@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="${product != null ? 'Sửa sản phẩm' : 'Thêm sản phẩm'}">Sản phẩm - CNJ70</title>
+    <link rel="stylesheet" th:href="@{/css/admin-vendor.css}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <div class="dashboard-container">
+        <div th:replace="fragments/dashboard-sidebar"></div>
+        <div class="main-content">
+            <div th:replace="fragments/dashboard-topbar"></div>
+            <main class="dashboard-content">
+                <h1 th:text="${product != null ? 'Sửa sản phẩm' : 'Thêm sản phẩm mới'}">Sản phẩm</h1>
+                
+                <div th:if="${error}" class="alert alert-error" th:text="${error}"></div>
+                
+                <form th:action="${product != null ? '/vendor/products/edit/' + product.id : '/vendor/products/create'}" 
+                      th:object="${productFormReq}" method="post" class="product-form">
+                    <div class="form-group">
+                        <label for="name">Tên sản phẩm *</label>
+                        <input type="text" id="name" th:field="*{name}" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="description">Mô tả</label>
+                        <textarea id="description" th:field="*{description}" rows="4"></textarea>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="price">Giá (VNĐ) *</label>
+                            <input type="number" id="price" th:field="*{price}" required min="0">
+                        </div>
+                        <div class="form-group">
+                            <label for="stock">Số lượng tồn kho *</label>
+                            <input type="number" id="stock" th:field="*{stock}" required min="0">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="categoryId">Danh mục</label>
+                        <input type="text" id="categoryId" th:field="*{categoryId}">
+                    </div>
+                    <div class="form-group">
+                        <label for="imageUrls">URL hình ảnh</label>
+                        <input type="text" id="imageUrls" th:field="*{imageUrls}" placeholder="Nhập URL, cách nhau bằng dấu phẩy">
+                    </div>
+                    <div class="form-actions">
+                        <a th:href="@{/vendor/products}" class="btn btn-secondary">Hủy</a>
+                        <button type="submit" class="btn btn-primary">Lưu</button>
+                    </div>
+                </form>
+            </main>
+        </div>
+    </div>
+</body>
+</html>

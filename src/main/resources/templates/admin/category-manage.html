@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quản lý danh mục - CNJ70 Admin</title>
+    <link rel="stylesheet" th:href="@{/css/admin-vendor.css}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <div class="dashboard-container">
+        <div class="sidebar">
+            <h2>CNJ70 Admin</h2>
+            <nav>
+                <a th:href="@{/admin/dashboard}"><i class="fas fa-chart-line"></i> Dashboard</a>
+                <a th:href="@{/admin/users}"><i class="fas fa-users"></i> Người dùng</a>
+                <a th:href="@{/admin/categories}"><i class="fas fa-tags"></i> Danh mục</a>
+            </nav>
+        </div>
+        <div class="main-content">
+            <main class="dashboard-content">
+                <h1>Quản lý danh mục</h1>
+                
+                <form th:action="@{/admin/categories/create}" method="post" class="category-form">
+                    <input type="text" name="name" placeholder="Tên danh mục" required>
+                    <input type="text" name="description" placeholder="Mô tả (tùy chọn)">
+                    <button type="submit" class="btn btn-primary">Thêm danh mục</button>
+                </form>
+                
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Tên danh mục</th>
+                            <th>Mô tả</th>
+                            <th>Trạng thái</th>
+                            <th>Thao tác</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr th:each="category : ${categories}">
+                            <td th:text="${category.name}">Tên danh mục</td>
+                            <td th:text="${category.description}">Mô tả</td>
+                            <td>
+                                <span class="status-badge" th:classappend="${category.active ? 'ACTIVE' : 'LOCKED'}" 
+                                      th:text="${category.active ? 'Hoạt động' : 'Khóa'}">Active</span>
+                            </td>
+                            <td>
+                                <form th:action="@{/admin/categories/{id}/delete(id=${category.id})}" method="post" style="display:inline;">
+                                    <button type="submit" class="btn-sm btn-danger" onclick="return confirm('Bạn có chắc?')">Xóa</button>
+                                </form>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </main>
+        </div>
+    </div>
+</body>
+</html>

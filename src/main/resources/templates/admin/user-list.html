@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quản lý người dùng - CNJ70 Admin</title>
+    <link rel="stylesheet" th:href="@{/css/admin-vendor.css}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <div class="dashboard-container">
+        <div class="sidebar">
+            <h2>CNJ70 Admin</h2>
+            <nav>
+                <a th:href="@{/admin/dashboard}"><i class="fas fa-chart-line"></i> Dashboard</a>
+                <a th:href="@{/admin/users}"><i class="fas fa-users"></i> Người dùng</a>
+                <a th:href="@{/admin/categories}"><i class="fas fa-tags"></i> Danh mục</a>
+            </nav>
+        </div>
+        <div class="main-content">
+            <main class="dashboard-content">
+                <h1>Quản lý người dùng</h1>
+                
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Họ tên</th>
+                            <th>Email</th>
+                            <th>Vai trò</th>
+                            <th>Trạng thái</th>
+                            <th>Thao tác</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr th:each="user : ${users}">
+                            <td th:text="${user.fullName}">Họ tên</td>
+                            <td th:text="${user.email}">email@example.com</td>
+                            <td th:text="${user.role}">CUSTOMER</td>
+                            <td>
+                                <span class="status-badge" th:classappend="${user.status.name()}" 
+                                      th:text="${user.status}">ACTIVE</span>
+                            </td>
+                            <td>
+                                <form th:if="${user.status.name() == 'ACTIVE'}" 
+                                      th:action="@{/admin/users/{id}/lock(id=${user.id})}" method="post" style="display:inline;">
+                                    <button type="submit" class="btn-sm btn-warning">Khóa</button>
+                                </form>
+                                <form th:if="${user.status.name() == 'LOCKED'}" 
+                                      th:action="@{/admin/users/{id}/unlock(id=${user.id})}" method="post" style="display:inline;">
+                                    <button type="submit" class="btn-sm btn-success">Mở khóa</button>
+                                </form>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </main>
+        </div>
+    </div>
+</body>
+</html>

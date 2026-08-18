@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quản lý đơn hàng - CNJ70 Vendor</title>
+    <link rel="stylesheet" th:href="@{/css/admin-vendor.css}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <div class="dashboard-container">
+        <div th:replace="fragments/dashboard-sidebar"></div>
+        <div class="main-content">
+            <div th:replace="fragments/dashboard-topbar"></div>
+            <main class="dashboard-content">
+                <h1>Quản lý đơn hàng</h1>
+                
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Mã đơn</th>
+                            <th>Khách hàng</th>
+                            <th>Tổng tiền</th>
+                            <th>Trạng thái</th>
+                            <th>Ngày đặt</th>
+                            <th>Thao tác</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr th:each="order : ${orders}">
+                            <td th:text="${order.id}">#001</td>
+                            <td th:text="${order.userName}">Nguyễn Văn A</td>
+                            <td th:text="${#numbers.formatCurrency(order.totalAmount)}">0đ</td>
+                            <td>
+                                <span class="status-badge" th:classappend="${order.status.name()}" 
+                                      th:text="${order.status.name()}">PENDING</span>
+                            </td>
+                            <td th:text="${#temporals.format(order.createdAt, 'dd/MM/yyyy')}">01/01/2026</td>
+                            <td>
+                                <form th:action="@{/vendor/orders/{id}/status(id=${order.id})}" method="post" style="display:inline;">
+                                    <select name="status" class="status-select">
+                                        <option value="PENDING">Chờ xác nhận</option>
+                                        <option value="PREPARING">Đang chuẩn bị</option>
+                                        <option value="SHIPPING">Đang giao</option>
+                                        <option value="DELIVERED">Đã giao</option>
+                                        <option value="CANCELLED">Đã hủy</option>
+                                    </select>
+                                    <button type="submit" class="btn-sm">Cập nhật</button>
+                                </form>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </main>
+        </div>
+    </div>
+</body>
+</html>

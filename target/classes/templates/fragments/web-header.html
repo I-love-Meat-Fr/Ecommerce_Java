@@ -1,0 +1,26 @@
+<header class="header">
+    <div class="container">
+        <div class="header-content">
+            <div class="logo">
+                <a th:href="@{/home}">CNJ70 Shop</a>
+            </div>
+            <nav class="nav">
+                <a th:href="@{/home}">Trang chủ</a>
+                <a th:href="@{/products}">Sản phẩm</a>
+            </nav>
+            <div class="header-actions">
+                <div sec:authorize="isAuthenticated()" class="user-menu">
+                    <a th:href="@{/cart}"><i class="fas fa-shopping-cart"></i> Giỏ hàng</a>
+                    <a th:href="@{/orders}"><i class="fas fa-receipt"></i> Đơn hàng</a>
+                    <form th:action="@{/auth/logout}" method="post" style="display: inline;">
+                        <button type="submit">Đăng xuất</button>
+                    </form>
+                </div>
+                <div sec:authorize="!isAuthenticated()">
+                    <a th:href="@{/auth/login}">Đăng nhập</a>
+                    <a th:href="@{/auth/register}">Đăng ký</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</header>

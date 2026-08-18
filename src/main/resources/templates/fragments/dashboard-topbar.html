@@ -1,0 +1,15 @@
+<div class="topbar">
+    <div class="topbar-left">
+        <button class="sidebar-toggle">
+            <i class="fas fa-bars"></i>
+        </button>
+    </div>
+    <div class="topbar-right">
+        <div class="user-dropdown">
+            <span class="user-name" sec:authentication="name">User</span>
+            <form th:action="@{/auth/logout}" method="post" style="display: inline;">
+                <button type="submit" class="btn-logout">Đăng xuất</button>
+            </form>
+        </div>
+    </div>
+</div>
