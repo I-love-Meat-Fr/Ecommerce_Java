@@ -1,0 +1,138 @@
+Cấu trúc thư mục theo mô hình MVC kết hợp Layered Architecture
+
+cnj70-ecommerce
+│
+├── pom.xml                                     # File quản lý thư viện Maven
+│
+└── src
+    ├── main
+    │   ├── java
+    │   │   └── com
+    │   │       └── ecommerce
+    │   │           └── cnj70
+    │   │               ├── Cnj70EcommerceApplication.java   # Class Main khởi chạy Spring Boot
+    │   │               │
+    │   │               ├── config/             # Cấu hình hệ thống chung
+    │   │               │   ├── MongoConfig.java             # Cấu hình audit, event cho MongoDB
+    │   │               │   ├── SecurityConfig.java          # Cấu hình phân quyền, authentication
+    │   │               │   └── WebMvcConfig.java            # Cấu hình resource tĩnh, i18n
+    │   │               │
+    │   │               ├── enums/              # [MỚI] Chứa các hằng số an toàn kiểu dữ liệu (Type-safe)
+    │   │               │   ├── UserRole.java                # ADMIN, VENDOR, CUSTOMER
+    │   │               │   ├── AccountStatus.java           # ACTIVE, LOCKED, UNVERIFIED
+    │   │               │   ├── ProductStatus.java           # DRAFT, ACTIVE, OUT_OF_STOCK, HIDDEN
+    │   │               │   ├── OrderStatus.java             # PENDING, PREPARING, SHIPPING, DELIVERED, CANCELLED
+    │   │               │   └── PaymentMethod.java           # COD, VNPAY (nếu sau này mở rộng)
+    │   │               │
+    │   │               ├── document/           # Các class ánh xạ 1-1 với Collection MongoDB
+    │   │               │   ├── User.java                    
+    │   │               │   ├── Shop.java
+    │   │               │   ├── Category.java
+    │   │               │   ├── Product.java
+    │   │               │   ├── Cart.java
+    │   │               │   ├── Order.java
+    │   │               │   └── Review.java
+    │   │               │
+    │   │               ├── repository/         # Giao tiếp với Database (Kế thừa MongoRepository)
+    │   │               │   ├── UserRepository.java
+    │   │               │   ├── ProductRepository.java
+    │   │               │   └── ... (tương ứng với các document)
+    │   │               │
+    │   │               ├── dto/                # Data Transfer Object (Validation & Ẩn dữ liệu nhạy cảm)
+    │   │               │   ├── request/                     # Hứng dữ liệu từ HTML Form
+    │   │               │   │   ├── RegisterReq.java         # Dữ liệu đăng ký (Validate email, pass)
+    │   │               │   │   ├── ProductFormReq.java      
+    │   │               │   │   └── CheckoutReq.java
+    │   │               │   └── response/                    # Trả dữ liệu ra View (nếu cần gom nhóm data)
+    │   │               │       └── OrderHistoryRes.java
+    │   │               │
+    │   │               ├── security/           # Logic lõi của quá trình Đăng nhập
+    │   │               │   ├── CustomUserDetails.java       
+    │   │               │   └── CustomUserDetailsService.java# Hàm load user từ CSDL để check pass
+    │   │               │
+    │   │               ├── service/            # Interface chứa các nghiệp vụ
+    │   │               │   ├── AuthService.java
+    │   │               │   ├── ProductService.java
+    │   │               │   ├── CartService.java
+    │   │               │   └── OrderService.java
+    │   │               │
+    │   │               ├── service/impl/       # Class thực thi code chi tiết của các Service
+    │   │               │   ├── AuthServiceImpl.java
+    │   │               │   ├── ProductServiceImpl.java
+    │   │               │   ├── CartServiceImpl.java
+    │   │               │   └── OrderServiceImpl.java
+    │   │               │
+    │   │               ├── controller/         # [ĐÃ TỐI ƯU] Hứng Request, gọi Service & trả về View
+    │   │               │   ├── auth/                        # Luồng xác thực
+    │   │               │   │   └── AuthController.java      # Login, Register, Logout
+    │   │               │   │
+    │   │               │   ├── web/                         # Giao diện Customer (ROLE_CUSTOMER)
+    │   │               │   │   ├── HomeController.java      # Trang chủ (/)
+    │   │               │   │   ├── ProductController.java   # Chi tiết, tìm kiếm SP (/products)
+    │   │               │   │   ├── CartController.java      # Quản lý giỏ hàng (/cart)
+    │   │               │   │   └── OrderController.java     # Checkout, lịch sử mua (/orders)
+    │   │               │   │
+    │   │               │   ├── vendor/                      # Bảng điều khiển Nhà bán (ROLE_VENDOR)
+    │   │               │   │   ├── VendorDashboardController.java # Thống kê doanh thu shop
+    │   │               │   │   ├── VendorShopController.java      # Đổi tên shop, logo
+    │   │               │   │   ├── VendorProductController.java   # CRUD sản phẩm
+    │   │               │   │   └── VendorOrderController.java     # Đổi trạng thái đơn hàng (Chuẩn bị -> Đang giao)
+    │   │               │   │
+    │   │               │   └── admin/                       # Bảng điều khiển Quản trị (ROLE_ADMIN)
+    │   │               │       ├── AdminDashboardController.java  # Thống kê toàn sàn
+    │   │               │       ├── AdminUserController.java       # Khóa/mở tài khoản, duyệt Shop
+    │   │               │       └── AdminCategoryController.java   # CRUD danh mục dùng chung
+    │   │               │
+    │   │               ├── exception/          # Bắt lỗi toàn cục (Global Exception Handling)
+    │   │               │   ├── GlobalExceptionHandler.java  # Hứng lỗi để trả về trang 404, 500 đẹp
+    │   │               │   └── ResourceNotFoundException.java
+    │   │               │
+    │   │               └── util/               # Tiện ích dùng chung
+    │   │                   └── FileUploadUtil.java          # Lưu ảnh lên ổ cứng hoặc chuyển thành Base64
+    │   │
+    │   └── resources/
+    │       ├── application.yml                 # Cấu hình port, kết nối MongoDB
+    │       │
+    │       ├── static/                         # Tài nguyên tĩnh (Public)
+    │       │   ├── css/
+    │       │   │   ├── style.css               # CSS cho Web
+    │       │   │   └── admin-vendor.css        # CSS cho Dashboard
+    │       │   ├── js/
+    │       │   ├── images/
+    │       │   └── uploads/                    # Nơi lưu ảnh SP thực tế (nếu cấu hình local)
+    │       │
+    │       └── templates/                      # View Thymeleaf HTML (Đồng nhất cấu trúc với Controller)
+    │           ├── auth/
+    │           │   ├── login.html
+    │           │   └── register.html
+    │           │
+    │           ├── web/
+    │           │   ├── index.html
+    │           │   ├── product-detail.html
+    │           │   ├── cart.html
+    │           │   └── checkout.html
+    │           │
+    │           ├── vendor/
+    │           │   ├── dashboard.html
+    │           │   ├── shop-profile.html
+    │           │   ├── product-list.html
+    │           │   ├── product-form.html       # Dùng chung cho Create/Edit
+    │           │   └── order-list.html
+    │           │
+    │           ├── admin/
+    │           │   ├── dashboard.html
+    │           │   ├── user-list.html
+    │           │   └── category-manage.html
+    │           │
+    │           ├── layout/                     # Chứa các Base Layout
+    │           │   ├── web-layout.html         # Khung bao ngoài cho Customer
+    │           │   └── dashboard-layout.html   # Khung bao ngoài cho Admin/Vendor
+    │           │
+    │           └── fragments/                  # Chứa các mảnh HTML dùng chung (để insert vào Layout)
+    │               ├── web-header.html
+    │               ├── web-footer.html
+    │               ├── dashboard-sidebar.html
+    │               └── dashboard-topbar.html
+    │
+    └── test/                                   # Viết Unit Test cho Service logic
+        └── java/com/ecommerce/cnj70/
