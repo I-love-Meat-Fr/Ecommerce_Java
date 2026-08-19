@@ -22,6 +22,11 @@ public class HomeController {
         model.addAttribute("products", products);
         return "web/index";
     }
+
+    @GetMapping("/")
+    public String rootRedirect() {
+        return "redirect:/home";
+    }
     
     @GetMapping("/products")
     public String productsPage(@RequestParam(required = false) String category,
