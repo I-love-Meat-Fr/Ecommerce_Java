@@ -1,6 +1,7 @@
 package com.ecommerce.cnj70.service.impl;
 
 import com.ecommerce.cnj70.document.User;
+import com.ecommerce.cnj70.dto.request.LoginReq;
 import com.ecommerce.cnj70.dto.request.RegisterReq;
 import com.ecommerce.cnj70.enums.AccountStatus;
 import com.ecommerce.cnj70.enums.UserRole;
@@ -56,6 +57,11 @@ public class AuthServiceImpl implements AuthService {
         }
         
         return CustomUserDetails.fromUser(user);
+    }
+
+    @Override
+    public CustomUserDetails login(LoginReq request) {
+        return login(request.getEmail(), request.getPassword());
     }
     
     @Override
