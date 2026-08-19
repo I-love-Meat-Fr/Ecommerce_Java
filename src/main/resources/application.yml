@@ -6,7 +6,7 @@ spring:
   data:
     mongodb:
       uri: ${MONGODB_URI:mongodb+srv://nguyenquocanh170205_db_user:FJGAwn7TMMPkcslN@cluster0.2pu37z6.mongodb.net}
-      database: ${MONGODB_DATABASE:cnj70_commerce}
+      database: ${MONGODB_DATABASE:cnj70_ecommerce}
       auto-index-creation: true
   
   # Thymeleaf Configuration
