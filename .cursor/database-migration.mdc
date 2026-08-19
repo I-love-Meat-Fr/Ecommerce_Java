@@ -1,0 +1,302 @@
+---
+description: Database migration workflow for MongoDB Atlas and Spring Boot
+alwaysApply: true
+---
+
+# Database Migration Workflow
+
+## Project Setup
+
+- Database: MongoDB Atlas at `cluster0.2pu37z6.mongodb.net`
+- Credentials stored in `.env` at project root
+- Spring Data MongoDB for application integration
+
+## MongoDB Connection
+
+### Connection URI (from .env)
+```
+MONGODB_URI="mongodb+srv://nguyenquocanh170205_db_user:FJGAwn7TMMPkcslN@cluster0.2pu37z6.mongodb.net"
+```
+
+### Spring Boot Configuration (application.yml)
+
+```yaml
+spring:
+  data:
+    mongodb:
+      uri: ${MONGODB_URI}
+      database: knowledge_db
+```
+
+## Running MongoDB Migration
+
+Since MongoDB doesn't use Flyway like MySQL, we use **mongomigrate** or manual scripts via `mongosh`.
+
+### Option 1: mongomigrate (Recommended for CI/CD)
+
+#### Step 1: Install mongomigrate
+
+```bash
+npm install -g mongomigrate
+```
+
+#### Step 2: Create migration files
+
+Structure:
+```
+src/main/resources/db/migration/
+├── V1__create_users_collection.js
+├── V2__add_user_indexes.js
+└── V3__create_posts_collection.js
+```
+
+#### Step 3: Create migration config
+
+```json
+{
+  "uri": "mongodb+srv://nguyenquocanh170205_db_user:FJGAwn7TMMPkcslN@cluster0.2pu37z6.mongodb.net",
+  "db": "knowledge_db",
+  "migrationsDir": "src/main/resources/db/migration"
+}
+```
+
+#### Step 4: Run migrations
+
+```bash
+mongomigrate --config .mongomigrate.json
+```
+
+### Option 2: Manual mongosh Scripts
+
+#### Connect to MongoDB Atlas
+
+```bash
+mongosh "mongodb+srv://nguyenquocanh170205_db_user:FJGAwn7TMMPkcslN@cluster0.2pu37z6.mongodb.net"
+```
+
+#### Run migration directly
+
+```javascript
+use knowledge_db
+
+// Example: Create collection with validation
+db.createCollection("users", {
+   validator: {
+      $jsonSchema: {
+         bsonType: "object",
+         required: ["email", "password"],
+         properties: {
+            email: { bsonType: "string" },
+            password: { bsonType: "string" },
+            createdAt: { bsonType: "date" }
+         }
+      }
+   }
+})
+
+// Example: Create indexes
+db.users.createIndex({ email: 1 }, { unique: true })
+db.users.createIndex({ createdAt: -1 })
+```
+
+### Option 3: Spring Boot BeanShell Migrator (For embedded migrations)
+
+Create a migration runner component:
+
+```java
+package vn.traphaco.knowledge;
+
+import com.mongodb.client.MongoClient;
+import com.mongodb.client.MongoDatabase;
+import org.springframework.boot.CommandLineRunner;
+import org.springframework.core.annotation.Order;
+import org.springframework.stereotype.Component;
+
+import java.io.BufferedReader;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
+import java.util.stream.Collectors;
+
+@Component
+@Order(1)
+public class MongoMigrationRunner implements CommandLineRunner {
+
+    private final MongoClient mongoClient;
+
+    public MongoMigrationRunner(MongoClient mongoClient) {
+        this.mongoClient = mongoClient;
+    }
+
+    @Override
+    public void run(String... args) {
+        MongoDatabase db = mongoClient.getDatabase("knowledge_db");
+        
+        // Example: Ensure indexes exist
+        db.getCollection("users").createIndex(
+            new org.bson.Document("email", 1),
+            new org.bson.Document("unique", true)
+        );
+        
+        System.out.println("MongoDB migrations completed.");
+    }
+}
+```
+
+## Migration File Conventions
+
+### Location
+`src/main/resources/db/migration/`
+
+### Naming Convention
+- `V<version>__<description>.js` for mongomigrate
+- `V<version>__<description>.sh` for mongosh scripts
+
+### Example: Create Collection
+
+```javascript
+// V1__create_users_collection.js
+db.createCollection("users", {
+   validator: {
+      $jsonSchema: {
+         bsonType: "object",
+         required: ["email", "password", "createdAt"],
+         properties: {
+            email: {
+               bsonType: "string",
+               pattern: "^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$"
+            },
+            password: { bsonType: "string", minLength: 6 },
+            fullName: { bsonType: "string" },
+            status: { 
+               bsonType: "string", 
+               enum: ["active", "inactive", "suspended"] 
+            },
+            createdAt: { bsonType: "date" },
+            updatedAt: { bsonType: "date" }
+         }
+      }
+   }
+});
+```
+
+### Example: Create Indexes
+
+```javascript
+// V2__create_users_indexes.js
+db.users.createIndex({ email: 1 }, { unique: true, background: true });
+db.users.createIndex({ createdAt: -1 }, { background: true });
+db.users.createIndex({ status: 1, createdAt: -1 }, { background: true });
+```
+
+### Example: Add New Field with Default Value
+
+```javascript
+// V3__add_user_avatar_field.js
+db.users.updateMany(
+   { avatar: { $exists: false } },
+   { $set: { avatar: null, updatedAt: new Date() } }
+);
+```
+
+### Example: Create New Collection
+
+```javascript
+// V4__create_posts_collection.js
+db.createCollection("posts", {
+   validator: {
+      $jsonSchema: {
+         bsonType: "object",
+         required: ["title", "content", "authorId", "createdAt"],
+         properties: {
+            title: { bsonType: "string", maxLength: 200 },
+            content: { bsonType: "string" },
+            authorId: { bsonType: "objectId" },
+            tags: { bsonType: "array", items: { bsonType: "string" } },
+            status: { 
+               bsonType: "string", 
+               enum: ["draft", "published", "archived"] 
+            },
+            createdAt: { bsonType: "date" },
+            updatedAt: { bsonType: "date" }
+         }
+      }
+   }
+);
+
+db.posts.createIndex({ authorId: 1 }, { background: true });
+db.posts.createIndex({ status: 1, createdAt: -1 }, { background: true });
+db.posts.createIndex({ tags: 1 }, { background: true });
+```
+
+### Example: Rename Collection
+
+```javascript
+// V5__rename_legacy_to_posts.js
+db.legacyArticles.renameCollection("posts", true);
+```
+
+## Common MongoDB Operations
+
+### Check if Index Exists Before Creating
+
+```javascript
+// Safe index creation
+const indexes = db.users.getIndexes().map(i => i.name);
+if (!indexes.includes("email_1")) {
+   db.users.createIndex({ email: 1 }, { unique: true, background: true });
+}
+```
+
+### Check if Field Exists Before Adding
+
+```javascript
+// Safe field addition
+const sample = db.users.findOne({});
+if (!sample || !sample.hasOwnProperty("avatar")) {
+   db.users.updateMany({}, { $set: { avatar: null } });
+}
+```
+
+### Drop Collection Safely
+
+```javascript
+// Only drop if collection exists
+if (db.getCollectionNames().includes("temp_data")) {
+   db.temp_data.drop();
+}
+```
+
+### Update Schema for All Documents
+
+```javascript
+// Migration-safe update
+db.posts.find({ status: { $exists: false } }).forEach(doc => {
+   db.posts.updateOne(
+      { _id: doc._id },
+      { $set: { status: "draft", updatedAt: new Date() } }
+   );
+});
+```
+
+## Common Issues
+
+- **Connection timeout**: Check network access whitelist in MongoDB Atlas
+- **Authentication failed**: Verify username/password in connection string
+- **Permission denied**: Ensure user has required roles (`readWrite`, `dbAdmin`)
+- **Validator errors**: Schema validation blocks invalid documents - test with sample data first
+
+## MongoDB Atlas Access
+
+- Atlas Console: https://account.mongodb.com
+- Cluster: `cluster0.2pu37z6.mongodb.net`
+- Database: `knowledge_db`
+
+## Shell Tool Configuration
+
+For database operations, always use:
+```json
+required_permissions: ["all"],
+request_smart_mode_approval: true
+```
+
