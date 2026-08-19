@@ -27,6 +27,11 @@ server:
   servlet:
     context-path: /
 
+# JWT Configuration
+jwt:
+  secret: ${JWT_SECRET:mySecretKeyForJWTTokenGenerationMustBeAtLeast256BitsLong}
+  expiration: 86400000  # 24 hours in milliseconds
+
 # Logging
 logging:
   level:
