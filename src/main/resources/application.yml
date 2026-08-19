@@ -5,7 +5,8 @@ spring:
   # MongoDB Configuration
   data:
     mongodb:
-      uri: mongodb://localhost:27017/cnj70_ecommerce
+      uri: mongodb+srv://nguyenquocanh170205_db_user:FJGAwn7TMMPkcslN@cluster0.2pu37z6.mongodb.net/?authSource=admin&appName=Cluster0
+      database: cnj70_ecommerce
       auto-index-creation: true
   
   # Thymeleaf Configuration
