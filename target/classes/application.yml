@@ -2,10 +2,11 @@ spring:
   application:
     name: CNJ70 Ecommerce
   
-  # MongoDB Configuration
+  # MongoDB Configuration - Load from environment or .env file
   data:
     mongodb:
-      uri: mongodb://localhost:27017/cnj70_ecommerce
+      uri: ${MONGODB_URI:mongodb+srv://nguyenquocanh170205_db_user:FJGAwn7TMMPkcslN@cluster0.2pu37z6.mongodb.net}
+      database: ${MONGODB_DATABASE:cnj70_commerce}
       auto-index-creation: true
   
   # Thymeleaf Configuration
