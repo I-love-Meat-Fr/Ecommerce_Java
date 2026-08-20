@@ -28,7 +28,7 @@
                         <a th:href="@{/products/{id}(id=${product.id})}">
                             <img th:src="${product.thumbnailUrl ?: '/images/placeholder.jpg'}" alt="${product.name}">
                             <h3 th:text="${product.name}">Tên sản phẩm</h3>
-                            <p class="price" th:text="${#numbers.formatCurrency(product.price)}">0đ</p>
+                            <p class="price" th:text="${@money.format(product.price)}">0đ</p>
                             <p class="shop-name" th:text="${product.shopName}">Tên shop</p>
                         </a>
                         <form th:action="@{/cart/add}" method="post" sec:authorize="isAuthenticated()">

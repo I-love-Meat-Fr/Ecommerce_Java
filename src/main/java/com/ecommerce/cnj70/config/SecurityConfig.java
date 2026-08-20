@@ -79,7 +79,7 @@ public class SecurityConfig {
                 .requestMatchers("/", "/auth/**", "/css/**", "/js/**", "/images/**", "/uploads/**").permitAll()
                 .requestMatchers("/api/auth/**").permitAll()
                 .requestMatchers("/admin/**").hasRole("ADMIN")
-                .requestMatchers("/vendor/**").hasRole("VENDOR")
+                .requestMatchers("/vendor/**").hasRole("VENDOR")  // Tạm comment để test
                 .requestMatchers(HttpMethod.GET, "/api/products/**").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/categories/**").permitAll()
                 .requestMatchers("/api/**").authenticated()

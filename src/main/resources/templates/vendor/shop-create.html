@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tạo cửa hàng - CNJ70 Vendor</title>
+    <link rel="stylesheet" th:href="@{/css/admin-vendor.css}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <div class="dashboard-container">
+        <div th:replace="~{fragments/dashboard-sidebar}"></div>
+        <div class="main-content">
+            <div th:replace="~{fragments/dashboard-topbar}"></div>
+            <main class="dashboard-content">
+                <h1>Tạo cửa hàng</h1>
+                
+                <div th:if="${error}" class="alert alert-error" th:text="${error}"></div>
+                
+                <form th:action="@{/vendor/shop/create}" th:object="${shopFormReq}" method="post" class="shop-form" enctype="multipart/form-data">
+                    <div class="form-group">
+                        <label for="shopName">Tên cửa hàng *</label>
+                        <input type="text" id="shopName" th:field="*{shopName}" required minlength="3" maxlength="100">
+                        <small>Tên shop phải từ 3-100 ký tự, duy nhất không trùng lặp</small>
+                        <div th:if="${#fields.hasErrors('shopName')}" class="error" th:errors="*{shopName}"></div>
+                    </div>
+                    <div class="form-group">
+                        <label for="description">Mô tả cửa hàng</label>
+                        <textarea id="description" th:field="*{description}" rows="4" maxlength="500" placeholder="Giới thiệu về cửa hàng của bạn..."></textarea>
+                        <div th:if="${#fields.hasErrors('description')}" class="error" th:errors="*{description}"></div>
+                    </div>
+                    <div class="form-group">
+                        <label for="logoFile">Logo cửa hàng</label>
+                        <input type="file" id="logoFile" name="logoFile" accept="image/png,image/jpeg,image/jpg,image/webp,image/gif">
+                        <small>Chấp nhận JPG, PNG, WEBP, GIF. Tối đa 5MB.</small>
+                        <img id="logoPreview" style="display:none;margin-top:10px;max-width:160px;border-radius:6px;">
+                        <input type="hidden" id="logoUrl" th:field="*{logoUrl}">
+                    </div>
+                    <div class="form-group">
+                        <label for="bannerFile">Banner cửa hàng</label>
+                        <input type="file" id="bannerFile" name="bannerFile" accept="image/png,image/jpeg,image/jpg,image/webp,image/gif">
+                        <small>Chấp nhận JPG, PNG, WEBP, GIF. Tối đa 5MB.</small>
+                        <img id="bannerPreview" style="display:none;margin-top:10px;max-width:360px;border-radius:6px;">
+                        <input type="hidden" id="bannerUrl" th:field="*{bannerUrl}">
+                    </div>
+                    <div class="form-actions">
+                        <a th:href="@{/vendor/dashboard}" class="btn btn-secondary">Hủy</a>
+                        <button type="submit" class="btn btn-primary"><i class="fas fa-store"></i> Tạo cửa hàng</button>
+                    </div>
+                </form>
+                <script>
+                    document.getElementById('logoFile').addEventListener('change', function(e) {
+                        const f = e.target.files[0]; if (!f) return;
+                        const prev = document.getElementById('logoPreview');
+                        prev.src = URL.createObjectURL(f); prev.style.display = 'block';
+                    });
+                    document.getElementById('bannerFile').addEventListener('change', function(e) {
+                        const f = e.target.files[0]; if (!f) return;
+                        const prev = document.getElementById('bannerPreview');
+                        prev.src = URL.createObjectURL(f); prev.style.display = 'block';
+                    });
+                </script>
+            </main>
+        </div>
+    </div>
+</body>
+</html>

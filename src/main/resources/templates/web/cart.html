@@ -31,7 +31,7 @@
                                 <img th:src="${item.imageUrl ?: '/images/placeholder.jpg'}" alt="">
                                 <span th:text="${item.productName}">Tên sản phẩm</span>
                             </td>
-                            <td th:text="${#numbers.formatCurrency(item.price)}">0đ</td>
+                            <td th:text="${@money.format(item.price)}">0đ</td>
                             <td>
                                 <form th:action="@{/cart/update}" method="post" class="quantity-form">
                                     <input type="hidden" name="productId" th:value="${item.productId}">
@@ -39,7 +39,7 @@
                                     <button type="submit">Cập nhật</button>
                                 </form>
                             </td>
-                            <td th:text="${#numbers.formatCurrency(item.subtotal)}">0đ</td>
+                            <td th:text="${@money.format(item.subtotal)}">0đ</td>
                             <td>
                                 <form th:action="@{/cart/remove}" method="post">
                                     <input type="hidden" name="productId" th:value="${item.productId}">

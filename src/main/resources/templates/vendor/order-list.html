@@ -9,44 +9,55 @@
 </head>
 <body>
     <div class="dashboard-container">
-        <div th:replace="fragments/dashboard-sidebar"></div>
+        <div th:replace="~{fragments/dashboard-sidebar}"></div>
         <div class="main-content">
-            <div th:replace="fragments/dashboard-topbar"></div>
+            <div th:replace="~{fragments/dashboard-topbar}"></div>
             <main class="dashboard-content">
-                <h1>Quản lý đơn hàng</h1>
+                <div class="content-header">
+                    <h1>Quản lý đơn hàng</h1>
+                </div>
                 
-                <table class="data-table">
+                <div th:if="${success}" class="alert alert-success" th:text="${success}"></div>
+                <div th:if="${error}" class="alert alert-error" th:text="${error}"></div>
+                
+                <div th:if="${#lists.isEmpty(orders)}" class="empty-state">
+                    <i class="fas fa-shopping-bag"></i>
+                    <h3>Chưa có đơn hàng nào</h3>
+                    <p>Khi có đơn hàng, bạn sẽ thấy danh sách tại đây.</p>
+                </div>
+                
+                <table th:unless="${#lists.isEmpty(orders)}" class="data-table">
                     <thead>
                         <tr>
-                            <th>Mã đơn</th>
+                            <th>Mã đơn hàng</th>
                             <th>Khách hàng</th>
-                            <th>Tổng tiền</th>
-                            <th>Trạng thái</th>
                             <th>Ngày đặt</th>
+                            <th>Tổng tiền (của bạn)</th>
+                            <th>Trạng thái</th>
                             <th>Thao tác</th>
                         </tr>
                     </thead>
                     <tbody>
                         <tr th:each="order : ${orders}">
-                            <td th:text="${order.id}">#001</td>
-                            <td th:text="${order.userName}">Nguyễn Văn A</td>
-                            <td th:text="${#numbers.formatCurrency(order.totalAmount)}">0đ</td>
+                            <td><strong th:text="${order.orderId}">ID</strong></td>
                             <td>
-                                <span class="status-badge" th:classappend="${order.status.name()}" 
-                                      th:text="${order.status.name()}">PENDING</span>
+                                <div th:text="${order.userName}">Tên khách</div>
+                                <small th:text="${order.userPhone}">SĐT</small>
                             </td>
-                            <td th:text="${#temporals.format(order.createdAt, 'dd/MM/yyyy')}">01/01/2026</td>
+                            <td th:text="${#temporals.format(order.createdAt, 'dd/MM/yyyy HH:mm')}">Ngày</td>
+                            <td th:text="${@money.format(order.subtotal)}">0đ</td>
                             <td>
-                                <form th:action="@{/vendor/orders/{id}/status(id=${order.id})}" method="post" style="display:inline;">
-                                    <select name="status" class="status-select">
-                                        <option value="PENDING">Chờ xác nhận</option>
-                                        <option value="PREPARING">Đang chuẩn bị</option>
-                                        <option value="SHIPPING">Đang giao</option>
-                                        <option value="DELIVERED">Đã giao</option>
-                                        <option value="CANCELLED">Đã hủy</option>
-                                    </select>
-                                    <button type="submit" class="btn-sm">Cập nhật</button>
-                                </form>
+                                <span class="status-badge" 
+                                      th:classappend="${order.status.name() == 'PENDING' ? 'status-warning' : 
+                                                       (order.status.name() == 'PROCESSING' ? 'status-info' : 
+                                                       (order.status.name() == 'DELIVERED' ? 'status-success' : 
+                                                       (order.status.name() == 'CANCELLED' ? 'status-danger' : '')))}"
+                                      th:text="${order.status}">STATUS</span>
+                            </td>
+                            <td>
+                                <a th:href="@{/vendor/orders/{id}(id=${order.orderId})}" class="btn-sm btn-primary">
+                                    <i class="fas fa-eye"></i> Xem
+                                </a>
                             </td>
                         </tr>
                     </tbody>

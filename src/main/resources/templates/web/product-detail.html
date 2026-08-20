@@ -23,7 +23,7 @@
                         <i class="fas fa-store"></i>
                         <span th:text="${product.shopName}">Tên shop</span>
                     </p>
-                    <p class="price" th:text="${#numbers.formatCurrency(product.price)}">0đ</p>
+                    <p class="price" th:text="${@money.format(product.price)}">0đ</p>
                     <p class="stock">
                         <i class="fas fa-box"></i>
                         Còn lại: <span th:text="${product.stock}">0</span> sản phẩm

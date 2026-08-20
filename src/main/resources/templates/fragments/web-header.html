@@ -12,6 +12,9 @@
                 <div sec:authorize="isAuthenticated()" class="user-menu">
                     <a th:href="@{/cart}"><i class="fas fa-shopping-cart"></i> Giỏ hàng</a>
                     <a th:href="@{/orders}"><i class="fas fa-receipt"></i> Đơn hàng</a>
+                    <a th:href="@{/vendor}" sec:authorize="hasRole('VENDOR')">
+                        <i class="fas fa-store"></i> Quản lý Shop
+                    </a>
                     <form th:action="@{/auth/logout}" method="post" style="display: inline;">
                         <button type="submit">Đăng xuất</button>
                     </form>

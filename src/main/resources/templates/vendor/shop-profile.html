@@ -9,26 +9,72 @@
 </head>
 <body>
     <div class="dashboard-container">
-        <div th:replace="fragments/dashboard-sidebar"></div>
+        <div th:replace="~{fragments/dashboard-sidebar}"></div>
         <div class="main-content">
-            <div th:replace="fragments/dashboard-topbar"></div>
+            <div th:replace="~{fragments/dashboard-topbar}"></div>
             <main class="dashboard-content">
                 <h1>Hồ sơ cửa hàng</h1>
-                <form class="shop-form">
-                    <div class="form-group">
-                        <label>Tên cửa hàng</label>
-                        <input type="text" name="shopName" placeholder="Nhập tên cửa hàng">
+                
+                <div th:if="${success}" class="alert alert-success" th:text="${success}"></div>
+                <div th:if="${error}" class="alert alert-error" th:text="${error}"></div>
+                
+                <div th:if="${shop}">
+                    <div class="shop-header">
+                        <div class="shop-logo">
+                            <img th:if="${shop.logoUrl}" th:src="${shop.logoUrl}" alt="Logo">
+                            <i th:unless="${shop.logoUrl}" class="fas fa-store"></i>
+                        </div>
+                        <div class="shop-info">
+                            <h2 th:text="${shop.shopName}">Tên cửa hàng</h2>
+                            <span th:if="${shop.verified}" class="badge badge-success"><i class="fas fa-check-circle"></i> Đã xác minh</span>
+                            <span th:unless="${shop.verified}" class="badge badge-warning"><i class="fas fa-clock"></i> Chờ xác minh</span>
+                        </div>
                     </div>
-                    <div class="form-group">
-                        <label>Mô tả</label>
-                        <textarea name="description" placeholder="Mô tả cửa hàng"></textarea>
-                    </div>
-                    <div class="form-group">
-                        <label>Logo cửa hàng</label>
-                        <input type="file" name="logo" accept="image/*">
-                    </div>
-                    <button type="submit" class="btn btn-primary">Lưu thay đổi</button>
-                </form>
+                    
+                    <form th:action="@{/vendor/shop/update}" th:object="${shopFormReq}" method="post" class="shop-form" enctype="multipart/form-data">
+                        <div class="form-group">
+                            <label for="shopName">Tên cửa hàng *</label>
+                            <input type="text" id="shopName" th:field="*{shopName}" required minlength="3" maxlength="100">
+                            <small>Tên shop phải từ 3-100 ký tự</small>
+                        </div>
+                        <div class="form-group">
+                            <label for="description">Mô tả cửa hàng</label>
+                            <textarea id="description" th:field="*{description}" rows="4" maxlength="500"></textarea>
+                            <small>Mô tả không quá 500 ký tự</small>
+                        </div>
+                        <div class="form-group">
+                            <label for="logoFile">Logo cửa hàng</label>
+                            <input type="file" id="logoFile" name="logoFile" accept="image/png,image/jpeg,image/jpg,image/webp,image/gif">
+                            <small>Chấp nhận JPG, PNG, WEBP, GIF. Tối đa 5MB.</small>
+                            <img id="logoPreview" th:if="${shop.logoUrl}" th:src="${shop.logoUrl}" style="margin-top:10px;max-width:160px;border-radius:6px;">
+                            <img id="logoPreviewNew" style="display:none;margin-top:10px;max-width:160px;border-radius:6px;">
+                            <input type="hidden" id="logoUrl" th:field="*{logoUrl}">
+                        </div>
+                        <div class="form-group">
+                            <label for="bannerFile">Banner cửa hàng</label>
+                            <input type="file" id="bannerFile" name="bannerFile" accept="image/png,image/jpeg,image/jpg,image/webp,image/gif">
+                            <small>Chấp nhận JPG, PNG, WEBP, GIF. Tối đa 5MB.</small>
+                            <img id="bannerPreview" th:if="${shop.bannerUrl}" th:src="${shop.bannerUrl}" style="margin-top:10px;max-width:360px;border-radius:6px;">
+                            <img id="bannerPreviewNew" style="display:none;margin-top:10px;max-width:360px;border-radius:6px;">
+                            <input type="hidden" id="bannerUrl" th:field="*{bannerUrl}">
+                        </div>
+                        <div class="form-actions">
+                            <button type="submit" class="btn btn-primary"><i class="fas fa-save"></i> Lưu thay đổi</button>
+                        </div>
+                    </form>
+                    <script>
+                        document.getElementById('logoFile').addEventListener('change', function(e) {
+                            const f = e.target.files[0]; if (!f) return;
+                            const prev = document.getElementById('logoPreviewNew');
+                            prev.src = URL.createObjectURL(f); prev.style.display = 'block';
+                        });
+                        document.getElementById('bannerFile').addEventListener('change', function(e) {
+                            const f = e.target.files[0]; if (!f) return;
+                            const prev = document.getElementById('bannerPreviewNew');
+                            prev.src = URL.createObjectURL(f); prev.style.display = 'block';
+                        });
+                    </script>
+                </div>
             </main>
         </div>
     </div>
