@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hồ sơ Vendor - CNJ70</title>
+    <link rel="stylesheet" th:href="@{/css/admin-vendor.css}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <div class="dashboard-container">
+        <div th:replace="~{fragments/dashboard-sidebar}"></div>
+        <div class="main-content">
+            <div th:replace="~{fragments/dashboard-topbar}"></div>
+            <main class="dashboard-content">
+                <h1>Hồ sơ của tôi</h1>
+                
+                <div class="profile-container">
+                    <div class="profile-header">
+                        <div class="avatar">
+                            <img th:if="${profile.avatarUrl}" th:src="${profile.avatarUrl}" alt="Avatar">
+                            <i th:unless="${profile.avatarUrl}" class="fas fa-user"></i>
+                        </div>
+                        <div class="profile-info">
+                            <h2 th:text="${profile.fullName}">Tên Vendor</h2>
+                            <span class="badge" th:text="${profile.role}">VENDOR</span>
+                            <span class="badge" th:classappend="${profile.status == 'ACTIVE' ? 'badge-success' : 'badge-warning'}" 
+                                  th:text="${profile.status}">ACTIVE</span>
+                        </div>
+                    </div>
+                    
+                    <div class="profile-section">
+                        <h3>Thông tin cá nhân</h3>
+                        <div class="info-grid">
+                            <div class="info-item">
+                                <label>Email:</label>
+                                <span th:text="${profile.email}">email@example.com</span>
+                            </div>
+                            <div class="info-item">
+                                <label>Số điện thoại:</label>
+                                <span th:text="${profile.phone != null ? profile.phone : 'Chưa cập nhật'}">SĐT</span>
+                            </div>
+                            <div class="info-item">
+                                <label>Địa chỉ:</label>
+                                <span th:text="${profile.address != null ? profile.address : 'Chưa cập nhật'}">Địa chỉ</span>
+                            </div>
+                            <div class="info-item">
+                                <label>Ngày tham gia:</label>
+                                <span th:text="${#temporals.format(profile.createdAt, 'dd/MM/yyyy')}">Ngày</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="profile-section" th:if="${profile.shop != null}">
+                        <h3>Thông tin cửa hàng</h3>
+                        <div class="shop-card">
+                            <div class="shop-logo">
+                                <img th:if="${profile.shop.logoUrl}" th:src="${profile.shop.logoUrl}" alt="Logo">
+                                <i th:unless="${profile.shop.logoUrl}" class="fas fa-store"></i>
+                            </div>
+                            <div class="shop-details">
+                                <h4 th:text="${profile.shop.shopName}">Tên cửa hàng</h4>
+                                <div class="shop-badges">
+                                    <span th:if="${profile.shop.verified}" class="badge badge-success">
+                                        <i class="fas fa-check-circle"></i> Đã xác minh
+                                    </span>
+                                    <span th:unless="${profile.shop.verified}" class="badge badge-warning">
+                                        <i class="fas fa-clock"></i> Chờ xác minh
+                                    </span>
+                                    <span th:if="${profile.shop.active}" class="badge badge-success">Đang hoạt động</span>
+                                    <span th:unless="${profile.shop.active}" class="badge badge-danger">Tạm ngưng</span>
+                                </div>
+                                <p th:if="${profile.shop.description}" th:text="${profile.shop.description}">Mô tả</p>
+                            </div>
+                        </div>
+                        <a th:href="@{/vendor/shop}" class="btn btn-primary">
+                            <i class="fas fa-edit"></i> Chỉnh sửa cửa hàng
+                        </a>
+                    </div>
+                    
+                    <div class="profile-section" th:unless="${profile.shop != null}">
+                        <div class="no-shop">
+                            <i class="fas fa-store-slash"></i>
+                            <h3>Bạn chưa có cửa hàng</h3>
+                            <p>Tạo cửa hàng để bắt đầu bán hàng trên CNJ70</p>
+                            <a th:href="@{/vendor/shop/create}" class="btn btn-primary">
+                                <i class="fas fa-plus"></i> Tạo cửa hàng
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+</body>
+</html>

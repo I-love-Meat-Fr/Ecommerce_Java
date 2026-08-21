@@ -5,6 +5,7 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 @ControllerAdvice
 public class GlobalExceptionHandler {
@@ -14,6 +15,38 @@ public class GlobalExceptionHandler {
     public String handleResourceNotFoundException(ResourceNotFoundException ex, Model model) {
         model.addAttribute("error", ex.getMessage());
         return "error/404";
+    }
+    
+    @ExceptionHandler(BadRequestException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public String handleBadRequestException(BadRequestException ex, Model model) {
+        model.addAttribute("error", ex.getMessage());
+        return "error/400";
+    }
+    
+    @ExceptionHandler(UnauthorizedException.class)
+    @ResponseStatus(HttpStatus.FORBIDDEN)
+    public String handleUnauthorizedException(UnauthorizedException ex, Model model) {
+        model.addAttribute("error", ex.getMessage());
+        return "error/403";
+    }
+    
+    @ExceptionHandler(org.springframework.security.access.AccessDeniedException.class)
+    @ResponseStatus(HttpStatus.FORBIDDEN)
+    public String handleAccessDeniedException(org.springframework.security.access.AccessDeniedException ex, Model model) {
+        model.addAttribute("error", "Bạn không có quyền truy cập trang này");
+        return "error/403";
+    }
+    
+    @ExceptionHandler(org.springframework.web.bind.MethodArgumentNotValidException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public String handleValidationException(org.springframework.web.bind.MethodArgumentNotValidException ex, Model model) {
+        StringBuilder errors = new StringBuilder();
+        ex.getBindingResult().getFieldErrors().forEach(error -> 
+            errors.append(error.getField()).append(": ").append(error.getDefaultMessage()).append("; ")
+        );
+        model.addAttribute("error", errors.toString());
+        return "error/400";
     }
     
     @ExceptionHandler(RuntimeException.class)
@@ -26,7 +59,7 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(Exception.class)
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
     public String handleException(Exception ex, Model model) {
-        model.addAttribute("error", "An unexpected error occurred");
+        model.addAttribute("error", "Đã xảy ra lỗi không mong muốn: " + ex.getMessage());
         return "error/500";
     }
 }

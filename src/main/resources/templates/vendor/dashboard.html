@@ -1,6 +1,5 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org"
-      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<html xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -10,26 +9,94 @@
 </head>
 <body>
     <div class="dashboard-container">
-        <div th:replace="fragments/dashboard-sidebar"></div>
+        <div th:replace="~{fragments/dashboard-sidebar}"></div>
         <div class="main-content">
-            <div th:replace="fragments/dashboard-topbar"></div>
+            <div th:replace="~{fragments/dashboard-topbar}"></div>
             <main class="dashboard-content">
                 <h1>Dashboard</h1>
-                <div class="stats-grid">
+                
+                <div th:if="${stats.shopSummary == null}" class="alert alert-warning">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    Bạn chưa có cửa hàng. <a th:href="@{/vendor/shop/create}">Tạo cửa hàng ngay</a>
+                </div>
+                
+                <div class="stats-grid" th:if="${stats.shopSummary != null}">
                     <div class="stat-card">
-                        <i class="fas fa-box"></i>
-                        <h3>Sản phẩm</h3>
-                        <p class="stat-value">0</p>
+                        <div class="stat-icon"><i class="fas fa-box"></i></div>
+                        <div class="stat-info">
+                            <h3>Tổng sản phẩm</h3>
+                            <p class="stat-value" th:text="${stats.totalProducts}">0</p>
+                        </div>
+                    </div>
+                    <div class="stat-card stat-warning">
+                        <div class="stat-icon"><i class="fas fa-exclamation-circle"></i></div>
+                        <div class="stat-info">
+                            <h3>Hết hàng</h3>
+                            <p class="stat-value" th:text="${stats.outOfStockProducts}">0</p>
+                        </div>
                     </div>
                     <div class="stat-card">
-                        <i class="fas fa-shopping-bag"></i>
-                        <h3>Đơn hàng</h3>
-                        <p class="stat-value">0</p>
+                        <div class="stat-icon"><i class="fas fa-shopping-bag"></i></div>
+                        <div class="stat-info">
+                            <h3>Tổng đơn hàng</h3>
+                            <p class="stat-value" th:text="${stats.totalOrders}">0</p>
+                        </div>
                     </div>
-                    <div class="stat-card">
-                        <i class="fas fa-dollar-sign"></i>
-                        <h3>Doanh thu</h3>
-                        <p class="stat-value">0đ</p>
+                    <div class="stat-card stat-success">
+                        <div class="stat-icon"><i class="fas fa-dollar-sign"></i></div>
+                        <div class="stat-info">
+                            <h3>Doanh thu</h3>
+                            <p class="stat-value" th:text="${@money.format(stats.totalRevenue)}">0đ</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="stats-grid" th:if="${stats.shopSummary != null}">
+                    <div class="stat-card stat-pending">
+                        <div class="stat-info">
+                            <h3>Chờ xử lý</h3>
+                            <p class="stat-value" th:text="${stats.pendingOrders}">0</p>
+                        </div>
+                    </div>
+                    <div class="stat-card stat-processing">
+                        <div class="stat-info">
+                            <h3>Đang xử lý</h3>
+                            <p class="stat-value" th:text="${stats.processingOrders}">0</p>
+                        </div>
+                    </div>
+                    <div class="stat-card stat-success">
+                        <div class="stat-info">
+                            <h3>Đã giao</h3>
+                            <p class="stat-value" th:text="${stats.completedOrders}">0</p>
+                        </div>
+                    </div>
+                    <div class="stat-card stat-monthly">
+                        <div class="stat-info">
+                            <h3>Doanh thu tháng</h3>
+                            <p class="stat-value" th:text="${@money.format(stats.monthlyRevenue)}">0đ</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="quick-actions" th:if="${stats.shopSummary != null}">
+                    <h2>Thao tác nhanh</h2>
+                    <div class="action-buttons">
+                        <a th:href="@{/vendor/products/create}" class="action-btn">
+                            <i class="fas fa-plus-circle"></i>
+                            <span>Thêm sản phẩm</span>
+                        </a>
+                        <a th:href="@{/vendor/products}" class="action-btn">
+                            <i class="fas fa-boxes"></i>
+                            <span>Quản lý sản phẩm</span>
+                        </a>
+                        <a th:href="@{/vendor/orders}" class="action-btn">
+                            <i class="fas fa-clipboard-list"></i>
+                            <span>Xem đơn hàng</span>
+                        </a>
+                        <a th:href="@{/vendor/shop}" class="action-btn">
+                            <i class="fas fa-store"></i>
+                            <span>Cài đặt shop</span>
+                        </a>
                     </div>
                 </div>
             </main>
