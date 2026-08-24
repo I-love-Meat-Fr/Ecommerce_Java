@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org"
-      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+      xmlns:sec="http://www.thymeleaf.org/extras/springsecurity6">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -15,7 +15,7 @@
         <div class="container">
             <div class="product-detail">
                 <div class="product-images">
-                    <img th:src="${product.thumbnailUrl ?: '/images/placeholder.jpg'}" alt="${product.name}">
+                    <img th:src="${product.thumbnailUrl ?: '/images/placeholder.jpg'}" th:alt="${product.name}">
                 </div>
                 <div class="product-info">
                     <h1 th:text="${product.name}">Tên sản phẩm</h1>

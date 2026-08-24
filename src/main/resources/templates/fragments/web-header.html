@@ -1,26 +1,26 @@
-<header class="header">
+<header class="header" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/springsecurity6">
     <div class="container">
         <div class="header-content">
             <div class="logo">
                 <a th:href="@{/home}">CNJ70 Shop</a>
             </div>
-            <nav class="nav">
+            <nav class="nav" aria-label="Điều hướng chính">
                 <a th:href="@{/home}">Trang chủ</a>
                 <a th:href="@{/products}">Sản phẩm</a>
             </nav>
             <div class="header-actions">
                 <div sec:authorize="isAuthenticated()" class="user-menu">
-                    <a th:href="@{/cart}"><i class="fas fa-shopping-cart"></i> Giỏ hàng</a>
-                    <a th:href="@{/orders}"><i class="fas fa-receipt"></i> Đơn hàng</a>
+                    <a th:href="@{/cart}"><i class="fas fa-shopping-cart" aria-hidden="true"></i><span>Giỏ hàng</span></a>
+                    <a th:href="@{/orders}"><i class="fas fa-receipt" aria-hidden="true"></i><span>Đơn hàng</span></a>
                     <a th:href="@{/vendor}" sec:authorize="hasRole('VENDOR')">
-                        <i class="fas fa-store"></i> Quản lý Shop
+                        <i class="fas fa-store" aria-hidden="true"></i><span>Quản lý Shop</span>
                     </a>
-                    <form th:action="@{/auth/logout}" method="post" style="display: inline;">
+                    <form th:action="@{/auth/logout}" method="post">
                         <button type="submit">Đăng xuất</button>
                     </form>
                 </div>
-                <div sec:authorize="!isAuthenticated()">
-                    <a th:href="@{/auth/login}">Đăng nhập</a>
+                <div sec:authorize="!isAuthenticated()" class="auth-actions">
+                    <a class="header-cta" th:href="@{/auth/login}">Đăng nhập</a>
                     <a th:href="@{/auth/register}">Đăng ký</a>
                 </div>
             </div>

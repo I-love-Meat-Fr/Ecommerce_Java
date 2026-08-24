@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org"
-      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+      xmlns:sec="http://www.thymeleaf.org/extras/springsecurity6">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -26,7 +26,7 @@
                 <div class="product-grid">
                     <div th:each="product : ${products}" class="product-card">
                         <a th:href="@{/products/{id}(id=${product.id})}">
-                            <img th:src="${product.thumbnailUrl ?: '/images/placeholder.jpg'}" alt="${product.name}">
+                            <img th:src="${product.thumbnailUrl ?: '/images/placeholder.jpg'}" th:alt="${product.name}">
                             <h3 th:text="${product.name}">Tên sản phẩm</h3>
                             <p class="price" th:text="${@money.format(product.price)}">0đ</p>
                             <p class="shop-name" th:text="${product.shopName}">Tên shop</p>
