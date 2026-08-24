@@ -1,15 +1,18 @@
-<div class="topbar">
+<div class="topbar" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/springsecurity6">
     <div class="topbar-left">
-        <button class="sidebar-toggle">
+        <button class="sidebar-toggle" type="button" aria-label="Mở menu">
             <i class="fas fa-bars"></i>
         </button>
     </div>
     <div class="topbar-right">
-        <div class="user-dropdown">
-            <span class="user-name" sec:authentication="name">User</span>
-            <form th:action="@{/auth/logout}" method="post" style="display: inline;">
-                <button type="submit" class="btn-logout">Đăng xuất</button>
-            </form>
+        <span class="user-greeting" sec:authentication="name">User</span>
+        <div class="user-avatar">
+            <i class="fas fa-user"></i>
         </div>
+        <form th:action="@{/auth/logout}" method="post">
+            <button type="submit" class="btn btn-logout btn-sm">
+                <i class="fas fa-sign-out-alt"></i>
+            </button>
+        </form>
     </div>
 </div>

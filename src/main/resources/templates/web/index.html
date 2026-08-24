@@ -1,10 +1,14 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org"
-      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+      xmlns:sec="http://www.thymeleaf.org/extras/springsecurity6">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Trang chủ - CNJ70 Ecommerce</title>
+    <meta name="description" content="CNJ70 Shop - Sàn thương mại điện tử đa nhà bán hàng hàng đầu Việt Nam. Mua sắm thông minh với hàng ngàn sản phẩm chất lượng.">
+    <title>CNJ70 Shop - Sàn Thương Mại Điện Tử Đa Nhà Bán</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" th:href="@{/css/style.css}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
@@ -12,30 +16,334 @@
     <div th:replace="fragments/web-header"></div>
     
     <main class="main-content">
-        <section class="hero">
+        <!-- Hero Section -->
+        <section class="hero" id="hero-section">
+            <div class="hero-bg-shapes">
+                <div class="hero-shape hero-shape-1"></div>
+                <div class="hero-shape hero-shape-2"></div>
+                <div class="hero-shape hero-shape-3"></div>
+            </div>
             <div class="container">
-                <h1>Chào mừng đến với CNJ70 Ecommerce</h1>
-                <p>Nền tảng thương mại điện tử đa nhà bán hàng đầu</p>
-                <a th:href="@{/products}" class="btn btn-primary">Xem sản phẩm</a>
+                <div class="hero-content">
+                    <div class="hero-text" data-animate="fade-up">
+                        <span class="hero-badge">
+                            <i class="fas fa-bolt"></i> Mua sắm thông minh
+                        </span>
+                        <h1>Khám phá hàng ngàn<br><span class="hero-gradient-text">sản phẩm chất lượng</span></h1>
+                        <p>Nền tảng thương mại điện tử đa nhà bán hàng với hàng triệu sản phẩm từ các shop uy tín trên toàn quốc.</p>
+                        <div class="hero-actions">
+                            <a th:href="@{/products}" class="btn btn-primary btn-lg btn-glow" id="shop-now-btn">
+                                <i class="fas fa-shopping-bag"></i> Mua sắm ngay
+                            </a>
+                            <a th:href="@{/auth/register}" class="btn btn-secondary btn-lg" sec:authorize="!isAuthenticated()" id="become-vendor-btn">
+                                <i class="fas fa-store"></i> Trở thành người bán
+                            </a>
+                        </div>
+                    </div>
+                    <div class="hero-stats-wrapper" data-animate="fade-up" data-animate-delay="200">
+                        <div class="hero-stats">
+                            <div class="stat-item">
+                                <div class="stat-icon">
+                                    <i class="fas fa-box-open"></i>
+                                </div>
+                                <div class="stat-content">
+                                    <span class="stat-number" data-count="10000">10K+</span>
+                                    <span class="stat-label">Sản phẩm</span>
+                                </div>
+                            </div>
+                            <div class="stat-divider"></div>
+                            <div class="stat-item">
+                                <div class="stat-icon">
+                                    <i class="fas fa-store"></i>
+                                </div>
+                                <div class="stat-content">
+                                    <span class="stat-number" data-count="500">500+</span>
+                                    <span class="stat-label">Nhà bán hàng</span>
+                                </div>
+                            </div>
+                            <div class="stat-divider"></div>
+                            <div class="stat-item">
+                                <div class="stat-icon">
+                                    <i class="fas fa-users"></i>
+                                </div>
+                                <div class="stat-content">
+                                    <span class="stat-number" data-count="50000">50K+</span>
+                                    <span class="stat-label">Khách hàng</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
         </section>
-        
-        <section class="products-section">
+
+        <!-- Trust Badges -->
+        <section class="trust-badges" id="trust-badges">
             <div class="container">
-                <h2>Sản phẩm nổi bật</h2>
-                <div class="product-grid">
-                    <div th:each="product : ${products}" class="product-card">
-                        <a th:href="@{/products/{id}(id=${product.id})}">
-                            <img th:src="${product.thumbnailUrl ?: '/images/placeholder.jpg'}" alt="${product.name}">
-                            <h3 th:text="${product.name}">Tên sản phẩm</h3>
-                            <p class="price" th:text="${#numbers.formatCurrency(product.price)}">0đ</p>
-                            <p class="shop-name" th:text="${product.shopName}">Tên shop</p>
+                <div class="trust-grid">
+                    <div class="trust-item">
+                        <i class="fas fa-shipping-fast"></i>
+                        <span>Giao hàng siêu tốc</span>
+                    </div>
+                    <div class="trust-item">
+                        <i class="fas fa-shield-alt"></i>
+                        <span>Thanh toán bảo mật</span>
+                    </div>
+                    <div class="trust-item">
+                        <i class="fas fa-medal"></i>
+                        <span>Hàng chính hãng 100%</span>
+                    </div>
+                    <div class="trust-item">
+                        <i class="fas fa-headset"></i>
+                        <span>Hỗ trợ 24/7</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Categories Section -->
+        <section class="categories-section" th:if="${not #lists.isEmpty(categories)}" id="categories-section">
+            <div class="container">
+                <div class="section-header" data-animate="fade-up">
+                    <div class="section-header-left">
+                        <span class="section-tag">Khám phá</span>
+                        <h2 class="section-title">Danh mục sản phẩm</h2>
+                    </div>
+                    <a th:href="@{/products}" class="section-link" id="view-all-categories">
+                        Xem tất cả <i class="fas fa-arrow-right"></i>
+                    </a>
+                </div>
+                <div class="categories-grid" data-animate="fade-up" data-animate-delay="100">
+                    <a th:each="cat : ${categories}" 
+                       th:href="@{/products(category=${cat.id})}" 
+                       class="category-card">
+                        <div class="category-icon">
+                            <i class="fas fa-folder"></i>
+                        </div>
+                        <span class="category-name" th:text="${cat.name}">Danh mục</span>
+                    </a>
+                </div>
+            </div>
+        </section>
+
+        <!-- Featured Products Section -->
+        <section class="products-section" th:if="${not #lists.isEmpty(featuredProducts)}" id="featured-products">
+            <div class="container">
+                <div class="section-header" data-animate="fade-up">
+                    <div class="section-header-left">
+                        <span class="section-tag"><i class="fas fa-fire"></i> Hot</span>
+                        <h2 class="section-title">Sản phẩm nổi bật</h2>
+                    </div>
+                    <a th:href="@{/products}" class="section-link" id="view-all-featured">
+                        Xem tất cả <i class="fas fa-arrow-right"></i>
+                    </a>
+                </div>
+                <div class="product-grid product-grid-4" data-animate="fade-up" data-animate-delay="100">
+                    <div th:each="product : ${featuredProducts}" class="product-card">
+                        <a th:href="@{/products/{id}(id=${product.id})}" class="product-link">
+                            <div class="product-image">
+                                <img th:src="${product.thumbnailUrl ?: '/images/placeholder.jpg'}" th:alt="${product.name}">
+                                <span class="product-badge">
+                                    <i class="fas fa-fire"></i> Nổi bật
+                                </span>
+                            </div>
+                            <div class="product-info">
+                                <h3 class="product-name" th:text="${product.name}">Tên sản phẩm</h3>
+                                <p class="product-price" th:text="${@money.format(product.price)}">0đ</p>
+                                <div class="product-meta">
+                                    <span class="product-rating" th:if="${product.rating > 0}">
+                                        <i class="fas fa-star"></i> <span th:text="${#numbers.formatDecimal(product.rating, 1, 1)}">0.0</span>
+                                    </span>
+                                    <span class="product-shop" th:text="${product.shopName}">Shop</span>
+                                </div>
+                            </div>
                         </a>
-                        <form th:action="@{/cart/add}" method="post" sec:authorize="isAuthenticated()">
+                        <form th:action="@{/cart/add}" method="post" sec:authorize="isAuthenticated()" class="product-action">
                             <input type="hidden" name="productId" th:value="${product.id}">
-                            <button type="submit" class="btn btn-secondary">Thêm vào giỏ</button>
+                            <button type="submit" class="btn btn-primary btn-sm btn-block">
+                                <i class="fas fa-cart-plus"></i> Thêm vào giỏ
+                            </button>
                         </form>
                     </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Banner Section -->
+        <section class="banner-section" id="promo-banners">
+            <div class="container">
+                <div class="banner-grid" data-animate="fade-up">
+                    <div class="banner-card banner-primary">
+                        <div class="banner-decoration">
+                            <i class="fas fa-percentage"></i>
+                        </div>
+                        <div class="banner-content">
+                            <span class="banner-tag">
+                                <i class="fas fa-bolt"></i> Ưu đãi đặc biệt
+                            </span>
+                            <h3>Giảm giá lên đến <span>50%</span></h3>
+                            <p>Dành cho các sản phẩm công nghệ</p>
+                            <a th:href="@{/products}" class="btn btn-white" id="promo-tech-btn">
+                                Mua ngay <i class="fas fa-arrow-right"></i>
+                            </a>
+                        </div>
+                    </div>
+                    <div class="banner-card banner-secondary">
+                        <div class="banner-decoration">
+                            <i class="fas fa-truck"></i>
+                        </div>
+                        <div class="banner-content">
+                            <span class="banner-tag">
+                                <i class="fas fa-gift"></i> Miễn phí vận chuyển
+                            </span>
+                            <h3>Đơn hàng từ <span>200K</span></h3>
+                            <p>Áp dụng toàn quốc</p>
+                            <a th:href="@{/products}" class="btn btn-white" id="promo-shipping-btn">
+                                Xem ngay <i class="fas fa-arrow-right"></i>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- New Arrivals Section -->
+        <section class="products-section products-section-alt" th:if="${not #lists.isEmpty(newArrivals)}" id="new-arrivals">
+            <div class="container">
+                <div class="section-header" data-animate="fade-up">
+                    <div class="section-header-left">
+                        <span class="section-tag section-tag-green"><i class="fas fa-sparkles"></i> Mới</span>
+                        <h2 class="section-title">Sản phẩm mới</h2>
+                    </div>
+                    <a th:href="@{/products}" class="section-link" id="view-all-new">
+                        Xem tất cả <i class="fas fa-arrow-right"></i>
+                    </a>
+                </div>
+                <div class="product-grid product-grid-4" data-animate="fade-up" data-animate-delay="100">
+                    <div th:each="product : ${newArrivals}" class="product-card">
+                        <a th:href="@{/products/{id}(id=${product.id})}" class="product-link">
+                            <div class="product-image">
+                                <img th:src="${product.thumbnailUrl ?: '/images/placeholder.jpg'}" th:alt="${product.name}">
+                                <span class="product-badge product-badge-new">
+                                    <i class="fas fa-sparkles"></i> Mới
+                                </span>
+                            </div>
+                            <div class="product-info">
+                                <h3 class="product-name" th:text="${product.name}">Tên sản phẩm</h3>
+                                <p class="product-price" th:text="${@money.format(product.price)}">0đ</p>
+                                <div class="product-meta">
+                                    <span class="product-rating" th:if="${product.rating > 0}">
+                                        <i class="fas fa-star"></i> <span th:text="${#numbers.formatDecimal(product.rating, 1, 1)}">0.0</span>
+                                    </span>
+                                    <span class="product-shop" th:text="${product.shopName}">Shop</span>
+                                </div>
+                            </div>
+                        </a>
+                        <form th:action="@{/cart/add}" method="post" sec:authorize="isAuthenticated()" class="product-action">
+                            <input type="hidden" name="productId" th:value="${product.id}">
+                            <button type="submit" class="btn btn-primary btn-sm btn-block">
+                                <i class="fas fa-cart-plus"></i> Thêm vào giỏ
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- All Products Section -->
+        <section class="products-section" th:if="${not #lists.isEmpty(products)}" id="all-products">
+            <div class="container">
+                <div class="section-header" data-animate="fade-up">
+                    <div class="section-header-left">
+                        <span class="section-tag"><i class="fas fa-th-large"></i> Tất cả</span>
+                        <h2 class="section-title">Tất cả sản phẩm</h2>
+                    </div>
+                    <a th:href="@{/products}" class="section-link" id="view-all-products">
+                        Xem tất cả <i class="fas fa-arrow-right"></i>
+                    </a>
+                </div>
+                <div class="product-grid product-grid-4" data-animate="fade-up" data-animate-delay="100">
+                    <div th:each="product : ${products}" class="product-card">
+                        <a th:href="@{/products/{id}(id=${product.id})}" class="product-link">
+                            <div class="product-image">
+                                <img th:src="${product.thumbnailUrl ?: '/images/placeholder.jpg'}" th:alt="${product.name}">
+                            </div>
+                            <div class="product-info">
+                                <h3 class="product-name" th:text="${product.name}">Tên sản phẩm</h3>
+                                <p class="product-price" th:text="${@money.format(product.price)}">0đ</p>
+                                <div class="product-meta">
+                                    <span class="product-rating" th:if="${product.rating > 0}">
+                                        <i class="fas fa-star"></i> <span th:text="${#numbers.formatDecimal(product.rating, 1, 1)}">0.0</span>
+                                    </span>
+                                    <span class="product-shop" th:text="${product.shopName}">Shop</span>
+                                </div>
+                            </div>
+                        </a>
+                        <form th:action="@{/cart/add}" method="post" sec:authorize="isAuthenticated()" class="product-action">
+                            <input type="hidden" name="productId" th:value="${product.id}">
+                            <button type="submit" class="btn btn-secondary btn-sm btn-block">
+                                <i class="fas fa-cart-plus"></i> Thêm vào giỏ
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Benefits Section -->
+        <section class="benefits-section" id="benefits">
+            <div class="container">
+                <div class="section-header section-header-center" data-animate="fade-up">
+                    <div class="section-header-left">
+                        <span class="section-tag">Tại sao chọn chúng tôi?</span>
+                        <h2 class="section-title">Cam kết của CNJ70 Shop</h2>
+                    </div>
+                </div>
+                <div class="benefits-grid" data-animate="fade-up" data-animate-delay="100">
+                    <div class="benefit-card">
+                        <div class="benefit-icon">
+                            <i class="fas fa-shield-alt"></i>
+                        </div>
+                        <h3>An toàn &amp; Bảo mật</h3>
+                        <p>Thanh toán an toàn, bảo mật thông tin cá nhân tuyệt đối</p>
+                    </div>
+                    <div class="benefit-card">
+                        <div class="benefit-icon benefit-icon-blue">
+                            <i class="fas fa-truck"></i>
+                        </div>
+                        <h3>Giao hàng nhanh</h3>
+                        <p>Giao hàng trong 24h tại các thành phố lớn trên toàn quốc</p>
+                    </div>
+                    <div class="benefit-card">
+                        <div class="benefit-icon benefit-icon-amber">
+                            <i class="fas fa-undo"></i>
+                        </div>
+                        <h3>Đổi trả dễ dàng</h3>
+                        <p>Chính sách đổi trả linh hoạt trong 7 ngày</p>
+                    </div>
+                    <div class="benefit-card">
+                        <div class="benefit-icon benefit-icon-green">
+                            <i class="fas fa-headset"></i>
+                        </div>
+                        <h3>Hỗ trợ 24/7</h3>
+                        <p>Đội ngũ chăm sóc khách hàng luôn sẵn sàng</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- CTA Section -->
+        <section class="cta-section" sec:authorize="!isAuthenticated()" id="cta-section">
+            <div class="container">
+                <div class="cta-content" data-animate="fade-up">
+                    <div class="cta-icon">
+                        <i class="fas fa-rocket"></i>
+                    </div>
+                    <h2>Bạn có shop? Tham gia ngay!</h2>
+                    <p>Trở thành người bán trên CNJ70 Shop và tiếp cận hàng triệu khách hàng tiềm năng trên khắp Việt Nam</p>
+                    <a th:href="@{/auth/register}" class="btn btn-white btn-lg" id="cta-register-btn">
+                        <i class="fas fa-rocket"></i> Đăng ký ngay
+                    </a>
                 </div>
             </div>
         </section>

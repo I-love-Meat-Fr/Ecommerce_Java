@@ -15,6 +15,13 @@ spring:
     suffix: .html
     mode: HTML
     cache: false
+
+  # Multipart upload
+  servlet:
+    multipart:
+      max-file-size: 5MB
+      max-request-size: 10MB
+      enabled: true
   
   # Jackson Configuration
   jackson:

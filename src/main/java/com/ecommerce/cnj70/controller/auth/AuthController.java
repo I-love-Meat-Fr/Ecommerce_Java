@@ -45,10 +45,10 @@ public class AuthController {
                 user.getRole()
             );
             
-            // Set JWT in HTTP-only cookie
+            // Set JWT in cookie (not httpOnly so filter can read it)
             Cookie cookie = new Cookie("jwt", token);
-            cookie.setHttpOnly(true);
-            cookie.setSecure(false); // Set to true in production with HTTPS
+            cookie.setHttpOnly(false);
+            cookie.setSecure(false);
             cookie.setPath("/");
             cookie.setMaxAge((int) (jwtUtils.getJwtExpiration() / 1000));
             response.addCookie(cookie);

@@ -1,5 +1,6 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/springsecurity6">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -32,7 +33,7 @@
                         </div>
                         <div class="order-info">
                             <p>Số sản phẩm: <span th:text="${order.itemCount}">0</span></p>
-                            <p class="order-total">Tổng: <strong th:text="${#numbers.formatCurrency(order.totalAmount)}">0đ</strong></p>
+                            <p class="order-total">Tổng: <strong th:text="${@money.format(order.totalAmount)}">0đ</strong></p>
                         </div>
                         <div class="order-status">
                             <span class="status-badge" th:classappend="${order.status.name()}" 

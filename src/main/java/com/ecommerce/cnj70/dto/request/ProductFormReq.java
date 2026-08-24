@@ -1,5 +1,6 @@
 package com.ecommerce.cnj70.dto.request;
 
+import com.ecommerce.cnj70.enums.ProductStatus;
 import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
@@ -18,20 +19,22 @@ import java.util.List;
 @AllArgsConstructor
 public class ProductFormReq {
     
-    @NotBlank(message = "Product name is required")
+    @NotBlank(message = "Tên sản phẩm không được để trống")
     private String name;
     
     private String description;
     
-    @NotNull(message = "Price is required")
-    @DecimalMin(value = "0.01", message = "Price must be greater than 0")
+    @NotNull(message = "Giá sản phẩm không được để trống")
+    @DecimalMin(value = "0.01", message = "Giá sản phẩm phải lớn hơn 0")
     private BigDecimal price;
     
-    @NotNull(message = "Stock is required")
-    @Min(value = 0, message = "Stock cannot be negative")
-    private int stock;
+    @NotNull(message = "Số lượng tồn kho không được để trống")
+    @Min(value = 0, message = "Số lượng tồn kho không được âm")
+    private Integer stock;
     
     private String categoryId;
-    
+
     private List<String> imageUrls;
+
+    private ProductStatus status;
 }

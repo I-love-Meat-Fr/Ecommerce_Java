@@ -1,19 +1,34 @@
-<aside class="sidebar">
+<aside class="sidebar sidebar-dark" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/springsecurity6">
     <div class="sidebar-header">
-        <h2>CNJ70 Dashboard</h2>
+        <h2>CNJ70 Shop</h2>
     </div>
     <nav class="sidebar-nav">
         <a th:href="@{/vendor/dashboard}" class="nav-item">
-            <i class="fas fa-chart-line"></i> Dashboard
+            <i class="fas fa-chart-line"></i>
+            <span>Dashboard</span>
         </a>
         <a th:href="@{/vendor/shop}" class="nav-item">
-            <i class="fas fa-store"></i> Cửa hàng
+            <i class="fas fa-store"></i>
+            <span>Cửa hàng</span>
         </a>
         <a th:href="@{/vendor/products}" class="nav-item">
-            <i class="fas fa-box"></i> Sản phẩm
+            <i class="fas fa-box"></i>
+            <span>Sản phẩm</span>
         </a>
         <a th:href="@{/vendor/orders}" class="nav-item">
-            <i class="fas fa-shopping-bag"></i> Đơn hàng
+            <i class="fas fa-shopping-bag"></i>
+            <span>Đơn hàng</span>
         </a>
+        <div class="nav-divider"></div>
+        <a th:href="@{/home}" class="nav-item">
+            <i class="fas fa-external-link-alt"></i>
+            <span>Xem website</span>
+        </a>
+        <form th:action="@{/auth/logout}" method="post">
+            <button type="submit" class="nav-item nav-item-btn">
+                <i class="fas fa-sign-out-alt"></i>
+                <span>Đăng xuất</span>
+            </button>
+        </form>
     </nav>
 </aside>

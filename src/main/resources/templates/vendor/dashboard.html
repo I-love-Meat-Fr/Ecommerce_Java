@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org"
-      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+      xmlns:sec="http://www.thymeleaf.org/extras/springsecurity6">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -10,30 +10,250 @@
 </head>
 <body>
     <div class="dashboard-container">
-        <div th:replace="fragments/dashboard-sidebar"></div>
+        <div class="sidebar sidebar-dark">
+            <div class="sidebar-header">
+                <h2>CNJ70 Vendor</h2>
+            </div>
+            <nav class="sidebar-nav">
+                <a th:href="@{/vendor/dashboard}" class="nav-item active">
+                    <i class="fas fa-chart-line"></i>
+                    <span>Dashboard</span>
+                </a>
+                <a th:href="@{/vendor/shop}" class="nav-item">
+                    <i class="fas fa-store"></i>
+                    <span>Cửa hàng</span>
+                </a>
+                <a th:href="@{/vendor/products}" class="nav-item">
+                    <i class="fas fa-box"></i>
+                    <span>Sản phẩm</span>
+                </a>
+                <a th:href="@{/vendor/orders}" class="nav-item">
+                    <i class="fas fa-shopping-bag"></i>
+                    <span>Đơn hàng</span>
+                </a>
+                <div class="nav-divider"></div>
+                <a th:href="@{/home}" class="nav-item">
+                    <i class="fas fa-external-link-alt"></i>
+                    <span>Xem shop</span>
+                </a>
+                <form th:action="@{/auth/logout}" method="post">
+                    <button type="submit" class="nav-item nav-item-btn">
+                        <i class="fas fa-sign-out-alt"></i>
+                        <span>Đăng xuất</span>
+                    </button>
+                </form>
+            </nav>
+        </div>
+        
         <div class="main-content">
-            <div th:replace="fragments/dashboard-topbar"></div>
+            <div class="topbar">
+                <div class="topbar-left">
+                    <button class="sidebar-toggle" type="button" aria-label="Mở menu">
+                        <i class="fas fa-bars"></i>
+                    </button>
+                    <div class="breadcrumb">
+                        <span>Vendor</span>
+                        <i class="fas fa-chevron-right"></i>
+                        <strong>Dashboard</strong>
+                    </div>
+                </div>
+                <div class="topbar-right">
+                    <span class="user-greeting" sec:authentication="name">Vendor</span>
+                    <div class="user-avatar">
+                        <i class="fas fa-store"></i>
+                    </div>
+                </div>
+            </div>
+            
             <main class="dashboard-content">
-                <h1>Dashboard</h1>
-                <div class="stats-grid">
-                    <div class="stat-card">
-                        <i class="fas fa-box"></i>
-                        <h3>Sản phẩm</h3>
-                        <p class="stat-value">0</p>
+                <!-- No Shop Warning -->
+                <div class="alert alert-warning" th:if="${stats.shopSummary == null}">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    <div>
+                        <strong>Bạn chưa có cửa hàng.</strong>
+                        <p>Tạo cửa hàng ngay để bắt đầu kinh doanh.</p>
                     </div>
-                    <div class="stat-card">
-                        <i class="fas fa-shopping-bag"></i>
-                        <h3>Đơn hàng</h3>
-                        <p class="stat-value">0</p>
+                    <a th:href="@{/vendor/shop/create}" class="btn btn-warning btn-sm">Tạo cửa hàng</a>
+                </div>
+
+                <!-- Shop Info Bar -->
+                <div class="shop-info-bar" th:if="${stats.shopSummary != null}">
+                    <div class="shop-avatar">
+                        <img th:if="${stats.shopSummary.logoUrl != null}" th:src="${stats.shopSummary.logoUrl}" alt="Logo">
+                        <i th:if="${stats.shopSummary.logoUrl == null}" class="fas fa-store"></i>
                     </div>
-                    <div class="stat-card">
-                        <i class="fas fa-dollar-sign"></i>
-                        <h3>Doanh thu</h3>
-                        <p class="stat-value">0đ</p>
+                    <div class="shop-details">
+                        <h2 th:text="${stats.shopSummary.shopName}">Tên cửa hàng</h2>
+                        <div class="shop-badges">
+                            <span class="badge" th:classappend="${stats.shopSummary.active ? 'badge-success' : 'badge-warning'}" th:text="${stats.shopSummary.active ? 'Hoạt động' : 'Tạm ngưng'}">Trạng thái</span>
+                            <span class="badge badge-verify" th:if="${stats.shopSummary.verified}">
+                                <i class="fas fa-check-circle"></i> Đã xác thực
+                            </span>
+                        </div>
+                    </div>
+                    <a th:href="@{/vendor/shop}" class="btn btn-secondary btn-sm">
+                        <i class="fas fa-cog"></i> Cài đặt
+                    </a>
+                </div>
+
+                <!-- Stats Cards -->
+                <div class="stats-grid stats-grid-4" th:if="${stats.shopSummary != null}">
+                    <div class="stat-card stat-card-icon">
+                        <div class="stat-card-bg">
+                            <i class="fas fa-box"></i>
+                        </div>
+                        <div class="stat-card-content">
+                            <div class="stat-label">Tổng sản phẩm</div>
+                            <div class="stat-number" th:text="${stats.totalProducts}">0</div>
+                            <div class="stat-sub stat-warning" th:if="${stats.outOfStockProducts > 0}">
+                                <i class="fas fa-exclamation-triangle"></i> <span th:text="${stats.outOfStockProducts}">0</span> hết hàng
+                            </div>
+                            <div class="stat-sub" th:if="${stats.outOfStockProducts == 0}">
+                                Tất cả có hàng
+                            </div>
+                        </div>
+                    </div>
+                    <div class="stat-card stat-card-icon stat-amber">
+                        <div class="stat-card-bg">
+                            <i class="fas fa-clock"></i>
+                        </div>
+                        <div class="stat-card-content">
+                            <div class="stat-label">Chờ xử lý</div>
+                            <div class="stat-number" th:text="${stats.pendingOrders}">0</div>
+                            <div class="stat-sub">Cần xử lý sớm</div>
+                        </div>
+                    </div>
+                    <div class="stat-card stat-card-icon stat-blue">
+                        <div class="stat-card-bg">
+                            <i class="fas fa-truck"></i>
+                        </div>
+                        <div class="stat-card-content">
+                            <div class="stat-label">Đang giao</div>
+                            <div class="stat-number" th:text="${stats.processingOrders}">0</div>
+                            <div class="stat-sub">Đơn đang vận chuyển</div>
+                        </div>
+                    </div>
+                    <div class="stat-card stat-card-icon stat-green">
+                        <div class="stat-card-bg">
+                            <i class="fas fa-check-circle"></i>
+                        </div>
+                        <div class="stat-card-content">
+                            <div class="stat-label">Đã giao</div>
+                            <div class="stat-number" th:text="${stats.completedOrders}">0</div>
+                            <div class="stat-sub">Hoàn thành</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Revenue Cards -->
+                <div class="stats-grid stats-grid-2" th:if="${stats.shopSummary != null}">
+                    <div class="stat-card stat-card-revenue">
+                        <div class="stat-card-bg-left">
+                            <i class="fas fa-dollar-sign"></i>
+                        </div>
+                        <div class="stat-card-content">
+                            <div class="stat-label">Doanh thu tổng</div>
+                            <div class="stat-number stat-number-lg" th:text="${@money.format(stats.totalRevenue)}">0đ</div>
+                            <div class="stat-sub">Từ tất cả đơn đã giao</div>
+                        </div>
+                    </div>
+                    <div class="stat-card stat-card-revenue stat-red">
+                        <div class="stat-card-bg-left">
+                            <i class="fas fa-calendar-alt"></i>
+                        </div>
+                        <div class="stat-card-content">
+                            <div class="stat-label">Doanh thu tháng</div>
+                            <div class="stat-number stat-number-lg" th:text="${@money.format(stats.monthlyRevenue)}">0đ</div>
+                            <div class="stat-sub">Tháng này</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Quick Actions -->
+                <div class="quick-actions" th:if="${stats.shopSummary != null}">
+                    <h2>Thao tác nhanh</h2>
+                    <div class="action-buttons">
+                        <a th:href="@{/vendor/products/create}" class="action-btn">
+                            <i class="fas fa-plus-circle"></i>
+                            <span>Thêm sản phẩm</span>
+                        </a>
+                        <a th:href="@{/vendor/products}" class="action-btn">
+                            <i class="fas fa-boxes"></i>
+                            <span>Quản lý sản phẩm</span>
+                        </a>
+                        <a th:href="@{/vendor/orders}" class="action-btn">
+                            <i class="fas fa-clipboard-list"></i>
+                            <span>Xem đơn hàng</span>
+                        </a>
+                        <a th:href="@{/vendor/shop}" class="action-btn">
+                            <i class="fas fa-store"></i>
+                            <span>Cài đặt shop</span>
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Recent Orders Table -->
+                <div class="dashboard-section" th:if="${stats.shopSummary != null}">
+                    <div class="card-header">
+                        <h2><i class="fas fa-list"></i> Tóm tắt đơn hàng</h2>
+                        <a th:href="@{/vendor/orders}" class="section-link">Xem tất cả <i class="fas fa-arrow-right"></i></a>
+                    </div>
+                    <div class="orders-summary-grid">
+                        <div class="order-summary-item">
+                            <div class="summary-icon summary-pending">
+                                <i class="fas fa-hourglass-half"></i>
+                            </div>
+                            <div class="summary-info">
+                                <span class="summary-count" th:text="${stats.pendingOrders}">0</span>
+                                <span class="summary-label">Chờ xử lý</span>
+                            </div>
+                        </div>
+                        <div class="order-summary-item">
+                            <div class="summary-icon summary-processing">
+                                <i class="fas fa-box-open"></i>
+                            </div>
+                            <div class="summary-info">
+                                <span class="summary-count" th:text="${stats.processingOrders}">0</span>
+                                <span class="summary-label">Đang xử lý</span>
+                            </div>
+                        </div>
+                        <div class="order-summary-item">
+                            <div class="summary-icon summary-delivered">
+                                <i class="fas fa-truck"></i>
+                            </div>
+                            <div class="summary-info">
+                                <span class="summary-count" th:text="${stats.completedOrders}">0</span>
+                                <span class="summary-label">Đã giao</span>
+                            </div>
+                        </div>
+                        <div class="order-summary-item">
+                            <div class="summary-icon summary-cancelled">
+                                <i class="fas fa-times-circle"></i>
+                            </div>
+                            <div class="summary-info">
+                                <span class="summary-count" th:text="${stats.cancelledOrders}">0</span>
+                                <span class="summary-label">Đã hủy</span>
+                            </div>
+                        </div>
+                        <div class="order-summary-item">
+                            <div class="summary-icon summary-orders">
+                                <i class="fas fa-shopping-bag"></i>
+                            </div>
+                            <div class="summary-info">
+                                <span class="summary-count" th:text="${stats.totalOrders}">0</span>
+                                <span class="summary-label">Tổng đơn</span>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </main>
         </div>
     </div>
+
+    <script>
+        document.querySelector('.sidebar-toggle').addEventListener('click', function() {
+            document.querySelector('.dashboard-container').classList.toggle('sidebar-collapsed');
+        });
+    </script>
 </body>
 </html>

@@ -72,6 +72,7 @@ public class Order {
     @NoArgsConstructor
     @AllArgsConstructor
     public static class OrderItem {
+        private String shopId;
         private String productId;
         private String productName;
         private String imageUrl;

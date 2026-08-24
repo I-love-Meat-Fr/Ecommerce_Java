@@ -1,0 +1,38 @@
+# Build
+target/
+*.class
+*.jar
+*.war
+
+# Logs
+*.log
+logs/
+
+# IDE
+.idea/
+*.iml
+.vscode/
+.project
+.classpath
+.settings/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Environment & secrets
+.env
+.env.local
+
+# Uploaded files (runtime data)
+src/main/resources/static/uploads/
+
+# Maven
+.mvn/
+mvnw
+mvnw.cmd
+
+# Temp
+*.tmp
+*.bak
+*.swp
