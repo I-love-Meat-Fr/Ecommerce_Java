@@ -26,5 +26,9 @@ public interface ProductService {
     
     List<Product> getActiveProducts();
     
+    List<Product> getNewArrivals(int limit);
+    
+    List<Product> getFeaturedProducts(int limit);
+    
     void updateProductStatus(String id, ProductStatus status);
 }

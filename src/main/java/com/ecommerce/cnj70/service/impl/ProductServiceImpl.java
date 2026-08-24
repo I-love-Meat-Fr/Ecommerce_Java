@@ -135,6 +135,20 @@ public class ProductServiceImpl implements ProductService {
     }
     
     @Override
+    public List<Product> getNewArrivals(int limit) {
+        return productRepository.findTop10ByStatusOrderByCreatedAtDesc(ProductStatus.ACTIVE)
+                .stream().limit(limit).toList();
+    }
+    
+    @Override
+    public List<Product> getFeaturedProducts(int limit) {
+        return productRepository.findByStatus(ProductStatus.ACTIVE).stream()
+                .sorted((p1, p2) -> Double.compare(p2.getRating(), p1.getRating()))
+                .limit(limit)
+                .toList();
+    }
+    
+    @Override
     public void updateProductStatus(String id, ProductStatus status) {
         Product product = getProductById(id);
         product.setStatus(status);
