@@ -1,24 +1,66 @@
-<footer class="footer">
+<footer class="footer" xmlns:th="http://www.thymeleaf.org">
+    <div class="footer-wave">
+        <svg viewBox="0 0 1440 100" preserveAspectRatio="none">
+            <path d="M0,40 C360,100 1080,0 1440,60 L1440,100 L0,100 Z" fill="currentColor"/>
+        </svg>
+    </div>
     <div class="container">
         <div class="footer-content">
+            <div class="footer-section footer-brand">
+                <div class="footer-logo">
+                    <a th:href="@{/home}" id="footer-logo-link">
+                        <span class="logo-icon"><i class="fas fa-shopping-bag"></i></span>
+                        CNJ70 Shop
+                    </a>
+                </div>
+                <p>Nền tảng thương mại điện tử đa nhà bán hàng hàng đầu Việt Nam. Kết nối người mua và người bán trên toàn quốc.</p>
+                <div class="footer-social">
+                    <a href="#" aria-label="Facebook" id="social-facebook"><i class="fab fa-facebook-f"></i></a>
+                    <a href="#" aria-label="Instagram" id="social-instagram"><i class="fab fa-instagram"></i></a>
+                    <a href="#" aria-label="Youtube" id="social-youtube"><i class="fab fa-youtube"></i></a>
+                    <a href="#" aria-label="Twitter" id="social-twitter"><i class="fab fa-twitter"></i></a>
+                    <a href="#" aria-label="TikTok" id="social-tiktok"><i class="fab fa-tiktok"></i></a>
+                </div>
+            </div>
             <div class="footer-section">
-                <h3>CNJ70 Ecommerce</h3>
-                <p>Đề tài mở: Xây dựng ứng dụng web quản lý sàn thương mại điện tử đa nhà bán</p>
+                <h4>Về chúng tôi</h4>
+                <a href="#">Giới thiệu</a>
+                <a href="#">Tuyển dụng</a>
+                <a href="#">Tin tức</a>
+                <a href="#">Liên hệ</a>
+            </div>
+            <div class="footer-section">
+                <h4>Hỗ trợ khách hàng</h4>
+                <a href="#">Trung tâm trợ giúp</a>
+                <a href="#">Chính sách đổi trả</a>
+                <a href="#">Chính sách vận chuyển</a>
+                <a href="#">Phương thức thanh toán</a>
             </div>
             <div class="footer-section">
                 <h4>Liên kết</h4>
-                <a href="#">Về chúng tôi</a>
-                <a href="#">Chính sách</a>
-                <a href="#">Điều khoản</a>
+                <a href="#">Điều khoản sử dụng</a>
+                <a href="#">Chính sách bảo mật</a>
+                <a href="#">Chính sách giải quyết khiếu nại</a>
+                <a href="#">Sơ đồ website</a>
             </div>
             <div class="footer-section">
-                <h4>Hỗ trợ</h4>
-                <p>Email: support@cnj70.com</p>
-                <p>Hotline: 1900-xxxx</p>
+                <h4>Liên hệ</h4>
+                <p><i class="fas fa-map-marker-alt"></i> 123 Đường ABC, Quận 1, TP.HCM</p>
+                <p><i class="fas fa-phone"></i> Hotline: 1900-1234</p>
+                <p><i class="fas fa-envelope"></i> Email: support@cnj70.com</p>
+                <p><i class="fas fa-clock"></i> Thứ 2 - Thứ 6: 8h00 - 17h00</p>
             </div>
         </div>
         <div class="footer-bottom">
-            <p>&copy; 2026 CNJ70 Ecommerce. All rights reserved.</p>
+            <div class="footer-bottom-content">
+                <p>&copy; 2026 CNJ70 Shop. Tất cả quyền được bảo lưu.</p>
+                <div class="payment-methods">
+                    <i class="fab fa-cc-visa" title="Visa"></i>
+                    <i class="fab fa-cc-mastercard" title="Mastercard"></i>
+                    <i class="fas fa-money-bill-wave" title="Tiền mặt"></i>
+                    <i class="fas fa-wallet" title="Ví điện tử"></i>
+                </div>
+            </div>
         </div>
     </div>
 </footer>
