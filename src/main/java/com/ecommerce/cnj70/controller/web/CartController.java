@@ -4,12 +4,18 @@ import com.ecommerce.cnj70.document.Cart;
 import com.ecommerce.cnj70.security.CustomUserDetails;
 import com.ecommerce.cnj70.service.CartService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
+
+import java.math.BigDecimal;
+import java.util.HashMap;
+import java.util.Map;
 
 @Controller
 @RequiredArgsConstructor
@@ -25,7 +31,40 @@ public class CartController {
         
         Cart cart = cartService.getCartByUserId(user.getId());
         model.addAttribute("cart", cart);
+        
+        BigDecimal cartTotal = cart.getItems().stream()
+                .map(Cart.CartItem::getSubtotal)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+        model.addAttribute("cartTotal", cartTotal);
+        
         return "web/cart";
+    }
+    
+    @PostMapping("/api/cart/add")
+    @ResponseBody
+    public ResponseEntity<Map<String, Object>> addToCartApi(@AuthenticationPrincipal CustomUserDetails user,
+                                                           @RequestParam String productId,
+                                                           @RequestParam(defaultValue = "1") int quantity) {
+        Map<String, Object> response = new HashMap<>();
+        
+        if (user == null) {
+            response.put("success", false);
+            response.put("message", "Vui lòng đăng nhập");
+            return ResponseEntity.status(401).body(response);
+        }
+        
+        try {
+            Cart cart = cartService.addToCart(user.getId(), productId, quantity);
+            int itemCount = cart.getItems().size();
+            response.put("success", true);
+            response.put("message", "Đã thêm sản phẩm vào giỏ hàng");
+            response.put("itemCount", itemCount);
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            response.put("success", false);
+            response.put("message", e.getMessage());
+            return ResponseEntity.badRequest().body(response);
+        }
     }
     
     @PostMapping("/cart/add")

@@ -158,7 +158,7 @@
                                 </div>
                             </div>
                         </a>
-                        <form th:action="@{/cart/add}" method="post" sec:authorize="isAuthenticated()" class="product-action">
+                        <form th:action="@{/api/cart/add}" method="post" sec:authorize="isAuthenticated()" class="product-action add-to-cart-form">
                             <input type="hidden" name="productId" th:value="${product.id}">
                             <button type="submit" class="btn btn-primary btn-sm btn-block">
                                 <i class="fas fa-cart-plus"></i> Thêm vào giỏ
@@ -239,7 +239,7 @@
                                 </div>
                             </div>
                         </a>
-                        <form th:action="@{/cart/add}" method="post" sec:authorize="isAuthenticated()" class="product-action">
+                        <form th:action="@{/api/cart/add}" method="post" sec:authorize="isAuthenticated()" class="product-action add-to-cart-form">
                             <input type="hidden" name="productId" th:value="${product.id}">
                             <button type="submit" class="btn btn-primary btn-sm btn-block">
                                 <i class="fas fa-cart-plus"></i> Thêm vào giỏ
@@ -279,7 +279,7 @@
                                 </div>
                             </div>
                         </a>
-                        <form th:action="@{/cart/add}" method="post" sec:authorize="isAuthenticated()" class="product-action">
+                        <form th:action="@{/api/cart/add}" method="post" sec:authorize="isAuthenticated()" class="product-action add-to-cart-form">
                             <input type="hidden" name="productId" th:value="${product.id}">
                             <button type="submit" class="btn btn-secondary btn-sm btn-block">
                                 <i class="fas fa-cart-plus"></i> Thêm vào giỏ

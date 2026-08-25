@@ -54,6 +54,10 @@
                 </table>
                 
                 <div class="cart-summary">
+                    <div class="cart-total">
+                        <span>Tổng cộng:</span>
+                        <span class="total-amount" th:text="${@money.format(cartTotal)}">0đ</span>
+                    </div>
                     <a th:href="@{/checkout}" class="btn btn-primary">Tiến hành thanh toán</a>
                 </div>
             </div>
