@@ -4,47 +4,262 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Lịch sử đơn hàng - CNJ70 Ecommerce</title>
+    <meta name="description" content="Lịch sử đơn hàng - Theo dõi trạng thái đơn hàng của bạn trên CNJ70 Shop">
+    <title>Lịch sử đơn hàng - CNJ70 Shop</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Work+Sans:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" th:href="@{/css/style.css}">
+    <link rel="stylesheet" th:href="@{/css/home.css}">
+    <link rel="stylesheet" th:href="@{/css/order-history.css}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
-<body>
+<body class="oh-page">
     <div th:replace="fragments/web-header"></div>
-    
+
     <main class="main-content">
-        <div class="container">
-            <h1>Lịch sử đơn hàng</h1>
-            
-            <div th:if="${#lists.isEmpty(orders)}" class="empty-state">
-                <i class="fas fa-receipt"></i>
-                <p>Bạn chưa có đơn hàng nào</p>
-                <a th:href="@{/products}" class="btn btn-primary">Mua sắm ngay</a>
+        <!-- Page Hero Banner -->
+        <section class="oh-hero">
+            <div class="oh-hero-bg">
+                <div class="oh-hero-shape oh-hero-shape-1"></div>
+                <div class="oh-hero-shape oh-hero-shape-2"></div>
             </div>
-            
-            <div th:if="${not #lists.isEmpty(orders)}" class="order-list">
-                <div th:each="order : ${orders}" class="order-card">
-                    <div class="order-header">
-                        <span class="order-id">Đơn hàng #<span th:text="${order.orderId}"></span></span>
-                        <span class="order-date" th:text="${#temporals.format(order.orderDate, 'dd/MM/yyyy HH:mm')}"></span>
+            <div class="container">
+                <div class="oh-hero-inner">
+                    <div class="oh-hero-text">
+                        <div class="oh-breadcrumb">
+                            <a th:href="@{/home}" id="breadcrumb-home"><i class="fas fa-home"></i> Trang chủ</a>
+                            <i class="fas fa-chevron-right"></i>
+                            <span>Đơn hàng</span>
+                        </div>
+                        <h1>Lịch sử đơn hàng</h1>
+                        <p>Theo dõi và quản lý tất cả đơn hàng của bạn tại đây</p>
                     </div>
-                    <div class="order-details">
-                        <div class="order-images">
-                            <img th:each="img : ${order.productImages}" th:src="${img}" alt="">
+                    <div class="oh-hero-stats" th:if="${not #lists.isEmpty(orders)}">
+                        <div class="oh-hero-stat">
+                            <div class="oh-hero-stat-number" th:text="${orders.size()}">0</div>
+                            <div class="oh-hero-stat-label">Tổng đơn</div>
                         </div>
-                        <div class="order-info">
-                            <p>Số sản phẩm: <span th:text="${order.itemCount}">0</span></p>
-                            <p class="order-total">Tổng: <strong th:text="${@money.format(order.totalAmount)}">0đ</strong></p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <div class="container">
+            <!-- Filter Bar -->
+            <div class="oh-filter-bar" th:if="${not #lists.isEmpty(orders)}">
+                <div class="oh-filter-tabs">
+                    <button class="oh-filter-tab active" data-filter="all">
+                        <i class="fas fa-list-ul"></i> Tất cả
+                    </button>
+                    <button class="oh-filter-tab" data-filter="PENDING">
+                        <i class="fas fa-clock"></i> Chờ xử lý
+                    </button>
+                    <button class="oh-filter-tab" data-filter="PREPARING">
+                        <i class="fas fa-box"></i> Đang chuẩn bị
+                    </button>
+                    <button class="oh-filter-tab" data-filter="SHIPPING">
+                        <i class="fas fa-truck"></i> Đang giao
+                    </button>
+                    <button class="oh-filter-tab" data-filter="DELIVERED">
+                        <i class="fas fa-check-circle"></i> Đã giao
+                    </button>
+                    <button class="oh-filter-tab" data-filter="CANCELLED">
+                        <i class="fas fa-times-circle"></i> Đã hủy
+                    </button>
+                </div>
+            </div>
+
+            <!-- Empty State -->
+            <div th:if="${#lists.isEmpty(orders)}" class="oh-empty">
+                <div class="oh-empty-inner">
+                    <div class="oh-empty-icon">
+                        <i class="fas fa-receipt"></i>
+                    </div>
+                    <h3>Chưa có đơn hàng nào</h3>
+                    <p>Bắt đầu khám phá và mua sắm những sản phẩm tuyệt vời ngay nhé!</p>
+                    <a th:href="@{/products}" class="oh-empty-btn" id="shop-now-btn">
+                        <i class="fas fa-shopping-bag"></i> Mua sắm ngay
+                    </a>
+                </div>
+            </div>
+
+            <!-- Order Cards -->
+            <div th:if="${not #lists.isEmpty(orders)}" class="oh-orders" id="orders-container">
+                <div th:each="order, iter : ${orders}" class="oh-card" th:attr="data-status=${order.status.name()}">
+                    <!-- Card Header -->
+                    <div class="oh-card-header">
+                        <div class="oh-card-header-left">
+                            <div class="oh-card-shop" th:if="${order.shopName != null}">
+                                <i class="fas fa-store"></i>
+                                <span th:text="${order.shopName}">Shop Name</span>
+                            </div>
+                            <div class="oh-card-id">
+                                Đơn hàng <span class="oh-card-id-code" th:text="'#' + ${order.orderId}">ID</span>
+                            </div>
                         </div>
-                        <div class="order-status">
-                            <span class="status-badge" th:classappend="${order.status.name()}" 
-                                  th:text="${order.status.name()}">PENDING</span>
+                        <div class="oh-card-header-right">
+                            <span class="oh-status"
+                                  th:classappend="${order.status.name()}"
+                                  th:attr="data-status=${order.status.name()}">
+                                <i class="fas"
+                                   th:classappend="${
+                                       order.status.name() == 'PENDING' ? 'fa-clock' :
+                                       order.status.name() == 'PREPARING' ? 'fa-box' :
+                                       order.status.name() == 'SHIPPING' ? 'fa-truck' :
+                                       order.status.name() == 'DELIVERED' ? 'fa-check-circle' :
+                                       'fa-times-circle'
+                                   }"></i>
+                                <span th:text="${
+                                    order.status.name() == 'PENDING' ? 'Chờ xử lý' :
+                                    order.status.name() == 'PREPARING' ? 'Đang chuẩn bị' :
+                                    order.status.name() == 'SHIPPING' ? 'Đang giao hàng' :
+                                    order.status.name() == 'DELIVERED' ? 'Đã giao hàng' :
+                                    'Đã hủy'
+                                }">Status</span>
+                            </span>
                         </div>
+                    </div>
+
+                    <!-- Card Body -->
+                    <div class="oh-card-body">
+                        <!-- Product Thumbnails -->
+                        <div class="oh-card-products">
+                            <div class="oh-card-thumbs">
+                                <div th:each="img, imgIter : ${order.productImages}"
+                                     th:if="${imgIter.index < 4}"
+                                     class="oh-card-thumb">
+                                    <img th:src="${img}" alt="" loading="lazy"
+                                         onerror="this.src='https://placehold.co/80x80/f1f5f9/94a3b8?text=No+Img'">
+                                </div>
+                                <div class="oh-card-thumb oh-card-thumb-more"
+                                     th:if="${order.productImages.size() > 4}">
+                                    <span th:text="'+' + ${order.productImages.size() - 4}">+N</span>
+                                </div>
+                            </div>
+                            <div class="oh-card-product-info">
+                                <span class="oh-card-item-count">
+                                    <i class="fas fa-cube"></i>
+                                    <span th:text="${order.itemCount}">0</span> sản phẩm
+                                </span>
+                            </div>
+                        </div>
+
+                        <!-- Order Meta -->
+                        <div class="oh-card-meta">
+                            <div class="oh-card-date">
+                                <i class="far fa-calendar-alt"></i>
+                                <span th:text="${#temporals.format(order.orderDate, 'dd/MM/yyyy')}">Date</span>
+                                <span class="oh-card-time" th:text="${#temporals.format(order.orderDate, 'HH:mm')}">Time</span>
+                            </div>
+                        </div>
+
+                        <!-- Total -->
+                        <div class="oh-card-total">
+                            <div class="oh-card-total-label">Tổng tiền</div>
+                            <div class="oh-card-total-value" th:text="${@money.format(order.totalAmount)}">0đ</div>
+                        </div>
+                    </div>
+
+                    <!-- Progress Tracker -->
+                    <div class="oh-card-progress" th:if="${order.status.name() != 'CANCELLED'}">
+                        <div class="oh-progress-step done">
+                            <div class="oh-progress-dot"><i class="fas fa-check"></i></div>
+                            <span>Đặt hàng</span>
+                        </div>
+                        <div class="oh-progress-line"
+                             th:classappend="${order.status.name() != 'PENDING' ? 'done' : ''}"></div>
+                        <div class="oh-progress-step"
+                             th:classappend="${order.status.name() != 'PENDING' ? 'done' : ''}">
+                            <div class="oh-progress-dot"><i class="fas fa-box"></i></div>
+                            <span>Chuẩn bị</span>
+                        </div>
+                        <div class="oh-progress-line"
+                             th:classappend="${order.status.name() == 'SHIPPING' || order.status.name() == 'DELIVERED' ? 'done' : ''}"></div>
+                        <div class="oh-progress-step"
+                             th:classappend="${order.status.name() == 'SHIPPING' || order.status.name() == 'DELIVERED' ? 'done' : ''}">
+                            <div class="oh-progress-dot"><i class="fas fa-truck"></i></div>
+                            <span>Giao hàng</span>
+                        </div>
+                        <div class="oh-progress-line"
+                             th:classappend="${order.status.name() == 'DELIVERED' ? 'done' : ''}"></div>
+                        <div class="oh-progress-step"
+                             th:classappend="${order.status.name() == 'DELIVERED' ? 'done' : ''}">
+                            <div class="oh-progress-dot"><i class="fas fa-check-double"></i></div>
+                            <span>Hoàn tất</span>
+                        </div>
+                    </div>
+
+                    <!-- Cancelled Notice -->
+                    <div class="oh-card-cancelled" th:if="${order.status.name() == 'CANCELLED'}">
+                        <i class="fas fa-info-circle"></i>
+                        <span>Đơn hàng đã bị hủy</span>
+                    </div>
+                </div>
+
+                <!-- Filter Empty State -->
+                <div class="oh-filter-empty" id="filter-empty" style="display:none;">
+                    <div class="oh-filter-empty-inner">
+                        <div class="oh-filter-empty-icon">
+                            <i class="fas fa-inbox"></i>
+                        </div>
+                        <h3 id="filter-empty-title">Không có đơn hàng nào</h3>
+                        <p id="filter-empty-desc">Chưa có đơn hàng nào ở trạng thái này</p>
                     </div>
                 </div>
             </div>
         </div>
     </main>
-    
+
     <div th:replace="fragments/web-footer"></div>
+
+    <script th:src="@{/js/main.js}"></script>
+    <script th:src="@{/js/home.js}" defer></script>
+    <script>
+        // Filter tabs with empty state
+        const filterLabels = {
+            'PENDING': 'chờ xử lý',
+            'PREPARING': 'đang chuẩn bị',
+            'SHIPPING': 'đang giao',
+            'DELIVERED': 'đã giao',
+            'CANCELLED': 'đã hủy'
+        };
+
+        document.querySelectorAll('.oh-filter-tab').forEach(tab => {
+            tab.addEventListener('click', () => {
+                document.querySelectorAll('.oh-filter-tab').forEach(t => t.classList.remove('active'));
+                tab.classList.add('active');
+
+                const filter = tab.dataset.filter;
+                let visibleCount = 0;
+
+                document.querySelectorAll('.oh-card').forEach(card => {
+                    if (filter === 'all' || card.dataset.status === filter) {
+                        card.style.display = '';
+                        card.style.animation = 'ohFadeIn 0.3s ease forwards';
+                        visibleCount++;
+                    } else {
+                        card.style.display = 'none';
+                    }
+                });
+
+                // Show/hide filter empty state
+                const emptyEl = document.getElementById('filter-empty');
+                if (emptyEl) {
+                    if (visibleCount === 0) {
+                        const label = filterLabels[filter] || '';
+                        document.getElementById('filter-empty-title').textContent = 'Không có đơn hàng nào';
+                        document.getElementById('filter-empty-desc').textContent = label
+                            ? 'Chưa có đơn hàng nào ở trạng thái ' + label
+                            : 'Không tìm thấy đơn hàng phù hợp';
+                        emptyEl.style.display = '';
+                        emptyEl.style.animation = 'ohFadeIn 0.3s ease forwards';
+                    } else {
+                        emptyEl.style.display = 'none';
+                    }
+                }
+            });
+        });
+    </script>
 </body>
 </html>

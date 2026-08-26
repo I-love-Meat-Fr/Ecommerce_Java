@@ -84,8 +84,8 @@ img {
 }
 
 .container {
-    width: min(100% - 48px, 1280px);
-    margin: 0 auto;
+    width: min(100% - 48px, 1280px) !important;
+    margin: 0 auto !important;
 }
 
 .main-content {

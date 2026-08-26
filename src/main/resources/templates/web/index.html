@@ -9,10 +9,24 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Work+Sans:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
-    <script>
-        tailwind.config = { theme: { extend: { fontFamily: { sans: ['Work Sans', 'Inter', 'system-ui', 'sans-serif'] } } } }
-    </script>
+
     <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            blockContainer: true,
+            corePlugins: {
+                preflight: false,
+                container: false
+            },
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Work Sans', 'Inter', 'system-ui', 'sans-serif']
+                    }
+                }
+            }
+        }
+    </script>
     <link rel="stylesheet" th:href="@{/css/style.css}">
     <link rel="stylesheet" th:href="@{/css/home.css}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -162,8 +176,9 @@
                     <a th:href="@{/products}" class="sl-link">Xem tất cả <i class="fas fa-arrow-right"></i></a>
                 </div>
                 <div class="cat-grid">
-                    <a th:each="cat : ${categories}" th:href="@{/products(category=${cat.id})}" class="cat-card">
-                        <div class="cat-icon"><i class="fas fa-folder"></i></div>
+                    <a th:each="cat, iter : ${categories}" th:href="@{/products(category=${cat.id})}" class="cat-card" th:if="${iter.index < 16}">
+                        <div class="cat-icon"><i class="fas fa-folder"></i>
+                        </div>
                         <div class="cat-name" th:text="${cat.name}">Danh mục</div>
                     </a>
                 </div>

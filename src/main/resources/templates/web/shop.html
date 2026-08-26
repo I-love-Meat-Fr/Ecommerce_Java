@@ -1,0 +1,696 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/springsecurity6">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="${shop.shopName} + ' - CNJ70 Shop'">Cửa hàng - CNJ70 Shop</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Work+Sans:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+    <link rel="stylesheet" th:href="@{/css/home.css}">
+    <link rel="stylesheet" th:href="@{/css/shop.css}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body class="shop-page">
+    <div th:replace="fragments/web-header"></div>
+
+    <!-- ========== HERO BANNER ========== -->
+    <div class="shop-hero-banner">
+        <div class="shop-hero-bg" th:style="${shop.bannerUrl != null} ? 'background-image: url(' + ${shop.bannerUrl} + ')' : ''">
+            <div class="shop-hero-pattern"></div>
+            <div class="shop-hero-overlay"></div>
+        </div>
+        <div class="container">
+            <div class="shop-hero-content">
+                <div class="shop-avatar-lg">
+                    <img th:if="${shop.logoUrl}" th:src="${shop.logoUrl}" th:alt="${shop.shopName}">
+                    <i th:unless="${shop.logoUrl}" class="fas fa-store"></i>
+                    <span class="shop-avatar-badge" th:if="${shop.verified}">
+                        <i class="fas fa-check"></i>
+                    </span>
+                </div>
+                <div class="shop-hero-info">
+                    <div class="shop-name-row">
+                        <h1 class="shop-name" th:text="${shop.shopName}">Tên cửa hàng</h1>
+                        <span class="shop-verified-badge" th:if="${shop.verified}">
+                            <i class="fas fa-check-circle"></i> Đã xác minh
+                        </span>
+                        <span class="shop-online-badge">
+                            <span class="shop-online-dot"></span> Đang hoạt động
+                        </span>
+                    </div>
+                    <p class="shop-description"
+                       th:text="${shop.description != null and !shop.description.isEmpty()} ? ${shop.description} : 'Cửa hàng chưa có mô tả chi tiết.'">
+                        Mô tả cửa hàng
+                    </p>
+                    <div class="shop-meta-badges">
+                        <span class="shop-meta-item">
+                            <i class="fas fa-star"></i>
+                            <strong th:text="${#numbers.formatDecimal(avgRating, 1, 1)}">0.0</strong>
+                            <span class="shop-meta-sub">/5 đánh giá</span>
+                        </span>
+                        <span class="shop-meta-sep">|</span>
+                        <span class="shop-meta-item">
+                            <i class="fas fa-box"></i>
+                            <strong th:text="${totalProducts}">0</strong>
+                            <span class="shop-meta-sub">sản phẩm</span>
+                        </span>
+                        <span class="shop-meta-sep">|</span>
+                        <span class="shop-meta-item">
+                            <i class="fas fa-shopping-bag"></i>
+                            <strong th:text="${totalSold}">0</strong>
+                            <span class="shop-meta-sub">đã bán</span>
+                        </span>
+                        <span class="shop-meta-sep">|</span>
+                        <span class="shop-meta-item">
+                            <i class="fas fa-comments"></i>
+                            <strong th:text="${responseRate} + '%'">98%</strong>
+                            <span class="shop-meta-sub">phản hồi</span>
+                        </span>
+                    </div>
+                </div>
+                <div class="shop-hero-actions">
+                    <button class="shop-action-btn shop-action-follow" id="follow-btn">
+                        <i class="fas fa-plus"></i> <span>Theo dõi</span>
+                    </button>
+                    <button class="shop-action-btn shop-action-chat">
+                        <i class="fas fa-comment-dots"></i> <span>Chat ngay</span>
+                    </button>
+                    <button class="shop-action-btn shop-action-share" onclick="shareShop()">
+                        <i class="fas fa-share-alt"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ========== STATS BAR ========== -->
+    <div class="shop-stats-bar">
+        <div class="container">
+            <div class="shop-stats-row">
+                <div class="shop-stat-card">
+                    <div class="shop-stat-icon icon-blue">
+                        <i class="fas fa-boxes-stacked"></i>
+                    </div>
+                    <div class="shop-stat-info">
+                        <span class="shop-stat-value" th:text="${totalProducts}">0</span>
+                        <span class="shop-stat-label">Sản phẩm</span>
+                    </div>
+                </div>
+                <div class="shop-stat-card">
+                    <div class="shop-stat-icon icon-amber">
+                        <i class="fas fa-star"></i>
+                    </div>
+                    <div class="shop-stat-info">
+                        <span class="shop-stat-value">
+                            <span th:text="${#numbers.formatDecimal(avgRating, 1, 1)}">0.0</span>
+                            <small>/5</small>
+                        </span>
+                        <span class="shop-stat-label">
+                            <span th:text="${totalReviewCount}">0</span> đánh giá
+                        </span>
+                    </div>
+                </div>
+                <div class="shop-stat-card">
+                    <div class="shop-stat-icon icon-teal">
+                        <i class="fas fa-bag-shopping"></i>
+                    </div>
+                    <div class="shop-stat-info">
+                        <span class="shop-stat-value" th:text="${totalSold}">0</span>
+                        <span class="shop-stat-label">Đã bán</span>
+                    </div>
+                </div>
+                <div class="shop-stat-card">
+                    <div class="shop-stat-icon icon-green">
+                        <i class="fas fa-comments"></i>
+                    </div>
+                    <div class="shop-stat-info">
+                        <span class="shop-stat-value">
+                            <span th:text="${responseRate}">98</span><small>%</small>
+                        </span>
+                        <span class="shop-stat-label">Tỉ lệ phản hồi</span>
+                    </div>
+                </div>
+                <div class="shop-stat-card">
+                    <div class="shop-stat-icon"
+                         th:classappend="${shop.verified} ? 'icon-green' : 'icon-amber'">
+                        <i class="fas"
+                           th:classappend="${shop.verified} ? 'fa-shield-check' : 'fa-clock'"></i>
+                    </div>
+                    <div class="shop-stat-info">
+                        <span class="shop-stat-value shop-stat-status"
+                              th:text="${shop.verified} ? 'Đã xác minh' : 'Chờ xác minh'">-</span>
+                        <span class="shop-stat-label">Trạng thái shop</span>
+                    </div>
+                </div>
+                <div class="shop-stat-card">
+                    <div class="shop-stat-icon icon-purple">
+                        <i class="fas fa-calendar-alt"></i>
+                    </div>
+                    <div class="shop-stat-info">
+                        <span class="shop-stat-value"
+                              th:text="${#temporals.format(shop.createdAt, 'dd/MM/yyyy')}">-</span>
+                        <span class="shop-stat-label">Ngày tham gia</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ========== POLICY STRIP ========== -->
+    <section class="shop-policy-strip">
+        <div class="container">
+            <div class="shop-policy-grid">
+                <div class="shop-policy-item">
+                    <div class="shop-policy-icon">
+                        <i class="fas fa-truck"></i>
+                    </div>
+                    <div class="shop-policy-content">
+                        <strong>Vận chuyển nhanh</strong>
+                        <span>Giao hàng trong 24h</span>
+                    </div>
+                </div>
+                <div class="shop-policy-item">
+                    <div class="shop-policy-icon">
+                        <i class="fas fa-shield-alt"></i>
+                    </div>
+                    <div class="shop-policy-content">
+                        <strong>Bảo hành chính hãng</strong>
+                        <span>Hàng chất lượng 100%</span>
+                    </div>
+                </div>
+                <div class="shop-policy-item">
+                    <div class="shop-policy-icon">
+                        <i class="fas fa-undo-alt"></i>
+                    </div>
+                    <div class="shop-policy-content">
+                        <strong>Đổi trả 7 ngày</strong>
+                        <span>Miễn phí đổi trả</span>
+                    </div>
+                </div>
+                <div class="shop-policy-item">
+                    <div class="shop-policy-icon">
+                        <i class="fas fa-headset"></i>
+                    </div>
+                    <div class="shop-policy-content">
+                        <strong>Hỗ trợ 24/7</strong>
+                        <span>Phản hồi nhanh chóng</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <main class="main-content">
+        <!-- ========== ABOUT + TOP PRODUCTS ========== -->
+        <section class="shop-about-section" th:if="${not #lists.isEmpty(topProducts)}">
+            <div class="container">
+                <div class="shop-about-grid">
+                    <!-- About Card -->
+                    <div class="shop-about-card">
+                        <div class="shop-about-header">
+                            <h3><i class="fas fa-info-circle"></i> Về cửa hàng</h3>
+                        </div>
+                        <div class="shop-about-body">
+                            <p class="shop-about-text"
+                               th:text="${shop.description != null and !shop.description.isEmpty()} ? ${shop.description} : 'Cửa hàng uy tín với nhiều sản phẩm chất lượng, cam kết mang đến trải nghiệm mua sắm tuyệt vời cho khách hàng.'">
+                                Mô tả
+                            </p>
+                            <div class="shop-about-list">
+                                <div class="shop-about-row">
+                                    <i class="fas fa-medal"></i>
+                                    <span>Shop uy tín - chất lượng đảm bảo</span>
+                                </div>
+                                <div class="shop-about-row">
+                                    <i class="fas fa-shipping-fast"></i>
+                                    <span>Đóng gói cẩn thận, giao hàng tận nơi</span>
+                                </div>
+                                <div class="shop-about-row">
+                                    <i class="fas fa-handshake"></i>
+                                    <span>Hỗ trợ khách hàng nhiệt tình 24/7</span>
+                                </div>
+                                <div class="shop-about-row">
+                                    <i class="fas fa-gift"></i>
+                                    <span>Đổi trả dễ dàng trong vòng 7 ngày</span>
+                                </div>
+                            </div>
+                            <div class="shop-about-cta">
+                                <button class="shop-btn-outline shop-btn-block">
+                                    <i class="fas fa-phone-alt"></i> Liên hệ shop
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Top Products -->
+                    <div class="shop-top-products">
+                        <div class="shop-section-title">
+                            <h3><i class="fas fa-fire"></i> Sản phẩm nổi bật</h3>
+                            <a th:href="@{/shop/{id}(id=${shop.id})}" class="shop-section-link">Xem tất cả <i class="fas fa-arrow-right"></i></a>
+                        </div>
+                        <div class="shop-top-grid">
+                            <th:block th:each="p, iter : ${topProducts}">
+                                <a th:href="@{/products/{pid}(pid=${p.id})}" class="shop-top-card">
+                                    <div class="shop-top-rank"
+                                         th:classappend="${iter.index == 0} ? 'rank-gold' : (${iter.index == 1} ? 'rank-silver' : (${iter.index == 2} ? 'rank-bronze' : 'rank-default'))"
+                                         th:text="${iter.index + 1}">1</div>
+                                    <div class="shop-top-img">
+                                        <img th:src="${p.thumbnailUrl ?: 'https://placehold.co/120x120/f0f7f6/0fb5b0?text=No+Img'}"
+                                             th:alt="${p.name}">
+                                    </div>
+                                    <div class="shop-top-info">
+                                        <span class="shop-top-name" th:text="${p.name}">Tên</span>
+                                        <span class="shop-top-price"
+                                              th:text="${@money.format(p.price)}">0đ</span>
+                                        <span class="shop-top-rating" th:if="${p.rating > 0}">
+                                            <i class="fas fa-star"></i>
+                                            <span th:text="${#numbers.formatDecimal(p.rating, 1, 1)}">0.0</span>
+                                        </span>
+                                    </div>
+                                </a>
+                            </th:block>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ========== FILTER BAR ========== -->
+        <div class="shop-filter-bar">
+            <div class="container">
+                <div class="shop-filter-inner">
+                    <div class="shop-filter-left">
+                        <span class="shop-filter-label">
+                            <i class="fas fa-sliders-h"></i> Sắp xếp:
+                        </span>
+                        <div class="shop-sort-tabs">
+                            <a th:href="@{/shop/{id}(id=${shop.id}, sort='newest', category=${selectedCategory}, priceRange=${selectedPriceRange})}"
+                               class="shop-sort-tab"
+                               th:classappend="${sort == 'newest' || sort == null} ? 'active'">
+                                <i class="fas fa-clock"></i> Mới nhất
+                            </a>
+                            <a th:href="@{/shop/{id}(id=${shop.id}, sort='best-selling', category=${selectedCategory}, priceRange=${selectedPriceRange})}"
+                               class="shop-sort-tab"
+                               th:classappend="${sort == 'best-selling'} ? 'active'">
+                                <i class="fas fa-fire"></i> Bán chạy
+                            </a>
+                            <a th:href="@{/shop/{id}(id=${shop.id}, sort='rating', category=${selectedCategory}, priceRange=${selectedPriceRange})}"
+                               class="shop-sort-tab"
+                               th:classappend="${sort == 'rating'} ? 'active'">
+                                <i class="fas fa-star"></i> Đánh giá
+                            </a>
+                            <a th:href="@{/shop/{id}(id=${shop.id}, sort='price-asc', category=${selectedCategory}, priceRange=${selectedPriceRange})}"
+                               class="shop-sort-tab"
+                               th:classappend="${sort == 'price-asc'} ? 'active'">
+                                Giá: Thấp → Cao
+                            </a>
+                            <a th:href="@{/shop/{id}(id=${shop.id}, sort='price-desc', category=${selectedCategory}, priceRange=${selectedPriceRange})}"
+                               class="shop-sort-tab"
+                               th:classappend="${sort == 'price-desc'} ? 'active'">
+                                Giá: Cao → Thấp
+                            </a>
+                        </div>
+                    </div>
+                    <div class="shop-filter-right">
+                        <span class="shop-product-count">
+                            Hiển thị <strong th:text="${products.size()}">0</strong> /
+                            <strong th:text="${totalFiltered}">0</strong> sản phẩm
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ========== PRODUCTS SECTION (with sidebar) ========== -->
+        <div class="shop-products-section">
+            <div class="container">
+                <div class="shop-products-layout">
+                    <!-- Sidebar -->
+                    <aside class="shop-sidebar">
+                        <!-- Categories -->
+                        <div class="shop-sidebar-card" th:if="${not #lists.isEmpty(shopCategories)}">
+                            <h4 class="shop-sidebar-title">
+                                <i class="fas fa-tags"></i> Danh mục
+                            </h4>
+                            <ul class="shop-cat-list">
+                                <li>
+                                    <a th:href="@{/shop/{id}(id=${shop.id}, sort=${sort}, priceRange=${selectedPriceRange})}"
+                                       class="shop-cat-link"
+                                       th:classappend="${selectedCategory == null} ? 'active'">
+                                        <span><i class="fas fa-th"></i> Tất cả</span>
+                                        <span class="shop-cat-count" th:text="${totalProducts}">0</span>
+                                    </a>
+                                </li>
+                                <li th:each="cat : ${shopCategories}">
+                                    <a th:href="@{/shop/{id}(id=${shop.id}, sort=${sort}, category=${cat.id}, priceRange=${selectedPriceRange})}"
+                                       class="shop-cat-link"
+                                       th:classappend="${selectedCategory == cat.id} ? 'active'">
+                                        <span><i class="fas fa-chevron-right"></i>
+                                              <span th:text="${cat.name}">Danh mục</span>
+                                        </span>
+                                        <span class="shop-cat-count" th:text="${cat.count}">0</span>
+                                    </a>
+                                </li>
+                            </ul>
+                        </div>
+
+                        <!-- Price Range -->
+                        <div class="shop-sidebar-card">
+                            <h4 class="shop-sidebar-title">
+                                <i class="fas fa-money-bill-wave"></i> Khoảng giá
+                            </h4>
+                            <ul class="shop-cat-list">
+                                <li>
+                                    <a th:href="@{/shop/{id}(id=${shop.id}, sort=${sort}, category=${selectedCategory})}"
+                                       class="shop-cat-link"
+                                       th:classappend="${selectedPriceRange == null} ? 'active'">
+                                        <span><i class="fas fa-infinity"></i> Tất cả</span>
+                                        <span class="shop-cat-count" th:text="${totalProducts}">0</span>
+                                    </a>
+                                </li>
+                                <li>
+                                    <a th:href="@{/shop/{id}(id=${shop.id}, sort=${sort}, category=${selectedCategory}, priceRange='under-100k')}"
+                                       class="shop-cat-link"
+                                       th:classappend="${selectedPriceRange == 'under-100k'} ? 'active'">
+                                        <span>Dưới 100.000đ</span>
+                                        <span class="shop-cat-count" th:text="${countUnder100k}">0</span>
+                                    </a>
+                                </li>
+                                <li>
+                                    <a th:href="@{/shop/{id}(id=${shop.id}, sort=${sort}, category=${selectedCategory}, priceRange='100k-500k')}"
+                                       class="shop-cat-link"
+                                       th:classappend="${selectedPriceRange == '100k-500k'} ? 'active'">
+                                        <span>100.000đ - 500.000đ</span>
+                                        <span class="shop-cat-count" th:text="${count100to500k}">0</span>
+                                    </a>
+                                </li>
+                                <li>
+                                    <a th:href="@{/shop/{id}(id=${shop.id}, sort=${sort}, category=${selectedCategory}, priceRange='500k-1m')}"
+                                       class="shop-cat-link"
+                                       th:classappend="${selectedPriceRange == '500k-1m'} ? 'active'">
+                                        <span>500.000đ - 1 triệu</span>
+                                        <span class="shop-cat-count" th:text="${count500kTo1m}">0</span>
+                                    </a>
+                                </li>
+                                <li>
+                                    <a th:href="@{/shop/{id}(id=${shop.id}, sort=${sort}, category=${selectedCategory}, priceRange='above-1m')}"
+                                       class="shop-cat-link"
+                                       th:classappend="${selectedPriceRange == 'above-1m'} ? 'active'">
+                                        <span>Trên 1 triệu</span>
+                                        <span class="shop-cat-count" th:text="${countAbove1m}">0</span>
+                                    </a>
+                                </li>
+                            </ul>
+                            <div class="shop-price-summary" th:if="${minPrice.compareTo(maxPrice) > 0 or totalProducts > 0}">
+                                <small>Khoảng giá shop</small>
+                                <strong>
+                                    <span th:text="${@money.format(minPrice)}">0</span>
+                                    -
+                                    <span th:text="${@money.format(maxPrice)}">0</span>
+                                </strong>
+                            </div>
+                        </div>
+
+                        <!-- Banner Promo -->
+                        <div class="shop-sidebar-promo">
+                            <i class="fas fa-gift"></i>
+                            <strong>Miễn phí vận chuyển</strong>
+                            <span>Cho đơn từ 300k</span>
+                        </div>
+                    </aside>
+
+                    <!-- Products Content -->
+                    <div class="shop-products-content">
+                        <!-- Active Filters -->
+                        <div class="shop-active-filters" th:if="${selectedCategory != null or selectedPriceRange != null}">
+                            <span><i class="fas fa-filter"></i> Bộ lọc đang áp dụng:</span>
+                            <span class="shop-active-tag" th:if="${selectedCategory != null and not #strings.isEmpty(selectedCategoryName)}">
+                                <i class="fas fa-tag"></i>
+                                <span th:text="${selectedCategoryName}">Danh mục</span>
+                                <a th:href="@{/shop/{id}(id=${shop.id}, sort=${sort}, priceRange=${selectedPriceRange})}">
+                                    <i class="fas fa-times"></i>
+                                </a>
+                            </span>
+                            <a th:href="@{/shop/{id}(id=${shop.id}, sort=${sort})}" class="shop-clear-all">
+                                <i class="fas fa-redo"></i> Xóa tất cả
+                            </a>
+                        </div>
+
+                        <!-- Products Grid -->
+                        <div class="shop-products-grid" th:if="${products != null and !products.isEmpty()}">
+                            <th:block th:each="product : ${products}">
+                                <a th:href="@{/products/{pid}(pid=${product.id})}" class="shop-product-card">
+                                    <div class="shop-product-img">
+                                        <img th:src="${product.thumbnailUrl ?: 'https://placehold.co/300x300/f0f7f6/0fb5b0?text=No+Img'}"
+                                             th:alt="${product.name}"
+                                             loading="lazy">
+                                        <div class="shop-product-badges">
+                                            <span class="shop-product-badge badge-hot" th:if="${product.rating >= 4.5}">
+                                                <i class="fas fa-fire"></i> Hot
+                                            </span>
+                                            <span class="shop-product-badge badge-out" th:unless="${product.stock > 0}">
+                                                Hết hàng
+                                            </span>
+                                        </div>
+                                        <div class="shop-product-overlay">
+                                            <span class="shop-overlay-btn">
+                                                <i class="fas fa-eye"></i> Xem chi tiết
+                                            </span>
+                                        </div>
+                                    </div>
+                                    <div class="shop-product-info">
+                                        <span class="shop-product-category" th:if="${product.categoryName != null}">
+                                            <i class="fas fa-tag"></i>
+                                            <span th:text="${product.categoryName}">Danh mục</span>
+                                        </span>
+                                        <span class="shop-product-name" th:text="${product.name}">Tên sản phẩm</span>
+                                        <div class="shop-product-price-row">
+                                            <span class="shop-product-price"
+                                                  th:text="${@money.format(product.price)}">0đ</span>
+                                        </div>
+                                        <div class="shop-product-meta">
+                                            <span class="shop-product-rating" th:if="${product.rating > 0}">
+                                                <i class="fas fa-star"></i>
+                                                <span th:text="${#numbers.formatDecimal(product.rating, 1, 1)}">0.0</span>
+                                            </span>
+                                            <span class="shop-product-review" th:if="${product.reviewCount > 0}">
+                                                <span th:text="${product.reviewCount}">0</span> đánh giá
+                                            </span>
+                                        </div>
+                                        <div class="shop-product-footer">
+                                            <span class="shop-product-stock"
+                                                  th:classappend="${product.stock > 0} ? 'in' : 'out'">
+                                                <i class="fas" th:classappend="${product.stock > 0} ? 'fa-check-circle' : 'fa-times-circle'"></i>
+                                                <span th:text="${product.stock > 0} ? 'Còn hàng' : 'Hết hàng'">Còn hàng</span>
+                                            </span>
+                                            <span class="shop-product-arrow">
+                                                <i class="fas fa-arrow-right"></i>
+                                            </span>
+                                        </div>
+                                    </div>
+                                </a>
+                            </th:block>
+                        </div>
+
+                        <!-- Empty state -->
+                        <div class="shop-empty-state" th:unless="${products != null and !products.isEmpty()}">
+                            <i class="fas fa-store-slash"></i>
+                            <h3>Không tìm thấy sản phẩm</h3>
+                            <p>Hiện chưa có sản phẩm nào phù hợp với bộ lọc của bạn.</p>
+                            <a th:href="@{/shop/{id}(id=${shop.id})}" class="shop-empty-btn">
+                                <i class="fas fa-redo"></i> Xem tất cả sản phẩm
+                            </a>
+                        </div>
+
+                        <!-- Pagination -->
+                        <div class="shop-pagination" th:if="${totalPages > 1}">
+                            <a th:if="${currentPage > 1}"
+                               th:href="@{/shop/{id}(id=${shop.id}, page=${currentPage - 1}, sort=${sort}, category=${selectedCategory}, priceRange=${selectedPriceRange})}"
+                               class="shop-pagination-btn">
+                                <i class="fas fa-chevron-left"></i>
+                            </a>
+                            <span th:unless="${currentPage > 1}" class="shop-pagination-btn disabled">
+                                <i class="fas fa-chevron-left"></i>
+                            </span>
+
+                            <th:block th:each="i : ${#numbers.sequence(1, totalPages)}">
+                                <a th:if="${i == currentPage || (i >= currentPage - 1 and i <= currentPage + 1) || i == 1 || i == totalPages}"
+                                   th:href="@{/shop/{id}(id=${shop.id}, page=${i}, sort=${sort}, category=${selectedCategory}, priceRange=${selectedPriceRange})}"
+                                   class="shop-pagination-page"
+                                   th:classappend="${i == currentPage} ? 'active'">
+                                    <span th:text="${i}">1</span>
+                                </a>
+                                <span th:if="${i == currentPage - 2 || i == currentPage + 2}"
+                                      class="shop-pagination-ellipsis">...</span>
+                            </th:block>
+
+                            <a th:if="${currentPage < totalPages}"
+                               th:href="@{/shop/{id}(id=${shop.id}, page=${currentPage + 1}, sort=${sort}, category=${selectedCategory}, priceRange=${selectedPriceRange})}"
+                               class="shop-pagination-btn">
+                                <i class="fas fa-chevron-right"></i>
+                            </a>
+                            <span th:unless="${currentPage < totalPages}" class="shop-pagination-btn disabled">
+                                <i class="fas fa-chevron-right"></i>
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ========== REVIEWS SECTION ========== -->
+        <section class="shop-reviews-section" th:if="${not #lists.isEmpty(recentReviews)}">
+            <div class="container">
+                <div class="shop-section-title-centered">
+                    <h2><i class="fas fa-comments"></i> Đánh giá từ khách hàng</h2>
+                    <p>Khách hàng nói gì về <strong th:text="${shop.shopName}">shop</strong></p>
+                </div>
+
+                <!-- Rating Summary -->
+                <div class="shop-reviews-summary">
+                    <div class="shop-reviews-big">
+                        <div class="shop-reviews-score" th:text="${#numbers.formatDecimal(avgRating, 1, 1)}">0.0</div>
+                        <div class="shop-reviews-stars">
+                            <th:block th:each="i : ${#numbers.sequence(1, 5)}">
+                                <i class="fas fa-star"
+                                   th:classappend="${i <= avgRating} ? 'filled' : ''"></i>
+                            </th:block>
+                        </div>
+                        <div class="shop-reviews-total">
+                            <strong th:text="${totalReviewCount}">0</strong> đánh giá
+                        </div>
+                    </div>
+                    <div class="shop-reviews-distribution">
+                        <div class="shop-dist-row">
+                            <span class="shop-dist-label">5 <i class="fas fa-star"></i></span>
+                            <div class="shop-dist-bar"><div class="shop-dist-fill" style="width: 65%;"></div></div>
+                            <span class="shop-dist-pct">65%</span>
+                        </div>
+                        <div class="shop-dist-row">
+                            <span class="shop-dist-label">4 <i class="fas fa-star"></i></span>
+                            <div class="shop-dist-bar"><div class="shop-dist-fill" style="width: 22%;"></div></div>
+                            <span class="shop-dist-pct">22%</span>
+                        </div>
+                        <div class="shop-dist-row">
+                            <span class="shop-dist-label">3 <i class="fas fa-star"></i></span>
+                            <div class="shop-dist-bar"><div class="shop-dist-fill" style="width: 8%;"></div></div>
+                            <span class="shop-dist-pct">8%</span>
+                        </div>
+                        <div class="shop-dist-row">
+                            <span class="shop-dist-label">2 <i class="fas fa-star"></i></span>
+                            <div class="shop-dist-bar"><div class="shop-dist-fill" style="width: 3%;"></div></div>
+                            <span class="shop-dist-pct">3%</span>
+                        </div>
+                        <div class="shop-dist-row">
+                            <span class="shop-dist-label">1 <i class="fas fa-star"></i></span>
+                            <div class="shop-dist-bar"><div class="shop-dist-fill" style="width: 2%;"></div></div>
+                            <span class="shop-dist-pct">2%</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Recent Reviews Grid -->
+                <div class="shop-reviews-grid">
+                    <th:block th:each="review : ${recentReviews}">
+                        <div class="shop-review-card">
+                            <div class="shop-review-header">
+                                <div class="shop-review-avatar">
+                                    <img th:if="${review.userAvatar != null}"
+                                         th:src="${review.userAvatar}" th:alt="${review.userName}">
+                                    <i th:unless="${review.userAvatar != null}" class="fas fa-user"></i>
+                                </div>
+                                <div class="shop-review-meta">
+                                    <strong th:text="${review.userName != null} ? ${review.userName} : 'Khách hàng'">Khách hàng</strong>
+                                    <div class="shop-review-stars-row">
+                                        <th:block th:each="i : ${#numbers.sequence(1, 5)}">
+                                            <i class="fas fa-star"
+                                               th:classappend="${i <= review.rating} ? 'filled' : ''"></i>
+                                        </th:block>
+                                    </div>
+                                </div>
+                                <span class="shop-review-date"
+                                      th:text="${#temporals.format(review.createdAt, 'dd/MM/yyyy')}">01/01/2024</span>
+                            </div>
+                            <p class="shop-review-text" th:text="${review.comment}">Nội dung</p>
+                            <div class="shop-review-footer">
+                                <span class="shop-review-tag">
+                                    <i class="fas fa-check-circle"></i> Đã mua hàng
+                                </span>
+                            </div>
+                        </div>
+                    </th:block>
+                </div>
+            </div>
+        </section>
+
+        <!-- ========== CTA SECTION ========== -->
+        <section class="shop-cta-section">
+            <div class="container">
+                <div class="shop-cta-card">
+                    <div class="shop-cta-content">
+                        <h2>Bạn cần tư vấn về sản phẩm?</h2>
+                        <p>Liên hệ ngay với <strong th:text="${shop.shopName}">shop</strong> để được hỗ trợ nhanh chóng và tận tình</p>
+                    </div>
+                    <div class="shop-cta-actions">
+                        <button class="shop-cta-btn shop-cta-primary">
+                            <i class="fas fa-comment-dots"></i> Chat với shop
+                        </button>
+                        <button class="shop-cta-btn shop-cta-outline">
+                            <i class="fas fa-phone-alt"></i> Gọi ngay
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <div th:replace="fragments/web-footer"></div>
+
+    <script th:src="@{/js/main.js}"></script>
+    <script th:src="@{/js/home.js}" defer></script>
+    <script>
+        // Follow button toggle
+        const followBtn = document.getElementById('follow-btn');
+        followBtn?.addEventListener('click', function() {
+            this.classList.toggle('following');
+            if (this.classList.contains('following')) {
+                this.innerHTML = '<i class="fas fa-check"></i> <span>Đã theo dõi</span>';
+            } else {
+                this.innerHTML = '<i class="fas fa-plus"></i> <span>Theo dõi</span>';
+            }
+        });
+
+        // Share shop
+        function shareShop() {
+            const url = window.location.href;
+            if (navigator.share) {
+                navigator.share({
+                    title: document.title,
+                    text: 'Ghé thăm shop trên CNJ70',
+                    url: url
+                });
+            } else {
+                navigator.clipboard.writeText(url);
+                showShopToast('Đã sao chép link shop!');
+            }
+        }
+
+        // Toast
+        function showShopToast(msg) {
+            let toast = document.getElementById('shop-toast');
+            if (!toast) {
+                toast = document.createElement('div');
+                toast.id = 'shop-toast';
+                toast.className = 'shop-toast';
+                toast.innerHTML = '<i class="fas fa-check-circle"></i> <span></span>';
+                document.body.appendChild(toast);
+            }
+            toast.querySelector('span').textContent = msg;
+            toast.classList.add('show');
+            setTimeout(() => toast.classList.remove('show'), 2500);
+        }
+    </script>
+</body>
+</html>
