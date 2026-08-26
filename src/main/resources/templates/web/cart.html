@@ -100,22 +100,30 @@
                                                 <div class="qty-stepper"
                                                      th:data-product-id="${item.productId}"
                                                      th:data-stock="${item.stock != null ? item.stock : 999}">
-                                                    <button type="button" class="qty-btn qty-decrement" aria-label="Giảm">
-                                                        <i class="fas fa-minus"></i>
-                                                    </button>
-                                                    <input type="number" class="qty-input" th:value="${item.quantity}" min="1" th:max="${item.stock != null ? item.stock : 999}" readonly>
-                                                    <button type="button" class="qty-btn qty-increment" aria-label="Tăng">
-                                                        <i class="fas fa-plus"></i>
-                                                    </button>
+                                                    <form th:action="@{/cart/update}" method="post" class="qty-stepper-form">
+                                                        <input type="hidden" name="productId" th:value="${item.productId}">
+                                                        <input type="hidden" name="quantity" class="qty-target" th:value="${item.quantity}">
+                                                        <button type="submit" class="qty-btn qty-decrement" aria-label="Giảm">
+                                                            <i class="fas fa-minus"></i>
+                                                        </button>
+                                                        <input type="text" class="qty-input" th:value="${item.quantity}" readonly aria-label="Số lượng hiện tại">
+                                                        <button type="submit" class="qty-btn qty-increment" aria-label="Tăng">
+                                                            <i class="fas fa-plus"></i>
+                                                        </button>
+                                                    </form>
                                                 </div>
                                             </div>
                                             <div class="cart-item-subtotal">
                                                 <span class="cart-item-subtotal-label">Thành tiền</span>
                                                 <span class="cart-item-subtotal-value" th:text="${@money.format(item.subtotal)}">0đ</span>
                                             </div>
-                                            <button type="button" class="cart-item-remove" th:data-product-id="${item.productId}" aria-label="Xóa sản phẩm">
-                                                <i class="fas fa-trash-alt"></i>
-                                            </button>
+                                            <form th:action="@{/cart/remove}" method="post" class="cart-item-remove-form"
+                                                  onsubmit="return confirm('Bạn có chắc muốn xóa sản phẩm này khỏi giỏ hàng?');">
+                                                <input type="hidden" name="productId" th:value="${item.productId}">
+                                                <button type="submit" class="cart-item-remove" th:data-product-id="${item.productId}" aria-label="Xóa sản phẩm">
+                                                    <i class="fas fa-trash-alt"></i>
+                                                </button>
+                                            </form>
                                         </div>
                                     </th:block>
                                 </div>
@@ -195,5 +203,6 @@
     </main>
 
     <div th:replace="fragments/web-footer"></div>
+    <script th:src="@{/js/main.js}"></script>
 </body>
 </html>

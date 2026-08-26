@@ -1,6 +1,9 @@
 // CNJ70 Ecommerce - Main JavaScript
 
 document.addEventListener('DOMContentLoaded', function() {
+    // #region agent log H11 init
+    fetch('http://127.0.0.1:7880/ingest/c62a6c44-8a64-4ebc-b91a-ead24f484206',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'04f262'},body:JSON.stringify({sessionId:'04f262',location:'main.js:init',message:'main.js loaded',data:{url:location.pathname,stepperNodes:document.querySelectorAll('.qty-stepper').length,removeForms:document.querySelectorAll('.cart-item-remove-form').length},timestamp:Date.now(),hypothesisId:'H11'})}).catch(()=>{});
+    // #endregion
     // ========== Header Scroll Effect ==========
     const header = document.querySelector('.header');
     if (header) {
@@ -46,13 +49,13 @@ document.addEventListener('DOMContentLoaded', function() {
     // ========== Sidebar Toggle for Mobile ==========
     const sidebarToggle = document.querySelector('.sidebar-toggle');
     const sidebar = document.querySelector('.sidebar');
-    
+
     if (sidebarToggle && sidebar) {
         sidebarToggle.addEventListener('click', function() {
             sidebar.classList.toggle('collapsed');
         });
     }
-    
+
     // ========== Confirm Delete ==========
     const deleteForms = document.querySelectorAll('form[onsubmit*="confirm"]');
     deleteForms.forEach(form => {
@@ -62,7 +65,7 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
     });
-    
+
     // ========== Auto-hide alerts after 5 seconds ==========
     const alerts = document.querySelectorAll('.alert');
     alerts.forEach(alert => {
@@ -73,7 +76,7 @@ document.addEventListener('DOMContentLoaded', function() {
             setTimeout(() => alert.remove(), 500);
         }, 5000);
     });
-    
+
     // ========== Quantity selector validation ==========
     const quantityInputs = document.querySelectorAll('input[type="number"][name="quantity"]');
     quantityInputs.forEach(input => {
@@ -81,7 +84,7 @@ document.addEventListener('DOMContentLoaded', function() {
             const min = parseInt(this.min) || 1;
             const max = parseInt(this.max) || 999;
             let value = parseInt(this.value);
-            
+
             if (value < min) this.value = min;
             if (value > max) this.value = max;
         });
@@ -92,16 +95,15 @@ document.addEventListener('DOMContentLoaded', function() {
     addToCartForms.forEach(form => {
         form.addEventListener('submit', function(e) {
             e.preventDefault();
-            
+
             const submitBtn = form.querySelector('button[type="submit"]') || form.querySelector('button');
             const originalText = submitBtn.innerHTML;
-            
-            // Disable button while processing
+
             submitBtn.disabled = true;
             submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Đang thêm...';
-            
+
             const formData = new FormData(form);
-            
+
             fetch('/api/cart/add', {
                 method: 'POST',
                 body: formData,
@@ -131,20 +133,73 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
 
+    // ========== Cart Stepper (POST form, server-side redirect) ==========
+    document.querySelectorAll('.qty-stepper').forEach(function(stepper) {
+        const form = stepper.querySelector('.qty-stepper-form');
+        const input = stepper.querySelector('.qty-input');
+        const target = stepper.querySelector('.qty-target');
+        const dec = stepper.querySelector('.qty-decrement');
+        const inc = stepper.querySelector('.qty-increment');
+        const productId = stepper.dataset.productId || 'unknown';
+        if (!form || !input || !target || !dec || !inc) return;
+
+        const stock = parseInt(stepper.dataset.stock) || 999;
+        let currentQty = parseInt(input.value) || 1;
+
+        function logStepper(action, next, willSubmit) {
+            fetch('http://127.0.0.1:7880/ingest/c62a6c44-8a64-4ebc-b91a-ead24f484206',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'04f262'},body:JSON.stringify({sessionId:'04f262',location:'main.js:stepper:'+action,message:'stepper '+action,data:{productId:productId,currentQty:currentQty,stock:stock,next:next,willSubmit:willSubmit},timestamp:Date.now(),hypothesisId:'H11'})}).catch(()=>{});
+        }
+
+        dec.addEventListener('click', function(e) {
+            e.preventDefault();
+            logStepper('dec:click', currentQty - 1, false);
+            // If currently 1 -> confirm remove
+            if (currentQty <= 1) {
+                if (confirm('Bạn có chắc muốn xóa sản phẩm này khỏi giỏ hàng?')) {
+                    const removeForm = document.querySelector('.cart-item-remove-form input[value="' + productId + '"]');
+                    if (removeForm && removeForm.form) {
+                        logStepper('dec:remove-confirm', 0, true);
+                        removeForm.form.submit();
+                    } else {
+                        logStepper('dec:remove-form-missing', 0, false);
+                    }
+                } else {
+                    logStepper('dec:remove-cancel', 0, false);
+                }
+                return;
+            }
+            const next = currentQty - 1;
+            target.value = next;
+            logStepper('dec:submit', next, true);
+            form.submit();
+        });
+
+        inc.addEventListener('click', function(e) {
+            e.preventDefault();
+            const next = currentQty + 1;
+            logStepper('inc:click', next, false);
+            if (next > stock) {
+                logStepper('inc:blocked-stock', next, false);
+                return;
+            }
+            target.value = next;
+            logStepper('inc:submit', next, true);
+            form.submit();
+        });
+    });
+
     // ========== Toast Notification ==========
     function showToast(type, message) {
-        // Remove existing toasts
         const existingToasts = document.querySelectorAll('.cart-toast');
         existingToasts.forEach(t => t.remove());
-        
+
         const toast = document.createElement('div');
         toast.className = `cart-toast cart-toast-${type}`;
         toast.innerHTML = `
             <i class="fas ${type === 'success' ? 'fa-check-circle' : 'fa-exclamation-circle'}"></i>
             <span>${message}</span>
         `;
-        
-        // Add styles if not exists
+
         if (!document.getElementById('cart-toast-styles')) {
             const style = document.createElement('style');
             style.id = 'cart-toast-styles';
@@ -188,10 +243,9 @@ document.addEventListener('DOMContentLoaded', function() {
             `;
             document.head.appendChild(style);
         }
-        
+
         document.body.appendChild(toast);
-        
-        // Auto remove after 3 seconds
+
         setTimeout(() => {
             toast.style.animation = 'slideInToast 0.3s ease reverse';
             setTimeout(() => toast.remove(), 300);
@@ -212,13 +266,7 @@ document.addEventListener('DOMContentLoaded', function() {
             const badge = document.createElement('span');
             badge.className = 'nav-cart-badge';
             badge.textContent = count;
-            if (target.id === 'cart-btn' || target.classList.contains('home-icon-btn')) {
-                target.appendChild(badge);
-            } else if (target.classList.contains('home-mobile-nav-link')) {
-                target.appendChild(badge);
-            } else {
-                target.appendChild(badge);
-            }
+            target.appendChild(badge);
         });
     }
 
@@ -228,160 +276,6 @@ document.addEventListener('DOMContentLoaded', function() {
             .then(data => { if (data) updateCartBadge(data.totalQuantity); })
             .catch(() => {});
     }
-
-    // ========== Cart Page: Quantity Stepper & Remove ==========
-    const steppers = document.querySelectorAll('.qty-stepper');
-    if (steppers.length > 0) {
-        const moneyFormatter = new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' });
-        let updateInFlight = null;
-
-        function updateQuantity(productId, qty, stepper) {
-            if (updateInFlight && updateInFlight.productId === productId) return;
-            const stock = parseInt(stepper.dataset.stock) || 999;
-            const oldQty = parseInt(stepper.querySelector('.qty-input').value);
-            if (qty < 1 || qty > stock) {
-                showToast('error', `Số lượng phải từ 1 đến ${stock}`);
-                stepper.querySelector('.qty-input').value = oldQty;
-                return;
-            }
-            if (qty === oldQty) return;
-
-            updateInFlight = { productId };
-            const formData = new FormData();
-            formData.append('productId', productId);
-            formData.append('quantity', qty);
-
-            stepper.querySelectorAll('.qty-btn').forEach(b => b.disabled = true);
-
-            fetch('/api/cart/update', {
-                method: 'POST',
-                body: formData,
-                headers: { 'X-Requested-With': 'XMLHttpRequest' }
-            })
-            .then(r => r.json())
-            .then(data => {
-                if (!data.success) {
-                    showToast('error', data.message || 'Không thể cập nhật');
-                    return;
-                }
-                if (data.removed) {
-                    const card = document.querySelector(`.cart-item-card[data-product-id="${productId}"]`);
-                    if (card) {
-                        card.classList.add('is-removing');
-                        setTimeout(() => {
-                            card.remove();
-                            maybeShowEmptyState();
-                        }, 250);
-                    }
-                } else {
-                    stepper.querySelector('.qty-input').value = data.quantity;
-                    const card = document.querySelector(`.cart-item-card[data-product-id="${productId}"]`);
-                    if (card && data.subtotal) {
-                        const sub = card.querySelector('.cart-item-subtotal-value');
-                        if (sub) sub.textContent = moneyFormatter.format(data.subtotal);
-                    }
-                }
-                updateCartTotals(data.cartTotal, data.totalQuantity);
-                updateCartBadge(data.totalQuantity);
-            })
-            .catch(err => {
-                console.error(err);
-                showToast('error', 'Có lỗi xảy ra');
-            })
-            .finally(() => {
-                stepper.querySelectorAll('.qty-btn').forEach(b => {
-                    const input = stepper.querySelector('.qty-input');
-                    b.disabled = parseInt(input.value) >= stock && b.classList.contains('qty-increment');
-                });
-                updateInFlight = null;
-            });
-        }
-
-        function updateCartTotals(cartTotal, totalQuantity) {
-            const subtotalEls = document.querySelectorAll('.summary-subtotal');
-            const totalEls = document.querySelectorAll('.summary-total-amount');
-            subtotalEls.forEach(el => {
-                if (cartTotal !== undefined) el.textContent = moneyFormatter.format(cartTotal);
-            });
-            totalEls.forEach(el => {
-                if (cartTotal !== undefined) el.textContent = moneyFormatter.format(cartTotal);
-            });
-        }
-
-        function maybeShowEmptyState() {
-            const remaining = document.querySelectorAll('.cart-item-card');
-            if (remaining.length > 0) return;
-            const layout = document.querySelector('.cart-layout');
-            const heroLeft = document.querySelector('.cart-hero-left h1');
-            const heroStats = document.querySelector('.cart-hero-right');
-            if (heroLeft) heroLeft.innerHTML = 'Giỏ hàng trống';
-            if (heroStats) heroStats.style.display = 'none';
-            if (layout) {
-                layout.style.opacity = '0';
-                setTimeout(() => location.reload(), 400);
-            }
-        }
-
-        steppers.forEach(stepper => {
-            const input = stepper.querySelector('.qty-input');
-            const dec = stepper.querySelector('.qty-decrement');
-            const inc = stepper.querySelector('.qty-increment');
-            const productId = stepper.dataset.productId;
-            const stock = parseInt(stepper.dataset.stock) || 999;
-
-            dec.addEventListener('click', () => {
-                const v = parseInt(input.value) - 1;
-                updateQuantity(productId, v, stepper);
-            });
-            inc.addEventListener('click', () => {
-                const v = parseInt(input.value) + 1;
-                if (v > stock) {
-                    showToast('error', `Chỉ còn ${stock} sản phẩm trong kho`);
-                    return;
-                }
-                updateQuantity(productId, v, stepper);
-            });
-        });
-    }
-
-    const removeBtns = document.querySelectorAll('.cart-item-remove');
-    removeBtns.forEach(btn => {
-        btn.addEventListener('click', function() {
-            const productId = this.dataset.productId;
-            if (!confirm('Bạn có chắc muốn xóa sản phẩm này khỏi giỏ hàng?')) return;
-            const card = document.querySelector(`.cart-item-card[data-product-id="${productId}"]`);
-            if (card) card.classList.add('is-removing');
-            const formData = new FormData();
-            formData.append('productId', productId);
-            fetch('/api/cart/remove', {
-                method: 'POST',
-                body: formData,
-                headers: { 'X-Requested-With': 'XMLHttpRequest' }
-            })
-            .then(r => r.json())
-            .then(data => {
-                if (!data.success) {
-                    if (card) card.classList.remove('is-removing');
-                    showToast('error', data.message || 'Không thể xóa sản phẩm');
-                    return;
-                }
-                setTimeout(() => {
-                    if (card) card.remove();
-                    if (data.empty) {
-                        location.reload();
-                    } else {
-                        updateCartTotals(data.cartTotal, data.totalQuantity);
-                        updateCartBadge(data.totalQuantity);
-                    }
-                }, 250);
-            })
-            .catch(err => {
-                console.error(err);
-                if (card) card.classList.remove('is-removing');
-                showToast('error', 'Có lỗi xảy ra');
-            });
-        });
-    });
 
     // ========== Refresh cart badge on page load ==========
     if (document.body.classList.contains('cart-page') ||

@@ -28,6 +28,14 @@ spring:
     date-format: dd/MM/yyyy HH:mm:ss
     time-zone: Asia/Ho_Chi_Minh
 
+# Static resource handling - graceful 404 instead of 500 for missing files
+spring.web.resources:
+  add-mappings: true
+  cache:
+    cachecontrol:
+      max-age: 3600
+  static-locations: classpath:/static/
+
 # Server Configuration
 server:
   port: 8081

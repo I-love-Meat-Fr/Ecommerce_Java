@@ -3,6 +3,7 @@ package com.ecommerce.cnj70.controller.web;
 import com.ecommerce.cnj70.document.Cart;
 import com.ecommerce.cnj70.security.CustomUserDetails;
 import com.ecommerce.cnj70.service.CartService;
+import com.ecommerce.cnj70.util.DebugLog;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -93,101 +94,34 @@ public class CartController {
         return ResponseEntity.ok(response);
     }
 
-    @PostMapping("/api/cart/update")
-    @ResponseBody
-    public ResponseEntity<Map<String, Object>> updateCartApi(@AuthenticationPrincipal CustomUserDetails user,
-                                                            @RequestParam String productId,
-                                                            @RequestParam int quantity) {
-        Map<String, Object> response = new HashMap<>();
-        if (user == null) {
-            response.put("success", false);
-            response.put("message", "Vui lòng đăng nhập");
-            return ResponseEntity.status(401).body(response);
-        }
-        try {
-            Cart cart = cartService.updateCartItem(user.getId(), productId, quantity);
-            BigDecimal cartTotal = cartService.calculateTotal(cart);
-            int totalQuantity = cart.getItems().stream().mapToInt(Cart.CartItem::getQuantity).sum();
-            Cart.CartItem updatedItem = cart.getItems().stream()
-                    .filter(i -> i.getProductId().equals(productId))
-                    .findFirst().orElse(null);
-            response.put("success", true);
-            response.put("message", "Đã cập nhật số lượng");
-            response.put("cartTotal", cartTotal);
-            response.put("totalQuantity", totalQuantity);
-            if (updatedItem != null) {
-                response.put("subtotal", updatedItem.getSubtotal());
-                response.put("quantity", updatedItem.getQuantity());
-            } else {
-                response.put("removed", true);
-            }
-            return ResponseEntity.ok(response);
-        } catch (Exception e) {
-            response.put("success", false);
-            response.put("message", e.getMessage());
-            return ResponseEntity.badRequest().body(response);
-        }
-    }
-
-    @PostMapping("/api/cart/remove")
-    @ResponseBody
-    public ResponseEntity<Map<String, Object>> removeFromCartApi(@AuthenticationPrincipal CustomUserDetails user,
-                                                                @RequestParam String productId) {
-        Map<String, Object> response = new HashMap<>();
-        if (user == null) {
-            response.put("success", false);
-            response.put("message", "Vui lòng đăng nhập");
-            return ResponseEntity.status(401).body(response);
-        }
-        try {
-            Cart cart = cartService.removeFromCart(user.getId(), productId);
-            BigDecimal cartTotal = cartService.calculateTotal(cart);
-            int totalQuantity = cart.getItems().stream().mapToInt(Cart.CartItem::getQuantity).sum();
-            response.put("success", true);
-            response.put("message", "Đã xóa sản phẩm khỏi giỏ hàng");
-            response.put("cartTotal", cartTotal);
-            response.put("totalQuantity", totalQuantity);
-            response.put("empty", cart.getItems().isEmpty());
-            return ResponseEntity.ok(response);
-        } catch (Exception e) {
-            response.put("success", false);
-            response.put("message", e.getMessage());
-            return ResponseEntity.badRequest().body(response);
-        }
-    }
-
-    @PostMapping("/cart/add")
-    public String addToCart(@AuthenticationPrincipal CustomUserDetails user,
-                           @RequestParam String productId,
-                           @RequestParam(defaultValue = "1") int quantity) {
-        if (user == null) {
-            return "redirect:/auth/login";
-        }
-
-        cartService.addToCart(user.getId(), productId, quantity);
-        return "redirect:/cart";
-    }
-
     @PostMapping("/cart/update")
     public String updateCart(@AuthenticationPrincipal CustomUserDetails user,
                             @RequestParam String productId,
                             @RequestParam int quantity) {
+        DebugLog.write("H11", "CartController:updateCart:entry", "POST /cart/update",
+                "userId=" + (user == null ? "null" : user.getId()) + " productId=" + productId + " quantity=" + quantity);
         if (user == null) {
             return "redirect:/auth/login";
         }
-
+        if (quantity < 1) {
+            DebugLog.write("H11", "CartController:updateCart:invalid", "quantity<1, redirect", "quantity=" + quantity);
+            return "redirect:/cart";
+        }
         cartService.updateCartItem(user.getId(), productId, quantity);
+        DebugLog.write("H11", "CartController:updateCart:ok", "Updated", "productId=" + productId + " quantity=" + quantity);
         return "redirect:/cart";
     }
 
     @PostMapping("/cart/remove")
     public String removeFromCart(@AuthenticationPrincipal CustomUserDetails user,
                                 @RequestParam String productId) {
+        DebugLog.write("H11", "CartController:removeFromCart:entry", "POST /cart/remove",
+                "userId=" + (user == null ? "null" : user.getId()) + " productId=" + productId);
         if (user == null) {
             return "redirect:/auth/login";
         }
-
         cartService.removeFromCart(user.getId(), productId);
+        DebugLog.write("H11", "CartController:removeFromCart:ok", "Removed", "productId=" + productId);
         return "redirect:/cart";
     }
 }
