@@ -1,82 +1,196 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/springsecurity6">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Hồ sơ cửa hàng - CNJ70 Vendor</title>
-    <link rel="stylesheet" th:href="@{/css/admin-vendor.css}">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Work+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" th:href="@{/css/dashboard.css}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .shop-hero { display:flex; align-items:center; gap:18px; padding:20px; background:var(--bg-elevated); border:1px solid var(--border); border-radius:var(--radius-lg); box-shadow:var(--shadow-xs); margin-bottom:20px; }
+        .shop-hero-logo { width:84px; height:84px; border-radius:var(--radius-lg); background:var(--bg-muted); display:flex; align-items:center; justify-content:center; overflow:hidden; font-size:32px; color:var(--text-faint); flex-shrink:0; }
+        .shop-hero-logo img { width:100%; height:100%; object-fit:cover; }
+        .shop-hero-info { flex:1; }
+        .shop-hero-info h2 { font-size:20px; font-weight:700; color:var(--text); margin-bottom:6px; }
+        .shop-hero-info p { font-size:13px; color:var(--text-muted); }
+        .preview-img { margin-top:10px; max-width:160px; border-radius:var(--radius); border:1px solid var(--border); }
+        .preview-banner { margin-top:10px; max-width:100%; max-height:160px; border-radius:var(--radius); border:1px solid var(--border); }
+        .file-hint { font-size:11.5px; color:var(--text-faint); margin-top:4px; }
+    </style>
 </head>
 <body>
-    <div class="dashboard-container">
-        <div th:replace="~{fragments/dashboard-sidebar}"></div>
-        <div class="main-content">
-            <div th:replace="~{fragments/dashboard-topbar}"></div>
-            <main class="dashboard-content">
-                <h1>Hồ sơ cửa hàng</h1>
-                
-                <div th:if="${success}" class="alert alert-success" th:text="${success}"></div>
-                <div th:if="${error}" class="alert alert-error" th:text="${error}"></div>
-                
+    <div class="sd-app" id="appShell">
+        <!-- SIDEBAR -->
+        <aside class="sd-sidebar">
+            <div class="sd-sidebar-header">
+                <div class="sd-sidebar-logo"><i class="fas fa-bolt"></i></div>
+                <div class="sd-sidebar-brand">
+                    <span class="sd-sidebar-brand-name">CNJ70 Shop</span>
+                    <span class="sd-sidebar-brand-sub">Vendor Console</span>
+                </div>
+            </div>
+            <nav class="sd-sidebar-nav">
+                <div class="sd-sidebar-nav-section">
+                    <span class="sd-sidebar-nav-title">Tổng quan</span>
+                    <a th:href="@{/vendor/dashboard}" class="sd-nav-item"><i class="fas fa-house"></i><span class="sd-nav-label">Dashboard</span></a>
+                </div>
+                <div class="sd-sidebar-nav-section">
+                    <span class="sd-sidebar-nav-title">Quản lý</span>
+                    <a th:href="@{/vendor/shop}" class="sd-nav-item active"><i class="fas fa-store"></i><span class="sd-nav-label">Cửa hàng</span></a>
+                    <a th:href="@{/vendor/products}" class="sd-nav-item"><i class="fas fa-box"></i><span class="sd-nav-label">Sản phẩm</span></a>
+                    <a th:href="@{/vendor/orders}" class="sd-nav-item"><i class="fas fa-cart-shopping"></i><span class="sd-nav-label">Đơn hàng</span></a>
+                </div>
+                <div class="sd-sidebar-nav-section">
+                    <span class="sd-sidebar-nav-title">Khác</span>
+                    <a th:href="@{/home}" class="sd-nav-item"><i class="fas fa-globe"></i><span class="sd-nav-label">Xem website</span></a>
+                    <form th:action="@{/auth/logout}" method="post" style="margin:0;">
+                        <button type="submit" class="sd-nav-item"><i class="fas fa-arrow-right-from-bracket"></i><span class="sd-nav-label">Đăng xuất</span></button>
+                    </form>
+                </div>
+            </nav>
+            <div class="sd-sidebar-footer">
+                <div class="sd-sidebar-user">
+                    <div class="sd-sidebar-avatar" sec:authentication="name">V</div>
+                    <div class="sd-sidebar-user-info">
+                        <div class="sd-sidebar-user-name" sec:authentication="name">Vendor</div>
+                        <div class="sd-sidebar-user-role">Vendor</div>
+                    </div>
+                </div>
+            </div>
+        </aside>
+
+        <div class="sd-main">
+            <div class="sd-topbar">
+                <button class="sd-topbar-toggle" type="button" id="sidebarToggle"><i class="fas fa-bars"></i></button>
+                <div class="sd-topbar-search">
+                    <i class="fas fa-magnifying-glass"></i>
+                    <input type="text" placeholder="Tìm kiếm...">
+                </div>
+                <div class="sd-topbar-actions">
+                    <button class="sd-icon-btn" type="button"><i class="fas fa-bell"></i><span class="sd-icon-btn-dot"></span></button>
+                    <div class="sd-topbar-divider"></div>
+                    <div class="sd-topbar-profile">
+                        <div class="sd-topbar-avatar" sec:authentication="name">V</div>
+                        <span class="sd-topbar-profile-name" sec:authentication="name">Vendor</span>
+                    </div>
+                </div>
+            </div>
+
+            <main class="sd-content">
+                <div class="sd-page-head">
+                    <div class="sd-page-head-title">
+                        <h1>Hồ sơ cửa hàng</h1>
+                        <p>Cập nhật thông tin cửa hàng của bạn.</p>
+                    </div>
+                </div>
+
+                <div th:if="${success}" class="sd-alert sd-alert-info" style="background:var(--success-soft);color:var(--success);border:1px solid transparent;padding:12px 16px;border-radius:var(--radius);margin-bottom:16px;display:flex;align-items:center;gap:10px;font-size:13.5px;">
+                    <i class="fas fa-circle-check"></i><span th:text="${success}"></span>
+                </div>
+                <div th:if="${error}" class="sd-alert sd-alert-warning" style="background:var(--danger-soft);color:var(--danger);border:1px solid transparent;padding:12px 16px;border-radius:var(--radius);margin-bottom:16px;display:flex;align-items:center;gap:10px;font-size:13.5px;">
+                    <i class="fas fa-triangle-exclamation"></i><span th:text="${error}"></span>
+                </div>
+
                 <div th:if="${shop}">
-                    <div class="shop-header">
-                        <div class="shop-logo">
+                    <div class="shop-hero">
+                        <div class="shop-hero-logo">
                             <img th:if="${shop.logoUrl}" th:src="${shop.logoUrl}" alt="Logo">
                             <i th:unless="${shop.logoUrl}" class="fas fa-store"></i>
                         </div>
-                        <div class="shop-info">
+                        <div class="shop-hero-info">
                             <h2 th:text="${shop.shopName}">Tên cửa hàng</h2>
-                            <span th:if="${shop.verified}" class="badge badge-success"><i class="fas fa-check-circle"></i> Đã xác minh</span>
-                            <span th:unless="${shop.verified}" class="badge badge-warning"><i class="fas fa-clock"></i> Chờ xác minh</span>
+                            <p th:text="${shop.description != null and !shop.description.isEmpty() ? shop.description : 'Chưa có mô tả.'}">Mô tả</p>
+                            <div style="margin-top:8px;display:flex;gap:6px;flex-wrap:wrap;">
+                                <span th:if="${shop.verified}" class="sd-badge sd-badge-green"><i class="fas fa-check-circle"></i> Đã xác minh</span>
+                                <span th:unless="${shop.verified}" class="sd-badge sd-badge-amber"><i class="fas fa-clock"></i> Chờ xác minh</span>
+                            </div>
                         </div>
                     </div>
-                    
-                    <form th:action="@{/vendor/shop/update}" th:object="${shopFormReq}" method="post" class="shop-form" enctype="multipart/form-data">
-                        <div class="form-group">
-                            <label for="shopName">Tên cửa hàng *</label>
-                            <input type="text" id="shopName" th:field="*{shopName}" required minlength="3" maxlength="100">
-                            <small>Tên shop phải từ 3-100 ký tự</small>
+
+                    <div class="sd-card">
+                        <div class="sd-card-head">
+                            <div>
+                                <h3>Thông tin cửa hàng</h3>
+                                <p>Cập nhật tên, mô tả, logo và banner.</p>
+                            </div>
                         </div>
-                        <div class="form-group">
-                            <label for="description">Mô tả cửa hàng</label>
-                            <textarea id="description" th:field="*{description}" rows="4" maxlength="500"></textarea>
-                            <small>Mô tả không quá 500 ký tự</small>
+                        <div class="sd-card-body">
+                            <form th:action="@{/vendor/shop/update}" th:object="${shopFormReq}" method="post" enctype="multipart/form-data">
+                                <div class="sd-form-group">
+                                    <label>Tên cửa hàng *</label>
+                                    <input type="text" class="sd-form-control" th:field="*{shopName}" required minlength="3" maxlength="100" placeholder="VD: Cửa hàng ABC">
+                                    <small class="file-hint">Tên shop phải từ 3-100 ký tự</small>
+                                </div>
+                                <div class="sd-form-group">
+                                    <label>Mô tả cửa hàng</label>
+                                    <textarea class="sd-form-control" th:field="*{description}" rows="4" maxlength="500" placeholder="Giới thiệu về cửa hàng của bạn..."></textarea>
+                                    <small class="file-hint">Tối đa 500 ký tự</small>
+                                </div>
+                                <div class="sd-form-group">
+                                    <label>Logo cửa hàng</label>
+                                    <input type="file" id="logoFile" name="logoFile" accept="image/png,image/jpeg,image/jpg,image/webp,image/gif">
+                                    <small class="file-hint">JPG, PNG, WEBP, GIF. Tối đa 5MB.</small>
+                                    <img id="logoPreview" th:if="${shop.logoUrl}" th:src="${shop.logoUrl}" class="preview-img">
+                                    <img id="logoPreviewNew" class="preview-img" style="display:none;">
+                                    <input type="hidden" id="logoUrl" th:field="*{logoUrl}">
+                                </div>
+                                <div class="sd-form-group">
+                                    <label>Banner cửa hàng</label>
+                                    <input type="file" id="bannerFile" name="bannerFile" accept="image/png,image/jpeg,image/jpg,image/webp,image/gif">
+                                    <small class="file-hint">JPG, PNG, WEBP, GIF. Tối đa 5MB.</small>
+                                    <img id="bannerPreview" th:if="${shop.bannerUrl}" th:src="${shop.bannerUrl}" class="preview-banner">
+                                    <img id="bannerPreviewNew" class="preview-banner" style="display:none;">
+                                    <input type="hidden" id="bannerUrl" th:field="*{bannerUrl}">
+                                </div>
+                                <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:18px;">
+                                    <a th:href="@{/vendor/dashboard}" class="sd-btn sd-btn-secondary"><i class="fas fa-xmark"></i> Hủy</a>
+                                    <button type="submit" class="sd-btn sd-btn-primary"><i class="fas fa-save"></i> Lưu thay đổi</button>
+                                </div>
+                            </form>
                         </div>
-                        <div class="form-group">
-                            <label for="logoFile">Logo cửa hàng</label>
-                            <input type="file" id="logoFile" name="logoFile" accept="image/png,image/jpeg,image/jpg,image/webp,image/gif">
-                            <small>Chấp nhận JPG, PNG, WEBP, GIF. Tối đa 5MB.</small>
-                            <img id="logoPreview" th:if="${shop.logoUrl}" th:src="${shop.logoUrl}" style="margin-top:10px;max-width:160px;border-radius:6px;">
-                            <img id="logoPreviewNew" style="display:none;margin-top:10px;max-width:160px;border-radius:6px;">
-                            <input type="hidden" id="logoUrl" th:field="*{logoUrl}">
-                        </div>
-                        <div class="form-group">
-                            <label for="bannerFile">Banner cửa hàng</label>
-                            <input type="file" id="bannerFile" name="bannerFile" accept="image/png,image/jpeg,image/jpg,image/webp,image/gif">
-                            <small>Chấp nhận JPG, PNG, WEBP, GIF. Tối đa 5MB.</small>
-                            <img id="bannerPreview" th:if="${shop.bannerUrl}" th:src="${shop.bannerUrl}" style="margin-top:10px;max-width:360px;border-radius:6px;">
-                            <img id="bannerPreviewNew" style="display:none;margin-top:10px;max-width:360px;border-radius:6px;">
-                            <input type="hidden" id="bannerUrl" th:field="*{bannerUrl}">
-                        </div>
-                        <div class="form-actions">
-                            <button type="submit" class="btn btn-primary"><i class="fas fa-save"></i> Lưu thay đổi</button>
-                        </div>
-                    </form>
-                    <script>
-                        document.getElementById('logoFile').addEventListener('change', function(e) {
-                            const f = e.target.files[0]; if (!f) return;
-                            const prev = document.getElementById('logoPreviewNew');
-                            prev.src = URL.createObjectURL(f); prev.style.display = 'block';
-                        });
-                        document.getElementById('bannerFile').addEventListener('change', function(e) {
-                            const f = e.target.files[0]; if (!f) return;
-                            const prev = document.getElementById('bannerPreviewNew');
-                            prev.src = URL.createObjectURL(f); prev.style.display = 'block';
-                        });
-                    </script>
+                    </div>
+                </div>
+
+                <div class="sd-empty" th:unless="${shop}">
+                    <i class="fas fa-store-slash"></i>
+                    <h3>Bạn chưa có cửa hàng</h3>
+                    <p>Tạo cửa hàng ngay để bắt đầu bán hàng.</p>
+                    <a th:href="@{/vendor/shop/create}" class="sd-btn sd-btn-primary" style="margin-top:14px;"><i class="fas fa-plus"></i> Tạo cửa hàng</a>
                 </div>
             </main>
         </div>
     </div>
+
+    <script>
+        (function() {
+            const shell = document.getElementById('appShell');
+            const toggle = document.getElementById('sidebarToggle');
+            const KEY = 'cnj70-sidebar-expanded';
+            if (localStorage.getItem(KEY) === '1') shell.classList.add('sidebar-expanded');
+            toggle?.addEventListener('click', () => {
+                shell.classList.toggle('sidebar-expanded');
+                localStorage.setItem(KEY, shell.classList.contains('sidebar-expanded') ? '1' : '0');
+            });
+            document.querySelectorAll('.sd-sidebar-avatar, .sd-topbar-avatar').forEach(el => {
+                const name = (el.textContent || '').trim();
+                if (!name) return;
+                el.textContent = name.charAt(0).toUpperCase();
+            });
+            document.getElementById('logoFile')?.addEventListener('change', function(e) {
+                const f = e.target.files[0]; if (!f) return;
+                const prev = document.getElementById('logoPreviewNew');
+                prev.src = URL.createObjectURL(f); prev.style.display = 'block';
+            });
+            document.getElementById('bannerFile')?.addEventListener('change', function(e) {
+                const f = e.target.files[0]; if (!f) return;
+                const prev = document.getElementById('bannerPreviewNew');
+                prev.src = URL.createObjectURL(f); prev.style.display = 'block';
+            });
+        })();
+    </script>
 </body>
 </html>

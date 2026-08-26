@@ -15,7 +15,7 @@
         <div class="container">
             <div class="product-detail">
                 <div class="product-images">
-                    <img th:src="${product.thumbnailUrl ?: '/images/placeholder.jpg'}" th:alt="${product.name}">
+                    <img th:src="${product.thumbnailUrl ?: 'https://placehold.co/500x500/f1f5f9/94a3b8?text=No+Img'}" th:alt="${product.name}">
                 </div>
                 <div class="product-info">
                     <h1 th:text="${product.name}">Tên sản phẩm</h1>

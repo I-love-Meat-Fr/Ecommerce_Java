@@ -1,129 +1,243 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/springsecurity6">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Chi tiết đơn hàng - CNJ70 Vendor</title>
-    <link rel="stylesheet" th:href="@{/css/admin-vendor.css}">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Work+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" th:href="@{/css/dashboard.css}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .info-grid { display:grid; grid-template-columns:1fr 1fr; gap:14px; }
+        .info-item { display:flex; flex-direction:column; gap:4px; padding:10px 14px; background:var(--bg-subtle); border-radius:var(--radius); }
+        .info-item .label { font-size:11.5px; font-weight:500; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.04em; }
+        .info-item .value { font-size:13.5px; font-weight:500; color:var(--text); word-break:break-word; }
+        .item-row { display:flex; align-items:center; gap:12px; }
+        .item-row img { width:48px; height:48px; border-radius:var(--radius); object-fit:cover; background:var(--bg-muted); }
+        .item-row .name { font-weight:600; font-size:13.5px; color:var(--text); }
+        .text-right { text-align:right; }
+        .table-foot td { background:var(--bg-subtle); font-weight:700; }
+        .file-hint { display:block; font-size:11.5px; color:var(--text-faint); margin-top:4px; }
+        @media (max-width:768px) { .info-grid { grid-template-columns:1fr; } }
+    </style>
 </head>
 <body>
-    <div class="dashboard-container">
-        <div th:replace="~{fragments/dashboard-sidebar}"></div>
-        <div class="main-content">
-            <div th:replace="~{fragments/dashboard-topbar}"></div>
-            <main class="dashboard-content">
-                <div class="content-header">
-                    <h1>Chi tiết đơn hàng</h1>
-                    <a th:href="@{/vendor/orders}" class="btn btn-secondary">
-                        <i class="fas fa-arrow-left"></i> Quay lại
-                    </a>
+    <div class="sd-app" id="appShell">
+        <aside class="sd-sidebar">
+            <div class="sd-sidebar-header">
+                <div class="sd-sidebar-logo"><i class="fas fa-bolt"></i></div>
+                <div class="sd-sidebar-brand">
+                    <span class="sd-sidebar-brand-name">CNJ70 Shop</span>
+                    <span class="sd-sidebar-brand-sub">Vendor Console</span>
                 </div>
-                
-                <div th:if="${error}" class="alert alert-error" th:text="${error}"></div>
-                
-                <div class="order-detail-container">
-                    <div class="order-info-card">
-                        <h3>Thông tin đơn hàng</h3>
-                        <div class="info-row">
-                            <span class="label">Mã đơn hàng:</span>
-                            <span class="value" th:text="${order.orderId}">ID</span>
+            </div>
+            <nav class="sd-sidebar-nav">
+                <div class="sd-sidebar-nav-section">
+                    <span class="sd-sidebar-nav-title">Tổng quan</span>
+                    <a th:href="@{/vendor/dashboard}" class="sd-nav-item"><i class="fas fa-house"></i><span class="sd-nav-label">Dashboard</span></a>
+                </div>
+                <div class="sd-sidebar-nav-section">
+                    <span class="sd-sidebar-nav-title">Quản lý</span>
+                    <a th:href="@{/vendor/shop}" class="sd-nav-item"><i class="fas fa-store"></i><span class="sd-nav-label">Cửa hàng</span></a>
+                    <a th:href="@{/vendor/products}" class="sd-nav-item"><i class="fas fa-box"></i><span class="sd-nav-label">Sản phẩm</span></a>
+                    <a th:href="@{/vendor/orders}" class="sd-nav-item active"><i class="fas fa-cart-shopping"></i><span class="sd-nav-label">Đơn hàng</span></a>
+                </div>
+                <div class="sd-sidebar-nav-section">
+                    <span class="sd-sidebar-nav-title">Khác</span>
+                    <a th:href="@{/home}" class="sd-nav-item"><i class="fas fa-globe"></i><span class="sd-nav-label">Xem website</span></a>
+                    <form th:action="@{/auth/logout}" method="post" style="margin:0;">
+                        <button type="submit" class="sd-nav-item"><i class="fas fa-arrow-right-from-bracket"></i><span class="sd-nav-label">Đăng xuất</span></button>
+                    </form>
+                </div>
+            </nav>
+            <div class="sd-sidebar-footer">
+                <div class="sd-sidebar-user">
+                    <div class="sd-sidebar-avatar" sec:authentication="name">V</div>
+                    <div class="sd-sidebar-user-info">
+                        <div class="sd-sidebar-user-name" sec:authentication="name">Vendor</div>
+                        <div class="sd-sidebar-user-role">Vendor</div>
+                    </div>
+                </div>
+            </div>
+        </aside>
+
+        <div class="sd-main">
+            <div class="sd-topbar">
+                <button class="sd-topbar-toggle" type="button" id="sidebarToggle"><i class="fas fa-bars"></i></button>
+                <div class="sd-topbar-search">
+                    <i class="fas fa-magnifying-glass"></i>
+                    <input type="text" placeholder="Tìm kiếm...">
+                </div>
+                <div class="sd-topbar-actions">
+                    <button class="sd-icon-btn" type="button"><i class="fas fa-bell"></i><span class="sd-icon-btn-dot"></span></button>
+                    <div class="sd-topbar-divider"></div>
+                    <div class="sd-topbar-profile">
+                        <div class="sd-topbar-avatar" sec:authentication="name">V</div>
+                        <span class="sd-topbar-profile-name" sec:authentication="name">Vendor</span>
+                    </div>
+                </div>
+            </div>
+
+            <main class="sd-content">
+                <div class="sd-page-head">
+                    <div class="sd-page-head-title">
+                        <h1>Chi tiết đơn hàng</h1>
+                        <p>Mã đơn: <strong th:text="${order.orderId}">ID</strong></p>
+                    </div>
+                    <div class="sd-page-head-actions">
+                        <a th:href="@{/vendor/orders}" class="sd-btn sd-btn-secondary sd-btn-sm"><i class="fas fa-arrow-left"></i> Quay lại</a>
+                    </div>
+                </div>
+
+                <div th:if="${error}" class="sd-alert sd-alert-warning" style="background:var(--danger-soft);color:var(--danger);border:1px solid transparent;padding:12px 16px;border-radius:var(--radius);margin-bottom:16px;display:flex;align-items:center;gap:10px;font-size:13.5px;">
+                    <i class="fas fa-triangle-exclamation"></i><span th:text="${error}"></span>
+                </div>
+
+                <div class="sd-grid sd-grid-3-2" style="margin-bottom:20px;">
+                    <div class="sd-card">
+                        <div class="sd-card-head">
+                            <h3>Sản phẩm của bạn</h3>
                         </div>
-                        <div class="info-row">
-                            <span class="label">Ngày đặt:</span>
-                            <span class="value" th:text="${#temporals.format(order.createdAt, 'dd/MM/yyyy HH:mm')}">Ngày</span>
-                        </div>
-                        <div class="info-row">
-                            <span class="label">Trạng thái:</span>
-                            <span class="status-badge" 
-                                  th:classappend="${order.status.name() == 'PENDING' ? 'status-warning' : 
-                                                   (order.status.name() == 'PROCESSING' ? 'status-info' : 
-                                                   (order.status.name() == 'DELIVERED' ? 'status-success' : 
-                                                   (order.status.name() == 'CANCELLED' ? 'status-danger' : '')))}"
-                                  th:text="${order.status}">STATUS</span>
-                        </div>
-                        <div class="info-row">
-                            <span class="label">Thanh toán:</span>
-                            <span th:text="${order.paid ? 'Đã thanh toán' : 'Chưa thanh toán'}">...</span>
+                        <div class="sd-card-body sd-card-body-flush">
+                            <table class="sd-table">
+                                <thead>
+                                    <tr>
+                                        <th>Sản phẩm</th>
+                                        <th>Giá</th>
+                                        <th>SL</th>
+                                        <th>Thành tiền</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr th:each="item : ${order.items}">
+                                        <td>
+                                            <div class="item-row">
+                                                <img th:if="${item.imageUrl}" th:src="${item.imageUrl}" alt="">
+                                                <i th:unless="${item.imageUrl}" class="fas fa-image" style="width:48px;height:48px;display:flex;align-items:center;justify-content:center;background:var(--bg-muted);border-radius:var(--radius);color:var(--text-faint);"></i>
+                                                <span class="name" th:text="${item.productName}">Tên</span>
+                                            </div>
+                                        </td>
+                                        <td th:text="${@money.format(item.price)}">0đ</td>
+                                        <td th:text="${item.quantity}">0</td>
+                                        <td th:text="${@money.format(item.subtotal)}">0đ</td>
+                                    </tr>
+                                </tbody>
+                                <tfoot>
+                                    <tr class="table-foot">
+                                        <td colspan="3" class="text-right">Tổng (sản phẩm của bạn):</td>
+                                        <td th:text="${@money.format(order.subtotal)}">0đ</td>
+                                    </tr>
+                                </tfoot>
+                            </table>
                         </div>
                     </div>
-                    
-                    <div class="customer-info-card">
-                        <h3>Thông tin khách hàng</h3>
-                        <div class="info-row">
-                            <span class="label">Tên:</span>
-                            <span class="value" th:text="${order.userName}">Tên</span>
-                        </div>
-                        <div class="info-row">
-                            <span class="label">Email:</span>
-                            <span class="value" th:text="${order.userEmail}">Email</span>
-                        </div>
-                        <div class="info-row">
-                            <span class="label">Số điện thoại:</span>
-                            <span class="value" th:text="${order.userPhone}">SĐT</span>
-                        </div>
-                        <div class="info-row">
-                            <span class="label">Địa chỉ giao hàng:</span>
-                            <span class="value" th:text="${order.shippingAddress}">Địa chỉ</span>
-                        </div>
-                    </div>
-                    
-                    <div class="order-items-card">
-                        <h3>Sản phẩm của bạn trong đơn hàng</h3>
-                        <table class="items-table">
-                            <thead>
-                                <tr>
-                                    <th>Sản phẩm</th>
-                                    <th>Giá</th>
-                                    <th>Số lượng</th>
-                                    <th>Thành tiền</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr th:each="item : ${order.items}">
-                                    <td>
-                                        <div class="item-product">
-                                            <img th:if="${item.imageUrl}" th:src="${item.imageUrl}" alt="" width="40">
-                                            <span th:text="${item.productName}">Tên</span>
-                                        </div>
-                                    </td>
-                                    <td th:text="${@money.format(item.price)}">0đ</td>
-                                    <td th:text="${item.quantity}">0</td>
-                                    <td th:text="${@money.format(item.subtotal)}">0đ</td>
-                                </tr>
-                            </tbody>
-                            <tfoot>
-                                <tr>
-                                    <td colspan="3" class="text-right"><strong>Tổng (chỉ sản phẩm của bạn):</strong></td>
-                                    <td><strong th:text="${@money.format(order.subtotal)}">0đ</strong></td>
-                                </tr>
-                            </tfoot>
-                        </table>
-                    </div>
-                    
-                    <div class="order-actions-card">
-                        <h3>Cập nhật trạng thái</h3>
-                        <form th:action="@{/vendor/orders/{id}/status(id=${order.orderId})}" method="post">
-                            <div class="form-group">
-                                <select name="status" class="form-control">
-                                    <option value="PENDING" th:selected="${order.status.name() == 'PENDING'}">Chờ xác nhận</option>
-                                    <option value="PROCESSING" th:selected="${order.status.name() == 'PROCESSING'}">Đang xử lý</option>
-                                    <option value="SHIPPED" th:selected="${order.status.name() == 'SHIPPED'}">Đang giao</option>
-                                    <option value="DELIVERED" th:selected="${order.status.name() == 'DELIVERED'}">Đã giao</option>
-                                    <option value="CANCELLED" th:selected="${order.status.name() == 'CANCELLED'}">Hủy</option>
-                                </select>
+
+                    <div style="display:flex;flex-direction:column;gap:16px;">
+                        <div class="sd-card">
+                            <div class="sd-card-head"><h3>Thông tin đơn</h3></div>
+                            <div class="sd-card-body">
+                                <div class="info-grid">
+                                    <div class="info-item">
+                                        <span class="label">Mã đơn</span>
+                                        <span class="value" th:text="${order.orderId}">ID</span>
+                                    </div>
+                                    <div class="info-item">
+                                        <span class="label">Ngày đặt</span>
+                                        <span class="value" th:text="${#temporals.format(order.createdAt, 'dd/MM/yyyy HH:mm')}">Ngày</span>
+                                    </div>
+                                    <div class="info-item">
+                                        <span class="label">Trạng thái</span>
+                                        <span class="value">
+                                            <span class="sd-badge"
+                                                  th:classappend="${order.status.name() == 'PENDING' ? 'sd-badge-amber' :
+                                                                   (order.status.name() == 'PROCESSING' ? 'sd-badge-sky' :
+                                                                   (order.status.name() == 'DELIVERED' ? 'sd-badge-green' :
+                                                                   (order.status.name() == 'CANCELLED' ? 'sd-badge-red' : 'sd-badge-slate')))}"
+                                                  th:text="${order.status.name() == 'PENDING' ? 'Chờ xác nhận' :
+                                                           (order.status.name() == 'PROCESSING' ? 'Đang xử lý' :
+                                                           (order.status.name() == 'SHIPPED' ? 'Đang giao' :
+                                                           (order.status.name() == 'DELIVERED' ? 'Đã giao' :
+                                                           (order.status.name() == 'CANCELLED' ? 'Đã hủy' : order.status.name()))))}">STATUS</span>
+                                        </span>
+                                    </div>
+                                    <div class="info-item">
+                                        <span class="label">Thanh toán</span>
+                                        <span class="value">
+                                            <span class="sd-badge" th:classappend="${order.paid ? 'sd-badge-green' : 'sd-badge-slate'}" th:text="${order.paid ? 'Đã thanh toán' : 'Chưa thanh toán'}">...</span>
+                                        </span>
+                                    </div>
+                                </div>
                             </div>
-                            <button type="submit" class="btn btn-primary">
-                                <i class="fas fa-save"></i> Cập nhật
-                            </button>
-                        </form>
-                        <small class="form-text text-muted">
-                            Lưu ý: Chỉ có thể chuyển trạng thái theo thứ tự hợp lệ.
-                        </small>
+                        </div>
+
+                        <div class="sd-card">
+                            <div class="sd-card-head"><h3>Khách hàng</h3></div>
+                            <div class="sd-card-body">
+                                <div class="info-grid">
+                                    <div class="info-item">
+                                        <span class="label">Tên</span>
+                                        <span class="value" th:text="${order.userName}">Tên</span>
+                                    </div>
+                                    <div class="info-item">
+                                        <span class="label">Email</span>
+                                        <span class="value" th:text="${order.userEmail}">Email</span>
+                                    </div>
+                                    <div class="info-item">
+                                        <span class="label">Số điện thoại</span>
+                                        <span class="value" th:text="${order.userPhone}">SĐT</span>
+                                    </div>
+                                    <div class="info-item" style="grid-column:1/-1;">
+                                        <span class="label">Địa chỉ giao hàng</span>
+                                        <span class="value" th:text="${order.shippingAddress}">Địa chỉ</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="sd-card">
+                            <div class="sd-card-head"><h3>Cập nhật trạng thái</h3></div>
+                            <div class="sd-card-body">
+                                <form th:action="@{/vendor/orders/{id}/status(id=${order.orderId})}" method="post">
+                                    <div class="sd-form-group">
+                                        <label>Trạng thái mới</label>
+                                        <select name="status" class="sd-form-control">
+                                            <option value="PENDING" th:selected="${order.status.name() == 'PENDING'}">Chờ xác nhận</option>
+                                            <option value="PROCESSING" th:selected="${order.status.name() == 'PROCESSING'}">Đang xử lý</option>
+                                            <option value="SHIPPED" th:selected="${order.status.name() == 'SHIPPED'}">Đang giao</option>
+                                            <option value="DELIVERED" th:selected="${order.status.name() == 'DELIVERED'}">Đã giao</option>
+                                            <option value="CANCELLED" th:selected="${order.status.name() == 'CANCELLED'}">Hủy</option>
+                                        </select>
+                                    </div>
+                                    <button type="submit" class="sd-btn sd-btn-primary" style="width:100%;justify-content:center;"><i class="fas fa-save"></i> Cập nhật</button>
+                                    <small class="file-hint">Chỉ có thể chuyển trạng thái theo thứ tự hợp lệ.</small>
+                                </form>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </main>
         </div>
     </div>
+
+    <script>
+        (function() {
+            const shell = document.getElementById('appShell');
+            const toggle = document.getElementById('sidebarToggle');
+            const KEY = 'cnj70-sidebar-expanded';
+            if (localStorage.getItem(KEY) === '1') shell.classList.add('sidebar-expanded');
+            toggle?.addEventListener('click', () => {
+                shell.classList.toggle('sidebar-expanded');
+                localStorage.setItem(KEY, shell.classList.contains('sidebar-expanded') ? '1' : '0');
+            });
+            document.querySelectorAll('.sd-sidebar-avatar, .sd-topbar-avatar').forEach(el => {
+                const name = (el.textContent || '').trim();
+                if (!name) return;
+                el.textContent = name.charAt(0).toUpperCase();
+            });
+        })();
+    </script>
 </body>
 </html>

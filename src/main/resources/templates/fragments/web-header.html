@@ -1,64 +1,144 @@
-<header class="header" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/springsecurity6">
+<header class="home-header" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/springsecurity6">
     <div class="container">
-        <div class="header-content">
-            <div class="logo">
-                <a th:href="@{/home}" id="logo-link">
-                    <span class="logo-icon">
+        <div class="home-header-inner">
+
+            <!-- Logo -->
+            <div class="home-logo">
+                <a th:href="@{/home}" id="logo-link" class="home-logo-link">
+                    <div class="home-logo-icon">
                         <i class="fas fa-shopping-bag"></i>
-                    </span>
-                    <span class="logo-text">CNJ70 <span>Shop</span></span>
+                    </div>
+                    <div class="home-logo-text">
+                        <span class="home-logo-brand">CNJ70</span>
+                        <span class="home-logo-sub">Shop</span>
+                    </div>
                 </a>
             </div>
-            
-            <form th:action="@{/products}" method="get" class="header-search" id="search-form">
-                <div class="search-box">
-                    <i class="fas fa-search search-icon"></i>
-                    <input type="text" name="search" placeholder="Tìm kiếm sản phẩm..." aria-label="Tìm kiếm sản phẩm">
-                    <button type="submit" class="search-btn" id="search-btn">
-                        <i class="fas fa-search"></i>
-                        <span>Tìm kiếm</span>
-                    </button>
-                </div>
-            </form>
-            
-            <nav class="nav" aria-label="Điều hướng chính">
-                <a th:href="@{/home}" id="nav-home">
-                    <i class="fas fa-home"></i>
+
+            <!-- Center: Nav Links -->
+            <nav class="home-nav" aria-label="Điều hướng chính">
+                <a th:href="@{/home}" id="nav-home" class="home-nav-link">
+                    <i class="fas fa-home home-nav-icon"></i>
                     <span>Trang chủ</span>
                 </a>
-                <a th:href="@{/products}" id="nav-products">
-                    <i class="fas fa-th-large"></i>
+                <a th:href="@{/products}" id="nav-products" class="home-nav-link">
+                    <i class="fas fa-th-large home-nav-icon"></i>
                     <span>Sản phẩm</span>
                 </a>
+                <a th:href="@{/orders}" id="nav-orders" class="home-nav-link">
+                    <i class="fas fa-receipt home-nav-icon"></i>
+                    <span>Đơn hàng</span>
+                </a>
+                <a th:href="@{/cart}" id="nav-cart" class="home-nav-link">
+                    <i class="fas fa-shopping-cart home-nav-icon"></i>
+                    <span>Giỏ hàng</span>
+                </a>
             </nav>
-            
-            <div class="header-actions">
-                <div sec:authorize="isAuthenticated()" class="user-menu">
-                    <a th:href="@{/cart}" class="header-icon-btn" title="Giỏ hàng" id="cart-btn">
-                        <i class="fas fa-shopping-cart" aria-hidden="true"></i>
-                        <span>Giỏ hàng</span>
+
+            <!-- Right: Actions -->
+            <div class="home-header-actions">
+                <!-- Logged in: icons row -->
+                <div sec:authorize="isAuthenticated()" class="home-authenticated">
+                    <a th:href="@{/cart}" class="home-icon-btn" title="Giỏ hàng" id="cart-btn">
+                        <i class="fas fa-shopping-cart"></i>
                     </a>
-                    <a th:href="@{/orders}" class="header-icon-btn" title="Đơn hàng" id="orders-btn">
-                        <i class="fas fa-receipt" aria-hidden="true"></i>
-                        <span>Đơn hàng</span>
+                    <a th:href="@{/orders}" class="home-icon-btn" title="Đơn hàng" id="orders-btn">
+                        <i class="fas fa-receipt"></i>
                     </a>
-                    <a th:href="@{/vendor}" sec:authorize="hasRole('VENDOR')" class="header-icon-btn" title="Quản lý Shop" id="vendor-btn">
-                        <i class="fas fa-store" aria-hidden="true"></i>
-                        <span>Shop</span>
+                    <a th:href="@{/vendor}" sec:authorize="hasRole('VENDOR')" class="home-icon-btn home-icon-btn-vendor" title="Quản lý Shop" id="vendor-btn">
+                        <i class="fas fa-store"></i>
+                        <span class="home-icon-label">Kênh người bán</span>
                     </a>
-                    <form th:action="@{/auth/logout}" method="post" class="logout-form">
-                        <button type="submit" class="header-icon-btn" id="logout-btn">
-                            <i class="fas fa-sign-out-alt"></i>
-                            <span>Đăng xuất</span>
+                    <div class="home-user-menu">
+                        <button class="home-user-btn" id="user-menu-btn">
+                            <div class="home-user-avatar">
+                                <i class="fas fa-user"></i>
+                            </div>
+                            <i class="fas fa-chevron-down home-user-arrow"></i>
                         </button>
-                    </form>
+                        <div class="home-user-dropdown" id="user-dropdown">
+                            <div class="home-user-dropdown-header">
+                                <div class="home-user-name" sec:authorize="isAuthenticated()" th:text="${#authentication.name}">Username</div>
+                                <div class="home-user-email">Xem và chỉnh sửa hồ sơ</div>
+                            </div>
+                            <div class="home-user-dropdown-divider"></div>
+                            <a th:href="@{/orders}" class="home-dropdown-item">
+                                <i class="fas fa-receipt"></i> Đơn hàng của tôi
+                            </a>
+                            <a th:href="@{/cart}" class="home-dropdown-item">
+                                <i class="fas fa-shopping-cart"></i> Giỏ hàng
+                            </a>
+                            <a th:href="@{/vendor}" sec:authorize="hasRole('VENDOR')" class="home-dropdown-item">
+                                <i class="fas fa-store"></i> Kênh người bán
+                            </a>
+                            <div class="home-user-dropdown-divider"></div>
+                            <form th:action="@{/auth/logout}" method="post">
+                                <button type="submit" class="home-dropdown-item home-dropdown-item-danger" id="logout-btn">
+                                    <i class="fas fa-sign-out-alt"></i> Đăng xuất
+                                </button>
+                            </form>
+                        </div>
+                    </div>
                 </div>
-                <div sec:authorize="!isAuthenticated()" class="auth-actions">
-                    <a class="btn btn-primary btn-sm header-cta" th:href="@{/auth/login}" id="login-btn">
+
+                <!-- Logged out -->
+                <div sec:authorize="!isAuthenticated()" class="home-auth-guest">
+                    <a class="home-btn-login" th:href="@{/auth/login}" id="login-btn">
                         <i class="fas fa-sign-in-alt"></i> Đăng nhập
                     </a>
-                    <a class="btn btn-secondary btn-sm" th:href="@{/auth/register}" id="register-btn">Đăng ký</a>
+                    <a class="home-btn-register" th:href="@{/auth/register}" id="register-btn">
+                        <i class="fas fa-user-plus"></i> Đăng ký
+                    </a>
                 </div>
+            </div>
+
+            <!-- Mobile Hamburger -->
+            <button class="home-hamburger" id="home-hamburger-btn" aria-label="Mở menu">
+                <span></span>
+                <span></span>
+                <span></span>
+            </button>
+        </div>
+
+        <!-- Mobile Menu Overlay -->
+        <div class="home-mobile-menu" id="home-mobile-menu">
+            <div class="home-mobile-menu-header">
+                <div class="home-mobile-logo">
+                    <i class="fas fa-shopping-bag"></i>
+                    <span>CNJ70 Shop</span>
+                </div>
+                <button class="home-mobile-close" id="home-mobile-close">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <nav class="home-mobile-nav">
+                <a th:href="@{/home}" class="home-mobile-nav-link">
+                    <i class="fas fa-home"></i> Trang chủ
+                </a>
+                <a th:href="@{/products}" class="home-mobile-nav-link">
+                    <i class="fas fa-th-large"></i> Sản phẩm
+                </a>
+                <a th:href="@{/orders}" class="home-mobile-nav-link">
+                    <i class="fas fa-receipt"></i> Đơn hàng
+                </a>
+                <a th:href="@{/cart}" class="home-mobile-nav-link">
+                    <i class="fas fa-shopping-cart"></i> Giỏ hàng
+                </a>
+            </nav>
+            <div sec:authorize="isAuthenticated()" class="home-mobile-auth">
+                <form th:action="@{/auth/logout}" method="post">
+                    <button type="submit" class="home-mobile-logout">
+                        <i class="fas fa-sign-out-alt"></i> Đăng xuất
+                    </button>
+                </form>
+            </div>
+            <div sec:authorize="!isAuthenticated()" class="home-mobile-auth">
+                <a class="home-mobile-login" th:href="@{/auth/login}">
+                    <i class="fas fa-sign-in-alt"></i> Đăng nhập
+                </a>
+                <a class="home-mobile-register" th:href="@{/auth/register}">
+                    <i class="fas fa-user-plus"></i> Đăng ký
+                </a>
             </div>
         </div>
     </div>

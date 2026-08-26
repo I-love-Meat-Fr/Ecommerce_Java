@@ -5,100 +5,185 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title th:text="${product != null ? 'Sửa sản phẩm' : 'Thêm sản phẩm mới'}">Sản phẩm - CNJ70</title>
-    <link rel="stylesheet" th:href="@{/css/admin-vendor.css}">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Work+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" th:href="@{/css/dashboard.css}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .form-row { display:grid; grid-template-columns:1fr 1fr; gap:14px; }
+        .preview-img { margin-top:10px; max-width:240px; border-radius:var(--radius); border:1px solid var(--border); }
+        .file-hint { display:block; font-size:11.5px; color:var(--text-faint); margin-top:4px; }
+        .sd-form-error { color:var(--danger); font-size:12px; margin-top:4px; }
+        @media (max-width:768px) { .form-row { grid-template-columns:1fr; } }
+    </style>
 </head>
 <body>
-    <div class="dashboard-container">
-        <div th:replace="fragments/dashboard-sidebar"></div>
-        <div class="main-content">
-            <div th:replace="fragments/dashboard-topbar"></div>
-            <main class="dashboard-content">
-                <h1 th:text="${product != null ? 'Sửa sản phẩm' : 'Thêm sản phẩm mới'}">Sản phẩm</h1>
-                
-                <div th:if="${error}" class="alert alert-error" th:text="${error}"></div>
-                
-                <form th:action="${product != null ? '/vendor/products/edit/' + product.id : '/vendor/products/create'}"
-                      th:object="${productFormReq}" method="post" class="product-form"
-                      enctype="multipart/form-data">
-                    
-                    <div class="form-group">
-                        <label for="name">Tên sản phẩm *</label>
-                        <input type="text" id="name" th:field="*{name}" required minlength="1" maxlength="200" 
-                               placeholder="Nhập tên sản phẩm">
-                        <div th:if="${#fields.hasErrors('name')}" class="error" th:errors="*{name}"></div>
+    <div class="sd-app" id="appShell">
+        <aside class="sd-sidebar">
+            <div class="sd-sidebar-header">
+                <div class="sd-sidebar-logo"><i class="fas fa-bolt"></i></div>
+                <div class="sd-sidebar-brand">
+                    <span class="sd-sidebar-brand-name">CNJ70 Shop</span>
+                    <span class="sd-sidebar-brand-sub">Vendor Console</span>
+                </div>
+            </div>
+            <nav class="sd-sidebar-nav">
+                <div class="sd-sidebar-nav-section">
+                    <span class="sd-sidebar-nav-title">Tổng quan</span>
+                    <a th:href="@{/vendor/dashboard}" class="sd-nav-item"><i class="fas fa-house"></i><span class="sd-nav-label">Dashboard</span></a>
+                </div>
+                <div class="sd-sidebar-nav-section">
+                    <span class="sd-sidebar-nav-title">Quản lý</span>
+                    <a th:href="@{/vendor/shop}" class="sd-nav-item"><i class="fas fa-store"></i><span class="sd-nav-label">Cửa hàng</span></a>
+                    <a th:href="@{/vendor/products}" class="sd-nav-item active"><i class="fas fa-box"></i><span class="sd-nav-label">Sản phẩm</span></a>
+                    <a th:href="@{/vendor/orders}" class="sd-nav-item"><i class="fas fa-cart-shopping"></i><span class="sd-nav-label">Đơn hàng</span></a>
+                </div>
+                <div class="sd-sidebar-nav-section">
+                    <span class="sd-sidebar-nav-title">Khác</span>
+                    <a th:href="@{/home}" class="sd-nav-item"><i class="fas fa-globe"></i><span class="sd-nav-label">Xem website</span></a>
+                    <form th:action="@{/auth/logout}" method="post" style="margin:0;">
+                        <button type="submit" class="sd-nav-item"><i class="fas fa-arrow-right-from-bracket"></i><span class="sd-nav-label">Đăng xuất</span></button>
+                    </form>
+                </div>
+            </nav>
+            <div class="sd-sidebar-footer">
+                <div class="sd-sidebar-user">
+                    <div class="sd-sidebar-avatar" sec:authentication="name">V</div>
+                    <div class="sd-sidebar-user-info">
+                        <div class="sd-sidebar-user-name" sec:authentication="name">Vendor</div>
+                        <div class="sd-sidebar-user-role">Vendor</div>
                     </div>
-                    
-                    <div class="form-group">
-                        <label for="description">Mô tả sản phẩm</label>
-                        <textarea id="description" th:field="*{description}" rows="5" 
-                                  placeholder="Mô tả chi tiết về sản phẩm..."></textarea>
+                </div>
+            </div>
+        </aside>
+
+        <div class="sd-main">
+            <div class="sd-topbar">
+                <button class="sd-topbar-toggle" type="button" id="sidebarToggle"><i class="fas fa-bars"></i></button>
+                <div class="sd-topbar-search">
+                    <i class="fas fa-magnifying-glass"></i>
+                    <input type="text" placeholder="Tìm kiếm...">
+                </div>
+                <div class="sd-topbar-actions">
+                    <button class="sd-icon-btn" type="button"><i class="fas fa-bell"></i><span class="sd-icon-btn-dot"></span></button>
+                    <div class="sd-topbar-divider"></div>
+                    <div class="sd-topbar-profile">
+                        <div class="sd-topbar-avatar" sec:authentication="name">V</div>
+                        <span class="sd-topbar-profile-name" sec:authentication="name">Vendor</span>
                     </div>
-                    
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label for="price">Giá (VNĐ) *</label>
-                            <input type="number" id="price" th:field="*{price}" required
-                                   placeholder="0">
-                            <div th:if="${#fields.hasErrors('price')}" class="error" th:errors="*{price}"></div>
+                </div>
+            </div>
+
+            <main class="sd-content">
+                <div class="sd-page-head">
+                    <div class="sd-page-head-title">
+                        <h1 th:text="${product != null ? 'Sửa sản phẩm' : 'Thêm sản phẩm mới'}">Sản phẩm</h1>
+                        <p th:text="${product != null ? 'Cập nhật thông tin sản phẩm.' : 'Điền thông tin để đăng bán sản phẩm mới.'}">Mô tả</p>
+                    </div>
+                    <div class="sd-page-head-actions">
+                        <a th:href="@{/vendor/products}" class="sd-btn sd-btn-secondary sd-btn-sm"><i class="fas fa-arrow-left"></i> Quay lại</a>
+                    </div>
+                </div>
+
+                <div th:if="${error}" class="sd-alert sd-alert-warning" style="background:var(--danger-soft);color:var(--danger);border:1px solid transparent;padding:12px 16px;border-radius:var(--radius);margin-bottom:16px;display:flex;align-items:center;gap:10px;font-size:13.5px;">
+                    <i class="fas fa-triangle-exclamation"></i><span th:text="${error}"></span>
+                </div>
+
+                <div class="sd-card" style="max-width:780px;">
+                    <div class="sd-card-head">
+                        <div>
+                            <h3>Thông tin sản phẩm</h3>
+                            <p>Tên, giá, tồn kho và hình ảnh.</p>
                         </div>
-                        <div class="form-group">
-                            <label for="stock">Số lượng tồn kho *</label>
-                            <input type="number" id="stock" th:field="*{stock}" required
-                                   placeholder="0">
-                            <div th:if="${#fields.hasErrors('stock')}" class="error" th:errors="*{stock}"></div>
-                        </div>
                     </div>
-                    
-                    <div class="form-group">
-                        <label for="categoryId">Danh mục</label>
-                        <select id="categoryId" th:field="*{categoryId}">
-                            <option value="">-- Chọn danh mục --</option>
-                            <option th:each="cat : ${categories}" 
-                                    th:value="${cat.id}" 
-                                    th:text="${cat.name}">Danh mục</option>
-                        </select>
+                    <div class="sd-card-body">
+                        <form th:action="${product != null ? '/vendor/products/edit/' + product.id : '/vendor/products/create'}"
+                              th:object="${productFormReq}" method="post" enctype="multipart/form-data">
+                            <div class="sd-form-group">
+                                <label>Tên sản phẩm *</label>
+                                <input type="text" class="sd-form-control" th:field="*{name}" required minlength="1" maxlength="200" placeholder="Nhập tên sản phẩm">
+                                <div th:if="${#fields.hasErrors('name')}" class="sd-form-error" th:errors="*{name}"></div>
+                            </div>
+
+                            <div class="sd-form-group">
+                                <label>Mô tả sản phẩm</label>
+                                <textarea class="sd-form-control" th:field="*{description}" rows="5" placeholder="Mô tả chi tiết về sản phẩm..."></textarea>
+                            </div>
+
+                            <div class="form-row">
+                                <div class="sd-form-group">
+                                    <label>Giá (VNĐ) *</label>
+                                    <input type="number" class="sd-form-control" th:field="*{price}" required placeholder="0">
+                                    <div th:if="${#fields.hasErrors('price')}" class="sd-form-error" th:errors="*{price}"></div>
+                                </div>
+                                <div class="sd-form-group">
+                                    <label>Số lượng tồn kho *</label>
+                                    <input type="number" class="sd-form-control" th:field="*{stock}" required placeholder="0">
+                                    <div th:if="${#fields.hasErrors('stock')}" class="sd-form-error" th:errors="*{stock}"></div>
+                                </div>
+                            </div>
+
+                            <div class="sd-form-group">
+                                <label>Danh mục</label>
+                                <select class="sd-form-control" th:field="*{categoryId}">
+                                    <option value="">-- Chọn danh mục --</option>
+                                    <option th:each="cat : ${categories}" th:value="${cat.id}" th:text="${cat.name}">Danh mục</option>
+                                </select>
+                            </div>
+
+                            <div class="sd-form-group">
+                                <label>Hình ảnh sản phẩm</label>
+                                <input type="file" id="imageFile" name="imageFile" accept="image/png,image/jpeg,image/jpg,image/webp,image/gif">
+                                <small class="file-hint">JPG, PNG, WEBP, GIF. Tối đa 5MB.</small>
+                                <img id="imagePreview" class="preview-img" style="display:none;">
+                                <div th:if="${product != null and product.imageUrls != null and !product.imageUrls.isEmpty()}" style="margin-top:10px;">
+                                    <small class="file-hint">Ảnh hiện tại:</small>
+                                    <img th:src="${product.imageUrls[0]}" class="preview-img" style="margin-top:6px;">
+                                </div>
+                            </div>
+
+                            <div class="sd-form-group" th:if="${product != null}">
+                                <label>Trạng thái</label>
+                                <select class="sd-form-control" th:field="*{status}">
+                                    <option value="ACTIVE">Đang bán</option>
+                                    <option value="DRAFT">Bản nháp</option>
+                                    <option value="INACTIVE">Ngừng bán</option>
+                                </select>
+                            </div>
+
+                            <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:18px;">
+                                <a th:href="@{/vendor/products}" class="sd-btn sd-btn-secondary"><i class="fas fa-xmark"></i> Hủy</a>
+                                <button type="submit" class="sd-btn sd-btn-primary"><i class="fas fa-save"></i> Lưu</button>
+                            </div>
+                        </form>
                     </div>
-                    
-                    <div class="form-group">
-                        <label for="imageFile">Hình ảnh sản phẩm</label>
-                        <input type="file" id="imageFile" name="imageFile"
-                               accept="image/png,image/jpeg,image/jpg,image/webp,image/gif">
-                        <small class="form-hint">Chấp nhận JPG, PNG, WEBP, GIF. Tối đa 5MB.</small>
-                        <img id="imagePreview" style="display:none;margin-top:10px;max-width:240px;border-radius:6px;">
-                        <div th:if="${product != null and product.imageUrls != null and !product.imageUrls.isEmpty()}" class="current-images">
-                            <p style="margin-top:10px;font-size:13px;color:#555;">Ảnh hiện tại:</p>
-                            <img th:src="${product.imageUrls[0]}" style="max-width:240px;border-radius:6px;">
-                        </div>
-                    </div>
-                    
-                    <div class="form-group" th:if="${product != null}">
-                        <label for="status">Trạng thái</label>
-                        <select id="status" th:field="*{status}">
-                            <option value="ACTIVE">Đang bán</option>
-                            <option value="DRAFT">Bản nháp</option>
-                            <option value="INACTIVE">Ngừng bán</option>
-                        </select>
-                    </div>
-                    
-                    <div class="form-actions">
-                        <a th:href="@{/vendor/products}" class="btn btn-secondary">Hủy</a>
-                        <button type="submit" class="btn btn-primary">
-                            <i class="fas fa-save"></i> Lưu
-                        </button>
-                    </div>
-                </form>
-                <script>
-                    document.getElementById('imageFile').addEventListener('change', function(e) {
-                        const file = e.target.files[0];
-                        if (!file) return;
-                        const preview = document.getElementById('imagePreview');
-                        preview.src = URL.createObjectURL(file);
-                        preview.style.display = 'block';
-                    });
-                </script>
+                </div>
             </main>
         </div>
     </div>
+
+    <script>
+        (function() {
+            const shell = document.getElementById('appShell');
+            const toggle = document.getElementById('sidebarToggle');
+            const KEY = 'cnj70-sidebar-expanded';
+            if (localStorage.getItem(KEY) === '1') shell.classList.add('sidebar-expanded');
+            toggle?.addEventListener('click', () => {
+                shell.classList.toggle('sidebar-expanded');
+                localStorage.setItem(KEY, shell.classList.contains('sidebar-expanded') ? '1' : '0');
+            });
+            document.querySelectorAll('.sd-sidebar-avatar, .sd-topbar-avatar').forEach(el => {
+                const name = (el.textContent || '').trim();
+                if (!name) return;
+                el.textContent = name.charAt(0).toUpperCase();
+            });
+            document.getElementById('imageFile')?.addEventListener('change', function(e) {
+                const file = e.target.files[0]; if (!file) return;
+                const preview = document.getElementById('imagePreview');
+                preview.src = URL.createObjectURL(file); preview.style.display = 'block';
+            });
+        })();
+    </script>
 </body>
 </html>

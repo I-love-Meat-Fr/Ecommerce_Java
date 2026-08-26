@@ -1,183 +1,273 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org"
-      xmlns:sec="http://www.thymeleaf.org/extras/springsecurity6">
+<html xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Admin Dashboard - CNJ70</title>
-    <link rel="stylesheet" th:href="@{/css/admin-vendor.css}">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Work+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" th:href="@{/css/dashboard.css}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body>
-    <div class="dashboard-container">
-        <div class="sidebar sidebar-dark">
-            <div class="sidebar-header">
-                <h2>CNJ70 Admin</h2>
+    <div class="sd-app" id="appShell">
+        <!-- ADMIN SIDEBAR -->
+        <aside class="sd-sidebar">
+            <div class="sd-sidebar-header">
+                <div class="sd-sidebar-logo">
+                    <i class="fas fa-shield-halved"></i>
+                </div>
+                <div class="sd-sidebar-brand">
+                    <span class="sd-sidebar-brand-name">CNJ70 Admin</span>
+                    <span class="sd-sidebar-brand-sub">Quản trị hệ thống</span>
+                </div>
             </div>
-            <nav class="sidebar-nav">
-                <a th:href="@{/admin/dashboard}" class="nav-item active">
-                    <i class="fas fa-chart-line"></i>
-                    <span>Dashboard</span>
-                </a>
-                <a th:href="@{/admin/users}" class="nav-item">
-                    <i class="fas fa-users"></i>
-                    <span>Người dùng</span>
-                </a>
-                <a th:href="@{/admin/categories}" class="nav-item">
-                    <i class="fas fa-tags"></i>
-                    <span>Danh mục</span>
-                </a>
-                <div class="nav-divider"></div>
-                <a th:href="@{/home}" class="nav-item">
-                    <i class="fas fa-external-link-alt"></i>
-                    <span>Xem website</span>
-                </a>
-                <form th:action="@{/auth/logout}" method="post">
-                    <button type="submit" class="nav-item nav-item-btn">
-                        <i class="fas fa-sign-out-alt"></i>
-                        <span>Đăng xuất</span>
-                    </button>
-                </form>
+            <nav class="sd-sidebar-nav">
+                <div class="sd-sidebar-nav-section">
+                    <span class="sd-sidebar-nav-title">Tổng quan</span>
+                    <a th:href="@{/admin/dashboard}" class="sd-nav-item active">
+                        <i class="fas fa-house"></i>
+                        <span class="sd-nav-label">Dashboard</span>
+                    </a>
+                </div>
+                <div class="sd-sidebar-nav-section">
+                    <span class="sd-sidebar-nav-title">Quản lý</span>
+                    <a th:href="@{/admin/users}" class="sd-nav-item">
+                        <i class="fas fa-users"></i>
+                        <span class="sd-nav-label">Người dùng</span>
+                        <span class="sd-nav-badge" th:text="${stats.totalUsers}">0</span>
+                    </a>
+                    <a th:href="@{/admin/categories}" class="sd-nav-item">
+                        <i class="fas fa-layer-group"></i>
+                        <span class="sd-nav-label">Danh mục</span>
+                    </a>
+                </div>
+                <div class="sd-sidebar-nav-section">
+                    <span class="sd-sidebar-nav-title">Hệ thống</span>
+                    <a th:href="@{/home}" class="sd-nav-item">
+                        <i class="fas fa-globe"></i>
+                        <span class="sd-nav-label">Xem website</span>
+                    </a>
+                    <form th:action="@{/auth/logout}" method="post" style="margin:0;">
+                        <button type="submit" class="sd-nav-item">
+                            <i class="fas fa-arrow-right-from-bracket"></i>
+                            <span class="sd-nav-label">Đăng xuất</span>
+                        </button>
+                    </form>
+                </div>
             </nav>
-        </div>
-        
-        <div class="main-content">
-            <div class="topbar">
-                <div class="topbar-left">
-                    <button class="sidebar-toggle" type="button" aria-label="Mở menu">
-                        <i class="fas fa-bars"></i>
-                    </button>
-                    <div class="breadcrumb">
-                        <span>Admin</span>
-                        <i class="fas fa-chevron-right"></i>
-                        <strong>Dashboard</strong>
-                    </div>
-                </div>
-                <div class="topbar-right">
-                    <span class="user-greeting" sec:authentication="name">Admin</span>
-                    <div class="user-avatar">
-                        <i class="fas fa-user-shield"></i>
+            <div class="sd-sidebar-footer">
+                <div class="sd-sidebar-user">
+                    <div class="sd-sidebar-avatar">A</div>
+                    <div class="sd-sidebar-user-info">
+                        <div class="sd-sidebar-user-name">Admin</div>
+                        <div class="sd-sidebar-user-role">Administrator</div>
                     </div>
                 </div>
             </div>
-            
-            <main class="dashboard-content">
-                <div class="page-header">
-                    <div>
-                        <h1>Tổng quan</h1>
-                        <p>Xin chào, quản trị viên. Dưới đây là bức tranh toàn cảnh về hệ thống.</p>
+        </aside>
+
+        <!-- MAIN -->
+        <div class="sd-main">
+            <!-- TOPBAR -->
+            <div class="sd-topbar">
+                <button class="sd-topbar-toggle" type="button" id="sidebarToggle">
+                    <i class="fas fa-bars"></i>
+                </button>
+                <div class="sd-topbar-search">
+                    <i class="fas fa-magnifying-glass"></i>
+                    <input type="text" placeholder="Tìm kiếm...">
+                </div>
+                <div class="sd-topbar-actions">
+                    <button class="sd-icon-btn" type="button">
+                        <i class="fas fa-bell"></i>
+                        <span class="sd-icon-btn-dot"></span>
+                    </button>
+                    <button class="sd-icon-btn" type="button">
+                        <i class="fas fa-circle-question"></i>
+                    </button>
+                    <div class="sd-topbar-divider"></div>
+                    <div class="sd-topbar-profile">
+                        <div class="sd-topbar-avatar">A</div>
+                        <span class="sd-topbar-profile-name">Admin</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- CONTENT -->
+            <main class="sd-content">
+                <div class="sd-page-head">
+                    <div class="sd-page-head-title">
+                        <h1>Tổng quan hệ thống</h1>
+                        <p>Xin chào, đây là báo cáo toàn hệ thống của CNJ70 E-Commerce.</p>
+                    </div>
+                    <div class="sd-page-head-actions">
+                        <span class="sd-badge sd-badge-green">
+                            <i class="fas fa-circle" style="font-size:6px;"></i> Hệ thống hoạt động tốt
+                        </span>
                     </div>
                 </div>
 
-                <!-- Stats Cards -->
-                <div class="stats-grid stats-grid-4">
-                    <div class="stat-card stat-card-icon">
-                        <div class="stat-card-bg">
-                            <i class="fas fa-users"></i>
+                <!-- Stats 4 -->
+                <div class="sd-stats-grid sd-stats-4">
+                    <div class="sd-stat">
+                        <div class="sd-stat-head">
+                            <div class="sd-stat-icon sd-indigo"><i class="fas fa-users"></i></div>
+                            <span class="sd-delta sd-delta-flat">Tổng người dùng</span>
                         </div>
-                        <div class="stat-card-content">
-                            <div class="stat-label">Người dùng</div>
-                            <div class="stat-number" th:text="${stats.totalUsers}">0</div>
-                            <div class="stat-sub">Tổng số tài khoản</div>
-                        </div>
+                        <div class="sd-stat-label">Người dùng</div>
+                        <div class="sd-stat-value" th:text="${stats.totalUsers}">0</div>
+                        <div class="sd-stat-foot">Tài khoản đã đăng ký</div>
                     </div>
-                    <div class="stat-card stat-card-icon stat-red">
-                        <div class="stat-card-bg">
-                            <i class="fas fa-store"></i>
+                    <div class="sd-stat">
+                        <div class="sd-stat-head">
+                            <div class="sd-stat-icon sd-green"><i class="fas fa-store"></i></div>
+                            <span class="sd-delta sd-delta-flat">Tổng cửa hàng</span>
                         </div>
-                        <div class="stat-card-content">
-                            <div class="stat-label">Cửa hàng</div>
-                            <div class="stat-number" th:text="${stats.totalShops}">0</div>
-                            <div class="stat-sub">Đang hoạt động: <strong th:text="${stats.activeVendors}">0</strong></div>
-                        </div>
+                        <div class="sd-stat-label">Cửa hàng</div>
+                        <div class="sd-stat-value" th:text="${stats.totalShops}">0</div>
+                        <div class="sd-stat-foot">Vendor đang hoạt động</div>
                     </div>
-                    <div class="stat-card stat-card-icon stat-green">
-                        <div class="stat-card-bg">
-                            <i class="fas fa-box-open"></i>
+                    <div class="sd-stat">
+                        <div class="sd-stat-head">
+                            <div class="sd-stat-icon sd-amber"><i class="fas fa-boxes-stacked"></i></div>
+                            <span class="sd-delta sd-delta-flat">Tổng sản phẩm</span>
                         </div>
-                        <div class="stat-card-content">
-                            <div class="stat-label">Sản phẩm</div>
-                            <div class="stat-number" th:text="${stats.totalProducts}">0</div>
-                            <div class="stat-sub">Đang bán: <strong th:text="${stats.activeProducts}">0</strong></div>
-                        </div>
+                        <div class="sd-stat-label">Sản phẩm</div>
+                        <div class="sd-stat-value" th:text="${stats.totalProducts}">0</div>
+                        <div class="sd-stat-foot">Đang kinh doanh</div>
                     </div>
-                    <div class="stat-card stat-card-icon stat-amber">
-                        <div class="stat-card-bg">
-                            <i class="fas fa-shopping-bag"></i>
+                    <div class="sd-stat">
+                        <div class="sd-stat-head">
+                            <div class="sd-stat-icon sd-sky"><i class="fas fa-cart-shopping"></i></div>
+                            <span class="sd-delta sd-delta-flat">Tổng đơn hàng</span>
                         </div>
-                        <div class="stat-card-content">
-                            <div class="stat-label">Đơn hàng</div>
-                            <div class="stat-number" th:text="${stats.totalOrders}">0</div>
-                            <div class="stat-sub">Tổng đơn hàng</div>
-                        </div>
+                        <div class="sd-stat-label">Đơn hàng</div>
+                        <div class="sd-stat-value" th:text="${stats.totalOrders}">0</div>
+                        <div class="sd-stat-foot">Toàn hệ thống</div>
                     </div>
                 </div>
 
-                <!-- Revenue & Activity -->
-                <div class="dashboard-grid">
-                    <div class="dashboard-card">
-                        <div class="card-header">
-                            <h2><i class="fas fa-wallet"></i> Doanh thu nền tảng</h2>
-                        </div>
-                        <div class="card-body">
-                            <div class="revenue-display">
-                                <div class="revenue-amount" th:text="${@money.format(stats.totalPlatformRevenue)}">0đ</div>
-                                <div class="revenue-label">Tổng doanh thu từ đơn hàng đã giao</div>
+                <!-- Revenue + Recent Activity -->
+                <div class="sd-grid sd-grid-3-2" style="margin-bottom:20px;">
+                    <div class="sd-card">
+                        <div class="sd-card-head">
+                            <div>
+                                <h3>Doanh thu 7 ngày</h3>
+                                <p>Xu hướng doanh thu toàn hệ thống</p>
                             </div>
+                            <span class="sd-badge sd-badge-green">7 ngày gần nhất</span>
+                        </div>
+                        <div class="sd-card-body">
+                            <div id="adminRevenueChart" class="sd-chart-wrap sd-chart-tall"></div>
                         </div>
                     </div>
-
-                    <div class="dashboard-card">
-                        <div class="card-header">
-                            <h2><i class="fas fa-clock"></i> Hoạt động gần đây</h2>
+                    <div class="sd-card">
+                        <div class="sd-card-head">
+                            <h3>Hoạt động gần đây</h3>
                         </div>
-                        <div class="card-body">
-                            <div class="activity-list" th:if="${not #lists.isEmpty(stats.recentActivities)}">
-                                <div class="activity-item" th:each="activity : ${stats.recentActivities}">
-                                    <div class="activity-icon">
-                                        <i class="fas fa-circle"></i>
-                                    </div>
-                                    <div class="activity-content">
-                                        <p class="activity-desc" th:text="${activity.description}">Mô tả hoạt động</p>
-                                        <span class="activity-time" th:text="${activity.time}">Thời gian</span>
+                        <div class="sd-card-body sd-activity-list">
+                            <div th:each="act : ${stats.recentActivity}" class="sd-activity-item">
+                                <div class="sd-activity-icon" th:classappend="${act.type == 'ORDER'} ? 'sd-indigo' : (${act.type == 'USER'} ? 'sd-green' : 'sd-amber')">
+                                    <i class="fas" th:classappend="${act.type == 'ORDER'} ? 'fa-cart-shopping' : (${act.type == 'USER'} ? 'fa-user-plus' : 'fa-box')"></i>
+                                </div>
+                                <div class="sd-activity-content">
+                                    <div class="sd-activity-text" th:text="${act.description}">Mô tả hoạt động</div>
+                                    <div class="sd-activity-meta">
+                                        <span th:text="${act.user}">User</span>
+                                        <span>·</span>
+                                        <span th:text="${act.timeAgo}">vừa xong</span>
                                     </div>
                                 </div>
                             </div>
-                            <div class="empty-state" th:if="${#lists.isEmpty(stats.recentActivities)}">
-                                <i class="fas fa-inbox"></i>
-                                <h3>Chưa có hoạt động</h3>
-                                <p>Không có hoạt động nào gần đây</p>
-                            </div>
                         </div>
                     </div>
                 </div>
 
-                <!-- Quick Links -->
-                <div class="quick-actions">
-                    <h2>Thao tác nhanh</h2>
-                    <div class="action-buttons">
-                        <a th:href="@{/admin/users}" class="action-btn">
-                            <i class="fas fa-user-cog"></i>
-                            <span>Quản lý người dùng</span>
-                        </a>
-                        <a th:href="@{/admin/categories}" class="action-btn">
-                            <i class="fas fa-tag"></i>
-                            <span>Quản lý danh mục</span>
-                        </a>
-                        <a th:href="@{/home}" class="action-btn">
-                            <i class="fas fa-globe"></i>
-                            <span>Xem website</span>
-                        </a>
+                <!-- Quick Actions -->
+                <div class="sd-card">
+                    <div class="sd-card-head">
+                        <h3>Thao tác nhanh</h3>
+                    </div>
+                    <div class="sd-card-body">
+                        <div class="sd-quick-grid">
+                            <a th:href="@{/admin/users}" class="sd-quick-card">
+                                <div class="sd-quick-icon"><i class="fas fa-users"></i></div>
+                                <div class="sd-quick-body">
+                                    <div class="sd-quick-title">Quản lý người dùng</div>
+                                    <div class="sd-quick-sub">Xem, khóa, xóa tài khoản</div>
+                                </div>
+                            </a>
+                            <a th:href="@{/admin/categories}" class="sd-quick-card">
+                                <div class="sd-quick-icon"><i class="fas fa-layer-group"></i></div>
+                                <div class="sd-quick-body">
+                                    <div class="sd-quick-title">Quản lý danh mục</div>
+                                    <div class="sd-quick-sub">Thêm, sửa, xóa danh mục</div>
+                                </div>
+                            </a>
+                            <a th:href="@{/home}" class="sd-quick-card">
+                                <div class="sd-quick-icon"><i class="fas fa-globe"></i></div>
+                                <div class="sd-quick-body">
+                                    <div class="sd-quick-title">Xem website</div>
+                                    <div class="sd-quick-sub">Kiểm tra giao diện người dùng</div>
+                                </div>
+                            </a>
+                        </div>
                     </div>
                 </div>
             </main>
         </div>
     </div>
 
+    <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
     <script>
-        document.querySelector('.sidebar-toggle').addEventListener('click', function() {
-            document.querySelector('.dashboard-container').classList.toggle('sidebar-collapsed');
-        });
+        (function() {
+            const shell = document.getElementById('appShell');
+            const toggle = document.getElementById('sidebarToggle');
+            const STORAGE_KEY = 'cnj70-admin-sidebar';
+            if (localStorage.getItem(STORAGE_KEY) === '1') shell.classList.add('sidebar-expanded');
+            toggle?.addEventListener('click', () => {
+                shell.classList.toggle('sidebar-expanded');
+                localStorage.setItem(STORAGE_KEY, shell.classList.contains('sidebar-expanded') ? '1' : '0');
+            });
+            document.querySelectorAll('.sd-sidebar-avatar, .sd-topbar-avatar').forEach(el => {
+                const name = (el.textContent || '').trim();
+                if (!name) return;
+                el.textContent = name.charAt(0).toUpperCase();
+            });
+        })();
+    </script>
+    <script>
+        (function() {
+            const trend = /*[[${stats.revenueTrend}]]*/ [];
+            if (!trend || trend.length === 0) return;
+            const labels = trend.map(t => t.label);
+            const revenue = trend.map(t => Number(t.revenue));
+            const orders = trend.map(t => Number(t.orders));
+            const options = {
+                chart: { type: 'area', height: 320, toolbar: { show: false }, fontFamily: 'Work Sans, sans-serif', zoom: { enabled: false } },
+                series: [{ name: 'Doanh thu', data: revenue }, { name: 'Đơn hàng', data: orders }],
+                colors: ['#6366f1', '#10b981'],
+                stroke: { curve: 'smooth', width: 3 },
+                fill: { type: 'gradient', gradient: { shadeIntensity: 1, opacityFrom: 0.35, opacityTo: 0, stops: [0, 90, 100] } },
+                dataLabels: { enabled: false },
+                grid: { borderColor: '#e2e8f0', strokeDashArray: 4, xaxis: { lines: { show: false } } },
+                xaxis: {
+                    categories: labels,
+                    labels: { style: { colors: '#64748b', fontSize: '12px' } },
+                    axisBorder: { show: false },
+                    axisTicks: { show: false }
+                },
+                yaxis: [
+                    { labels: { style: { colors: '#64748b', fontSize: '12px' }, formatter: v => new Intl.NumberFormat('vi-VN').format(v) } },
+                    { opposite: true, labels: { style: { colors: '#64748b', fontSize: '12px' } } }
+                ],
+                legend: { show: false },
+                tooltip: { theme: 'light', y: { formatter: v => new Intl.NumberFormat('vi-VN').format(v) } }
+            };
+            new ApexCharts(document.querySelector('#adminRevenueChart'), options).render();
+        })();
     </script>
 </body>
 </html>

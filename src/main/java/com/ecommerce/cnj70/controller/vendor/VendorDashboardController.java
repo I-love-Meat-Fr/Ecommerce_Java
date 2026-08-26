@@ -19,6 +19,7 @@ public class VendorDashboardController {
     public String dashboard(@AuthenticationPrincipal CustomUserDetails user, Model model) {
         VendorDashboardRes stats = vendorService.getDashboardStats(user);
         model.addAttribute("stats", stats);
+        model.addAttribute("pendingOrders", stats.getPendingOrders());
         return "vendor/dashboard";
     }
     
