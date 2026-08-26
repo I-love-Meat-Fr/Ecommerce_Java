@@ -38,8 +38,13 @@ public class CartServiceImpl implements CartService {
         
         if (existingItem.isPresent()) {
             Cart.CartItem item = existingItem.get();
-            item.setQuantity(item.getQuantity() + quantity);
-            item.setSubtotal(item.getPrice().multiply(BigDecimal.valueOf(item.getQuantity())));
+            int newQty = item.getQuantity() + quantity;
+            int maxStock = item.getStock() != null ? item.getStock() : Integer.MAX_VALUE;
+            if (newQty > maxStock) {
+                newQty = maxStock;
+            }
+            item.setQuantity(newQty);
+            item.setSubtotal(item.getPrice().multiply(BigDecimal.valueOf(newQty)));
         } else {
             Cart.CartItem newItem = Cart.CartItem.builder()
                     .productId(productId)
@@ -48,6 +53,9 @@ public class CartServiceImpl implements CartService {
                     .price(product.getPrice())
                     .quantity(quantity)
                     .subtotal(product.getPrice().multiply(BigDecimal.valueOf(quantity)))
+                    .shopId(product.getShopId())
+                    .shopName(product.getShopName())
+                    .stock(product.getStock())
                     .build();
             cart.getItems().add(newItem);
         }
@@ -68,8 +76,10 @@ public class CartServiceImpl implements CartService {
                 .filter(item -> item.getProductId().equals(productId))
                 .findFirst()
                 .ifPresent(item -> {
-                    item.setQuantity(quantity);
-                    item.setSubtotal(item.getPrice().multiply(BigDecimal.valueOf(quantity)));
+                    int maxStock = item.getStock() != null ? item.getStock() : Integer.MAX_VALUE;
+                    int newQty = Math.min(quantity, maxStock);
+                    item.setQuantity(newQty);
+                    item.setSubtotal(item.getPrice().multiply(BigDecimal.valueOf(newQty)));
                 });
         
         cart.setUpdatedAt(LocalDateTime.now());
@@ -82,6 +92,23 @@ public class CartServiceImpl implements CartService {
         cart.getItems().removeIf(item -> item.getProductId().equals(productId));
         cart.setUpdatedAt(LocalDateTime.now());
         return cartRepository.save(cart);
+    }
+    
+    @Override
+    public int countItems(String userId) {
+        if (userId == null) return 0;
+        return cartRepository.findByUserId(userId)
+                .map(cart -> cart.getItems().stream().mapToInt(Cart.CartItem::getQuantity).sum())
+                .orElse(0);
+    }
+    
+    @Override
+    public BigDecimal calculateTotal(Cart cart) {
+        if (cart == null || cart.getItems() == null) return BigDecimal.ZERO;
+        return cart.getItems().stream()
+                .map(Cart.CartItem::getSubtotal)
+                .filter(java.util.Objects::nonNull)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
     }
     
     @Override

@@ -5,71 +5,195 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Giỏ hàng - CNJ70 Ecommerce</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Work+Sans:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" th:href="@{/css/style.css}">
+    <link rel="stylesheet" th:href="@{/css/home.css}">
+    <link rel="stylesheet" th:href="@{/css/cart.css}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
-<body>
+<body class="cart-page">
     <div th:replace="fragments/web-header"></div>
-    
+
     <main class="main-content">
-        <div class="container">
-            <h1>Giỏ hàng của bạn</h1>
-            
-            <div th:if="${cart != null and not #lists.isEmpty(cart.items)}">
-                <table class="cart-table">
-                    <thead>
-                        <tr>
-                            <th>Sản phẩm</th>
-                            <th>Giá</th>
-                            <th>Số lượng</th>
-                            <th>Thành tiền</th>
-                            <th></th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr th:each="item : ${cart.items}">
-                            <td class="cart-item">
-                                <img th:src="${item.imageUrl ?: 'https://placehold.co/80x80/f1f5f9/94a3b8?text=No+Img'}" th:alt="${item.productName}" style="width:80px;height:80px;object-fit:cover;border-radius:6px;">
-                                <span th:text="${item.productName}">Tên sản phẩm</span>
-                            </td>
-                            <td th:text="${@money.format(item.price)}">0đ</td>
-                            <td>
-                                <form th:action="@{/cart/update}" method="post" class="quantity-form">
-                                    <input type="hidden" name="productId" th:value="${item.productId}">
-                                    <input type="number" name="quantity" th:value="${item.quantity}" min="1">
-                                    <button type="submit">Cập nhật</button>
-                                </form>
-                            </td>
-                            <td th:text="${@money.format(item.subtotal)}">0đ</td>
-                            <td>
-                                <form th:action="@{/cart/remove}" method="post">
-                                    <input type="hidden" name="productId" th:value="${item.productId}">
-                                    <button type="submit" class="btn-remove">
-                                        <i class="fas fa-trash"></i>
-                                    </button>
-                                </form>
-                            </td>
-                        </tr>
-                    </tbody>
-                </table>
-                
-                <div class="cart-summary">
-                    <div class="cart-total">
-                        <span>Tổng cộng:</span>
-                        <span class="total-amount" th:text="${@money.format(cartTotal)}">0đ</span>
+        <!-- Hero / breadcrumb -->
+        <section class="cart-hero">
+            <div class="container">
+                <nav class="cart-breadcrumb">
+                    <a th:href="@{/home}"><i class="fas fa-home"></i> Trang chủ</a>
+                    <i class="fas fa-chevron-right"></i>
+                    <span>Giỏ hàng</span>
+                </nav>
+                <div class="cart-hero-inner">
+                    <div class="cart-hero-left">
+                        <span class="cart-hero-tag">
+                            <i class="fas fa-shopping-bag"></i> Giỏ hàng của bạn
+                        </span>
+                        <h1>
+                            <th:block th:if="${totalQuantity > 0}">
+                                Bạn có <span class="teal-word" th:text="${totalQuantity}">0</span> sản phẩm
+                            </th:block>
+                            <th:block th:unless="${totalQuantity > 0}">Giỏ hàng trống</th:block>
+                        </h1>
+                        <p th:if="${totalQuantity > 0}">
+                            Kiểm tra lại đơn hàng của bạn trước khi tiến hành thanh toán. Bạn có thể điều chỉnh số lượng hoặc xóa sản phẩm bất kỳ lúc nào.
+                        </p>
                     </div>
-                    <a th:href="@{/checkout}" class="btn btn-primary">Tiến hành thanh toán</a>
+                    <div class="cart-hero-right" th:if="${totalQuantity > 0}">
+                        <div class="cart-hero-stat">
+                            <i class="fas fa-box"></i>
+                            <div>
+                                <strong th:text="${cart != null ? #lists.size(cart.items) : 0}">0</strong>
+                                <span>loại sản phẩm</span>
+                            </div>
+                        </div>
+                        <div class="cart-hero-stat">
+                            <i class="fas fa-cubes"></i>
+                            <div>
+                                <strong th:text="${totalQuantity}">0</strong>
+                                <span>tổng số lượng</span>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
-            
-            <div th:if="${cart == null or #lists.isEmpty(cart.items)}" class="empty-cart">
-                <i class="fas fa-shopping-cart"></i>
-                <p>Giỏ hàng trống</p>
-                <a th:href="@{/products}" class="btn btn-primary">Tiếp tục mua sắm</a>
+        </section>
+
+        <!-- Cart body -->
+        <section class="cart-section">
+            <div class="container">
+                <div th:if="${cart != null and not #lists.isEmpty(cart.items)}" class="cart-layout">
+                    <!-- Items column -->
+                    <div class="cart-items-col">
+                        <th:block th:each="shopEntry : ${itemsByShop}">
+                            <article class="cart-shop-group">
+                                <header class="cart-shop-header">
+                                    <i class="fas fa-store"></i>
+                                    <span class="cart-shop-name"
+                                          th:text="${shopEntry.value[0].shopName != null ? shopEntry.value[0].shopName : 'Cửa hàng'}">Cửa hàng</span>
+                                    <span class="cart-shop-count">
+                                        <th:block th:text="${#lists.size(shopEntry.value)}">0</th:block> sản phẩm
+                                    </span>
+                                </header>
+                                <div class="cart-item-list">
+                                    <th:block th:each="item : ${shopEntry.value}">
+                                        <div class="cart-item-card" th:data-product-id="${item.productId}">
+                                            <a th:href="@{/products/{id}(id=${item.productId})}" class="cart-item-thumb">
+                                                <img th:src="${item.imageUrl ?: 'https://placehold.co/120x120/f0f7f6/94a3b8?text=No+Img'}" th:alt="${item.productName}">
+                                            </a>
+                                            <div class="cart-item-info">
+                                                <a th:href="@{/products/{id}(id=${item.productId})}" class="cart-item-name" th:text="${item.productName}">Tên sản phẩm</a>
+                                                <div class="cart-item-meta">
+                                                    <span class="cart-item-shop" th:if="${item.shopName != null}">
+                                                        <i class="fas fa-store"></i>
+                                                        <th:block th:text="${item.shopName}">Shop</th:block>
+                                                    </span>
+                                                    <span class="cart-item-stock" th:if="${item.stock != null and item.stock <= 5}">
+                                                        <i class="fas fa-fire"></i> Chỉ còn <th:block th:text="${item.stock}">0</th:block>
+                                                    </span>
+                                                </div>
+                                                <div class="cart-item-price" th:text="${@money.format(item.price)}">0đ</div>
+                                            </div>
+                                            <div class="cart-item-qty">
+                                                <span class="cart-item-qty-label">Số lượng</span>
+                                                <div class="qty-stepper"
+                                                     th:data-product-id="${item.productId}"
+                                                     th:data-stock="${item.stock != null ? item.stock : 999}">
+                                                    <button type="button" class="qty-btn qty-decrement" aria-label="Giảm">
+                                                        <i class="fas fa-minus"></i>
+                                                    </button>
+                                                    <input type="number" class="qty-input" th:value="${item.quantity}" min="1" th:max="${item.stock != null ? item.stock : 999}" readonly>
+                                                    <button type="button" class="qty-btn qty-increment" aria-label="Tăng">
+                                                        <i class="fas fa-plus"></i>
+                                                    </button>
+                                                </div>
+                                            </div>
+                                            <div class="cart-item-subtotal">
+                                                <span class="cart-item-subtotal-label">Thành tiền</span>
+                                                <span class="cart-item-subtotal-value" th:text="${@money.format(item.subtotal)}">0đ</span>
+                                            </div>
+                                            <button type="button" class="cart-item-remove" th:data-product-id="${item.productId}" aria-label="Xóa sản phẩm">
+                                                <i class="fas fa-trash-alt"></i>
+                                            </button>
+                                        </div>
+                                    </th:block>
+                                </div>
+                            </article>
+                        </th:block>
+
+                        <div class="cart-continue">
+                            <a th:href="@{/products}" class="cart-continue-link">
+                                <i class="fas fa-arrow-left"></i> Tiếp tục mua sắm
+                            </a>
+                        </div>
+                    </div>
+
+                    <!-- Summary sidebar -->
+                    <aside class="cart-summary-card">
+                        <header class="cart-summary-header">
+                            <i class="fas fa-receipt"></i>
+                            <h3>Tóm tắt đơn hàng</h3>
+                        </header>
+                        <div class="cart-summary-body">
+                            <div class="summary-row">
+                                <span>Tạm tính (<th:block th:text="${totalQuantity}">0</th:block> sản phẩm)</span>
+                                <span class="summary-subtotal" th:text="${@money.format(cartTotal)}">0đ</span>
+                            </div>
+                            <div class="summary-row">
+                                <span>Phí vận chuyển</span>
+                                <span class="summary-shipping">Tính ở bước sau</span>
+                            </div>
+                            <div class="summary-row summary-row-coupon">
+                                <label for="coupon-input" class="summary-coupon-label">
+                                    <i class="fas fa-tag"></i> Mã giảm giá
+                                </label>
+                                <div class="summary-coupon-form">
+                                    <input type="text" id="coupon-input" placeholder="Nhập mã (nếu có)" disabled>
+                                    <button type="button" class="btn-coupon" disabled>Áp dụng</button>
+                                </div>
+                                <small class="summary-coupon-note">Tính năng đang phát triển</small>
+                            </div>
+                            <div class="summary-divider"></div>
+                            <div class="summary-row summary-total">
+                                <span>Tổng cộng</span>
+                                <span class="summary-total-amount" th:text="${@money.format(cartTotal)}">0đ</span>
+                            </div>
+                        </div>
+                        <a th:href="@{/checkout}" class="btn-checkout">
+                            <i class="fas fa-lock"></i> Tiến hành thanh toán
+                        </a>
+                        <ul class="trust-badges">
+                            <li><i class="fas fa-shield-alt"></i> Thanh toán an toàn</li>
+                            <li><i class="fas fa-undo"></i> Đổi trả trong 7 ngày</li>
+                            <li><i class="fas fa-truck"></i> Giao hàng tận nơi</li>
+                        </ul>
+                    </aside>
+                </div>
+
+                <!-- Empty state -->
+                <div th:if="${cart == null or #lists.isEmpty(cart.items)}" class="cart-empty-state">
+                    <div class="cart-empty-illustration">
+                        <svg width="180" height="180" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                            <circle cx="100" cy="100" r="90" fill="#e6f8f7"/>
+                            <path d="M60 70 L150 70 L140 130 L70 130 Z" fill="#ffffff" stroke="#0fb5b0" stroke-width="3" stroke-linejoin="round"/>
+                            <path d="M70 70 L65 50 L45 50" stroke="#0fb5b0" stroke-width="3" fill="none" stroke-linecap="round"/>
+                            <circle cx="80" cy="145" r="8" fill="#0fb5b0"/>
+                            <circle cx="130" cy="145" r="8" fill="#0fb5b0"/>
+                            <circle cx="100" cy="100" r="14" fill="#ffd166" opacity="0.7"/>
+                            <path d="M93 100 L98 105 L107 96" stroke="#0a8a87" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
+                    </div>
+                    <h2>Giỏ hàng của bạn đang trống</h2>
+                    <p>Hãy khám phá thêm sản phẩm và thêm vào giỏ hàng để tiến hành mua sắm nhé!</p>
+                    <a th:href="@{/products}" class="btn-shop-now">
+                        <i class="fas fa-shopping-bag"></i> Khám phá sản phẩm
+                    </a>
+                </div>
             </div>
-        </div>
+        </section>
     </main>
-    
+
     <div th:replace="fragments/web-footer"></div>
 </body>
 </html>

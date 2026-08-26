@@ -588,6 +588,9 @@
                 .then(data => {
                     if (data.success) {
                         showToast(data.message || 'Đã thêm vào giỏ hàng!');
+                        if (typeof updateCartBadge === 'function' && typeof data.itemCount !== 'undefined') {
+                            updateCartBadge(data.itemCount);
+                        }
                     } else {
                         showToast(data.message || 'Có lỗi xảy ra');
                     }

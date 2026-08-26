@@ -2537,3 +2537,43 @@
     font-size: 14px;
     font-weight: 600;
 }
+
+/* ---------- Cart badge (header) ---------- */
+.nav-cart-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 18px;
+    height: 18px;
+    padding: 0 5px;
+    background: var(--accent-red);
+    color: #fff;
+    border-radius: 9px;
+    font-size: 11px;
+    font-weight: 700;
+    line-height: 1;
+    margin-left: 6px;
+    box-shadow: 0 0 0 2px var(--bg);
+    animation: badgePop .25s ease;
+}
+
+@keyframes badgePop {
+    0% { transform: scale(0.6); opacity: 0; }
+    100% { transform: scale(1); opacity: 1; }
+}
+
+.home-icon-btn .nav-cart-badge {
+    position: absolute;
+    top: -4px;
+    right: -4px;
+    margin: 0;
+    box-shadow: 0 0 0 2px var(--bg), 0 1px 4px rgba(239, 68, 68, 0.4);
+}
+
+.home-icon-btn {
+    position: relative;
+}
+
+.home-mobile-nav-link .nav-cart-badge {
+    margin-left: auto;
+}
