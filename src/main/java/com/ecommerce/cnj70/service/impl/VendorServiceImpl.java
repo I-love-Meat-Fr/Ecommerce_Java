@@ -22,9 +22,16 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.YearMonth;
+import java.time.format.DateTimeFormatter;
+import java.time.format.TextStyle;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Locale;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @Service
@@ -205,6 +212,31 @@ public class VendorServiceImpl implements VendorService {
                 .filter(java.util.Objects::nonNull)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
         
+        Map<LocalDate, BigDecimal> revByDay = new LinkedHashMap<>();
+        Map<LocalDate, Long> orderByDay = new LinkedHashMap<>();
+        for (int i = 6; i >= 0; i--) {
+            LocalDate d = LocalDate.now().minusDays(i);
+            revByDay.put(d, BigDecimal.ZERO);
+            orderByDay.put(d, 0L);
+        }
+        for (Order o : orders) {
+            if (o.getCreatedAt() == null) continue;
+            LocalDate d = o.getCreatedAt().toLocalDate();
+            if (!revByDay.containsKey(d)) continue;
+            orderByDay.merge(d, 1L, Long::sum);
+            if (o.getStatus() == OrderStatus.DELIVERED && o.getTotalAmount() != null) {
+                revByDay.merge(d, o.getTotalAmount(), BigDecimal::add);
+            }
+        }
+        List<VendorDashboardRes.DailyMetric> revenueTrend = new ArrayList<>();
+        for (Map.Entry<LocalDate, BigDecimal> e : revByDay.entrySet()) {
+            revenueTrend.add(VendorDashboardRes.DailyMetric.builder()
+                    .label(e.getKey().getDayOfWeek().getDisplayName(TextStyle.SHORT, new Locale("vi")).toUpperCase())
+                    .revenue(e.getValue())
+                    .orders(orderByDay.getOrDefault(e.getKey(), 0L))
+                    .build());
+        }
+        
         VendorDashboardRes.VendorDashboardResBuilder builder = VendorDashboardRes.builder()
                 .totalProducts(totalProducts)
                 .outOfStockProducts(outOfStockProducts)
@@ -214,7 +246,8 @@ public class VendorServiceImpl implements VendorService {
                 .completedOrders(completedOrders)
                 .cancelledOrders(cancelledOrders)
                 .totalRevenue(totalRevenue)
-                .monthlyRevenue(monthlyRevenue);
+                .monthlyRevenue(monthlyRevenue)
+                .revenueTrend(revenueTrend);
         
         if (shop != null) {
             builder.shopSummary(VendorDashboardRes.ShopSummary.builder()

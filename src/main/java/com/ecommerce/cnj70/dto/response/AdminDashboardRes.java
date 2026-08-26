@@ -22,6 +22,7 @@ public class AdminDashboardRes {
     private long activeProducts;
     private BigDecimal totalPlatformRevenue;
     private List<RecentActivity> recentActivities;
+    private List<DailyMetric> revenueTrend;
     
     @Data
     @Builder
@@ -31,5 +32,15 @@ public class AdminDashboardRes {
         private String type;
         private String description;
         private String time;
+    }
+    
+    @Data
+    @Builder
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class DailyMetric {
+        private String label;
+        private BigDecimal revenue;
+        private long orders;
     }
 }

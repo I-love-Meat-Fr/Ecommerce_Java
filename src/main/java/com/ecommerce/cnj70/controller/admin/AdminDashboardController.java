@@ -17,6 +17,7 @@ public class AdminDashboardController {
     public String dashboard(Model model) {
         AdminDashboardRes stats = adminService.getDashboardStats();
         model.addAttribute("stats", stats);
+        model.addAttribute("isAdmin", true);
         return "admin/dashboard";
     }
 }

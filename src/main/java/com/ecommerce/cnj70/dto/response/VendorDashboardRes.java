@@ -26,6 +26,7 @@ public class VendorDashboardRes {
     private BigDecimal monthlyRevenue;
     private ShopSummary shopSummary;
     private List<TopProduct> topProducts;
+    private List<DailyMetric> revenueTrend;
     
     @Data
     @Builder
@@ -50,5 +51,15 @@ public class VendorDashboardRes {
         private String imageUrl;
         private int orderCount;
         private BigDecimal revenue;
+    }
+    
+    @Data
+    @Builder
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class DailyMetric {
+        private String label;
+        private BigDecimal revenue;
+        private long orders;
     }
 }

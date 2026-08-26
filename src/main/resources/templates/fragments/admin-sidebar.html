@@ -1,18 +1,18 @@
 <aside class="sd-sidebar" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/springsecurity6">
     <div class="sd-sidebar-header">
         <div class="sd-sidebar-logo">
-            <i class="fas fa-bolt"></i>
+            <i class="fas fa-shield-halved"></i>
         </div>
         <div class="sd-sidebar-brand">
-            <span class="sd-sidebar-brand-name">CNJ70 Shop</span>
-            <span class="sd-sidebar-brand-sub">Vendor Console</span>
+            <span class="sd-sidebar-brand-name">CNJ70 Admin</span>
+            <span class="sd-sidebar-brand-sub">Management Console</span>
         </div>
     </div>
 
     <nav class="sd-sidebar-nav">
         <div class="sd-sidebar-nav-section">
             <span class="sd-sidebar-nav-title">Tổng quan</span>
-            <a th:href="@{/vendor/dashboard}" class="sd-nav-item" data-match="/vendor/dashboard">
+            <a th:href="@{/admin/dashboard}" class="sd-nav-item" data-match="/admin/dashboard">
                 <i class="fas fa-house"></i>
                 <span class="sd-nav-label">Dashboard</span>
             </a>
@@ -20,18 +20,13 @@
 
         <div class="sd-sidebar-nav-section">
             <span class="sd-sidebar-nav-title">Quản lý</span>
-            <a th:href="@{/vendor/shop}" class="sd-nav-item" data-match="/vendor/shop">
-                <i class="fas fa-store"></i>
-                <span class="sd-nav-label">Cửa hàng</span>
+            <a th:href="@{/admin/users}" class="sd-nav-item" data-match="/admin/users">
+                <i class="fas fa-users"></i>
+                <span class="sd-nav-label">Người dùng</span>
             </a>
-            <a th:href="@{/vendor/products}" class="sd-nav-item" data-match="/vendor/products">
-                <i class="fas fa-box"></i>
-                <span class="sd-nav-label">Sản phẩm</span>
-            </a>
-            <a th:href="@{/vendor/orders}" class="sd-nav-item" data-match="/vendor/orders">
-                <i class="fas fa-cart-shopping"></i>
-                <span class="sd-nav-label">Đơn hàng</span>
-                <span class="sd-nav-badge" th:if="${pendingOrders != null and pendingOrders > 0}" th:text="${pendingOrders}">0</span>
+            <a th:href="@{/admin/categories}" class="sd-nav-item" data-match="/admin/categories">
+                <i class="fas fa-tags"></i>
+                <span class="sd-nav-label">Danh mục</span>
             </a>
         </div>
 
@@ -52,10 +47,10 @@
 
     <div class="sd-sidebar-footer">
         <div class="sd-sidebar-user">
-            <div class="sd-sidebar-avatar" sec:authentication="name">U</div>
+            <div class="sd-sidebar-avatar" sec:authentication="name">A</div>
             <div class="sd-sidebar-user-info">
-                <div class="sd-sidebar-user-name" sec:authentication="name">User</div>
-                <div class="sd-sidebar-user-role">Vendor</div>
+                <div class="sd-sidebar-user-name" sec:authentication="name">Admin</div>
+                <div class="sd-sidebar-user-role">Administrator</div>
             </div>
         </div>
     </div>

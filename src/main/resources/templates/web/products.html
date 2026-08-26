@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/springsecurity6">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Khám phá sản phẩm - CNJ70 Shop</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Work+Sans:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+    <link rel="stylesheet" th:href="@{/css/home.css}">
+    <link rel="stylesheet" th:href="@{/css/products.css}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body class="pl-page">
+    <div th:replace="fragments/web-header"></div>
+
+    <main class="main-content">
+        <!-- Page Hero -->
+        <section class="pl-hero">
+            <div class="pl-hero-bg">
+                <div class="pl-hero-pattern"></div>
+            </div>
+            <div class="container">
+                <div class="pl-hero-inner">
+                    <div class="pl-hero-text">
+                        <div class="pl-breadcrumb">
+                            <a th:href="@{/home}"><i class="fas fa-home"></i> Trang chủ</a>
+                            <i class="fas fa-chevron-right"></i>
+                            <span>Sản phẩm</span>
+                        </div>
+                        <h1>Khám phá sản phẩm</h1>
+                        <p>Tìm kiếm hàng ngàn sản phẩm chất lượng từ các shop uy tín</p>
+                    </div>
+                    <div class="pl-hero-stats">
+                        <div class="pl-hero-stat">
+                            <div class="pl-hero-stat-number" th:text="${totalProducts}">0</div>
+                            <div class="pl-hero-stat-label">Sản phẩm</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Search & Filter Bar -->
+        <div class="pl-filter-bar">
+            <div class="container">
+                <div class="pl-filter-inner">
+                    <!-- Search Form -->
+                    <form th:action="@{/products}" method="get" class="pl-search-form" id="search-form">
+                        <div class="pl-search-wrap">
+                            <i class="fas fa-search pl-search-icon"></i>
+                            <input type="text" 
+                                   name="search" 
+                                   th:value="${search}" 
+                                   placeholder="Tìm kiếm sản phẩm..." 
+                                   class="pl-search-input"
+                                   id="search-input">
+                            <button type="submit" class="pl-search-btn">
+                                <i class="fas fa-search"></i>
+                            </button>
+                        </div>
+                    </form>
+
+                    <!-- Sort Options -->
+                    <div class="pl-sort-wrap">
+                        <label class="pl-sort-label"><i class="fas fa-sort"></i> Sắp xếp:</label>
+                        <select class="pl-sort-select" id="sort-select" onchange="submitSortForm()">
+                            <option value="newest" th:selected="${sort == 'newest' or sort == null}">Mới nhất</option>
+                            <option value="price-asc" th:selected="${sort == 'price-asc'}">Giá: Thấp → Cao</option>
+                            <option value="price-desc" th:selected="${sort == 'price-desc'}">Giá: Cao → Thấp</option>
+                            <option value="rating" th:selected="${sort == 'rating'}">Đánh giá cao</option>
+                        </select>
+                        <form th:action="@{/products}" method="get" id="sort-form" style="display:none;">
+                            <input type="hidden" name="search" th:value="${search}">
+                            <input type="hidden" name="category" th:value="${selectedCategory}">
+                            <input type="hidden" name="sort" id="sort-input">
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Category Pills -->
+        <div class="pl-category-bar" th:if="${not #lists.isEmpty(categories)}">
+            <div class="container">
+                <div class="pl-category-scroll">
+                    <a th:href="@{/products(search=${search}, sort=${sort})}" 
+                       class="pl-cat-pill" 
+                       th:classappend="${selectedCategory == null} ? 'active'">
+                        <i class="fas fa-th"></i> Tất cả
+                    </a>
+                    <th:block th:each="cat : ${categories}">
+                        <a th:href="@{/products(search=${search}, category=${cat.id}, sort=${sort})}" 
+                           class="pl-cat-pill"
+                           th:classappend="${selectedCategory == cat.id} ? 'active'"
+                           th:data-category-id="${cat.id}">
+                            <i class="fas fa-tag"></i> <span th:text="${cat.name}">Danh mục</span>
+                        </a>
+                    </th:block>
+                </div>
+            </div>
+        </div>
+
+        <!-- Active Filters -->
+        <div class="pl-active-filters" th:if="${search != null or selectedCategory != null}">
+            <div class="container">
+                <div class="pl-active-inner">
+                    <span class="pl-active-label"><i class="fas fa-filter"></i> Bộ lọc:</span>
+                    <div class="pl-active-tags">
+                        <span class="pl-active-tag" th:if="${search != null}">
+                            "<span th:text="${search}">Từ khóa</span>"
+                            <a th:href="@{/products(category=${selectedCategory}, sort=${sort})}" class="pl-active-remove">
+                                <i class="fas fa-times"></i>
+                            </a>
+                        </span>
+                        <span class="pl-active-tag" th:if="${selectedCategory != null}">
+                            <span th:text="${selectedCategoryName}">Danh mục</span>
+                            <a th:href="@{/products(search=${search}, sort=${sort})}" class="pl-active-remove">
+                                <i class="fas fa-times"></i>
+                            </a>
+                        </span>
+                    </div>
+                    <a th:href="@{/products}" class="pl-clear-all">Xóa tất cả</a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Products Grid Section -->
+        <section class="pl-products-section">
+            <div class="container">
+                <!-- Results Header -->
+                <div class="pl-results-header" th:if="${not #lists.isEmpty(products)}">
+                    <div class="pl-results-count">
+                        Hiển thị <strong th:text="${products.size()}">0</strong> / <strong th:text="${totalProducts}">0</strong> sản phẩm
+                    </div>
+                    <div class="pl-view-toggle">
+                        <button class="pl-view-btn active" data-view="grid" title="Lưới">
+                            <i class="fas fa-th-large"></i>
+                        </button>
+                        <button class="pl-view-btn" data-view="list" title="Danh sách">
+                            <i class="fas fa-list"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Empty State -->
+                <div th:if="${#lists.isEmpty(products)}" class="pl-empty">
+                    <div class="pl-empty-inner">
+                        <div class="pl-empty-icon">
+                            <i class="fas fa-search"></i>
+                        </div>
+                        <h3>Không tìm thấy sản phẩm</h3>
+                        <p>Thử thay đổi từ khóa tìm kiếm hoặc bộ lọc</p>
+                        <a th:href="@{/products}" class="pl-empty-btn">
+                            <i class="fas fa-redo"></i> Xem tất cả sản phẩm
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Products Grid -->
+                <div class="pl-products-grid" id="products-grid" th:if="${not #lists.isEmpty(products)}">
+                    <th:block th:each="product, iter : ${products}">
+                        <div class="pl-product-card" th:attr="data-product-id=${product.id}">
+                            <!-- Badge -->
+                            <div class="pl-product-badge" th:if="${product.rating >= 4.5}">
+                                <i class="fas fa-star"></i> Bán chạy
+                            </div>
+                            
+                            <!-- Image -->
+                            <a th:href="@{/products/{id}(id=${product.id})}" class="pl-product-image">
+                                <img th:src="${product.thumbnailUrl ?: 'https://placehold.co/400x400/f0f7f6/0fb5b0?text=No+Img'}" 
+                                     th:alt="${product.name}"
+                                     loading="lazy">
+                                <div class="pl-product-overlay">
+                                    <span class="pl-quick-view">
+                                        <i class="fas fa-eye"></i> Xem nhanh
+                                    </span>
+                                </div>
+                            </a>
+
+                            <!-- Content -->
+                            <div class="pl-product-content">
+                                <!-- Shop -->
+                                <div class="pl-product-shop">
+                                    <i class="fas fa-store"></i>
+                                    <span th:text="${product.shopName}">Shop Name</span>
+                                </div>
+
+                                <!-- Name -->
+                                <a th:href="@{/products/{id}(id=${product.id})}" class="pl-product-name" th:text="${product.name}">
+                                    Tên sản phẩm
+                                </a>
+
+                                <!-- Price -->
+                                <div class="pl-product-price-row">
+                                    <span class="pl-product-price" th:text="${@money.format(product.price)}">0đ</span>
+                                    <span class="pl-product-sold" th:if="${product.reviewCount > 0}">
+                                        <i class="fas fa-shopping-bag"></i> <span th:text="${product.reviewCount * 12}">0</span> đã bán
+                                    </span>
+                                </div>
+
+                                <!-- Rating -->
+                                <div class="pl-product-rating" th:if="${product.rating > 0}">
+                                    <div class="pl-stars">
+                                        <th:block th:each="i : ${#numbers.sequence(1, 5)}">
+                                            <i class="fas fa-star" 
+                                               th:classappend="${i <= product.rating} ? 'pl-star-filled' : (i - 0.5 <= product.rating ? 'pl-star-half' : '')"></i>
+                                        </th:block>
+                                    </div>
+                                    <span class="pl-rating-value" th:text="${#numbers.formatDecimal(product.rating, 1, 1)}">0.0</span>
+                                    <span class="pl-review-count">(<span th:text="${product.reviewCount}">0</span>)</span>
+                                </div>
+
+                                <!-- Category Tag -->
+                                <div class="pl-product-category" th:if="${product.categoryName != null}">
+                                    <span th:text="${product.categoryName}">Danh mục</span>
+                                </div>
+
+                                <!-- Stock Status -->
+                                <div class="pl-product-stock">
+                                    <th:block th:if="${product.stock > 0}">
+                                        <span class="pl-stock-badge pl-stock-in">
+                                            <i class="fas fa-check-circle"></i> Còn <span th:text="${product.stock}">0</span> sản phẩm
+                                        </span>
+                                    </th:block>
+                                    <th:block th:unless="${product.stock > 0}">
+                                        <span class="pl-stock-badge pl-stock-out">
+                                            <i class="fas fa-times-circle"></i> Hết hàng
+                                        </span>
+                                    </th:block>
+                                </div>
+                            </div>
+
+                            <!-- Actions (hover) -->
+                            <div class="pl-product-actions" sec:authorize="isAuthenticated()">
+                                <form th:action="@{/api/cart/add}" method="post" class="pl-add-cart-form add-to-cart-form">
+                                    <input type="hidden" name="productId" th:value="${product.id}">
+                                    <button type="submit" class="pl-add-cart-btn">
+                                        <i class="fas fa-cart-plus"></i> Thêm vào giỏ
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                    </th:block>
+                </div>
+
+                <!-- Pagination -->
+                <div class="pl-pagination" th:if="${totalPages > 1}">
+                    <a th:href="@{/products(page=${currentPage - 1}, search=${search}, category=${selectedCategory}, sort=${sort})}" 
+                       class="pl-pagination-btn" 
+                       th:classappend="${currentPage == 1} ? 'disabled'"
+                       th:if="${currentPage > 1}">
+                        <i class="fas fa-chevron-left"></i>
+                    </a>
+                    <a class="pl-pagination-btn disabled" th:if="${currentPage == 1}">
+                        <i class="fas fa-chevron-left"></i>
+                    </a>
+
+                    <th:block th:each="i : ${#numbers.sequence(1, totalPages)}">
+                        <a th:href="@{/products(page=${i}, search=${search}, category=${selectedCategory}, sort=${sort})}" 
+                           class="pl-pagination-btn"
+                           th:classappend="${i == currentPage} ? 'active'"
+                           th:text="${i}">1</a>
+                    </th:block>
+
+                    <a th:href="@{/products(page=${currentPage + 1}, search=${search}, category=${selectedCategory}, sort=${sort})}" 
+                       class="pl-pagination-btn"
+                       th:classappend="${currentPage == totalPages} ? 'disabled'"
+                       th:if="${currentPage < totalPages}">
+                        <i class="fas fa-chevron-right"></i>
+                    </a>
+                    <a class="pl-pagination-btn disabled" th:if="${currentPage == totalPages}">
+                        <i class="fas fa-chevron-right"></i>
+                    </a>
+                </div>
+            </div>
+        </section>
+
+        <!-- Quick Filters Banner -->
+        <section class="pl-quick-filters reveal">
+            <div class="container">
+                <div class="pl-qf-grid">
+                    <a th:href="@{/products(sort='price-asc')}" class="pl-qf-card">
+                        <i class="fas fa-tags"></i>
+                        <div class="pl-qf-content">
+                            <strong>Ưu đãi</strong>
+                            <span>Giá tốt nhất</span>
+                        </div>
+                    </a>
+                    <a th:href="@{/products(sort='rating')}" class="pl-qf-card">
+                        <i class="fas fa-star"></i>
+                        <div class="pl-qf-content">
+                            <strong>Top đánh giá</strong>
+                            <span>Sản phẩm 5 sao</span>
+                        </div>
+                    </a>
+                    <a th:href="@{/products(sort='newest')}" class="pl-qf-card">
+                        <i class="fas fa-bolt"></i>
+                        <div class="pl-qf-content">
+                            <strong>Hàng mới về</strong>
+                            <span>Cập nhật liên tục</span>
+                        </div>
+                    </a>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <div th:replace="fragments/web-footer"></div>
+
+    <script th:src="@{/js/main.js}"></script>
+    <script th:src="@{/js/home.js}" defer></script>
+    <script>
+        // Sort form submission
+        function submitSortForm() {
+            const sortSelect = document.getElementById('sort-select');
+            const sortInput = document.getElementById('sort-input');
+            const sortForm = document.getElementById('sort-form');
+            
+            sortInput.value = sortSelect.value;
+            sortForm.submit();
+        }
+
+        // View toggle
+        document.querySelectorAll('.pl-view-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.pl-view-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                
+                const view = btn.dataset.view;
+                const grid = document.getElementById('products-grid');
+                
+                if (view === 'list') {
+                    grid.classList.add('pl-view-list');
+                } else {
+                    grid.classList.remove('pl-view-list');
+                }
+            });
+        });
+
+        // Scroll reveal animation
+        const revealElements = document.querySelectorAll('.reveal');
+        const revealOnScroll = () => {
+            revealElements.forEach(el => {
+                const rect = el.getBoundingClientRect();
+                if (rect.top < window.innerHeight - 50) {
+                    el.classList.add('visible');
+                }
+            });
+        };
+        window.addEventListener('scroll', revealOnScroll);
+        revealOnScroll();
+
+        // Search debounce
+        let searchTimeout;
+        const searchInput = document.getElementById('search-input');
+        searchInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                document.getElementById('search-form').submit();
+            }
+        });
+    </script>
+</body>
+</html>

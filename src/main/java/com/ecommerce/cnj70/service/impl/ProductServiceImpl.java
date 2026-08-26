@@ -10,6 +10,8 @@ import com.ecommerce.cnj70.repository.CategoryRepository;
 import com.ecommerce.cnj70.repository.ProductRepository;
 import com.ecommerce.cnj70.service.ProductService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -83,6 +85,10 @@ public class ProductServiceImpl implements ProductService {
         }
         if (request.getImageUrls() != null) {
             product.setImageUrls(request.getImageUrls());
+            // Set thumbnail as first image
+            if (!request.getImageUrls().isEmpty()) {
+                product.setThumbnailUrl(request.getImageUrls().get(0));
+            }
         }
         if (request.getStatus() != null) {
             product.setStatus(request.getStatus());
@@ -115,6 +121,11 @@ public class ProductServiceImpl implements ProductService {
     }
     
     @Override
+    public Page<Product> getAllProducts(Pageable pageable) {
+        return productRepository.findAll(pageable);
+    }
+    
+    @Override
     public List<Product> getProductsByShop(String shopId) {
         return productRepository.findByShopId(shopId);
     }
@@ -125,8 +136,18 @@ public class ProductServiceImpl implements ProductService {
     }
     
     @Override
+    public Page<Product> getProductsByCategory(String categoryId, Pageable pageable) {
+        return productRepository.findByCategoryId(categoryId, pageable);
+    }
+    
+    @Override
     public List<Product> searchProducts(String keyword) {
         return productRepository.findByNameContainingIgnoreCaseAndStatus(keyword, ProductStatus.ACTIVE);
+    }
+    
+    @Override
+    public Page<Product> searchProducts(String keyword, Pageable pageable) {
+        return productRepository.findByNameContainingIgnoreCase(keyword, pageable);
     }
     
     @Override

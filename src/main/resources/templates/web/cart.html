@@ -29,7 +29,7 @@
                     <tbody>
                         <tr th:each="item : ${cart.items}">
                             <td class="cart-item">
-                                <img th:src="${item.imageUrl ?: '/images/placeholder.jpg'}" th:alt="${item.productName}">
+                                <img th:src="${item.imageUrl ?: 'https://placehold.co/80x80/f1f5f9/94a3b8?text=No+Img'}" th:alt="${item.productName}" style="width:80px;height:80px;object-fit:cover;border-radius:6px;">
                                 <span th:text="${item.productName}">Tên sản phẩm</span>
                             </td>
                             <td th:text="${@money.format(item.price)}">0đ</td>
