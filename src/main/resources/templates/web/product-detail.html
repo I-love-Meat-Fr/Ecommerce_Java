@@ -172,7 +172,7 @@
                             <!-- Sticky Action Buttons (always visible at bottom) -->
                             <div class="pdp-sticky-actions">
                                 <div sec:authorize="isAuthenticated()" style="flex:1;">
-                                    <form th:action="@{/cart/add}" method="post" id="add-to-cart-form">
+                                    <form th:action="@{/api/cart/add}" method="post" id="add-to-cart-form">
                                         <input type="hidden" name="productId" th:value="${product.id}">
                                         <input type="hidden" name="quantity" id="hidden-quantity" value="1">
                                         <div class="pdp-btn-row">
@@ -565,24 +565,44 @@
             setTimeout(() => { toast.classList.remove('show'); }, 3000);
         }
 
-        // Add to cart
+        // Add to cart - AJAX API
         const cartForm = document.getElementById('add-to-cart-form');
         if (cartForm) {
             cartForm.addEventListener('submit', function(e) {
                 e.preventDefault();
+                const submitBtn = cartForm.querySelector('button[type="submit"]');
+                const originalText = submitBtn.innerHTML;
+                submitBtn.disabled = true;
+                submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Đang thêm...';
+                
                 const quantity = document.getElementById('quantity-input').value;
                 document.getElementById('hidden-quantity').value = quantity;
-                const formData = new FormData(this);
-                fetch(this.action, {
+                const formData = new FormData(cartForm);
+                
+                fetch('/api/cart/add', {
                     method: 'POST',
-                    body: formData
+                    body: formData,
+                    headers: { 'X-Requested-With': 'XMLHttpRequest' }
                 })
-                .then(response => {
-                    if (response.ok || response.redirected) {
-                        showToast('Đã thêm vào giỏ hàng!');
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        showToast(data.message || 'Đã thêm vào giỏ hàng!');
+                        if (typeof updateCartBadge === 'function' && typeof data.itemCount !== 'undefined') {
+                            updateCartBadge(data.itemCount);
+                        }
+                    } else {
+                        showToast(data.message || 'Có lỗi xảy ra');
                     }
                 })
-                .catch(error => { console.error('Error:', error); });
+                .catch(error => { 
+                    console.error('Error:', error); 
+                    showToast('Có lỗi xảy ra');
+                })
+                .finally(() => {
+                    submitBtn.disabled = false;
+                    submitBtn.innerHTML = originalText;
+                });
             });
         }
 

@@ -235,7 +235,7 @@
 
                             <!-- Actions (hover) -->
                             <div class="pl-product-actions" sec:authorize="isAuthenticated()">
-                                <form th:action="@{/cart/add}" method="post" class="pl-add-cart-form">
+                                <form th:action="@{/api/cart/add}" method="post" class="pl-add-cart-form add-to-cart-form">
                                     <input type="hidden" name="productId" th:value="${product.id}">
                                     <button type="submit" class="pl-add-cart-btn">
                                         <i class="fas fa-cart-plus"></i> Thêm vào giỏ
