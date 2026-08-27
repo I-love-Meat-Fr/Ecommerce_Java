@@ -40,7 +40,7 @@ body {
     min-width: 320px;
     background: var(--surface-alt);
     color: var(--ink);
-    font-family: var(--font); /* Work Sans via var(--font) in style.css */
+    font-family: var(--font);
     font-size: 14px;
     line-height: 1.55;
 }

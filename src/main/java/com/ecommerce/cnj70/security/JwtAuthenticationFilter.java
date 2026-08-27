@@ -1,6 +1,7 @@
 package com.ecommerce.cnj70.security;
 
 import com.ecommerce.cnj70.document.User;
+import com.ecommerce.cnj70.enums.AccountStatus;
 import com.ecommerce.cnj70.repository.UserRepository;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -32,25 +33,34 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                                     FilterChain filterChain) throws ServletException, IOException {
         try {
             String jwt = parseJwt(request);
-            
+
             if (jwt != null && jwtUtils.validateToken(jwt)) {
                 String email = jwtUtils.extractUsername(jwt);
                 String userId = jwtUtils.extractUserId(jwt);
                 String role = jwtUtils.extractRole(jwt);
-                
+
                 User user = userRepository.findByEmail(email).orElse(null);
                 if (user != null) {
-                    CustomUserDetails userDetails = CustomUserDetails.fromUser(user);
-                    
-                    UsernamePasswordAuthenticationToken authentication =
-                            new UsernamePasswordAuthenticationToken(
-                                    userDetails,
-                                    null,
-                                    userDetails.getAuthorities()
-                            );
-                    authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
-                    
-                    SecurityContextHolder.getContext().setAuthentication(authentication);
+                    // TASK 1.7 — LOCKED user + old JWT.
+                    // Reject authentication for any account whose current status is not ACTIVE,
+                    // so previously valid JWT tokens stop authenticating once the account is LOCKED.
+                    if (user.getStatus() != AccountStatus.ACTIVE) {
+                        log.debug("JWT rejected: account {} is not active (status={})", email, user.getStatus());
+                    } else if (!userId.equals(user.getId()) || !role.equals(user.getRole().name())) {
+                        log.debug("JWT rejected: claim mismatch for {}", email);
+                    } else {
+                        CustomUserDetails userDetails = CustomUserDetails.fromUser(user);
+
+                        UsernamePasswordAuthenticationToken authentication =
+                                new UsernamePasswordAuthenticationToken(
+                                        userDetails,
+                                        null,
+                                        userDetails.getAuthorities()
+                                );
+                        authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+
+                        SecurityContextHolder.getContext().setAuthentication(authentication);
+                    }
                 }
             }
         } catch (Exception e) {
@@ -65,7 +75,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         if (StringUtils.hasText(headerAuth) && headerAuth.startsWith("Bearer ")) {
             return headerAuth.substring(7);
         }
-        
+
         if (request.getCookies() != null) {
             for (Cookie cookie : request.getCookies()) {
                 if ("jwt".equals(cookie.getName())) {

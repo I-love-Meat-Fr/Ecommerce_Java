@@ -3,14 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>404 - Không tìm thấy</title>
+    <title>400 - Yêu cầu không hợp lệ</title>
     <link rel="stylesheet" th:href="@{/css/style.css}">
 </head>
 <body>
     <div class="error-page">
-        <h1>404</h1>
-        <h2>Không tìm thấy trang</h2>
-        <p th:text="${error} ?: 'Trang bạn đang tìm kiếm không tồn tại hoặc đã được di chuyển.'">Trang bạn đang tìm kiếm không tồn tại.</p>
+        <h1>400</h1>
+        <h2>Yêu cầu không hợp lệ</h2>
+        <p th:text="${error} ?: 'Dữ liệu bạn gửi không hợp lệ. Vui lòng kiểm tra lại và thử lại.'">Dữ liệu gửi lên không hợp lệ.</p>
         <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap;">
             <a th:href="@{/home}" class="btn btn-primary">Về trang chủ</a>
             <a th:href="@{/auth/login}" class="btn btn-secondary">Đăng nhập</a>

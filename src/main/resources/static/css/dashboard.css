@@ -1000,6 +1000,12 @@
     border-color: var(--border-strong);
 }
 .sd-app .sd-btn-secondary:hover { background: var(--bg-muted); color: var(--text); }
+.sd-app .sd-btn-danger {
+    background: var(--danger, #ef4444);
+    border-color: var(--danger, #ef4444);
+    color: #fff;
+}
+.sd-app .sd-btn-danger:hover { background: #dc2626; border-color: #dc2626; }
 
 /* ============================================
    ALERTS
@@ -1237,6 +1243,145 @@
 }
 
 /* ============================================
+   ADMIN SHELL — PHASE 2 ADDITIONS
+   Admin-specific tweaks layered on top of the
+   shared .sd-app shell. Use .sd-app-admin scope
+   to avoid breaking Vendor UI.
+   ============================================ */
+
+.sd-app-admin .sd-app {
+    /* surfaces */
+}
+
+/* ---- Topbar profile (Admin variant — two-line) ---- */
+.sd-app .sd-topbar-profile-info {
+    display: flex;
+    flex-direction: column;
+    line-height: 1.2;
+}
+
+.sd-app .sd-topbar-profile-role {
+    font-size: 10.5px;
+    font-weight: 600;
+    color: var(--text-faint);
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+}
+
+/* ---- Sidebar disabled nav items (Shops / Orders Coming Soon) ---- */
+.sd-app .sd-nav-item-disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
+    pointer-events: none;
+}
+
+.sd-app .sd-nav-coming-soon {
+    margin-left: auto;
+    background: var(--warning-soft);
+    color: var(--warning);
+    font-size: 9.5px;
+    font-weight: 700;
+    padding: 2px 6px;
+    border-radius: 999px;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    opacity: 1;
+    transition: opacity 200ms ease;
+}
+
+.sd-app.sidebar-expanded .sd-nav-coming-soon { opacity: 1; }
+
+/* ---- Flash message container ---- */
+.sd-app .sd-flash {
+    padding: 16px 28px 0;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    flex-shrink: 0;
+}
+
+.sd-app .sd-flash:empty { display: none; }
+
+.sd-app .sd-flash-item {
+    margin-bottom: 0;
+    animation: sdFlashSlide 240ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.sd-app .sd-flash-item .sd-alert-content { flex: 1; min-width: 0; }
+.sd-app .sd-flash-item .sd-alert-content p { word-break: break-word; }
+
+.sd-app .sd-flash-close {
+    background: transparent;
+    border: none;
+    color: inherit;
+    opacity: 0.6;
+    cursor: pointer;
+    padding: 6px;
+    border-radius: var(--radius-sm);
+    transition: opacity 160ms ease, background-color 160ms ease;
+    flex-shrink: 0;
+}
+
+.sd-app .sd-flash-close:hover { opacity: 1; background: rgba(15, 23, 42, 0.06); }
+
+/* ---- Variants for flash types ---- */
+.sd-app .sd-alert.sd-alert-success {
+    background: var(--success-soft);
+    border-color: rgba(16, 185, 129, 0.3);
+    color: #065f46;
+}
+
+.sd-app .sd-alert.sd-alert-danger {
+    background: var(--danger-soft);
+    border-color: rgba(239, 68, 68, 0.3);
+    color: #991b1b;
+}
+
+@keyframes sdFlashSlide {
+    from { opacity: 0; transform: translateY(-6px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ---- Quick-card disabled variant ---- */
+.sd-app .sd-quick-card-disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
+    pointer-events: none;
+}
+
+/* ---- Activity icon tints (type-driven) ---- */
+.sd-app .sd-activity-icon.sd-amber {
+    background: var(--warning-soft);
+    color: var(--warning);
+}
+
+.sd-app .sd-activity-icon.sd-indigo {
+    background: var(--primary-soft);
+    color: var(--primary);
+}
+
+.sd-app .sd-activity-icon.sd-green {
+    background: var(--success-soft);
+    color: var(--success);
+}
+
+.sd-app .sd-activity-icon.sd-red {
+    background: var(--danger-soft);
+    color: var(--danger);
+}
+
+/* ---- Responsive tweaks for Admin (faster collapse) ---- */
+@media (max-width: 1280px) {
+    .sd-app-admin .sd-stats-4 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+@media (max-width: 768px) {
+    .sd-app-admin .sd-flash { padding: 12px 16px 0; }
+    .sd-app-admin .sd-content { padding: 20px 16px; }
+    .sd-app-admin .sd-topbar-profile-info { display: none; }
+}
+
+/* ============================================
    MISC
    ============================================ */
 
@@ -1244,3 +1389,93 @@
 .sd-app .sd-text-success { color: var(--success); }
 .sd-app .sd-text-danger { color: var(--danger); }
 .sd-app .sd-text-warning { color: var(--warning); }
+
+.sd-app .sd-topbar-search-form { flex: 1; display: flex; align-items: center; }
+.sd-app .sd-topbar-search-form input[type="text"] {
+    border: none;
+    outline: none;
+    background: transparent;
+    flex: 1;
+    font-size: 14px;
+    color: var(--text);
+    padding: 4px 0;
+}
+
+.sd-app .sd-pagination {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    padding: 14px 0 4px;
+    flex-wrap: wrap;
+}
+.sd-app .sd-page-link {
+    min-width: 36px;
+    height: 36px;
+    padding: 0 12px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    border: 1px solid var(--border, #e2e8f0);
+    background: var(--bg-card, #fff);
+    color: var(--text, #0f172a);
+    border-radius: 8px;
+    text-decoration: none;
+    font-size: 13.5px;
+    font-weight: 500;
+    transition: background .15s ease, color .15s ease, border-color .15s ease;
+}
+.sd-app .sd-page-link:hover { background: var(--bg-muted, #f1f5f9); }
+.sd-app .sd-page-active {
+    background: var(--primary, #2563eb);
+    border-color: var(--primary, #2563eb);
+    color: #fff;
+}
+.sd-app .sd-page-active:hover { background: var(--primary-hover, #1d4ed8); color: #fff; }
+.sd-app .sd-page-disabled {
+    color: var(--text-muted);
+    cursor: not-allowed;
+    opacity: .55;
+    background: var(--bg-card, #fff);
+}
+
+.sd-app .sd-mono { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 12.5px; color: var(--text-muted); }
+
+.sd-app .sd-badge-amber { background: var(--warning-soft); color: var(--warning); }
+
+.sd-app .sd-detail-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 16px 24px;
+}
+.sd-app .sd-detail-item {
+    padding: 12px 14px;
+    background: var(--bg-card, #f8fafc);
+    border: 1px solid var(--border, #e2e8f0);
+    border-radius: 10px;
+}
+.sd-app .sd-detail-label {
+    font-size: 11.5px;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--text-muted);
+    font-weight: 600;
+    margin-bottom: 4px;
+}
+.sd-app .sd-detail-value {
+    font-size: 14px;
+    color: var(--text-primary, #0f172a);
+    word-break: break-word;
+}
+
+.sd-app .sd-action-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+@media (max-width: 768px) {
+    .sd-app .sd-detail-grid { grid-template-columns: 1fr; }
+}
