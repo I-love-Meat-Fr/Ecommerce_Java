@@ -22,10 +22,10 @@
             <div th:replace="~{fragments/admin-topbar :: topbar}"></div>
 
             <div class="sd-flash" id="adminFlashContainer"
-                 th:with="flashSuccess=${session.success != null} ? ${session.success} : (${flashSuccess} ?: null),
-                          flashError=${session.error != null} ? ${session.error} : (${flashError} ?: null),
-                          flashWarning=${session.warning != null} ? ${session.warning} : (${flashWarning} ?: null),
-                          flashInfo=${session.info != null} ? ${session.info} : (${flashInfo} ?: null)">
+                 th:with="flashSuccess=${param.flashSuccess != null and !#strings.isEmpty(param.flashSuccess[0])} ? ${param.flashSuccess[0]} : (${session.success != null} ? ${session.success} : (${flashSuccess} ?: null)),
+                          flashError=${param.flashError != null and !#strings.isEmpty(param.flashError[0])} ? ${param.flashError[0]} : (${session.error != null} ? ${session.error} : (${flashError} ?: null)),
+                          flashWarning=${param.flashWarning != null and !#strings.isEmpty(param.flashWarning[0])} ? ${param.flashWarning[0]} : (${session.warning != null} ? ${session.warning} : (${flashWarning} ?: null)),
+                          flashInfo=${param.flashInfo != null and !#strings.isEmpty(param.flashInfo[0])} ? ${param.flashInfo[0]} : (${session.info != null} ? ${session.info} : (${flashInfo} ?: null))">
                 <div th:if="${flashSuccess}" class="sd-alert sd-alert-success sd-flash-item" data-flash-type="success">
                     <i class="fas fa-check-circle"></i>
                     <div class="sd-alert-content">
@@ -116,22 +116,28 @@
                 });
             }
 
-            // Wire the Admin global search to the User Management list when on /admin/users.
+            // Wire the Admin global search to the matching module list when on a supported page.
+            // /admin/users  -> search users (email / fullName)
+            // /admin/categories -> search categories (name)
             // Other modules keep the plain input (no form submit, no parameter leakage).
             (function wireAdminSearch() {
                 const searchInput = document.getElementById('adminGlobalSearch');
                 if (!searchInput) return;
                 const isUserPage = path === '/admin/users' || path.startsWith('/admin/users/');
-                if (!isUserPage) return;
+                const isCategoryPage = path === '/admin/categories' || path.startsWith('/admin/categories/');
+                if (!isUserPage && !isCategoryPage) return;
                 const url = new URL(window.location.href);
                 const currentQ = url.searchParams.get('q') || '';
-                searchInput.placeholder = 'Tìm email hoặc họ tên...';
+                searchInput.placeholder = isCategoryPage
+                    ? 'Tìm danh mục theo tên...'
+                    : 'Tìm email hoặc họ tên...';
                 searchInput.value = currentQ;
+                const basePath = isCategoryPage ? '/admin/categories' : '/admin/users';
                 searchInput.addEventListener('keydown', function (e) {
                     if (e.key === 'Enter') {
                         e.preventDefault();
                         const q = encodeURIComponent(searchInput.value.trim());
-                        window.location.href = q ? '/admin/users?q=' + q : '/admin/users';
+                        window.location.href = q ? basePath + '?q=' + q : basePath;
                     }
                 });
             })();
