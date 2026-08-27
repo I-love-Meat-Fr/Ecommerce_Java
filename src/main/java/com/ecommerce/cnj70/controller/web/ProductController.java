@@ -3,14 +3,18 @@ package com.ecommerce.cnj70.controller.web;
 import com.ecommerce.cnj70.document.Category;
 import com.ecommerce.cnj70.document.Product;
 import com.ecommerce.cnj70.document.Review;
+import com.ecommerce.cnj70.dto.response.ReviewRes;
 import com.ecommerce.cnj70.repository.CategoryRepository;
 import com.ecommerce.cnj70.repository.ReviewRepository;
+import com.ecommerce.cnj70.security.CustomUserDetails;
 import com.ecommerce.cnj70.service.ProductService;
+import com.ecommerce.cnj70.service.ReviewService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -19,6 +23,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Controller
 @RequiredArgsConstructor
@@ -27,6 +32,7 @@ public class ProductController {
     private final ProductService productService;
     private final CategoryRepository categoryRepository;
     private final ReviewRepository reviewRepository;
+    private final ReviewService reviewService;
     
     @GetMapping("/products")
     public String productsList(
@@ -99,15 +105,31 @@ public class ProductController {
     }
     
     @GetMapping("/products/{id}")
-    public String productDetail(@PathVariable String id, Model model) {
+    public String productDetail(@PathVariable String id, Model model, @AuthenticationPrincipal CustomUserDetails user) {
         Product product = productService.getProductById(id);
+        model.addAttribute("product", product);
         
-        // Get reviews for the product
-        List<Review> reviews = reviewRepository.findByProductIdOrderByCreatedAtDesc(id);
-        if (reviews == null) {
-            reviews = Collections.emptyList();
+        // Get reviews using ReviewService
+        List<Review> reviews = reviewService.getReviewsByProductId(id);
+        List<ReviewRes> reviewList = reviews.stream()
+                .map(review -> ReviewRes.builder()
+                        .id(review.getId())
+                        .productId(review.getProductId())
+                        .userId(review.getUserId())
+                        .userName(review.getUserName())
+                        .userAvatar(review.getUserAvatar())
+                        .rating(review.getRating())
+                        .comment(review.getComment())
+                        .createdAt(review.getCreatedAt())
+                        .build())
+                .collect(Collectors.toList());
+        model.addAttribute("reviews", reviewList);
+        
+        // Check if current user has reviewed
+        if (user != null) {
+            boolean hasReviewed = reviewService.hasUserReviewedProduct(user.getId(), id);
+            model.addAttribute("hasReviewed", hasReviewed);
         }
-        model.addAttribute("reviews", reviews);
         
         // Get related products from same category
         List<Product> relatedProducts = Collections.emptyList();
@@ -120,7 +142,6 @@ public class ProductController {
         }
         model.addAttribute("relatedProducts", relatedProducts);
         
-        model.addAttribute("product", product);
         return "web/product-detail";
     }
 }

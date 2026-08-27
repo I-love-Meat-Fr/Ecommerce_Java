@@ -42,5 +42,8 @@ public class Cart {
         private BigDecimal price;
         private int quantity;
         private BigDecimal subtotal;
+        private String shopId;
+        private String shopName;
+        private Integer stock;
     }
 }
