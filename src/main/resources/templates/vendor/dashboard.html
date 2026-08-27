@@ -19,6 +19,7 @@
                     <i class="fas fa-exclamation-triangle"></i>
                     Bạn chưa có cửa hàng. <a th:href="@{/vendor/shop/create}">Tạo cửa hàng ngay</a>
                 </div>
+<<<<<<< HEAD
                 
                 <div class="stats-grid" th:if="${stats.shopSummary != null}">
                     <div class="stat-card">
@@ -48,6 +49,63 @@
                             <h3>Doanh thu</h3>
                             <p class="stat-value" th:text="${@money.format(stats.totalRevenue)}">0đ</p>
                         </div>
+=======
+                <div class="sd-sidebar-brand">
+                    <span class="sd-sidebar-brand-name">CNJ70 Shop</span>
+                    <span class="sd-sidebar-brand-sub">Vendor Console</span>
+                </div>
+            </div>
+
+            <nav class="sd-sidebar-nav">
+                <div class="sd-sidebar-nav-section">
+                    <span class="sd-sidebar-nav-title">Tổng quan</span>
+                    <a th:href="@{/vendor/dashboard}" class="sd-nav-item active" data-match="/vendor/dashboard">
+                        <i class="fas fa-house"></i>
+                        <span class="sd-nav-label">Dashboard</span>
+                    </a>
+                </div>
+                <div class="sd-sidebar-nav-section">
+                    <span class="sd-sidebar-nav-title">Quản lý</span>
+                    <a th:href="@{/vendor/shop}" class="sd-nav-item" data-match="/vendor/shop">
+                        <i class="fas fa-store"></i>
+                        <span class="sd-nav-label">Cửa hàng</span>
+                    </a>
+                    <a th:href="@{/vendor/products}" class="sd-nav-item" data-match="/vendor/products">
+                        <i class="fas fa-box"></i>
+                        <span class="sd-nav-label">Sản phẩm</span>
+                    </a>
+                    <a th:href="@{/vendor/orders}" class="sd-nav-item" data-match="/vendor/orders">
+                        <i class="fas fa-cart-shopping"></i>
+                        <span class="sd-nav-label">Đơn hàng</span>
+                        <span class="sd-nav-badge" th:if="${pendingOrders != null and pendingOrders > 0}" th:text="${pendingOrders}">0</span>
+                    </a>
+                    <a th:href="@{/vendor/vouchers/create}" class="sd-nav-item" data-match="/vendor/vouchers">
+                        <i class="fas fa-ticket"></i>
+                        <span class="sd-nav-label">Voucher</span>
+                    </a>
+                </div>
+                <div class="sd-sidebar-nav-section">
+                    <span class="sd-sidebar-nav-title">Khác</span>
+                    <a th:href="@{/home}" class="sd-nav-item">
+                        <i class="fas fa-globe"></i>
+                        <span class="sd-nav-label">Xem website</span>
+                    </a>
+                    <form th:action="@{/auth/logout}" method="post" style="margin:0;">
+                        <button type="submit" class="sd-nav-item">
+                            <i class="fas fa-arrow-right-from-bracket"></i>
+                            <span class="sd-nav-label">Đăng xuất</span>
+                        </button>
+                    </form>
+                </div>
+            </nav>
+
+            <div class="sd-sidebar-footer">
+                <div class="sd-sidebar-user">
+                    <div class="sd-sidebar-avatar" sec:authentication="name">V</div>
+                    <div class="sd-sidebar-user-info">
+                        <div class="sd-sidebar-user-name" sec:authentication="name">Vendor</div>
+                        <div class="sd-sidebar-user-role">Vendor</div>
+>>>>>>> dc088f9 (feat: implement voucher module for vendor management)
                     </div>
                 </div>
                 

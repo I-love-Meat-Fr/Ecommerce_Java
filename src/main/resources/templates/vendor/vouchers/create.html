@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/springsecurity6">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tạo voucher SHOP - CNJ70</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Work+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" th:href="@{/css/dashboard.css}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+        @media (max-width: 768px) { .form-row { grid-template-columns: 1fr; } }
+    </style>
+</head>
+<body>
+<div class="sd-app" id="appShell">
+    <aside class="sd-sidebar">
+        <div class="sd-sidebar-header">
+            <div class="sd-sidebar-logo"><i class="fas fa-bolt"></i></div>
+            <div class="sd-sidebar-brand">
+                <span class="sd-sidebar-brand-name">CNJ70 Shop</span>
+                <span class="sd-sidebar-brand-sub">Vendor Console</span>
+            </div>
+        </div>
+        <nav class="sd-sidebar-nav">
+            <div class="sd-sidebar-nav-section">
+                <span class="sd-sidebar-nav-title">Tổng quan</span>
+                <a th:href="@{/vendor/dashboard}" class="sd-nav-item"><i class="fas fa-house"></i><span class="sd-nav-label">Dashboard</span></a>
+            </div>
+            <div class="sd-sidebar-nav-section">
+                <span class="sd-sidebar-nav-title">Quản lý</span>
+                <a th:href="@{/vendor/shop}" class="sd-nav-item"><i class="fas fa-store"></i><span class="sd-nav-label">Cửa hàng</span></a>
+                <a th:href="@{/vendor/products}" class="sd-nav-item"><i class="fas fa-box"></i><span class="sd-nav-label">Sản phẩm</span></a>
+                <a th:href="@{/vendor/orders}" class="sd-nav-item" data-match="/vendor/orders"><i class="fas fa-cart-shopping"></i><span class="sd-nav-label">Đơn hàng</span></a>
+                <a th:href="@{/vendor/vouchers/create}" class="sd-nav-item active" data-match="/vendor/vouchers"><i class="fas fa-ticket"></i><span class="sd-nav-label">Voucher</span></a>
+            </div>
+            <div class="sd-sidebar-nav-section">
+                <span class="sd-sidebar-nav-title">Khác</span>
+                <a th:href="@{/home}" class="sd-nav-item"><i class="fas fa-globe"></i><span class="sd-nav-label">Xem website</span></a>
+                <form th:action="@{/auth/logout}" method="post" style="margin:0;">
+                    <button type="submit" class="sd-nav-item"><i class="fas fa-arrow-right-from-bracket"></i><span class="sd-nav-label">Đăng xuất</span></button>
+                </form>
+            </div>
+        </nav>
+        <div class="sd-sidebar-footer">
+            <div class="sd-sidebar-user">
+                <div class="sd-sidebar-avatar" sec:authentication="name">V</div>
+                <div class="sd-sidebar-user-info">
+                    <div class="sd-sidebar-user-name" sec:authentication="name">Vendor</div>
+                    <div class="sd-sidebar-user-role">Vendor</div>
+                </div>
+            </div>
+        </div>
+    </aside>
+
+    <div class="sd-main">
+        <div class="sd-topbar">
+            <button class="sd-topbar-toggle" type="button" id="sidebarToggle"><i class="fas fa-bars"></i></button>
+            <div class="sd-topbar-search">
+                <i class="fas fa-magnifying-glass"></i>
+                <input type="text" placeholder="Tìm kiếm...">
+            </div>
+            <div class="sd-topbar-actions">
+                <button class="sd-icon-btn" type="button"><i class="fas fa-bell"></i></button>
+                <div class="sd-topbar-divider"></div>
+                <div class="sd-topbar-profile">
+                    <div class="sd-topbar-avatar" sec:authentication="name">V</div>
+                    <span class="sd-topbar-profile-name" sec:authentication="name">Vendor</span>
+                </div>
+            </div>
+        </div>
+
+        <main class="sd-content">
+            <div class="sd-page-head">
+                <div class="sd-page-head-title">
+                    <h1>Tạo voucher SHOP</h1>
+                    <p>Voucher áp dụng cho cửa hàng của bạn. Khách hàng nhập mã để được giảm giá.</p>
+                </div>
+                <div class="sd-page-head-actions">
+                    <a th:href="@{/vouchers}" class="sd-btn sd-btn-secondary sd-btn-sm"><i class="fas fa-eye"></i> Xem voucher công khai</a>
+                </div>
+            </div>
+
+            <!-- Thông báo -->
+            <div th:if="${param.success}" class="sd-alert sd-alert-success" style="background:var(--success-soft,#d4edda);color:var(--success,#155724);padding:12px 16px;border-radius:8px;margin-bottom:16px;display:flex; align-items:center;gap:10px;font-size:13.5px;">
+                <i class="fas fa-check-circle"></i> Tạo voucher thành công!
+            </div>
+            <div th:if="${error}" class="sd-alert sd-alert-warning" style="background:var(--danger-soft,#f8d7da);color:var(--danger,#721c24);padding:12px 16px;border-radius:8px;margin-bottom:16px;display:flex; align-items:center;gap:10px;font-size:13.5px;">
+                <i class="fas fa-triangle-exclamation"></i><span th:text="${error}"></span>
+            </div>
+
+            <form th:action="@{/vendor/vouchers/create}"
+                  th:object="${voucherFormReq != null ? voucherFormReq : {}}"
+                  method="post">
+                <div class="sd-card" style="max-width:800px;">
+                    <div class="sd-card-head">
+                        <div>
+                            <h3><i class="fas fa-ticket"></i> Thông tin voucher</h3>
+                            <p>Mã voucher phải là duy nhất trong hệ thống.</p>
+                        </div>
+                    </div>
+                    <div class="sd-card-body">
+                        <div class="form-row">
+                            <div class="sd-form-group">
+                                <label>Mã voucher *</label>
+                                <input type="text" class="sd-form-control" name="code" required
+                                       pattern="[A-Za-z0-9]+" minlength="3" maxlength="20"
+                                       placeholder="VD: SHOP2026, GIAM50K..."
+                                       style="text-transform:uppercase;">
+                                <small style="color:#7f8c8d;font-size:11.5px;">3-20 ký tự, chỉ chữ và số.</small>
+                            </div>
+                            <div class="sd-form-group">
+                                <label>Tên voucher *</label>
+                                <input type="text" class="sd-form-control" name="name" required maxlength="100"
+                                       placeholder="VD: Giảm 50K cho đơn từ 500K">
+                            </div>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="sd-form-group">
+                                <label>Loại giảm giá *</label>
+                                <select class="sd-form-control" name="discountType" id="discountType" required onchange="toggleDiscountLabel()">
+                                    <option value="">-- Chọn --</option>
+                                    <option value="PERCENT">Giảm theo %</option>
+                                    <option value="AMOUNT">Giảm số tiền (VNĐ)</option>
+                                </select>
+                            </div>
+                            <div class="sd-form-group">
+                                <label id="discountValueLabel">Giá trị giảm *</label>
+                                <input type="number" class="sd-form-control" name="discountValue" required min="0.01" step="0.01"
+                                       placeholder="VD: 10 hoặc 50000">
+                            </div>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="sd-form-group">
+                                <label>Đơn hàng tối thiểu (VNĐ)</label>
+                                <input type="number" class="sd-form-control" name="minOrderValue" min="0" step="1000"
+                                       placeholder="0 = không yêu cầu">
+                            </div>
+                            <div class="sd-form-group">
+                                <label>Tổng số lượt *</label>
+                                <input type="number" class="sd-form-control" name="quantity" required min="1"
+                                       placeholder="VD: 100">
+                            </div>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="sd-form-group">
+                                <label>Ngày bắt đầu</label>
+                                <input type="datetime-local" class="sd-form-control" name="startDate"
+                                       id="startDate">
+                            </div>
+                            <div class="sd-form-group">
+                                <label>Ngày kết thúc *</label>
+                                <input type="datetime-local" class="sd-form-control" name="endDate" required id="endDate">
+                            </div>
+                        </div>
+
+                        <!-- Hidden field: type = SHOP -->
+                        <input type="hidden" name="type" value="SHOP">
+                    </div>
+                </div>
+
+                <div style="max-width:800px;display:flex;gap:8px;justify-content:flex-end;margin-top:16px;margin-bottom:24px;">
+                    <button type="reset" class="sd-btn sd-btn-secondary"><i class="fas fa-xmark"></i> Hủy</button>
+                    <button type="submit" class="sd-btn sd-btn-primary"><i class="fas fa-save"></i> Tạo voucher</button>
+                </div>
+            </form>
+        </main>
+    </div>
+</div>
+
+<script>
+    (function() {
+        const shell = document.getElementById('appShell');
+        const toggle = document.getElementById('sidebarToggle');
+        const KEY = 'cnj70-sidebar-expanded';
+        if (localStorage.getItem(KEY) === '1') shell.classList.add('sidebar-expanded');
+        toggle?.addEventListener('click', () => {
+            shell.classList.toggle('sidebar-expanded');
+            localStorage.setItem(KEY, shell.classList.contains('sidebar-expanded') ? '1' : '0');
+        });
+
+        // Auto-highlight sidebar theo URL hiện tại
+        const path = window.location.pathname.replace(/\/$/, '');
+        document.querySelectorAll('.sd-nav-item[data-match]').forEach(el => {
+            const match = el.getAttribute('data-match');
+            if (match && (path === match || path.startsWith(match + '/'))) {
+                el.classList.add('active');
+            }
+        });
+
+        document.querySelectorAll('.sd-sidebar-avatar, .sd-topbar-avatar').forEach(el => {
+            const name = (el.textContent || '').trim();
+            if (!name) return;
+            el.textContent = name.charAt(0).toUpperCase();
+        });
+
+        // Set datetime mặc định
+        const now = new Date();
+        const tomorrow = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000);
+        const fmt = d => d.toISOString().slice(0, 16);
+        document.getElementById('startDate').value = fmt(now);
+        document.getElementById('endDate').value = fmt(tomorrow);
+
+        // Auto-uppercase mã
+        document.querySelector('input[name="code"]').addEventListener('input', function(e) {
+            e.target.value = e.target.value.toUpperCase();
+        });
+    })();
+
+    function toggleDiscountLabel() {
+        const type = document.getElementById('discountType').value;
+        const label = document.getElementById('discountValueLabel');
+        label.textContent = type === 'PERCENT' ? 'Giá trị giảm (% )*' : 'Giá trị giảm (VNĐ) *';
+    }
+</script>
+</body>
+</html>

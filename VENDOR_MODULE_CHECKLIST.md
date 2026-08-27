@@ -217,3 +217,65 @@ db.products.createIndex({ "categoryId": 1 })
 - [ ] Documentation updated
 - [ ] Database migration scripts ready (nếu cần)
 - [ ] Frontend team notified về API changes (Order.OrderItem.shopId)
+
+
+
+
+Bạn đang code module Voucher cho Spring Boot + Thymeleaf + MongoDB.
+
+Yêu cầu thiết kế theo hướng "Công bố công khai":
+- Admin/Vendor tạo voucher với code, số lượng cố định
+- Công khai danh sách voucher, ai nhập mã → dùng được
+- Hết lượt hoặc hết hạn → không dùng được nữa
+- KHÔNG cần check ownership per user
+- KHÔNG cần validate phức tạp
+
+# 1. DOCUMENT Voucher (1 collection duy nhất)
+- id, code (UNIQUE), name
+- type: SHOP hoặc WEB
+- shopId: null nếu WEB
+- discountType: PERCENT hoặc AMOUNT
+- discountValue, minOrderValue
+- quantity (tổng số lượt), used (đã dùng)
+- startDate, endDate
+- active (boolean)
+- createdBy (admin/vendor)
+
+# 2. CONTROLLER (1 file duy nhất, KHÔNG @PreAuthorize)
+Endpoint:
+- GET  /vouchers → trang công khai (ai cũng xem được)
+- GET  /vendor/vouchers/create + POST → vendor tạo voucher SHOP
+- GET  /admin/vouchers/create  + POST → admin tạo voucher WEB
+- POST /checkout/apply-voucher → khách nhập mã, validate 3 bước:
+  1. Tồn tại + active
+  2. Chưa hết hạn
+  3. Còn lượt (used < quantity)
+- POST /checkout/place-order → trừ lượt voucher sau khi đặt hàng
+
+# 3. SECURITYCONFIG chặn theo URL pattern
+- /admin/vouchers/**     → hasRole("ADMIN")
+- /vendor/vouchers/**    → hasRole("VENDOR")
+- /vouchers, /checkout/** → authenticated()
+
+# 4. SERVICE xử lý logic
+- findByCode(String code)
+- findAvailable() → chỉ trả về voucher active + còn hạn + còn lượt
+- save(Voucher v)
+- incrementUsed(String voucherId) → tăng used +=1
+
+Yêu cầu code:
+- Java Spring Boot
+- Thymeleaf (KHÔNG REST API)
+- MongoDB (Spring Data MongoDB)
+- Code gọn, đủ chức năng cho đồ án môn học
+- Comment ngắn gọn bằng tiếng Việt
+
+Hãy viết đầy đủ các file:
+1. Voucher.java (Document)
+2. VoucherType.java, DiscountType.java (Enum)
+3. VoucherRepository.java (extends MongoRepository)
+4. VoucherService.java + Impl
+5. VoucherController.java
+6. Phần SecurityConfig (authorizeHttpRequests)
+7. Template Thymeleaf: vouchers/list.html, vouchers/create.html, 
+   admin/vouchers/create.html
