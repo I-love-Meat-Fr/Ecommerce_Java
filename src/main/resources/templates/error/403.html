@@ -10,8 +10,11 @@
     <div class="error-page">
         <h1>403</h1>
         <h2>Bạn không có quyền truy cập trang này</h2>
-        <p th:text="${error}">Vui lòng đăng nhập hoặc liên hệ quản trị viên.</p>
-        <a th:href="@{/home}" class="btn btn-primary">Về trang chủ</a>
+        <p th:text="${error} ?: 'Vui lòng đăng nhập bằng tài khoản có quyền phù hợp hoặc liên hệ quản trị viên.'">Vui lòng đăng nhập hoặc liên hệ quản trị viên.</p>
+        <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap;">
+            <a th:href="@{/home}" class="btn btn-primary">Về trang chủ</a>
+            <a th:href="@{/auth/login}" class="btn btn-secondary">Đăng nhập</a>
+        </div>
     </div>
 </body>
 </html>

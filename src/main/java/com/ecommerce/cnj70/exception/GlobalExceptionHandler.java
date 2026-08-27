@@ -23,6 +23,13 @@ public class GlobalExceptionHandler {
         model.addAttribute("error", ex.getMessage());
         return "error/400";
     }
+
+    @ExceptionHandler(BusinessException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public String handleBusinessException(BusinessException ex, Model model) {
+        model.addAttribute("error", ex.getMessage());
+        return "error/400";
+    }
     
     @ExceptionHandler(UnauthorizedException.class)
     @ResponseStatus(HttpStatus.FORBIDDEN)
@@ -38,6 +45,13 @@ public class GlobalExceptionHandler {
         return "error/403";
     }
     
+    @ExceptionHandler(org.springframework.web.servlet.resource.NoResourceFoundException.class)
+    @ResponseStatus(HttpStatus.NOT_FOUND)
+    public String handleNoResourceFoundException(org.springframework.web.servlet.resource.NoResourceFoundException ex, Model model) {
+        model.addAttribute("error", "Trang bạn tìm không tồn tại");
+        return "error/404";
+    }
+
     @ExceptionHandler(org.springframework.web.bind.MethodArgumentNotValidException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public String handleValidationException(org.springframework.web.bind.MethodArgumentNotValidException ex, Model model) {

@@ -9,13 +9,13 @@ import java.util.List;
 import java.util.Optional;
 
 @Repository
-public interface UserRepository extends MongoRepository<User, String> {
-    
+public interface UserRepository extends MongoRepository<User, String>, UserRepositoryCustom {
+
     Optional<User> findByEmail(String email);
-    
+
     boolean existsByEmail(String email);
-    
+
     List<User> findByRole(UserRole role);
-    
+
     List<User> findByRoleAndStatus(UserRole role, String status);
 }

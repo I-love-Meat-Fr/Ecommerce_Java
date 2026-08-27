@@ -10,8 +10,11 @@
     <div class="error-page">
         <h1>500</h1>
         <h2>Đã xảy ra lỗi</h2>
-        <p th:text="${error}">Đã có lỗi xảy ra trong quá trình xử lý.</p>
-        <a th:href="@{/home}" class="btn btn-primary">Về trang chủ</a>
+        <p th:text="${error} ?: 'Đã có lỗi xảy ra trong quá trình xử lý. Vui lòng thử lại sau.'">Đã có lỗi xảy ra trong quá trình xử lý.</p>
+        <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap;">
+            <a th:href="@{/home}" class="btn btn-primary">Về trang chủ</a>
+            <a th:href="@{/auth/login}" class="btn btn-secondary">Đăng nhập</a>
+        </div>
     </div>
 </body>
 </html>

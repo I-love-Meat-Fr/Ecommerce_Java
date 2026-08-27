@@ -13,9 +13,10 @@
             <h1>CNJ70 Ecommerce</h1>
             <h2>Đăng nhập</h2>
             
-            <div th:if="${param.error}" class="alert alert-error">
+            <div th:if="${param.error != null or error != null}" class="alert alert-error">
                 <i class="fas fa-exclamation-circle"></i>
-                Email hoặc mật khẩu không đúng
+                <span th:if="${error}" th:text="${error}">Đăng nhập thất bại</span>
+                <span th:unless="${error}">Email hoặc mật khẩu không đúng</span>
             </div>
             
             <div th:if="${param.logout}" class="alert alert-success">

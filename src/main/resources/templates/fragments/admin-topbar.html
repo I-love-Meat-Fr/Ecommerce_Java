@@ -1,0 +1,33 @@
+<div class="sd-topbar" th:fragment="topbar" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/springsecurity6">
+    <button class="sd-topbar-toggle" type="button" id="sidebarToggle" aria-label="Mở menu">
+        <i class="fas fa-bars"></i>
+    </button>
+
+    <div class="sd-topbar-search">
+        <i class="fas fa-magnifying-glass"></i>
+        <input type="text" id="adminGlobalSearch" placeholder="Tìm kiếm nhanh..." aria-label="Tìm kiếm">
+    </div>
+
+    <div class="sd-topbar-actions">
+        <button class="sd-icon-btn" type="button" aria-label="Trợ giúp">
+            <i class="fas fa-circle-question"></i>
+        </button>
+
+        <div class="sd-topbar-divider"></div>
+
+        <div class="sd-topbar-profile">
+            <div class="sd-topbar-avatar" sec:authentication="name">A</div>
+            <div class="sd-topbar-profile-info">
+                <span class="sd-topbar-profile-name" sec:authentication="name">Admin</span>
+                <span class="sd-topbar-profile-role">ROLE_ADMIN</span>
+            </div>
+        </div>
+
+        <form th:action="@{/auth/logout}" method="post" style="margin:0;">
+            <button type="submit" class="sd-btn sd-btn-secondary sd-btn-sm" aria-label="Đăng xuất">
+                <i class="fas fa-arrow-right-from-bracket"></i>
+                <span>Đăng xuất</span>
+            </button>
+        </form>
+    </div>
+</div>

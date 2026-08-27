@@ -1,59 +1,182 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/springsecurity6"
+      th:replace="~{layout/admin-layout :: layout(title='Quản lý danh mục - CNJ70 Admin', content=~{::main-content}, scripts=~{::page-scripts})}">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Quản lý danh mục - CNJ70 Admin</title>
-    <link rel="stylesheet" th:href="@{/css/admin-vendor.css}">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body>
-    <div class="dashboard-container">
-        <div class="sidebar">
-            <h2>CNJ70 Admin</h2>
-            <nav>
-                <a th:href="@{/admin/dashboard}"><i class="fas fa-chart-line"></i> Dashboard</a>
-                <a th:href="@{/admin/users}"><i class="fas fa-users"></i> Người dùng</a>
-                <a th:href="@{/admin/categories}"><i class="fas fa-tags"></i> Danh mục</a>
-            </nav>
+<main th:fragment="main-content">
+    <div class="sd-page-head">
+        <div class="sd-page-head-title">
+            <h1>Quản lý danh mục</h1>
+            <p>Thêm, sửa, xóa các danh mục sản phẩm trong hệ thống.</p>
         </div>
-        <div class="main-content">
-            <main class="dashboard-content">
-                <h1>Quản lý danh mục</h1>
-                
-                <form th:action="@{/admin/categories/create}" method="post" class="category-form">
-                    <input type="text" name="name" placeholder="Tên danh mục" required>
-                    <input type="text" name="description" placeholder="Mô tả (tùy chọn)">
-                    <button type="submit" class="btn btn-primary">Thêm danh mục</button>
-                </form>
-                
-                <table class="data-table">
-                    <thead>
-                        <tr>
-                            <th>Tên danh mục</th>
-                            <th>Mô tả</th>
-                            <th>Trạng thái</th>
-                            <th>Thao tác</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr th:each="category : ${categories}">
-                            <td th:text="${category.name}">Tên danh mục</td>
-                            <td th:text="${category.description}">Mô tả</td>
-                            <td>
-                                <span class="status-badge" th:classappend="${category.active ? 'ACTIVE' : 'LOCKED'}" 
-                                      th:text="${category.active ? 'Hoạt động' : 'Khóa'}">Active</span>
-                            </td>
-                            <td>
-                                <form th:action="@{/admin/categories/{id}/delete(id=${category.id})}" method="post" style="display:inline;">
-                                    <button type="submit" class="btn-sm btn-danger" onclick="return confirm('Bạn có chắc?')">Xóa</button>
-                                </form>
-                            </td>
-                        </tr>
-                    </tbody>
-                </table>
-            </main>
+        <div class="sd-page-head-actions">
+            <span class="sd-badge sd-badge-slate">
+                <i class="fas fa-tags"></i>
+                <span th:text="${totalItems} + ' danh mục'">0</span>
+            </span>
         </div>
     </div>
+
+    <div th:if="${q != null and !#strings.isEmpty(q)}" class="sd-card" style="margin-bottom:16px;">
+        <div class="sd-card-body" style="display:flex;align-items:center;gap:10px;">
+            <i class="fas fa-filter"></i>
+            <span>Đang lọc theo:</span>
+            <span class="sd-badge sd-badge-slate" th:text="${q}">keyword</span>
+            <a th:href="@{/admin/categories(page=0, size=${size})}" class="sd-btn sd-btn-secondary sd-btn-sm" style="margin-left:auto;">
+                <i class="fas fa-times"></i> Bỏ lọc
+            </a>
+        </div>
+    </div>
+
+    <div class="sd-card" style="margin-bottom:20px;">
+        <div class="sd-card-head">
+            <div>
+                <h3 th:if="${editMode == null or !editMode}">
+                    <i class="fas fa-plus-circle"></i> Thêm danh mục mới
+                </h3>
+                <h3 th:if="${editMode == true}">
+                    <i class="fas fa-pen-to-square"></i> Sửa danh mục
+                </h3>
+                <p th:if="${editMode == null or !editMode}">Tạo danh mục sản phẩm mới cho hệ thống</p>
+                <p th:if="${editMode == true}">
+                    Cập nhật thông tin cho danh mục
+                    <strong th:text="${category.name}">name</strong>
+                </p>
+            </div>
+        </div>
+        <div class="sd-card-body">
+            <form th:if="${editMode == null or !editMode}"
+                  th:action="@{/admin/categories/create(page=${page}, size=${size}, q=${q})}" method="post">
+                <div style="display:grid;grid-template-columns:1fr 2fr auto;gap:12px;align-items:flex-end;">
+                    <div class="sd-form-group" style="margin:0;">
+                        <label for="cat-name">Tên danh mục</label>
+                        <input type="text" id="cat-name" name="name" class="sd-form-control"
+                               placeholder="Ví dụ: Thời trang nam" required>
+                    </div>
+                    <div class="sd-form-group" style="margin:0;">
+                        <label for="cat-desc">Mô tả</label>
+                        <input type="text" id="cat-desc" name="description" class="sd-form-control"
+                               placeholder="Mô tả ngắn (tùy chọn)">
+                    </div>
+                    <button type="submit" class="sd-btn sd-btn-primary">
+                        <i class="fas fa-plus"></i> Thêm danh mục
+                    </button>
+                </div>
+            </form>
+
+            <form th:if="${editMode == true}"
+                  th:action="@{/admin/categories/{id}/edit(id=${category.id}, page=${page}, size=${size}, q=${q})}" method="post">
+                <div style="display:grid;grid-template-columns:1fr 2fr auto auto;gap:12px;align-items:flex-end;">
+                    <div class="sd-form-group" style="margin:0;">
+                        <label for="cat-name-edit">Tên danh mục</label>
+                        <input type="text" id="cat-name-edit" name="name" class="sd-form-control"
+                               th:value="${category.name}" required>
+                    </div>
+                    <div class="sd-form-group" style="margin:0;">
+                        <label for="cat-desc-edit">Mô tả</label>
+                        <input type="text" id="cat-desc-edit" name="description" class="sd-form-control"
+                               th:value="${category.description}" placeholder="Mô tả ngắn (tùy chọn)">
+                    </div>
+                    <button type="submit" class="sd-btn sd-btn-primary">
+                        <i class="fas fa-save"></i> Lưu
+                    </button>
+                    <a th:href="@{/admin/categories(page=${page}, size=${size}, q=${q})}" class="sd-btn sd-btn-secondary">
+                        <i class="fas fa-xmark"></i> Hủy
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="sd-card">
+        <div class="sd-card-body sd-card-body-flush">
+            <table class="sd-table">
+                <thead>
+                    <tr>
+                        <th>Tên danh mục</th>
+                        <th>Mô tả</th>
+                        <th>Trạng thái</th>
+                        <th style="text-align:right;">Thao tác</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr th:if="${#lists.isEmpty(categories)}">
+                        <td colspan="4">
+                            <div class="sd-empty">
+                                <i class="fas fa-tags"></i>
+                                <h3 th:if="${q != null and !#strings.isEmpty(q)}">Không tìm thấy danh mục</h3>
+                                <h3 th:unless="${q != null and !#strings.isEmpty(q)}">Chưa có danh mục</h3>
+                                <p th:if="${q != null and !#strings.isEmpty(q)}">Không có danh mục nào khớp với từ khóa.</p>
+                                <p th:unless="${q != null and !#strings.isEmpty(q)}">Tạo danh mục đầu tiên cho hệ thống.</p>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr th:each="category : ${categories}">
+                        <td>
+                            <div class="sd-table-title" th:text="${category.name}">Tên danh mục</div>
+                        </td>
+                        <td>
+                            <div class="sd-table-sub" th:text="${category.description} ?: '—'">Mô tả</div>
+                        </td>
+                        <td>
+                            <span class="sd-badge"
+                                  th:classappend="${category.active ? 'sd-badge-green' : 'sd-badge-slate'}"
+                                  th:text="${category.active ? 'Hoạt động' : 'Tạm khóa'}">Hoạt động</span>
+                        </td>
+                        <td style="text-align:right; white-space:nowrap;">
+                            <a th:href="@{/admin/categories/{id}/edit(id=${category.id}, page=${page}, size=${size}, q=${q})}"
+                               class="sd-btn sd-btn-secondary sd-btn-sm">
+                                <i class="fas fa-pen-to-square"></i> Sửa
+                            </a>
+                            <form th:action="@{/admin/categories/{id}/delete(id=${category.id}, page=${page}, size=${size}, q=${q})}" method="post"
+                                  style="display:inline;"
+                                  onsubmit="return confirm('Bạn có chắc muốn xóa danh mục này?');">
+                                <button type="submit" class="sd-btn sd-btn-danger sd-btn-sm">
+                                    <i class="fas fa-trash"></i> Xóa
+                                </button>
+                            </form>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="sd-card-body" th:if="${totalPages > 0}"
+             style="display:flex;justify-content:center;border-top:1px solid var(--border,#e2e8f0);">
+            <nav class="sd-pagination" aria-label="Phân trang">
+                <a th:if="${hasPrev}"
+                   th:href="@{/admin/categories(page=${page - 1}, size=${size}, q=${q})}"
+                   class="sd-page-link">
+                    <i class="fas fa-chevron-left"></i> Trước
+                </a>
+                <span th:unless="${hasPrev}" class="sd-page-link sd-page-disabled">
+                    <i class="fas fa-chevron-left"></i> Trước
+                </span>
+
+                <th:block th:each="i : ${pageNumbers}">
+                    <a th:if="${i != page}"
+                       th:href="@{/admin/categories(page=${i}, size=${size}, q=${q})}"
+                       class="sd-page-link"
+                       th:text="${i + 1}">1</a>
+                    <span th:if="${i == page}" class="sd-page-link sd-page-active" th:text="${i + 1}">1</span>
+                </th:block>
+
+                <a th:if="${hasNext}"
+                   th:href="@{/admin/categories(page=${page + 1}, size=${size}, q=${q})}"
+                   class="sd-page-link">
+                    Sau <i class="fas fa-chevron-right"></i>
+                </a>
+                <span th:unless="${hasNext}" class="sd-page-link sd-page-disabled">
+                    Sau <i class="fas fa-chevron-right"></i>
+                </span>
+            </nav>
+        </div>
+    </div>
+</main>
+
+<th:block th:fragment="page-scripts"></th:block>
 </body>
 </html>

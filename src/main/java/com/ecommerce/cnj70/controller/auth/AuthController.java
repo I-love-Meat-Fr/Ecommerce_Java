@@ -32,19 +32,19 @@ public class AuthController {
     }
     
     @PostMapping("/auth/login")
-    public String login(@ModelAttribute LoginReq request, 
+    public String login(@ModelAttribute LoginReq request,
                         HttpServletResponse response,
                         Model model) {
         try {
             CustomUserDetails user = authService.login(request);
-            
+
             // Generate JWT token
             String token = jwtUtils.generateToken(
                 user.getUsername(),
                 user.getId(),
                 user.getRole()
             );
-            
+
             // Set JWT in cookie (not httpOnly so filter can read it)
             Cookie cookie = new Cookie("jwt", token);
             cookie.setHttpOnly(false);
@@ -52,10 +52,17 @@ public class AuthController {
             cookie.setPath("/");
             cookie.setMaxAge((int) (jwtUtils.getJwtExpiration() / 1000));
             response.addCookie(cookie);
-            
-            return "redirect:/home";
+
+            // Redirect based on role - Phase 1 requirement
+            String redirectUrl = "redirect:/home";
+            if ("ADMIN".equals(user.getRole())) {
+                redirectUrl = "redirect:/admin/dashboard";
+            }
+            return redirectUrl;
         } catch (Exception e) {
-            model.addAttribute("error", "Invalid email or password");
+            // TASK 1.3 + Gate 0 #16 — Login error must be visible to the user.
+            // Surface the actual reason (wrong credentials, account not active, etc.)
+            model.addAttribute("error", e.getMessage());
             model.addAttribute("email", request.getEmail());
             return "auth/login";
         }

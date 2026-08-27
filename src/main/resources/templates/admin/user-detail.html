@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/springsecurity6"
+      th:replace="~{layout/admin-layout :: layout(title='Chi tiết người dùng - CNJ70 Admin', content=~{::main-content}, scripts=~{::page-scripts})}">
+<head>
+    <title>Chi tiết người dùng - CNJ70 Admin</title>
+</head>
+<body>
+<main th:fragment="main-content">
+    <div class="sd-page-head">
+        <div class="sd-page-head-title">
+            <h1>Chi tiết người dùng</h1>
+            <p>Thông tin tài khoản trong hệ thống.</p>
+        </div>
+        <div class="sd-page-head-actions">
+            <a th:href="@{/admin/users}" class="sd-btn sd-btn-secondary sd-btn-sm">
+                <i class="fas fa-arrow-left"></i>
+                <span>Quay lại danh sách</span>
+            </a>
+        </div>
+    </div>
+
+    <div class="sd-card">
+        <div class="sd-card-head">
+            <div>
+                <h3><i class="fas fa-user-circle"></i> Thông tin cơ bản</h3>
+                <p>Thông tin tài khoản và trạng thái</p>
+            </div>
+            <span class="sd-badge"
+                  th:classappend="${user.status.name() == 'ACTIVE' ? 'sd-badge-green' : (user.status.name() == 'LOCKED' ? 'sd-badge-red' : 'sd-badge-amber')}"
+                  th:text="${user.status}">ACTIVE</span>
+        </div>
+        <div class="sd-card-body">
+            <div class="sd-detail-grid">
+                <div class="sd-detail-item">
+                    <div class="sd-detail-label">ID</div>
+                    <div class="sd-detail-value sd-mono" th:text="${user.id}">—</div>
+                </div>
+                <div class="sd-detail-item">
+                    <div class="sd-detail-label">Email</div>
+                    <div class="sd-detail-value" th:text="${user.email}">—</div>
+                </div>
+                <div class="sd-detail-item">
+                    <div class="sd-detail-label">Họ tên</div>
+                    <div class="sd-detail-value" th:text="${user.fullName} ?: '—'">—</div>
+                </div>
+                <div class="sd-detail-item">
+                    <div class="sd-detail-label">Số điện thoại</div>
+                    <div class="sd-detail-value" th:text="${user.phone} ?: '—'">—</div>
+                </div>
+                <div class="sd-detail-item">
+                    <div class="sd-detail-label">Vai trò</div>
+                    <div class="sd-detail-value">
+                        <span class="sd-badge sd-badge-slate" th:text="${user.role}">CUSTOMER</span>
+                    </div>
+                </div>
+                <div class="sd-detail-item">
+                    <div class="sd-detail-label">Trạng thái</div>
+                    <div class="sd-detail-value">
+                        <span class="sd-badge"
+                              th:classappend="${user.status.name() == 'ACTIVE' ? 'sd-badge-green' : (user.status.name() == 'LOCKED' ? 'sd-badge-red' : 'sd-badge-amber')}"
+                              th:text="${user.status}">ACTIVE</span>
+                    </div>
+                </div>
+                <div class="sd-detail-item">
+                    <div class="sd-detail-label">Địa chỉ</div>
+                    <div class="sd-detail-value" th:text="${user.address} ?: '—'">—</div>
+                </div>
+                <div class="sd-detail-item">
+                    <div class="sd-detail-label">Shop ID</div>
+                    <div class="sd-detail-value sd-mono" th:text="${user.shopId} ?: '—'">—</div>
+                </div>
+                <div class="sd-detail-item">
+                    <div class="sd-detail-label">Ngày tạo</div>
+                    <div class="sd-detail-value" th:text="${user.createdAt} ?: '—'">—</div>
+                </div>
+                <div class="sd-detail-item">
+                    <div class="sd-detail-label">Cập nhật</div>
+                    <div class="sd-detail-value" th:text="${user.updatedAt} ?: '—'">—</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="sd-card" style="margin-top:20px;">
+        <div class="sd-card-head">
+            <div>
+                <h3><i class="fas fa-shield-halved"></i> Thao tác tài khoản</h3>
+                <p>Khóa hoặc mở khóa tài khoản này</p>
+            </div>
+        </div>
+        <div class="sd-card-body">
+            <div class="sd-action-row">
+                <form th:if="${user.status.name() == 'ACTIVE' or user.status.name() == 'UNVERIFIED'}"
+                      th:action="@{/admin/users/{id}/lock(id=${user.id})}" method="post"
+                      style="display:inline;">
+                    <button type="submit" class="sd-btn sd-btn-danger sd-btn-sm">
+                        <i class="fas fa-lock"></i> Khóa tài khoản
+                    </button>
+                </form>
+                <form th:if="${user.status.name() == 'LOCKED'}"
+                      th:action="@{/admin/users/{id}/unlock(id=${user.id})}" method="post"
+                      style="display:inline;">
+                    <button type="submit" class="sd-btn sd-btn-primary sd-btn-sm">
+                        <i class="fas fa-unlock"></i> Mở khóa
+                    </button>
+                </form>
+                <span th:if="${user.status.name() == 'ACTIVE'}"
+                      class="sd-text-muted" style="font-size:13px;">
+                    Tài khoản đang hoạt động bình thường.
+                </span>
+            </div>
+        </div>
+    </div>
+</main>
+
+<th:block th:fragment="page-scripts"></th:block>
+</body>
+</html>

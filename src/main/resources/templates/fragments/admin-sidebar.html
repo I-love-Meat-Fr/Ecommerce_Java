@@ -1,4 +1,4 @@
-<aside class="sd-sidebar" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/springsecurity6">
+<aside class="sd-sidebar" th:fragment="sidebar" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/springsecurity6">
     <div class="sd-sidebar-header">
         <div class="sd-sidebar-logo">
             <i class="fas fa-shield-halved"></i>
@@ -28,6 +28,16 @@
                 <i class="fas fa-tags"></i>
                 <span class="sd-nav-label">Danh mục</span>
             </a>
+            <span class="sd-nav-item sd-nav-item-disabled" aria-disabled="true" title="Sẽ có trong Phase 5">
+                <i class="fas fa-store"></i>
+                <span class="sd-nav-label">Cửa hàng</span>
+                <span class="sd-nav-coming-soon">Soon</span>
+            </span>
+            <span class="sd-nav-item sd-nav-item-disabled" aria-disabled="true" title="Sẽ có trong Phase 6">
+                <i class="fas fa-cart-shopping"></i>
+                <span class="sd-nav-label">Đơn hàng</span>
+                <span class="sd-nav-coming-soon">Soon</span>
+            </span>
         </div>
 
         <div class="sd-sidebar-nav-section">

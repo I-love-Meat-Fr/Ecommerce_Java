@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/springsecurity6"
+      th:fragment="layout(title, content, scripts)">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="${title} ?: 'Admin - CNJ70'">Admin - CNJ70</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Work+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+    <link rel="stylesheet" th:href="@{/css/dashboard.css}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <div class="sd-app sd-app-admin" id="appShell">
+        <aside th:replace="~{fragments/admin-sidebar :: sidebar}"></aside>
+
+        <div class="sd-main">
+            <div th:replace="~{fragments/admin-topbar :: topbar}"></div>
+
+            <div class="sd-flash" id="adminFlashContainer"
+                 th:with="flashSuccess=${param.flashSuccess != null and !#strings.isEmpty(param.flashSuccess[0])} ? ${param.flashSuccess[0]} : (${session.success != null} ? ${session.success} : (${flashSuccess} ?: null)),
+                          flashError=${param.flashError != null and !#strings.isEmpty(param.flashError[0])} ? ${param.flashError[0]} : (${session.error != null} ? ${session.error} : (${flashError} ?: null)),
+                          flashWarning=${param.flashWarning != null and !#strings.isEmpty(param.flashWarning[0])} ? ${param.flashWarning[0]} : (${session.warning != null} ? ${session.warning} : (${flashWarning} ?: null)),
+                          flashInfo=${param.flashInfo != null and !#strings.isEmpty(param.flashInfo[0])} ? ${param.flashInfo[0]} : (${session.info != null} ? ${session.info} : (${flashInfo} ?: null))">
+                <div th:if="${flashSuccess}" class="sd-alert sd-alert-success sd-flash-item" data-flash-type="success">
+                    <i class="fas fa-check-circle"></i>
+                    <div class="sd-alert-content">
+                        <strong>Thành công</strong>
+                        <p th:text="${flashSuccess}">Thao tác thành công</p>
+                    </div>
+                    <button type="button" class="sd-flash-close" aria-label="Đóng">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                <div th:if="${flashError}" class="sd-alert sd-alert-danger sd-flash-item" data-flash-type="error">
+                    <i class="fas fa-circle-exclamation"></i>
+                    <div class="sd-alert-content">
+                        <strong>Lỗi</strong>
+                        <p th:text="${flashError}">Đã có lỗi xảy ra</p>
+                    </div>
+                    <button type="button" class="sd-flash-close" aria-label="Đóng">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                <div th:if="${flashWarning}" class="sd-alert sd-alert-warning sd-flash-item" data-flash-type="warning">
+                    <i class="fas fa-triangle-exclamation"></i>
+                    <div class="sd-alert-content">
+                        <strong>Cảnh báo</strong>
+                        <p th:text="${flashWarning}">Cảnh báo</p>
+                    </div>
+                    <button type="button" class="sd-flash-close" aria-label="Đóng">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                <div th:if="${flashInfo}" class="sd-alert sd-alert-info sd-flash-item" data-flash-type="info">
+                    <i class="fas fa-circle-info"></i>
+                    <div class="sd-alert-content">
+                        <strong>Thông tin</strong>
+                        <p th:text="${flashInfo}">Thông tin</p>
+                    </div>
+                    <button type="button" class="sd-flash-close" aria-label="Đóng">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+            </div>
+
+            <main class="sd-content" th:replace="${content}"></main>
+        </div>
+    </div>
+
+    <script>
+        (function() {
+            const shell = document.getElementById('appShell');
+            const toggle = document.getElementById('sidebarToggle');
+            const STORAGE_KEY = 'cnj70-admin-sidebar-expanded';
+
+            const persisted = localStorage.getItem(STORAGE_KEY);
+            if (persisted === '1') shell.classList.add('sidebar-expanded');
+
+            toggle?.addEventListener('click', () => {
+                shell.classList.toggle('sidebar-expanded');
+                localStorage.setItem(STORAGE_KEY, shell.classList.contains('sidebar-expanded') ? '1' : '0');
+            });
+
+            const path = window.location.pathname.replace(/\/$/, '');
+            document.querySelectorAll('.sd-nav-item[data-match]').forEach(el => {
+                const match = el.getAttribute('data-match');
+                if (match && (path === match || path.startsWith(match + '/'))) {
+                    el.classList.add('active');
+                }
+            });
+
+            document.querySelectorAll('.sd-sidebar-avatar, .sd-topbar-avatar').forEach(el => {
+                const name = (el.textContent || '').trim();
+                if (!name) return;
+                el.textContent = name.charAt(0).toUpperCase();
+            });
+
+            const flashContainer = document.getElementById('adminFlashContainer');
+            if (flashContainer) {
+                flashContainer.querySelectorAll('.sd-flash-item').forEach(item => {
+                    const dismiss = () => {
+                        item.style.transition = 'opacity 220ms ease, transform 220ms ease';
+                        item.style.opacity = '0';
+                        item.style.transform = 'translateY(-6px)';
+                        setTimeout(() => item.remove(), 240);
+                    };
+                    const closeBtn = item.querySelector('.sd-flash-close');
+                    closeBtn?.addEventListener('click', dismiss);
+                    const timer = setTimeout(dismiss, 5000);
+                    closeBtn?.addEventListener('click', () => clearTimeout(timer));
+                });
+            }
+
+            // Wire the Admin global search to the matching module list when on a supported page.
+            // /admin/users  -> search users (email / fullName)
+            // /admin/categories -> search categories (name)
+            // Other modules keep the plain input (no form submit, no parameter leakage).
+            (function wireAdminSearch() {
+                const searchInput = document.getElementById('adminGlobalSearch');
+                if (!searchInput) return;
+                const isUserPage = path === '/admin/users' || path.startsWith('/admin/users/');
+                const isCategoryPage = path === '/admin/categories' || path.startsWith('/admin/categories/');
+                if (!isUserPage && !isCategoryPage) return;
+                const url = new URL(window.location.href);
+                const currentQ = url.searchParams.get('q') || '';
+                searchInput.placeholder = isCategoryPage
+                    ? 'Tìm danh mục theo tên...'
+                    : 'Tìm email hoặc họ tên...';
+                searchInput.value = currentQ;
+                const basePath = isCategoryPage ? '/admin/categories' : '/admin/users';
+                searchInput.addEventListener('keydown', function (e) {
+                    if (e.key === 'Enter') {
+                        e.preventDefault();
+                        const q = encodeURIComponent(searchInput.value.trim());
+                        window.location.href = q ? basePath + '?q=' + q : basePath;
+                    }
+                });
+            })();
+        })();
+    </script>
+    <th:block th:replace="${scripts} ?: ~{}"></th:block>
+</body>
+</html>
+</content>
