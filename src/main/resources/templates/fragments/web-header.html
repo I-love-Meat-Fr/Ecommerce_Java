@@ -4,35 +4,9 @@
             <div class="logo">
                 <a th:href="@{/home}">CNJ70 Shop</a>
             </div>
-<<<<<<< HEAD
             <nav class="nav" aria-label="Điều hướng chính">
                 <a th:href="@{/home}">Trang chủ</a>
                 <a th:href="@{/products}">Sản phẩm</a>
-=======
-
-            <!-- Center: Nav Links -->
-            <nav class="home-nav" aria-label="Điều hướng chính">
-                <a th:href="@{/home}" id="nav-home" class="home-nav-link">
-                    <i class="fas fa-home home-nav-icon"></i>
-                    <span>Trang chủ</span>
-                </a>
-                <a th:href="@{/products}" id="nav-products" class="home-nav-link">
-                    <i class="fas fa-th-large home-nav-icon"></i>
-                    <span>Sản phẩm</span>
-                </a>
-                <a th:href="@{/orders}" id="nav-orders" class="home-nav-link">
-                    <i class="fas fa-receipt home-nav-icon"></i>
-                    <span>Đơn hàng</span>
-                </a>
-                <a th:href="@{/vouchers}" id="nav-vouchers" class="home-nav-link">
-                    <i class="fas fa-ticket home-nav-icon"></i>
-                    <span>Voucher</span>
-                </a>
-                <a th:href="@{/cart}" id="nav-cart" class="home-nav-link">
-                    <i class="fas fa-shopping-cart home-nav-icon"></i>
-                    <span>Giỏ hàng</span>
-                </a>
->>>>>>> dc088f9 (feat: implement voucher module for vendor management)
             </nav>
             <div class="header-actions">
                 <div sec:authorize="isAuthenticated()" class="user-menu">
@@ -50,61 +24,6 @@
                     <a th:href="@{/auth/register}">Đăng ký</a>
                 </div>
             </div>
-<<<<<<< HEAD
-=======
-
-            <!-- Mobile Hamburger -->
-            <button class="home-hamburger" id="home-hamburger-btn" aria-label="Mở menu">
-                <span></span>
-                <span></span>
-                <span></span>
-            </button>
-        </div>
-
-        <!-- Mobile Menu Overlay -->
-        <div class="home-mobile-menu" id="home-mobile-menu">
-            <div class="home-mobile-menu-header">
-                <div class="home-mobile-logo">
-                    <i class="fas fa-shopping-bag"></i>
-                    <span>CNJ70 Shop</span>
-                </div>
-                <button class="home-mobile-close" id="home-mobile-close">
-                    <i class="fas fa-times"></i>
-                </button>
-            </div>
-            <nav class="home-mobile-nav">
-                <a th:href="@{/home}" class="home-mobile-nav-link">
-                    <i class="fas fa-home"></i> Trang chủ
-                </a>
-                <a th:href="@{/products}" class="home-mobile-nav-link">
-                    <i class="fas fa-th-large"></i> Sản phẩm
-                </a>
-                <a th:href="@{/orders}" class="home-mobile-nav-link">
-                    <i class="fas fa-receipt"></i> Đơn hàng
-                </a>
-                <a th:href="@{/vouchers}" class="home-mobile-nav-link">
-                    <i class="fas fa-ticket"></i> Voucher
-                </a>
-                <a th:href="@{/cart}" class="home-mobile-nav-link">
-                    <i class="fas fa-shopping-cart"></i> Giỏ hàng
-                </a>
-            </nav>
-            <div sec:authorize="isAuthenticated()" class="home-mobile-auth">
-                <form th:action="@{/auth/logout}" method="post">
-                    <button type="submit" class="home-mobile-logout">
-                        <i class="fas fa-sign-out-alt"></i> Đăng xuất
-                    </button>
-                </form>
-            </div>
-            <div sec:authorize="!isAuthenticated()" class="home-mobile-auth">
-                <a class="home-mobile-login" th:href="@{/auth/login}">
-                    <i class="fas fa-sign-in-alt"></i> Đăng nhập
-                </a>
-                <a class="home-mobile-register" th:href="@{/auth/register}">
-                    <i class="fas fa-user-plus"></i> Đăng ký
-                </a>
-            </div>
->>>>>>> dc088f9 (feat: implement voucher module for vendor management)
         </div>
     </div>
 </header>

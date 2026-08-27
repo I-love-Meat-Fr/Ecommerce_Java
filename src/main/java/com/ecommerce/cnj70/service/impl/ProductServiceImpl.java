@@ -44,15 +44,11 @@ public class ProductServiceImpl implements ProductService {
                 .categoryId(request.getCategoryId())
                 .categoryName(categoryName)
                 .imageUrls(request.getImageUrls())
-                .mainImage(request.getMainImage())
-                .commonSpecs(request.getCommonSpecs())
-                .customSpecs(request.getCustomSpecs())
-                .variants(request.getVariants())
                 .shopId(shopId)
                 .shopName(shopName)
                 .status(request.getStatus() != null ? request.getStatus() : ProductStatus.ACTIVE)
                 .build();
-
+        
         return productRepository.save(product);
     }
     
@@ -60,7 +56,7 @@ public class ProductServiceImpl implements ProductService {
     @Transactional
     public Product updateProduct(String id, ProductFormReq request) {
         Product product = getProductById(id);
-
+        
         if (request.getName() != null && !request.getName().isBlank()) {
             product.setName(request.getName());
         }
@@ -88,22 +84,10 @@ public class ProductServiceImpl implements ProductService {
         if (request.getImageUrls() != null) {
             product.setImageUrls(request.getImageUrls());
         }
-        if (request.getMainImage() != null) {
-            product.setMainImage(request.getMainImage());
-        }
-        if (request.getCommonSpecs() != null) {
-            product.setCommonSpecs(request.getCommonSpecs());
-        }
-        if (request.getCustomSpecs() != null) {
-            product.setCustomSpecs(request.getCustomSpecs());
-        }
-        if (request.getVariants() != null) {
-            product.setVariants(request.getVariants());
-        }
         if (request.getStatus() != null) {
             product.setStatus(request.getStatus());
         }
-
+        
         return productRepository.save(product);
     }
     
