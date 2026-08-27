@@ -8,6 +8,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body>
+<<<<<<< HEAD
     <div class="dashboard-container">
         <div th:replace="~{fragments/dashboard-sidebar}"></div>
         <div class="main-content">
@@ -23,6 +24,43 @@
                         <input type="text" id="shopName" th:field="*{shopName}" required minlength="3" maxlength="100">
                         <small>Tên shop phải từ 3-100 ký tự, duy nhất không trùng lặp</small>
                         <div th:if="${#fields.hasErrors('shopName')}" class="error" th:errors="*{shopName}"></div>
+=======
+    <div class="sd-app" id="appShell">
+        <aside class="sd-sidebar">
+            <div class="sd-sidebar-header">
+                <div class="sd-sidebar-logo"><i class="fas fa-bolt"></i></div>
+                <div class="sd-sidebar-brand">
+                    <span class="sd-sidebar-brand-name">CNJ70 Shop</span>
+                    <span class="sd-sidebar-brand-sub">Vendor Console</span>
+                </div>
+            </div>
+            <nav class="sd-sidebar-nav">
+                <div class="sd-sidebar-nav-section">
+                    <span class="sd-sidebar-nav-title">Tổng quan</span>
+                    <a th:href="@{/vendor/dashboard}" class="sd-nav-item" data-match="/vendor/dashboard"><i class="fas fa-house"></i><span class="sd-nav-label">Dashboard</span></a>
+                </div>
+                <div class="sd-sidebar-nav-section">
+                    <span class="sd-sidebar-nav-title">Quản lý</span>
+                    <a th:href="@{/vendor/shop}" class="sd-nav-item" data-match="/vendor/shop"><i class="fas fa-store"></i><span class="sd-nav-label">Cửa hàng</span></a>
+                    <a th:href="@{/vendor/products}" class="sd-nav-item" data-match="/vendor/products"><i class="fas fa-box"></i><span class="sd-nav-label">Sản phẩm</span></a>
+                    <a th:href="@{/vendor/orders}" class="sd-nav-item" data-match="/vendor/orders"><i class="fas fa-cart-shopping"></i><span class="sd-nav-label">Đơn hàng</span></a>
+                    <a th:href="@{/vendor/vouchers/create}" class="sd-nav-item" data-match="/vendor/vouchers"><i class="fas fa-ticket"></i><span class="sd-nav-label">Voucher</span></a>
+                </div>
+                <div class="sd-sidebar-nav-section">
+                    <span class="sd-sidebar-nav-title">Khác</span>
+                    <a th:href="@{/home}" class="sd-nav-item"><i class="fas fa-globe"></i><span class="sd-nav-label">Xem website</span></a>
+                    <form th:action="@{/auth/logout}" method="post" style="margin:0;">
+                        <button type="submit" class="sd-nav-item"><i class="fas fa-arrow-right-from-bracket"></i><span class="sd-nav-label">Đăng xuất</span></button>
+                    </form>
+                </div>
+            </nav>
+            <div class="sd-sidebar-footer">
+                <div class="sd-sidebar-user">
+                    <div class="sd-sidebar-avatar" sec:authentication="name">V</div>
+                    <div class="sd-sidebar-user-info">
+                        <div class="sd-sidebar-user-name" sec:authentication="name">Vendor</div>
+                        <div class="sd-sidebar-user-role">Vendor</div>
+>>>>>>> dc088f9 (feat: implement voucher module for vendor management)
                     </div>
                     <div class="form-group">
                         <label for="description">Mô tả cửa hàng</label>
@@ -63,5 +101,43 @@
             </main>
         </div>
     </div>
+<<<<<<< HEAD
+=======
+
+    <script>
+        (function() {
+            const shell = document.getElementById('appShell');
+            const toggle = document.getElementById('sidebarToggle');
+            const KEY = 'cnj70-sidebar-expanded';
+            if (localStorage.getItem(KEY) === '1') shell.classList.add('sidebar-expanded');
+            toggle?.addEventListener('click', () => {
+                shell.classList.toggle('sidebar-expanded');
+                localStorage.setItem(KEY, shell.classList.contains('sidebar-expanded') ? '1' : '0');
+            });
+            const path = window.location.pathname.replace(/\/$/, '');
+            document.querySelectorAll('.sd-nav-item[data-match]').forEach(el => {
+                const match = el.getAttribute('data-match');
+                if (match && (path === match || path.startsWith(match + '/'))) {
+                    el.classList.add('active');
+                }
+            });
+            document.querySelectorAll('.sd-sidebar-avatar, .sd-topbar-avatar').forEach(el => {
+                const name = (el.textContent || '').trim();
+                if (!name) return;
+                el.textContent = name.charAt(0).toUpperCase();
+            });
+            document.getElementById('logoFile')?.addEventListener('change', function(e) {
+                const f = e.target.files[0]; if (!f) return;
+                const prev = document.getElementById('logoPreview');
+                prev.src = URL.createObjectURL(f); prev.style.display = 'block';
+            });
+            document.getElementById('bannerFile')?.addEventListener('change', function(e) {
+                const f = e.target.files[0]; if (!f) return;
+                const prev = document.getElementById('bannerPreview');
+                prev.src = URL.createObjectURL(f); prev.style.display = 'block';
+            });
+        })();
+    </script>
+>>>>>>> dc088f9 (feat: implement voucher module for vendor management)
 </body>
 </html>
