@@ -13,6 +13,7 @@ import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 
 @Data
@@ -21,43 +22,59 @@ import java.util.List;
 @AllArgsConstructor
 @Document(collection = "products")
 public class Product {
-    
+
     @Id
     private String id;
-    
+
     private String shopId;
-    
+
     private String shopName;
-    
+
     @Indexed
     private String name;
-    
+
+    private String brand;
+
+    private Integer warrantyMonths;
+
+    private String manufacturer;
+
+    private String manufacturerAddress;
+
     private String description;
-    
+
+    private String richDescription;
+
     private BigDecimal price;
-    
+
     private int stock;
-    
+
     private String categoryId;
-    
+
     private String categoryName;
-    
+
     private List<String> imageUrls;
-    
+
     private String thumbnailUrl;
-    
+
+    @Builder.Default
+    private List<ProductSpecification> specifications = new ArrayList<>();
+
+    @Builder.Default
+    private List<ProductVariant> variants = new ArrayList<>();
+
     @Builder.Default
     private ProductStatus status = ProductStatus.DRAFT;
-    
+
     @Builder.Default
     private double rating = 0.0;
-    
+
     @Builder.Default
     private int reviewCount = 0;
-    
+
     @CreatedDate
     private LocalDateTime createdAt;
-    
+
     @LastModifiedDate
     private LocalDateTime updatedAt;
 }

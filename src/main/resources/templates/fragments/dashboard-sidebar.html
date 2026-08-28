@@ -33,6 +33,11 @@
                 <span class="sd-nav-label">Đơn hàng</span>
                 <span class="sd-nav-badge" th:if="${pendingOrders != null and pendingOrders > 0}" th:text="${pendingOrders}">0</span>
             </a>
+            <!-- Menu Voucher chỉ hiện khi vendor đã có shop -->
+            <a th:if="${hasShop}" th:href="@{/vendor/vouchers}" class="sd-nav-item" data-match="/vendor/vouchers">
+                <i class="fas fa-ticket"></i>
+                <span class="sd-nav-label">Voucher</span>
+            </a>
         </div>
 
         <div class="sd-sidebar-nav-section">

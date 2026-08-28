@@ -10,12 +10,40 @@
     <link href="https://fonts.googleapis.com/css2?family=Work+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" th:href="@{/css/dashboard.css}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.tiny.cloud/1/pevoj4inszwh7t2eibogd5qazcdackbwsoqug4zmrdbchu1h/tinymce/6/tinymce.min.js" referrerpolicy="origin"></script>
     <style>
         .form-row { display:grid; grid-template-columns:1fr 1fr; gap:14px; }
         .preview-img { margin-top:10px; max-width:240px; border-radius:var(--radius); border:1px solid var(--border); }
         .file-hint { display:block; font-size:11.5px; color:var(--text-faint); margin-top:4px; }
         .sd-form-error { color:var(--danger); font-size:12px; margin-top:4px; }
         @media (max-width:768px) { .form-row { grid-template-columns:1fr; } }
+
+        .spec-section { border:1px solid var(--border); border-radius:var(--radius); padding:16px; margin-bottom:18px; background:var(--bg-muted); }
+        .spec-section-head { display:flex; align-items:center; justify-content:space-between; margin-bottom:14px; }
+        .spec-section-head h3 { margin:0; font-size:14.5px; font-weight:600; color:var(--text); display:flex; align-items:center; gap:8px; }
+        .spec-section-head h3 i { color:var(--primary); }
+        .spec-section-head p { margin:2px 0 0; font-size:12px; color:var(--text-muted); }
+
+        .spec-table { width:100%; border-collapse:collapse; background:#fff; border-radius:var(--radius); overflow:hidden; }
+        .spec-table th, .spec-table td { padding:10px 12px; border-bottom:1px solid var(--border); font-size:13px; text-align:left; vertical-align:middle; }
+        .spec-table th { background:var(--bg-soft); color:var(--text-muted); font-weight:600; font-size:11.5px; text-transform:uppercase; letter-spacing:0.04em; }
+        .spec-table tbody tr:last-child td { border-bottom:none; }
+        .spec-table input, .spec-table select { width:100%; padding:7px 10px; border:1px solid var(--border); border-radius:6px; font-size:13px; background:#fff; color:var(--text); }
+        .spec-table input:focus, .spec-table select:focus { outline:none; border-color:var(--primary); box-shadow:0 0 0 2px rgba(99,102,241,0.15); }
+        .spec-empty { padding:20px; text-align:center; color:var(--text-faint); font-size:13px; }
+        .btn-icon-danger { width:30px; height:30px; border-radius:6px; border:1px solid transparent; background:var(--danger-soft); color:var(--danger); display:inline-flex; align-items:center; justify-content:center; cursor:pointer; transition:background 150ms ease; }
+        .btn-icon-danger:hover { background:var(--danger); color:#fff; }
+
+        .add-spec-btn { margin-top:12px; padding:8px 14px; border:1px dashed var(--primary); border-radius:8px; background:rgba(99,102,241,0.05); color:var(--primary); font-weight:600; font-size:13px; cursor:pointer; display:inline-flex; align-items:center; gap:6px; transition:background 150ms ease, color 150ms ease; }
+        .add-spec-btn:hover { background:var(--primary); color:#fff; }
+
+        .variant-card { border:1px solid var(--border); border-radius:var(--radius); padding:14px; margin-bottom:12px; background:#fff; }
+        .variant-head { display:flex; align-items:center; justify-content:space-between; margin-bottom:12px; padding-bottom:10px; border-bottom:1px dashed var(--border); }
+        .variant-head-title { font-weight:600; color:var(--text); font-size:13.5px; display:flex; align-items:center; gap:8px; }
+        .variant-head-title .variant-num { width:22px; height:22px; background:var(--primary); color:#fff; border-radius:50%; display:inline-flex; align-items:center; justify-content:center; font-size:11px; font-weight:700; }
+        .variant-empty { padding:24px; text-align:center; color:var(--text-faint); font-size:13px; border:1px dashed var(--border); border-radius:var(--radius); background:var(--bg-soft); }
+
+        .tox-tinymce { border-radius:8px !important; border-color:var(--border) !important; }
     </style>
 </head>
 <body>
@@ -38,6 +66,7 @@
                     <a th:href="@{/vendor/shop}" class="sd-nav-item"><i class="fas fa-store"></i><span class="sd-nav-label">Cửa hàng</span></a>
                     <a th:href="@{/vendor/products}" class="sd-nav-item active"><i class="fas fa-box"></i><span class="sd-nav-label">Sản phẩm</span></a>
                     <a th:href="@{/vendor/orders}" class="sd-nav-item"><i class="fas fa-cart-shopping"></i><span class="sd-nav-label">Đơn hàng</span></a>
+                    <a th:href="@{/vendor/vouchers}" class="sd-nav-item"><i class="fas fa-ticket"></i><span class="sd-nav-label">Voucher</span></a>
                 </div>
                 <div class="sd-sidebar-nav-section">
                     <span class="sd-sidebar-nav-title">Khác</span>
@@ -86,29 +115,24 @@
                     </div>
                 </div>
 
-                <div th:if="${error}" class="sd-alert sd-alert-warning" style="background:var(--danger-soft);color:var(--danger);border:1px solid transparent;padding:12px 16px;border-radius:var(--radius);margin-bottom:16px;display:flex;align-items:center;gap:10px;font-size:13.5px;">
+                <div th:if="${error}" class="sd-alert sd-alert-warning" style="background:var(--danger-soft);color:var(--danger);border:1px solid transparent;padding:12px 16px;border-radius:var(--radius);margin-bottom:16px;display:flex; align-items:center;gap:10px;font-size:13.5px;">
                     <i class="fas fa-triangle-exclamation"></i><span th:text="${error}"></span>
                 </div>
 
-                <div class="sd-card" style="max-width:780px;">
-                    <div class="sd-card-head">
-                        <div>
-                            <h3>Thông tin sản phẩm</h3>
-                            <p>Tên, giá, tồn kho và hình ảnh.</p>
+                <form id="productForm" th:action="${product != null ? '/vendor/products/edit/' + product.id : '/vendor/products/create'}"
+                      th:object="${productFormReq}" method="post" enctype="multipart/form-data">
+                    <div class="sd-card" style="max-width:880px;">
+                        <div class="sd-card-head">
+                            <div>
+                                <h3>Thông tin cơ bản</h3>
+                                <p>Tên, giá, tồn kho và hình ảnh sản phẩm.</p>
+                            </div>
                         </div>
-                    </div>
-                    <div class="sd-card-body">
-                        <form th:action="${product != null ? '/vendor/products/edit/' + product.id : '/vendor/products/create'}"
-                              th:object="${productFormReq}" method="post" enctype="multipart/form-data">
+                        <div class="sd-card-body">
                             <div class="sd-form-group">
                                 <label>Tên sản phẩm *</label>
                                 <input type="text" class="sd-form-control" th:field="*{name}" required minlength="1" maxlength="200" placeholder="Nhập tên sản phẩm">
                                 <div th:if="${#fields.hasErrors('name')}" class="sd-form-error" th:errors="*{name}"></div>
-                            </div>
-
-                            <div class="sd-form-group">
-                                <label>Mô tả sản phẩm</label>
-                                <textarea class="sd-form-control" th:field="*{description}" rows="5" placeholder="Mô tả chi tiết về sản phẩm..."></textarea>
                             </div>
 
                             <div class="form-row">
@@ -151,19 +175,115 @@
                                     <option value="INACTIVE">Ngừng bán</option>
                                 </select>
                             </div>
-
-                            <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:18px;">
-                                <a th:href="@{/vendor/products}" class="sd-btn sd-btn-secondary"><i class="fas fa-xmark"></i> Hủy</a>
-                                <button type="submit" class="sd-btn sd-btn-primary"><i class="fas fa-save"></i> Lưu</button>
-                            </div>
-                        </form>
+                        </div>
                     </div>
-                </div>
+
+                    <div class="sd-card" style="max-width:880px; margin-top:18px;">
+                        <div class="sd-card-body">
+                            <div class="spec-section-head">
+                                <div>
+                                    <h3><i class="fas fa-clipboard-list"></i> Thông số kỹ thuật (Có cấu trúc)</h3>
+                                    <p>Các thông tin bắt buộc của nhà sản xuất.</p>
+                                </div>
+                            </div>
+                            <div class="form-row">
+                                <div class="sd-form-group">
+                                    <label>Hãng sản phẩm</label>
+                                    <input type="text" class="sd-form-control" th:field="*{brand}" placeholder="VD: Samsung, Apple, Dell...">
+                                </div>
+                                <div class="sd-form-group">
+                                    <label>Bảo hành (tháng)</label>
+                                    <input type="number" class="sd-form-control" th:field="*{warrantyMonths}" min="0" placeholder="VD: 12">
+                                </div>
+                            </div>
+                            <div class="form-row">
+                                <div class="sd-form-group">
+                                    <label>Nhà sản xuất</label>
+                                    <input type="text" class="sd-form-control" th:field="*{manufacturer}" placeholder="Tên nhà sản xuất">
+                                </div>
+                                <div class="sd-form-group">
+                                    <label>Địa chỉ nhà sản xuất</label>
+                                    <input type="text" class="sd-form-control" th:field="*{manufacturerAddress}" placeholder="Địa chỉ trụ sở / nhà máy">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="sd-card" style="max-width:880px; margin-top:18px;">
+                        <div class="sd-card-body">
+                            <div class="spec-section-head">
+                                <div>
+                                    <h3><i class="fas fa-sliders"></i> Thông số tuỳ chỉnh</h3>
+                                    <p>Vendor tự thêm các thông số mô tả riêng cho sản phẩm.</p>
+                                </div>
+                            </div>
+                            <table class="spec-table" id="customSpecTable">
+                                <thead>
+                                    <tr>
+                                        <th style="width:42%;">Tên thông số</th>
+                                        <th>Mô tả</th>
+                                        <th style="width:60px; text-align:center;"></th>
+                                    </tr>
+                                </thead>
+                                <tbody id="customSpecBody">
+                                    <!-- Rows injected by JS -->
+                                </tbody>
+                            </table>
+                            <button type="button" class="add-spec-btn" id="addCustomSpecBtn">
+                                <i class="fas fa-plus"></i> Thêm thông số
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="sd-card" style="max-width:880px; margin-top:18px;">
+                        <div class="sd-card-body">
+                            <div class="spec-section-head">
+                                <div>
+                                    <h3><i class="fas fa-list-ul"></i> Biến thể sản phẩm</h3>
+                                    <p>Mỗi biến thể có giá riêng, có thể thêm các thông số phân biệt (VD: Màu sắc, Kích thước...).</p>
+                                </div>
+                            </div>
+                            <div id="variantList">
+                                <!-- Variants injected by JS -->
+                            </div>
+                            <button type="button" class="add-spec-btn" id="addVariantBtn">
+                                <i class="fas fa-plus"></i> Thêm biến thể
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="sd-card" style="max-width:880px; margin-top:18px;">
+                        <div class="sd-card-body">
+                            <div class="spec-section-head">
+                                <div>
+                                    <h3><i class="fas fa-align-left"></i> Mô tả sản phẩm</h3>
+                                    <p>Vendor tự do trình bày mô tả chi tiết sản phẩm.</p>
+                                </div>
+                            </div>
+                            <textarea id="richDescriptionEditor" name="richDescription" th:text="${productFormReq.richDescription}"></textarea>
+                        </div>
+                    </div>
+
+                    <div style="display:flex;gap:8px;justify-content:flex-end;max-width:880px;margin:18px 0 32px;">
+                        <a th:href="@{/vendor/products}" class="sd-btn sd-btn-secondary"><i class="fas fa-xmark"></i> Hủy</a>
+                        <button type="submit" class="sd-btn sd-btn-primary"><i class="fas fa-save"></i> Lưu sản phẩm</button>
+                    </div>
+                </form>
             </main>
         </div>
     </div>
 
-    <script>
+    <script th:inline="javascript">
+        /*<![CDATA[*/
+        window.__INITIAL_PRODUCT__ = {
+            specifications: /*[[${productFormReq.specifications}]]*/ null,
+            variants: /*[[${productFormReq.variants}]]*/ null
+        };
+        if (!window.__INITIAL_PRODUCT__.specifications) window.__INITIAL_PRODUCT__.specifications = [];
+        if (!window.__INITIAL_PRODUCT__.variants) window.__INITIAL_PRODUCT__.variants = [];
+        /*]]>*/
+    </script>
+    <script th:inline="none">
         (function() {
             const shell = document.getElementById('appShell');
             const toggle = document.getElementById('sidebarToggle');
@@ -182,6 +302,181 @@
                 const file = e.target.files[0]; if (!file) return;
                 const preview = document.getElementById('imagePreview');
                 preview.src = URL.createObjectURL(file); preview.style.display = 'block';
+            });
+        })();
+
+        /* ===== Custom Specifications (Tên thông số + Mô tả) ===== */
+        (function() {
+            const body = document.getElementById('customSpecBody');
+            const addBtn = document.getElementById('addCustomSpecBtn');
+            let customSpecIndex = 0;
+
+            const initialCustomSpecs = (window.__INITIAL_PRODUCT__ && window.__INITIAL_PRODUCT__.specifications) || [];
+
+            function escapeHtml(str) {
+                return String(str ?? '')
+                    .replace(/&/g, '&amp;')
+                    .replace(/</g, '&lt;')
+                    .replace(/>/g, '&gt;')
+                    .replace(/"/g, '&quot;')
+                    .replace(/'/g, '&#39;');
+            }
+
+            function addCustomSpecRow(name = '', value = '') {
+                const idx = customSpecIndex++;
+                const tr = document.createElement('tr');
+                tr.dataset.rowType = 'custom-spec';
+                tr.innerHTML = `
+                    <td><input type="text" name="specifications[${idx}].name" placeholder="VD: Bluetooth, Dung lượng pin..." value="${escapeHtml(name)}"></td>
+                    <td><input type="text" name="specifications[${idx}].value" placeholder="VD: 5.3, 30 giờ..." value="${escapeHtml(value)}"></td>
+                    <td style="text-align:center;">
+                        <button type="button" class="btn-icon-danger" title="Xóa">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </td>
+                `;
+                tr.querySelector('.btn-icon-danger').addEventListener('click', () => tr.remove());
+                body.appendChild(tr);
+            }
+
+            addBtn.addEventListener('click', () => addCustomSpecRow());
+
+            if (initialCustomSpecs.length > 0) {
+                initialCustomSpecs.forEach(spec => addCustomSpecRow(spec.name, spec.value));
+            } else {
+                addCustomSpecRow();
+            }
+        })();
+
+        /* ===== Variants (giá + danh sách thông số phân biệt) ===== */
+        (function() {
+            const list = document.getElementById('variantList');
+            const addBtn = document.getElementById('addVariantBtn');
+            let variantIndex = 0;
+            const initialVariants = (window.__INITIAL_PRODUCT__ && window.__INITIAL_PRODUCT__.variants) || [];
+
+            function escapeHtml(str) {
+                return String(str ?? '')
+                    .replace(/&/g, '&amp;')
+                    .replace(/</g, '&lt;')
+                    .replace(/>/g, '&gt;')
+                    .replace(/"/g, '&quot;')
+                    .replace(/'/g, '&#39;');
+            }
+
+            function addVariantSpecRow(variantCard, name = '', value = '') {
+                const tbody = variantCard.querySelector('.variant-spec-body');
+                const idx = parseInt(variantCard.dataset.nextSpecIdx || '0', 10);
+                variantCard.dataset.nextSpecIdx = idx + 1;
+
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td><input type="text" name="variants[${variantCard.dataset.variantIdx}].specifications[${idx}].name" placeholder="VD: Màu sắc, Kích thước..." value="${escapeHtml(name)}"></td>
+                    <td><input type="text" name="variants[${variantCard.dataset.variantIdx}].specifications[${idx}].value" placeholder="VD: Đỏ, 256GB..." value="${escapeHtml(value)}"></td>
+                    <td style="text-align:center;">
+                        <button type="button" class="btn-icon-danger" title="Xóa">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </td>
+                `;
+                tr.querySelector('.btn-icon-danger').addEventListener('click', () => tr.remove());
+                tbody.appendChild(tr);
+            }
+
+            function addVariant(variantData) {
+                const idx = variantIndex++;
+                const card = document.createElement('div');
+                card.className = 'variant-card';
+                card.dataset.variantIdx = idx;
+                card.dataset.nextSpecIdx = '0';
+
+                const data = variantData || { price: '', specifications: [] };
+
+                card.innerHTML = `
+                    <div class="variant-head">
+                        <div class="variant-head-title">
+                            <span class="variant-num">${idx + 1}</span>
+                            <span>Biến thể #${idx + 1}</span>
+                        </div>
+                        <button type="button" class="btn-icon-danger" data-action="remove-variant" title="Xóa biến thể">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
+                    <div class="sd-form-group" style="margin-bottom:10px;">
+                        <label>Giá biến thể (VNĐ) *</label>
+                        <input type="number" min="0" step="1000" name="variants[${idx}].price" placeholder="Nhập giá cho biến thể này" value="${escapeHtml(data.price)}">
+                    </div>
+                    <table class="spec-table" style="margin-top:6px;">
+                        <thead>
+                            <tr>
+                                <th style="width:42%;">Tên thông số</th>
+                                <th>Mô tả</th>
+                                <th style="width:60px; text-align:center;"></th>
+                            </tr>
+                        </thead>
+                        <tbody class="variant-spec-body"></tbody>
+                    </table>
+                    <button type="button" class="add-spec-btn" data-action="add-variant-spec" style="margin-top:10px;">
+                        <i class="fas fa-plus"></i> Thêm thông số
+                    </button>
+                `;
+
+                card.querySelector('[data-action="remove-variant"]').addEventListener('click', () => {
+                    card.remove();
+                    reindexVariantTitles();
+                });
+
+                card.querySelector('[data-action="add-variant-spec"]').addEventListener('click', () => {
+                    addVariantSpecRow(card);
+                });
+
+                (data.specifications || []).forEach(spec => addVariantSpecRow(card, spec.name, spec.value));
+
+                list.appendChild(card);
+            }
+
+            function reindexVariantTitles() {
+                Array.from(list.children).forEach((card, i) => {
+                    card.dataset.variantIdx = i;
+                    card.querySelector('.variant-num').textContent = i + 1;
+                    card.querySelector('.variant-head-title span:last-child').textContent = `Biến thể #${i + 1}`;
+                    const inputs = card.querySelectorAll('input[name^="variants["]');
+                    inputs.forEach(input => {
+                        input.name = input.name.replace(/^variants\[\d+\]/, `variants[${i}]`);
+                    });
+                });
+                variantIndex = list.children.length;
+            }
+
+            addBtn.addEventListener('click', () => addVariant());
+
+            if (initialVariants.length > 0) {
+                initialVariants.forEach(v => addVariant(v));
+            } else {
+                // No pre-populated variants - start empty as user requested
+                // Optionally show empty state placeholder
+            }
+        })();
+
+        /* ===== TinyMCE ===== */
+        (function() {
+            if (typeof tinymce === 'undefined') return;
+            tinymce.init({
+                selector: '#richDescriptionEditor',
+                height: 420,
+                menubar: 'file edit view insert format tools table help',
+                plugins: 'advlist autolink lists link image charmap preview anchor searchreplace visualblocks code fullscreen insertdatetime media table help wordcount emoticons',
+                toolbar: 'undo redo | blocks | bold italic underline strikethrough | forecolor backcolor | alignleft aligncenter alignright alignjustify | bullist numlist outdent indent | link image table | code fullscreen preview | removeformat help',
+                branding: false,
+                promotion: false,
+                statusbar: true,
+                elementpath: true,
+                content_style: 'body { font-family: "Work Sans", sans-serif; font-size:14px; color:#0f172a; }',
+                setup: function(editor) {
+                    editor.on('change keyup', function() {
+                        editor.save();
+                    });
+                }
             });
         })();
     </script>
