@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/springsecurity6">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quản lý Voucher WEB - CNJ70 Admin</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Work+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" th:href="@{/css/admin.css}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body { font-family: 'Work Sans', sans-serif; background: #f5f5f5; }
+        .admin-container { max-width: 1400px; margin: 0 auto; padding: 24px; }
+        .page-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; }
+        .page-header h1 { font-size: 24px; font-weight: 700; color: #333; margin: 0; }
+        .btn { padding: 10px 20px; border-radius: 8px; font-weight: 500; cursor: pointer; border: none; font-size: 14px; display: inline-flex; align-items: center; gap: 8px; }
+        .btn-primary { background: #ee4d2d; color: #fff; }
+        .btn-secondary { background: #fff; color: #333; border: 1px solid #ddd; }
+        .btn-danger { background: #fff; color: #dc3545; border: 1px solid #dc3545; }
+        .alert { padding: 12px 16px; border-radius: 8px; margin-bottom: 20px; display: flex; align-items: center; gap: 10px; }
+        .alert-success { background: #d4edda; color: #155724; }
+        .alert-danger { background: #f8d7da; color: #721c24; }
+        .table-container { background: #fff; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); overflow: hidden; }
+        table { width: 100%; border-collapse: collapse; }
+        th { background: #fafafa; padding: 14px 16px; text-align: left; font-weight: 600; color: #333; font-size: 13px; border-bottom: 1px solid #eee; }
+        td { padding: 14px 16px; border-bottom: 1px solid #eee; font-size: 14px; color: #333; }
+        tr:hover { background: #fafafa; }
+        .voucher-badge { display: inline-flex; align-items: center; gap: 6px; padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: 500; }
+        .voucher-badge.percent { background: #fff3e0; color: #e65100; }
+        .voucher-badge.amount { background: #e8f5e9; color: #2e7d32; }
+        .code-badge { font-family: monospace; background: #f5f5f5; padding: 4px 10px; border-radius: 4px; color: #ee4d2d; font-weight: 600; }
+        .status-badge { padding: 4px 10px; border-radius: 12px; font-size: 12px; font-weight: 500; }
+        .status-active { background: #d4edda; color: #155724; }
+        .status-inactive { background: #f8d7da; color: #721c24; }
+        .empty-state { text-align: center; padding: 60px 20px; }
+        .empty-state i { font-size: 48px; color: #ccc; margin-bottom: 16px; }
+        .empty-state h3 { color: #666; margin: 0 0 8px 0; }
+        .empty-state p { color: #999; margin: 0; }
+    </style>
+</head>
+<body>
+    <div class="admin-wrapper">
+        <!-- Admin Sidebar -->
+        <aside class="admin-sidebar">
+            <div class="admin-sidebar-header">
+                <div class="admin-logo"><i class="fas fa-bolt"></i></div>
+                <div class="admin-brand">
+                    <span class="admin-brand-name">CNJ70</span>
+                    <span class="admin-brand-sub">Admin Panel</span>
+                </div>
+            </div>
+            <nav class="admin-sidebar-nav">
+                <div class="admin-sidebar-section">
+                    <span class="admin-sidebar-title">Tổng quan</span>
+                    <a th:href="@{/admin/dashboard}" class="admin-nav-item"><i class="fas fa-house"></i><span>Dashboard</span></a>
+                </div>
+                <div class="admin-sidebar-section">
+                    <span class="admin-sidebar-title">Quản lý</span>
+                    <a th:href="@{/admin/users}" class="admin-nav-item"><i class="fas fa-users"></i><span>Người dùng</span></a>
+                    <a th:href="@{/admin/categories}" class="admin-nav-item"><i class="fas fa-tags"></i><span>Danh mục</span></a>
+                    <a th:href="@{/admin/vouchers}" class="admin-nav-item active"><i class="fas fa-ticket"></i><span>Voucher WEB</span></a>
+                </div>
+                <div class="admin-sidebar-section">
+                    <span class="admin-sidebar-title">Khác</span>
+                    <a th:href="@{/home}" class="admin-nav-item"><i class="fas fa-globe"></i><span>Xem website</span></a>
+                    <form th:action="@{/auth/logout}" method="post" style="margin:0;">
+                        <button type="submit" class="admin-nav-item"><i class="fas fa-arrow-right-from-bracket"></i><span>Đăng xuất</span></button>
+                    </form>
+                </div>
+            </nav>
+        </aside>
+
+        <div class="admin-main">
+            <div class="admin-topbar">
+                <div class="admin-topbar-title">Quản lý Voucher WEB</div>
+                <div class="admin-topbar-user">
+                    <span sec:authentication="name">Admin</span>
+                </div>
+            </div>
+
+            <div class="admin-content">
+                <div class="page-header">
+                    <h1><i class="fas fa-ticket"></i> Voucher WEB</h1>
+                    <div>
+                        <a th:href="@{/vouchers}" class="btn btn-secondary" target="_blank">
+                            <i class="fas fa-eye"></i> Xem trang công khai
+                        </a>
+                        <a th:href="@{/admin/vouchers/create}" class="btn btn-primary">
+                            <i class="fas fa-plus"></i> Tạo Voucher WEB
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Alerts -->
+                <div th:if="${success}" class="alert alert-success">
+                    <i class="fas fa-check-circle"></i><span th:text="${success}"></span>
+                </div>
+                <div th:if="${error}" class="alert alert-danger">
+                    <i class="fas fa-exclamation-triangle"></i><span th:text="${error}"></span>
+                </div>
+
+                <!-- Empty state -->
+                <div th:if="${#lists.isEmpty(vouchers)}" class="table-container">
+                    <div class="empty-state">
+                        <i class="fas fa-ticket-alt"></i>
+                        <h3>Chưa có voucher nào</h3>
+                        <p>Tạo voucher đầu tiên cho toàn hệ thống.</p>
+                        <a th:href="@{/admin/vouchers/create}" class="btn btn-primary" style="margin-top:16px;">
+                            <i class="fas fa-plus"></i> Tạo Voucher WEB
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Table -->
+                <div th:unless="${#lists.isEmpty(vouchers)}" class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Mã</th>
+                                <th>Tên</th>
+                                <th>Loại giảm</th>
+                                <th>Đơn tối thiểu</th>
+                                <th>Lượt (Đã dùng/Tổng)</th>
+                                <th>Thời gian</th>
+                                <th>Trạng thái</th>
+                                <th style="text-align:right;">Thao tác</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr th:each="v : ${vouchers}">
+                                <td><span class="code-badge" th:text="${v.code}">CODE123</span></td>
+                                <td th:text="${v.name}">Tên Voucher</td>
+                                <td>
+                                    <span class="voucher-badge" th:classappend="${v.discountType.name() == 'PERCENT' ? 'percent' : 'amount'}">
+                                        <th:block th:if="${v.discountType.name() == 'PERCENT'}" th:text="${v.discountValue.intValue()} + '%'">10%</th:block>
+                                        <th:block th:if="${v.discountType.name() == 'AMOUNT'}" th:text="${#numbers.formatDecimal(v.discountValue, 0, 'DEFAULT', 0, 'DEFAULT')} + 'đ'">50.000đ</th:block>
+                                    </span>
+                                </td>
+                                <td th:text="${v.minOrderValue != null ? #numbers.formatDecimal(v.minOrderValue, 0, 'DEFAULT', 0, 'DEFAULT') + 'đ' : '0đ'}">100.000đ</td>
+                                <td>
+                                    <th:block th:text="${v.used}">10</th:block>/<th:block th:text="${v.quantity}">100</th:block>
+                                    <div style="font-size: 12px; color: #888;">
+                                        (<th:block th:text="${v.quantity - v.used}">90</th:block> còn)
+                                    </div>
+                                </td>
+                                <td>
+                                    <th:block th:if="${v.endDate != null}" th:text="${#temporals.format(v.endDate, 'dd/MM/yyyy')}">31/12/2024</th:block>
+                                    <th:block th:unless="${v.endDate != null}">Không giới hạn</th:block>
+                                </td>
+                                <td>
+                                    <span class="status-badge" th:classappend="${v.active ? 'status-active' : 'status-inactive'}" th:text="${v.active ? 'Đang hoạt động' : 'Đã tắt'}">Đang hoạt động</span>
+                                </td>
+                                <td style="text-align:right;">
+                                    <form th:action="@{/admin/vouchers/delete/{id}(id=${v.id})}" method="post" style="display:inline;">
+                                        <button type="submit" class="btn btn-danger btn-sm" onclick="return confirm('Bạn có chắc muốn xóa voucher này?')">
+                                            <i class="fas fa-trash"></i> Xóa
+                                        </button>
+                                    </form>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

@@ -78,10 +78,12 @@ public class SecurityConfig {
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers("/", "/auth/**", "/css/**", "/js/**", "/images/**", "/uploads/**", "/error").permitAll()
                 .requestMatchers("/api/auth/**").permitAll()
+                .requestMatchers("/api/products/**").permitAll()
+                .requestMatchers("/api/categories/**").permitAll()
+                .requestMatchers("/vouchers").permitAll()  // Trang công khai xem voucher
+                .requestMatchers("/checkout/apply-voucher").permitAll()  // Áp dụng voucher
                 .requestMatchers("/admin/**").hasRole("ADMIN")
-                .requestMatchers("/vendor/**").hasRole("VENDOR")  // Tạm comment để test
-                .requestMatchers(HttpMethod.GET, "/api/products/**").permitAll()
-                .requestMatchers(HttpMethod.GET, "/api/categories/**").permitAll()
+                .requestMatchers("/vendor/**").hasRole("VENDOR")
                 .requestMatchers("/api/**").authenticated()
                 .anyRequest().permitAll()
             )
