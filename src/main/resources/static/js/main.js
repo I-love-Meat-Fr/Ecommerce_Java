@@ -1,9 +1,6 @@
 // CNJ70 Ecommerce - Main JavaScript
 
 document.addEventListener('DOMContentLoaded', function() {
-    // #region agent log H11 init
-    fetch('http://127.0.0.1:7880/ingest/c62a6c44-8a64-4ebc-b91a-ead24f484206',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'04f262'},body:JSON.stringify({sessionId:'04f262',location:'main.js:init',message:'main.js loaded',data:{url:location.pathname,stepperNodes:document.querySelectorAll('.qty-stepper').length,removeForms:document.querySelectorAll('.cart-item-remove-form').length},timestamp:Date.now(),hypothesisId:'H11'})}).catch(()=>{});
-    // #endregion
     // ========== Header Scroll Effect ==========
     const header = document.querySelector('.header');
     if (header) {
@@ -146,44 +143,30 @@ document.addEventListener('DOMContentLoaded', function() {
         const stock = parseInt(stepper.dataset.stock) || 999;
         let currentQty = parseInt(input.value) || 1;
 
-        function logStepper(action, next, willSubmit) {
-            fetch('http://127.0.0.1:7880/ingest/c62a6c44-8a64-4ebc-b91a-ead24f484206',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'04f262'},body:JSON.stringify({sessionId:'04f262',location:'main.js:stepper:'+action,message:'stepper '+action,data:{productId:productId,currentQty:currentQty,stock:stock,next:next,willSubmit:willSubmit},timestamp:Date.now(),hypothesisId:'H11'})}).catch(()=>{});
-        }
-
         dec.addEventListener('click', function(e) {
             e.preventDefault();
-            logStepper('dec:click', currentQty - 1, false);
             // If currently 1 -> confirm remove
             if (currentQty <= 1) {
                 if (confirm('Bạn có chắc muốn xóa sản phẩm này khỏi giỏ hàng?')) {
                     const removeForm = document.querySelector('.cart-item-remove-form input[value="' + productId + '"]');
                     if (removeForm && removeForm.form) {
-                        logStepper('dec:remove-confirm', 0, true);
                         removeForm.form.submit();
-                    } else {
-                        logStepper('dec:remove-form-missing', 0, false);
                     }
-                } else {
-                    logStepper('dec:remove-cancel', 0, false);
                 }
                 return;
             }
             const next = currentQty - 1;
             target.value = next;
-            logStepper('dec:submit', next, true);
             form.submit();
         });
 
         inc.addEventListener('click', function(e) {
             e.preventDefault();
             const next = currentQty + 1;
-            logStepper('inc:click', next, false);
             if (next > stock) {
-                logStepper('inc:blocked-stock', next, false);
                 return;
             }
             target.value = next;
-            logStepper('inc:submit', next, true);
             form.submit();
         });
     });
@@ -281,5 +264,39 @@ document.addEventListener('DOMContentLoaded', function() {
     if (document.body.classList.contains('cart-page') ||
         document.querySelector('#nav-cart, #cart-btn')) {
         refreshCartBadge();
+    }
+
+    // ========== User Dropdown Menu ==========
+    const userMenuBtn = document.getElementById('user-menu-btn');
+    const userDropdown = document.getElementById('user-dropdown');
+
+    if (userMenuBtn && userDropdown) {
+        const userMenu = userMenuBtn.closest('.home-user-menu');
+
+        // Idempotent binding: if the dropdown already has a handler (e.g. bound
+        // by another script), skip. This prevents the double-toggle glitch that
+        // occurs when both main.js and home.js attach a click handler.
+        if (!userMenuBtn.dataset.dropdownBound) {
+            userMenuBtn.dataset.dropdownBound = '1';
+
+            userMenuBtn.addEventListener('click', function(e) {
+                e.stopPropagation();
+                userMenu.classList.toggle('open');
+            });
+
+            // Close dropdown when clicking outside
+            document.addEventListener('click', function(e) {
+                if (!userMenuBtn.contains(e.target) && !userDropdown.contains(e.target)) {
+                    userMenu.classList.remove('open');
+                }
+            });
+
+            // Close on Escape
+            document.addEventListener('keydown', function(e) {
+                if (e.key === 'Escape') {
+                    userMenu.classList.remove('open');
+                }
+            });
+        }
     }
 });

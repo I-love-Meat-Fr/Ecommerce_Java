@@ -374,10 +374,53 @@
                                 </div>
                             </div>
 
+                            <!-- Write Review Form -->
+                            <div class="pdp-write-review-section" sec:authorize="isAuthenticated()">
+                                <div class="pdp-write-review-card" th:if="${hasReviewed == null or !hasReviewed}">
+                                    <h4 class="pdp-write-review-title">
+                                        <i class="fas fa-edit"></i> Viết đánh giá của bạn
+                                    </h4>
+                                    <form th:action="@{/products/{id}/reviews(id=${product.id})}" method="post" class="pdp-review-form">
+                                        <div class="pdp-review-form-group">
+                                            <label class="pdp-review-form-label">Đánh giá của bạn <span class="required">*</span></label>
+                                            <div class="pdp-rating-input" id="rating-input">
+                                                <input type="radio" name="rating" value="5" id="star5" required>
+                                                <label for="star5" title="5 sao"><i class="fas fa-star"></i></label>
+                                                <input type="radio" name="rating" value="4" id="star4">
+                                                <label for="star4" title="4 sao"><i class="fas fa-star"></i></label>
+                                                <input type="radio" name="rating" value="3" id="star3">
+                                                <label for="star3" title="3 sao"><i class="fas fa-star"></i></label>
+                                                <input type="radio" name="rating" value="2" id="star2">
+                                                <label for="star2" title="2 sao"><i class="fas fa-star"></i></label>
+                                                <input type="radio" name="rating" value="1" id="star1">
+                                                <label for="star1" title="1 sao"><i class="fas fa-star"></i></label>
+                                            </div>
+                                        </div>
+                                        <div class="pdp-review-form-group">
+                                            <label for="comment" class="pdp-review-form-label">Nhận xét của bạn <span class="required">*</span></label>
+                                            <textarea id="comment" name="comment" rows="4" class="pdp-review-textarea" 
+                                                      placeholder="Chia sẻ trải nghiệm của bạn về sản phẩm này..." required></textarea>
+                                        </div>
+                                        <button type="submit" class="pdp-btn-submit-review">
+                                            <i class="fas fa-paper-plane"></i> Gửi đánh giá
+                                        </button>
+                                    </form>
+                                </div>
+                                <div class="pdp-already-reviewed" th:if="${hasReviewed != null and hasReviewed}">
+                                    <i class="fas fa-check-circle"></i>
+                                    <p>Bạn đã đánh giá sản phẩm này. Xem đánh giá của bạn bên dưới.</p>
+                                </div>
+                            </div>
+
+                            <div class="pdp-login-to-review" sec:authorize="!isAuthenticated()">
+                                <i class="fas fa-lock"></i>
+                                <p>Bạn cần <a th:href="@{/auth/login}">đăng nhập</a> để viết đánh giá.</p>
+                            </div>
+
                             <!-- Review list -->
                             <div class="pdp-review-list" th:if="${reviews != null and !reviews.isEmpty()}">
                                 <th:block th:each="review : ${reviews}">
-                                    <div class="pdp-review-item">
+                                    <div class="pdp-review-item" th:id="'review-' + ${review.id}">
                                         <div class="pdp-review-avatar">
                                             <i class="fas fa-user"></i>
                                         </div>
@@ -392,6 +435,21 @@
                                             </div>
                                             <span class="pdp-review-date" th:text="${#temporals.format(review.createdAt, 'dd/MM/yyyy')}">01/01/2024</span>
                                             <div class="pdp-review-text" th:text="${review.comment}">Nội dung đánh giá</div>
+                                            
+                                            <!-- Edit/Delete buttons for own review -->
+                                            <div class="pdp-review-actions" sec:authorize="isAuthenticated()" 
+                                                 th:if="${#authentication.principal.id == review.userId}">
+                                                <button type="button" class="pdp-review-edit-btn" 
+                                                        th:onclick="'editReview(\'' + ${review.id} + '\', ' + ${review.rating} + ', \'' + ${review.comment} + '\')'">
+                                                    <i class="fas fa-edit"></i> Sửa
+                                                </button>
+                                                <form th:action="@{/reviews/{id}/delete(id=${review.id})}" method="post" 
+                                                      style="display:inline;" onsubmit="return confirm('Bạn có chắc muốn xóa đánh giá này?');">
+                                                    <button type="submit" class="pdp-review-delete-btn">
+                                                        <i class="fas fa-trash-alt"></i> Xóa
+                                                    </button>
+                                                </form>
+                                            </div>
                                         </div>
                                     </div>
                                 </th:block>
@@ -657,6 +715,77 @@
                 if (imageDim) imageDim.style.display = 'none';
             });
         }
+
+        // Review Edit/Delete functionality
+        function editReview(reviewId, currentRating, currentComment) {
+            // Create edit form modal
+            const modal = document.createElement('div');
+            modal.className = 'pdp-review-edit-modal';
+            modal.innerHTML = `
+                <div class="pdp-review-edit-overlay" onclick="closeEditModal()"></div>
+                <div class="pdp-review-edit-content">
+                    <div class="pdp-review-edit-header">
+                        <h3><i class="fas fa-edit"></i> Chỉnh sửa đánh giá</h3>
+                        <button type="button" class="pdp-modal-close" onclick="closeEditModal()">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                    <form action="/reviews/${reviewId}/edit" method="post" class="pdp-review-edit-form">
+                        <div class="pdp-review-form-group">
+                            <label class="pdp-review-form-label">Đánh giá của bạn <span class="required">*</span></label>
+                            <div class="pdp-rating-input" id="edit-rating-input">
+                                <input type="radio" name="rating" value="5" id="edit-star5" ${currentRating === 5 ? 'checked' : ''} required>
+                                <label for="edit-star5" title="5 sao"><i class="fas fa-star"></i></label>
+                                <input type="radio" name="rating" value="4" id="edit-star4" ${currentRating === 4 ? 'checked' : ''}>
+                                <label for="edit-star4" title="4 sao"><i class="fas fa-star"></i></label>
+                                <input type="radio" name="rating" value="3" id="edit-star3" ${currentRating === 3 ? 'checked' : ''}>
+                                <label for="edit-star3" title="3 sao"><i class="fas fa-star"></i></label>
+                                <input type="radio" name="rating" value="2" id="edit-star2" ${currentRating === 2 ? 'checked' : ''}>
+                                <label for="edit-star2" title="2 sao"><i class="fas fa-star"></i></label>
+                                <input type="radio" name="rating" value="1" id="edit-star1" ${currentRating === 1 ? 'checked' : ''}>
+                                <label for="edit-star1" title="1 sao"><i class="fas fa-star"></i></label>
+                            </div>
+                        </div>
+                        <div class="pdp-review-form-group">
+                            <label for="edit-comment" class="pdp-review-form-label">Nhận xét của bạn <span class="required">*</span></label>
+                            <textarea id="edit-comment" name="comment" rows="4" class="pdp-review-textarea" 
+                                      placeholder="Chia sẻ trải nghiệm của bạn về sản phẩm này..." required>${escapeHtml(currentComment)}</textarea>
+                        </div>
+                        <div class="pdp-review-edit-actions">
+                            <button type="button" class="pdp-btn-cancel" onclick="closeEditModal()">
+                                <i class="fas fa-times"></i> Hủy
+                            </button>
+                            <button type="submit" class="pdp-btn-submit-review">
+                                <i class="fas fa-save"></i> Lưu thay đổi
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            `;
+            document.body.appendChild(modal);
+            setTimeout(() => modal.classList.add('show'), 10);
+        }
+
+        function closeEditModal() {
+            const modal = document.querySelector('.pdp-review-edit-modal');
+            if (modal) {
+                modal.classList.remove('show');
+                setTimeout(() => modal.remove(), 300);
+            }
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        // Close modal on Escape key
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                closeEditModal();
+            }
+        });
     </script>
 </body>
 </html>
