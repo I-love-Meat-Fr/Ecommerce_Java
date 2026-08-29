@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/springsecurity6"
+      th:replace="~{layout/admin-layout :: layout(title='Quản lý đơn hàng - CNJ70 Admin', content=~{::main-content}, scripts=~{::page-scripts})}">
+<head>
+    <title>Quản lý đơn hàng - CNJ70 Admin</title>
+</head>
+<body>
+<main th:fragment="main-content">
+    <div class="sd-page-head">
+        <div class="sd-page-head-title">
+            <h1>Quản lý đơn hàng</h1>
+            <p>Xem và theo dõi trạng thái các đơn hàng trong hệ thống.</p>
+        </div>
+        <div class="sd-page-head-actions">
+            <span class="sd-badge sd-badge-slate">
+                <i class="fas fa-cart-shopping"></i>
+                <span th:text="${totalItems}">0</span> đơn hàng
+            </span>
+        </div>
+    </div>
+
+    <div th:if="${q != null and !#strings.isEmpty(q)}" class="sd-card" style="margin-bottom:16px;">
+        <div class="sd-card-body" style="display:flex;align-items:center;gap:10px;">
+            <i class="fas fa-filter"></i>
+            <span>Đang lọc theo:</span>
+            <span class="sd-badge sd-badge-slate" th:text="${q}">keyword</span>
+            <span style="margin-left:auto;color:var(--text-muted);font-size:13px;">
+                <span th:text="${totalItems}">0</span> kết quả
+            </span>
+        </div>
+    </div>
+
+    <div class="sd-card">
+        <div class="sd-card-body sd-card-body-flush">
+            <table class="sd-table">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Khách hàng</th>
+                        <th>Tổng cộng</th>
+                        <th>Trạng thái</th>
+                        <th>Ngày tạo</th>
+                        <th style="text-align:right;">Thao tác</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr th:if="${#lists.isEmpty(orders)}">
+                        <td colspan="6">
+                            <div class="sd-empty">
+                                <i class="fas fa-cart-shopping"></i>
+                                <h3 th:if="${q != null and !#strings.isEmpty(q)}">Không tìm thấy đơn hàng</h3>
+                                <h3 th:unless="${q != null and !#strings.isEmpty(q)}">Chưa có đơn hàng nào</h3>
+                                <p th:if="${q != null and !#strings.isEmpty(q)}">Không có đơn hàng nào khớp với từ khóa.</p>
+                                <p th:unless="${q != null and !#strings.isEmpty(q)}">Hiện chưa có đơn hàng nào trong hệ thống.</p>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr th:each="order : ${orders}">
+                        <td>
+                            <div class="sd-table-title sd-mono" th:text="${#strings.substring(order.id, 0, 8)}">id</div>
+                            <div class="sd-table-sub">
+                                <span th:if="${order.shops != null and order.shops.size() > 1}"
+                                      class="sd-badge sd-badge-slate" style="font-size:10px;">
+                                    <span th:text="${order.shops.size()}">n</span> shop
+                                </span>
+                                <span th:if="${order.shops == null or order.shops.size() <= 1}"
+                                      class="sd-badge sd-badge-slate" style="font-size:10px;">
+                                    1 shop
+                                </span>
+                            </div>
+                        </td>
+                        <td>
+                            <div th:text="${order.userName} ?: '-'">Khách hàng</div>
+                            <div class="sd-table-sub" th:text="${order.userEmail} ?: '-'">email</div>
+                        </td>
+                        <td>
+                            <span th:text="${#numbers.formatDecimal(order.totalAmount, 0, 'COMMA', 0, 'POINT')} + ' đ'">0 đ</span>
+                        </td>
+                        <td>
+                            <span th:if="${order.status.name() == 'PENDING'}" class="sd-badge sd-badge-amber">
+                                <i class="fas fa-clock"></i> Chờ xác nhận
+                            </span>
+                            <span th:if="${order.status.name() == 'PREPARING'}" class="sd-badge sd-badge-sky">
+                                <i class="fas fa-box"></i> Đang chuẩn bị
+                            </span>
+                            <span th:if="${order.status.name() == 'SHIPPING'}" class="sd-badge sd-badge-sky">
+                                <i class="fas fa-truck"></i> Đang giao
+                            </span>
+                            <span th:if="${order.status.name() == 'DELIVERED'}" class="sd-badge sd-badge-green">
+                                <i class="fas fa-circle-check"></i> Đã giao
+                            </span>
+                            <span th:if="${order.status.name() == 'CANCELLED'}" class="sd-badge sd-badge-red">
+                                <i class="fas fa-ban"></i> Đã hủy
+                            </span>
+                        </td>
+                        <td>
+                            <span th:if="${order.createdAt != null}"
+                                  th:text="${#temporals.format(order.createdAt, 'dd/MM/yyyy HH:mm')}">-</span>
+                            <span th:unless="${order.createdAt != null}">-</span>
+                        </td>
+                        <td style="text-align:right; white-space:nowrap;">
+                            <a th:href="@{/admin/orders/{id}(id=${order.id}, page=${page}, size=${size}, q=${q})}"
+                               class="sd-btn sd-btn-secondary sd-btn-sm">
+                                <i class="fas fa-eye"></i> Xem
+                            </a>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="sd-card-body" th:if="${totalPages > 0}"
+             style="display:flex;justify-content:center;border-top:1px solid var(--border,#e2e8f0);">
+            <nav class="sd-pagination" aria-label="Phân trang">
+                <a th:if="${hasPrev}"
+                   th:href="@{/admin/orders(page=${page - 1}, size=${size}, q=${q})}"
+                   class="sd-page-link">
+                    <i class="fas fa-chevron-left"></i> Quay lại
+                </a>
+                <span th:unless="${hasPrev}" class="sd-page-link sd-page-disabled">
+                    <i class="fas fa-chevron-left"></i> Quay lại
+                </span>
+
+                <span class="sd-page-link sd-page-active" th:text="${page + 1}">1</span>
+
+                <a th:if="${hasNext}"
+                   th:href="@{/admin/orders(page=${page + 1}, size=${size}, q=${q})}"
+                   class="sd-page-link">
+                    Tiếp theo <i class="fas fa-chevron-right"></i>
+                </a>
+                <span th:unless="${hasNext}" class="sd-page-link sd-page-disabled">
+                    Tiếp theo <i class="fas fa-chevron-right"></i>
+                </span>
+            </nav>
+        </div>
+    </div>
+</main>
+
+<th:block th:fragment="page-scripts"></th:block>
+</body>
+</html>

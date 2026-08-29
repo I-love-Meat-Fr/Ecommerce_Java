@@ -13,17 +13,15 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 public class AdminDashboardRes {
-    
+
     private long totalUsers;
     private long totalShops;
     private long totalProducts;
     private long totalOrders;
-    private long activeVendors;
-    private long activeProducts;
     private BigDecimal totalPlatformRevenue;
     private List<RecentActivity> recentActivities;
     private List<DailyMetric> revenueTrend;
-    
+
     @Data
     @Builder
     @NoArgsConstructor
@@ -33,7 +31,7 @@ public class AdminDashboardRes {
         private String description;
         private String time;
     }
-    
+
     @Data
     @Builder
     @NoArgsConstructor
