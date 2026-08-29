@@ -157,10 +157,13 @@
                                     <i class="fas fa-tag"></i> Mã giảm giá
                                 </label>
                                 <div class="summary-coupon-form">
-                                    <input type="text" id="coupon-input" placeholder="Nhập mã (nếu có)" disabled>
-                                    <button type="button" class="btn-coupon" disabled>Áp dụng</button>
+                                    <input type="text" id="coupon-input" name="voucherCode" placeholder="Nhập mã giảm giá" maxlength="50">
+                                    <button type="button" class="btn-coupon" onclick="applyVoucher()">Áp dụng</button>
                                 </div>
-                                <small class="summary-coupon-note">Tính năng đang phát triển</small>
+                                <small class="summary-coupon-note">
+                                    <i class="fas fa-info-circle"></i> 
+                                    Chức năng áp dụng mã sẽ được kích hoạt sau khi hoàn thiện hệ thống voucher
+                                </small>
                             </div>
                             <div class="summary-divider"></div>
                             <div class="summary-row summary-total">
@@ -204,5 +207,34 @@
 
     <div th:replace="fragments/web-footer"></div>
     <script th:src="@{/js/main.js}"></script>
+    <script>
+        // Voucher input handling (UI only - no business logic)
+        function applyVoucher() {
+            const input = document.getElementById('coupon-input');
+            const code = input.value.trim();
+            
+            if (!code) {
+                alert('Vui lòng nhập mã giảm giá');
+                return;
+            }
+            
+            // Display the entered code (UI only)
+            console.log('Mã voucher đã nhập:', code);
+            
+            // Show informational message
+            alert('Mã voucher "' + code + '" đã được ghi nhận.\n\nChức năng áp dụng voucher sẽ được kích hoạt sau khi hệ thống voucher hoàn thiện.');
+        }
+        
+        // Allow Enter key to apply voucher
+        const couponInput = document.getElementById('coupon-input');
+        if (couponInput) {
+            couponInput.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    applyVoucher();
+                }
+            });
+        }
+    </script>
 </body>
 </html>

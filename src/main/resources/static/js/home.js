@@ -40,7 +40,12 @@
         // User dropdown toggle
         const userBtn = document.getElementById('user-menu-btn');
         const userMenu = document.querySelector('.home-user-menu');
-        if (userBtn && userMenu) {
+        // Dropdown is bound by main.js (the global handler). Skip here to avoid
+        // double-binding which would toggle the menu twice per click and appear stuck.
+        // If for any reason main.js has not bound yet (e.g. it failed to load),
+        // fall back to binding so the menu still works on the home page.
+        if (userBtn && userMenu && !userBtn.dataset.dropdownBound) {
+            userBtn.dataset.dropdownBound = '1';
             userBtn.addEventListener('click', function(e) {
                 e.stopPropagation();
                 userMenu.classList.toggle('open');

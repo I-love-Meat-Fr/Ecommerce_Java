@@ -1492,3 +1492,340 @@
     0%, 100% { opacity: 1; transform: scale(1); }
     50% { opacity: 0.4; transform: scale(0.7); }
 }
+
+/* Review Form Styles */
+.pdp-write-review-section {
+    margin-top: 32px;
+    padding-top: 24px;
+    border-top: 1px solid var(--line);
+}
+
+.pdp-write-review-card {
+    background: #f8fffe;
+    border: 1px solid #d1f5f3;
+    border-radius: 12px;
+    padding: 24px;
+}
+
+.pdp-write-review-title {
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--text);
+    margin: 0 0 20px 0;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.pdp-write-review-title i {
+    color: var(--primary);
+}
+
+.pdp-review-form {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.pdp-review-form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.pdp-review-form-label {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text);
+}
+
+.pdp-review-form-label .required {
+    color: #ef4444;
+}
+
+.pdp-rating-input {
+    display: flex;
+    flex-direction: row-reverse;
+    justify-content: flex-end;
+    gap: 4px;
+}
+
+.pdp-rating-input input[type="radio"] {
+    display: none;
+}
+
+.pdp-rating-input label {
+    cursor: pointer;
+    font-size: 32px;
+    color: #e0e0e0;
+    transition: color 0.2s, transform 0.2s;
+}
+
+.pdp-rating-input label:hover,
+.pdp-rating-input label:hover ~ label,
+.pdp-rating-input input[type="radio"]:checked ~ label {
+    color: #fbbf24;
+    transform: scale(1.1);
+}
+
+.pdp-rating-input label i {
+    display: block;
+}
+
+.pdp-review-textarea {
+    width: 100%;
+    padding: 12px;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    font-family: inherit;
+    font-size: 14px;
+    color: var(--text);
+    resize: vertical;
+    transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.pdp-review-textarea:focus {
+    outline: none;
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(15, 181, 176, 0.1);
+}
+
+.pdp-btn-submit-review {
+    align-self: flex-start;
+    padding: 12px 24px;
+    background: var(--primary);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    transition: background 0.2s, transform 0.2s;
+}
+
+.pdp-btn-submit-review:hover {
+    background: var(--primary-dark);
+    transform: translateY(-1px);
+}
+
+.pdp-already-reviewed {
+    background: #f0fdf4;
+    border: 1px solid #bbf7d0;
+    border-radius: 12px;
+    padding: 16px 20px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    color: #15803d;
+}
+
+.pdp-already-reviewed i {
+    font-size: 24px;
+}
+
+.pdp-already-reviewed p {
+    margin: 0;
+    font-size: 14px;
+    font-weight: 500;
+}
+
+.pdp-login-to-review {
+    margin-top: 32px;
+    padding: 24px;
+    background: #fef3c7;
+    border: 1px solid #fcd34d;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    color: #92400e;
+}
+
+.pdp-login-to-review i {
+    font-size: 24px;
+}
+
+.pdp-login-to-review p {
+    margin: 0;
+    font-size: 14px;
+}
+
+.pdp-login-to-review a {
+    color: var(--primary);
+    font-weight: 600;
+    text-decoration: underline;
+}
+
+.pdp-review-actions {
+    margin-top: 12px;
+    display: flex;
+    gap: 12px;
+}
+
+.pdp-review-edit-btn,
+.pdp-review-delete-btn {
+    padding: 6px 12px;
+    border: none;
+    border-radius: 6px;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    transition: all 0.2s;
+}
+
+.pdp-review-edit-btn {
+    background: #e0f2fe;
+    color: #0369a1;
+}
+
+.pdp-review-edit-btn:hover {
+    background: #bae6fd;
+}
+
+.pdp-review-delete-btn {
+    background: #fee2e2;
+    color: #dc2626;
+}
+
+.pdp-review-delete-btn:hover {
+    background: #fecaca;
+}
+
+/* Edit Modal Styles */
+.pdp-review-edit-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 9999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    transition: opacity 0.3s;
+}
+
+.pdp-review-edit-modal.show {
+    opacity: 1;
+}
+
+.pdp-review-edit-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    cursor: pointer;
+}
+
+.pdp-review-edit-content {
+    position: relative;
+    width: 90%;
+    max-width: 600px;
+    background: white;
+    border-radius: 16px;
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+    max-height: 90vh;
+    overflow-y: auto;
+    transform: scale(0.9);
+    transition: transform 0.3s;
+}
+
+.pdp-review-edit-modal.show .pdp-review-edit-content {
+    transform: scale(1);
+}
+
+.pdp-review-edit-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 20px 24px;
+    border-bottom: 1px solid var(--line);
+}
+
+.pdp-review-edit-header h3 {
+    margin: 0;
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--text);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.pdp-modal-close {
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: none;
+    border: none;
+    border-radius: 6px;
+    color: var(--text-light);
+    cursor: pointer;
+    transition: background 0.2s, color 0.2s;
+}
+
+.pdp-modal-close:hover {
+    background: #f3f4f6;
+    color: var(--text);
+}
+
+.pdp-review-edit-form {
+    padding: 24px;
+}
+
+.pdp-review-edit-actions {
+    display: flex;
+    gap: 12px;
+    justify-content: flex-end;
+    margin-top: 24px;
+}
+
+.pdp-btn-cancel {
+    padding: 10px 20px;
+    background: #f3f4f6;
+    color: var(--text);
+    border: none;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    transition: background 0.2s;
+}
+
+.pdp-btn-cancel:hover {
+    background: #e5e7eb;
+}
+
+@media (max-width: 640px) {
+    .pdp-write-review-card {
+        padding: 16px;
+    }
+
+    .pdp-rating-input label {
+        font-size: 28px;
+    }
+
+    .pdp-review-edit-content {
+        width: 95%;
+        max-height: 95vh;
+    }
+
+    .pdp-review-edit-header,
+    .pdp-review-edit-form {
+        padding: 16px;
+    }
+}

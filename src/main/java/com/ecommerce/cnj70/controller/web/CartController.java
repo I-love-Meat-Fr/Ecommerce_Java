@@ -3,7 +3,6 @@ package com.ecommerce.cnj70.controller.web;
 import com.ecommerce.cnj70.document.Cart;
 import com.ecommerce.cnj70.security.CustomUserDetails;
 import com.ecommerce.cnj70.service.CartService;
-import com.ecommerce.cnj70.util.DebugLog;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -98,30 +97,23 @@ public class CartController {
     public String updateCart(@AuthenticationPrincipal CustomUserDetails user,
                             @RequestParam String productId,
                             @RequestParam int quantity) {
-        DebugLog.write("H11", "CartController:updateCart:entry", "POST /cart/update",
-                "userId=" + (user == null ? "null" : user.getId()) + " productId=" + productId + " quantity=" + quantity);
         if (user == null) {
             return "redirect:/auth/login";
         }
         if (quantity < 1) {
-            DebugLog.write("H11", "CartController:updateCart:invalid", "quantity<1, redirect", "quantity=" + quantity);
             return "redirect:/cart";
         }
         cartService.updateCartItem(user.getId(), productId, quantity);
-        DebugLog.write("H11", "CartController:updateCart:ok", "Updated", "productId=" + productId + " quantity=" + quantity);
         return "redirect:/cart";
     }
 
     @PostMapping("/cart/remove")
     public String removeFromCart(@AuthenticationPrincipal CustomUserDetails user,
                                 @RequestParam String productId) {
-        DebugLog.write("H11", "CartController:removeFromCart:entry", "POST /cart/remove",
-                "userId=" + (user == null ? "null" : user.getId()) + " productId=" + productId);
         if (user == null) {
             return "redirect:/auth/login";
         }
         cartService.removeFromCart(user.getId(), productId);
-        DebugLog.write("H11", "CartController:removeFromCart:ok", "Removed", "productId=" + productId);
         return "redirect:/cart";
     }
 }
