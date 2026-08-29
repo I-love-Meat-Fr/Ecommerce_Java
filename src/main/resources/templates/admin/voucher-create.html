@@ -1,220 +1,284 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org"
-      xmlns:sec="http://www.thymeleaf.org/extras/springsecurity6">
+      xmlns:sec="http://www.thymeleaf.org/extras/springsecurity6"
+      th:replace="~{layout/admin-layout :: layout(title='Tạo Voucher WEB - CNJ70 Admin', content=~{::main-content}, scripts=~{::page-scripts})}">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Tạo Voucher WEB - CNJ70 Admin</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Work+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" th:href="@{/css/admin.css}">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <style>
-        body { font-family: 'Work Sans', sans-serif; background: #f5f5f5; }
-        .admin-container { max-width: 900px; margin: 0 auto; padding: 24px; }
-        .page-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; }
-        .page-header h1 { font-size: 24px; font-weight: 700; color: #333; margin: 0; }
-        .card { background: #fff; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); padding: 24px; }
-        .form-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px; }
-        .form-group { margin-bottom: 20px; }
-        .form-group.full-width { grid-column: span 2; }
-        .form-label { display: block; font-weight: 500; color: #333; font-size: 14px; margin-bottom: 8px; }
-        .form-label span.required { color: #ee4d2d; }
-        .form-input, .form-select { width: 100%; padding: 10px 14px; border: 1px solid #ddd; border-radius: 8px; font-size: 14px; font-family: inherit; box-sizing: border-box; }
-        .form-input:focus, .form-select:focus { outline: none; border-color: #ee4d2d; }
-        .form-hint { color: #888; font-size: 12px; margin-top: 4px; }
-        .form-error { color: #dc3545; font-size: 12px; margin-top: 4px; }
-        .btn { padding: 10px 20px; border-radius: 8px; font-weight: 500; cursor: pointer; border: none; font-size: 14px; display: inline-flex; align-items: center; gap: 8px; }
-        .btn-primary { background: #ee4d2d; color: #fff; }
-        .btn-secondary { background: #fff; color: #333; border: 1px solid #ddd; }
-        .form-actions { display: flex; gap: 12px; justify-content: flex-end; padding-top: 20px; border-top: 1px solid #eee; margin-top: 24px; }
-        .discount-type-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
-        .discount-type-option { border: 2px solid #ddd; border-radius: 8px; padding: 16px; cursor: pointer; transition: all 0.2s; text-align: center; }
-        .discount-type-option:hover { border-color: #ee4d2d; }
-        .discount-type-option.selected { border-color: #ee4d2d; background: #fff9f7; }
-        .discount-type-option input { display: none; }
-        .discount-type-option .option-icon { font-size: 24px; margin-bottom: 8px; color: #ee4d2d; }
-        .discount-type-option .option-title { font-weight: 600; color: #333; }
-        .date-range { display: flex; gap: 12px; align-items: center; }
-        .date-range .form-group { flex: 1; margin-bottom: 0; }
-        .alert { padding: 12px 16px; border-radius: 8px; margin-bottom: 20px; display: flex; align-items: center; gap: 10px; }
-        .alert-danger { background: #f8d7da; color: #721c24; }
-        .info-box { background: #e3f2fd; border: 1px solid #90caf9; border-radius: 8px; padding: 16px; margin-bottom: 20px; }
-        .info-box .title { font-weight: 600; color: #1565c0; margin-bottom: 8px; }
-        .info-box ul { margin: 0; padding-left: 20px; color: #1976d2; font-size: 13px; }
-        .info-box li { margin-bottom: 4px; }
-        .preview-card { background: linear-gradient(135deg, #ee4d2d, #ff7337); border-radius: 8px; padding: 20px; color: #fff; margin-top: 20px; }
-        .preview-card .preview-code { font-family: monospace; font-size: 20px; font-weight: 700; letter-spacing: 2px; background: rgba(255,255,255,0.2); padding: 8px 16px; border-radius: 8px; display: inline-block; margin-bottom: 12px; }
-        .preview-card .preview-discount { font-size: 32px; font-weight: 700; }
-        .preview-card .preview-info { font-size: 13px; opacity: 0.9; margin-top: 8px; }
-    </style>
 </head>
 <body>
-    <div class="admin-container">
-        <div class="page-header">
-            <h1><i class="fas fa-plus"></i> Tạo Voucher WEB</h1>
-            <a th:href="@{/admin/vouchers}" class="btn btn-secondary"><i class="fas fa-arrow-left"></i> Quay lại</a>
+<main th:fragment="main-content">
+    <div class="sd-page-head">
+        <div class="sd-page-head-title">
+            <h1>Tạo Voucher WEB</h1>
+            <p>Voucher áp dụng cho toàn bộ sản phẩm trên hệ thống.</p>
         </div>
-
-        <!-- Info box -->
-        <div class="info-box">
-            <div class="title"><i class="fas fa-info-circle"></i> Về Voucher WEB</div>
-            <ul>
-                <li>Voucher WEB áp dụng cho <strong>toàn bộ sản phẩm</strong> trên hệ thống</li>
-                <li>Có thể giới hạn áp dụng cho <strong>từng sản phẩm cụ thể</strong> (tùy chọn)</li>
-                <li>Người dùng có thể xem danh sách voucher tại trang <a href="/vouchers" target="_blank">/vouchers</a></li>
-            </ul>
-        </div>
-
-        <!-- Error alert -->
-        <div th:if="${error}" class="alert alert-danger">
-            <i class="fas fa-exclamation-triangle"></i><span th:text="${error}"></span>
-        </div>
-
-        <div class="card">
-            <form th:action="@{/admin/vouchers/create}" th:object="${voucherForm}" method="post">
-                <div class="form-grid">
-                    <!-- Mã voucher -->
-                    <div class="form-group full-width">
-                        <label class="form-label">Mã voucher <span class="required">*</span></label>
-                        <input type="text" th:field="*{code}" class="form-input" placeholder="VD: WEBPROMO50" style="text-transform: uppercase;" maxlength="20">
-                        <div class="form-hint">Mã duy nhất, 3-20 ký tự (chỉ chữ hoa, số, gạch ngang và gạch dưới)</div>
-                        <div th:if="${#fields.hasErrors('code')}" class="form-error" th:errors="*{code}"></div>
-                    </div>
-
-                    <!-- Tên voucher -->
-                    <div class="form-group full-width">
-                        <label class="form-label">Tên voucher <span class="required">*</span></label>
-                        <input type="text" th:field="*{name}" class="form-input" placeholder="VD: Summer Sale - Giảm 10% toàn sản phẩm" maxlength="100">
-                        <div th:if="${#fields.hasErrors('name')}" class="form-error" th:errors="*{name}"></div>
-                    </div>
-
-                    <!-- Loại giảm giá -->
-                    <div class="form-group full-width">
-                        <label class="form-label">Loại giảm giá <span class="required">*</span></label>
-                        <div class="discount-type-grid">
-                            <label class="discount-type-option" th:classappend="${voucherForm.discountType != null and voucherForm.discountType.name() == 'PERCENT' ? 'selected' : ''}">
-                                <input type="radio" th:field="*{discountType}" value="PERCENT" checked>
-                                <div class="option-icon"><i class="fas fa-percent"></i></div>
-                                <div class="option-title">Giảm theo %</div>
-                            </label>
-                            <label class="discount-type-option" th:classappend="${voucherForm.discountType != null and voucherForm.discountType.name() == 'AMOUNT' ? 'selected' : ''}">
-                                <input type="radio" th:field="*{discountType}" value="AMOUNT">
-                                <div class="option-icon"><i class="fas fa-coins"></i></div>
-                                <div class="option-title">Giảm số tiền cố định</div>
-                            </label>
-                        </div>
-                    </div>
-
-                    <!-- Giá trị giảm -->
-                    <div class="form-group">
-                        <label class="form-label">
-                            Giá trị giảm <span class="required">*</span>
-                            <th:block th:if="${voucherForm.discountType == null or voucherForm.discountType.name() == 'PERCENT'}">(% - tối đa 100)</th:block>
-                            <th:block th:if="${voucherForm.discountType != null and voucherForm.discountType.name() == 'AMOUNT'}">(VNĐ)</th:block>
-                        </label>
-                        <input type="number" th:field="*{discountValue}" class="form-input" placeholder="VD: 10" min="1" max="100" step="1">
-                        <div th:if="${#fields.hasErrors('discountValue')}" class="form-error" th:errors="*{discountValue}"></div>
-                    </div>
-
-                    <!-- Giảm tối đa -->
-                    <div class="form-group">
-                        <label class="form-label">Giảm tối đa (VNĐ)</label>
-                        <input type="number" th:field="*{maxDiscountAmount}" class="form-input" placeholder="VD: 200000" min="0" step="1000">
-                        <div class="form-hint">Chỉ áp dụng khi giảm theo %. Để trống = không giới hạn</div>
-                    </div>
-
-                    <!-- Đơn hàng tối thiểu -->
-                    <div class="form-group">
-                        <label class="form-label">Giá trị đơn hàng tối thiểu (VNĐ)</label>
-                        <input type="number" th:field="*{minOrderValue}" class="form-input" placeholder="VD: 100000" min="0" step="1000">
-                        <div class="form-hint">Để trống hoặc 0 = không yêu cầu</div>
-                    </div>
-
-                    <!-- Số lượng -->
-                    <div class="form-group">
-                        <label class="form-label">Số lượng voucher <span class="required">*</span></label>
-                        <input type="number" th:field="*{quantity}" class="form-input" placeholder="VD: 1000" min="1" step="1">
-                        <div class="form-hint">Tổng số lượt sử dụng</div>
-                        <div th:if="${#fields.hasErrors('quantity')}" class="form-error" th:errors="*{quantity}"></div>
-                    </div>
-
-                    <!-- Thời gian -->
-                    <div class="form-group full-width">
-                        <label class="form-label">Thời gian hiệu lực</label>
-                        <div class="date-range">
-                            <div class="form-group">
-                                <label class="form-label" style="font-size: 13px;">Ngày bắt đầu</label>
-                                <input type="datetime-local" th:field="*{startDate}" class="form-input" th:value="${#temporals.format(voucherForm.startDate, 'yyyy-MM-dd''T''HH:mm')}">
-                                <div class="form-hint">Để trống = bắt đầu ngay</div>
-                            </div>
-                            <span style="color: #888; padding-top: 24px;">—</span>
-                            <div class="form-group">
-                                <label class="form-label" style="font-size: 13px;">Ngày kết thúc</label>
-                                <input type="datetime-local" th:field="*{endDate}" class="form-input" th:value="${#temporals.format(voucherForm.endDate, 'yyyy-MM-dd''T''HH:mm')}">
-                                <div class="form-hint">Để trống = không hết hạn</div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Preview -->
-                <div style="margin-top: 24px; padding: 20px; background: #fafafa; border-radius: 8px;">
-                    <h4 style="margin: 0 0 16px 0; font-size: 14px; color: #666;"><i class="fas fa-eye"></i> Xem trước</h4>
-                    <div class="preview-card">
-                        <div class="preview-code" id="previewCode">YOUR_CODE</div>
-                        <div class="preview-discount" id="previewDiscount">0%</div>
-                        <div class="preview-info" id="previewInfo">Áp dụng cho đơn hàng từ 0đ trở lên</div>
-                    </div>
-                </div>
-
-                <div class="form-actions">
-                    <a th:href="@{/admin/vouchers}" class="btn btn-secondary">Hủy</a>
-                    <button type="submit" class="btn btn-primary"><i class="fas fa-check"></i> Tạo Voucher WEB</button>
-                </div>
-            </form>
+        <div class="sd-page-head-actions">
+            <a th:href="@{/admin/vouchers}" class="sd-btn sd-btn-secondary sd-btn-sm">
+                <i class="fas fa-arrow-left"></i>
+                <span>Quay lại</span>
+            </a>
         </div>
     </div>
 
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            // Discount type selection
-            document.querySelectorAll('.discount-type-option').forEach(option => {
-                option.addEventListener('click', () => {
-                    document.querySelectorAll('.discount-type-option').forEach(o => o.classList.remove('selected'));
-                    option.classList.add('selected');
-                    updatePreview();
-                });
-            });
+    <!-- Info box -->
+    <div class="sd-card" style="margin-bottom: 20px;">
+        <div class="sd-card-body" style="display: flex; gap: 12px; align-items: flex-start; background: #eff6ff; border-radius: 8px; padding: 16px;">
+            <i class="fas fa-info-circle" style="color: #3b82f6; font-size: 18px; margin-top: 2px;"></i>
+            <div>
+                <div style="font-weight: 600; color: #1e40af; margin-bottom: 4px;">Về Voucher WEB</div>
+                <ul style="margin: 0; padding-left: 18px; color: #2563eb; font-size: 13px; line-height: 1.6;">
+                    <li>Voucher WEB áp dụng cho <strong>toàn bộ sản phẩm</strong> trên hệ thống</li>
+                    <li>Có thể giới hạn đơn hàng tối thiểu</li>
+                    <li>Người dùng xem danh sách tại trang <a href="/vouchers" target="_blank" style="color: #3b82f6;">/vouchers</a></li>
+                </ul>
+            </div>
+        </div>
+    </div>
 
-            // Preview update
-            const codeInput = document.querySelector('[name="code"]');
-            const valueInput = document.querySelector('[name="discountValue"]');
-            const minOrderInput = document.querySelector('[name="minOrderValue"]');
+    <!-- Error alert -->
+    <div th:if="${error}" class="sd-alert sd-alert-danger" style="margin-bottom: 16px;">
+        <i class="fas fa-circle-exclamation"></i>
+        <span th:text="${error}">Lỗi</span>
+    </div>
+
+    <div class="sd-grid sd-grid-2-1" style="gap: 20px;">
+        <!-- Form -->
+        <div class="sd-card">
+            <div class="sd-card-head">
+                <h3><i class="fas fa-ticket-alt"></i> Thông tin Voucher</h3>
+            </div>
+            <div class="sd-card-body">
+                <form th:action="@{/admin/vouchers/create}" th:object="${voucherForm}" method="post">
+                    <!-- Mã voucher -->
+                    <div class="sd-form-group">
+                        <label for="v-code">Mã voucher <span style="color: #ef4444;">*</span></label>
+                        <input type="text" id="v-code" th:field="*{code}" class="sd-form-control"
+                               placeholder="VD: WEBPROMO50" style="text-transform: uppercase;" maxlength="20" required>
+                        <div class="sd-form-hint">3-20 ký tự (chỉ chữ hoa, số, gạch ngang và gạch dưới)</div>
+                        <div class="sd-form-error" th:if="${#fields.hasErrors('code')}" th:errors="*{code}"></div>
+                    </div>
+
+                    <!-- Tên voucher -->
+                    <div class="sd-form-group">
+                        <label for="v-name">Tên voucher <span style="color: #ef4444;">*</span></label>
+                        <input type="text" id="v-name" th:field="*{name}" class="sd-form-control"
+                               placeholder="VD: Summer Sale - Giảm 10% toàn sản phẩm" maxlength="100" required>
+                        <div class="sd-form-error" th:if="${#fields.hasErrors('name')}" th:errors="*{name}"></div>
+                    </div>
+
+                    <!-- Loại giảm giá -->
+                    <div class="sd-form-group">
+                        <label>Loại giảm giá <span style="color: #ef4444;">*</span></label>
+                        <div class="sd-flex" style="gap: 12px;">
+                            <label class="sd-radio-card" th:classappend="${voucherForm.discountType == null or voucherForm.discountType.name() == 'PERCENT' ? 'selected' : ''}">
+                                <input type="radio" th:field="*{discountType}" value="PERCENT" checked>
+                                <div class="sd-radio-icon"><i class="fas fa-percent"></i></div>
+                                <div class="sd-radio-title">Giảm theo %</div>
+                            </label>
+                            <label class="sd-radio-card" th:classappend="${voucherForm.discountType != null and voucherForm.discountType.name() == 'AMOUNT' ? 'selected' : ''}">
+                                <input type="radio" th:field="*{discountType}" value="AMOUNT">
+                                <div class="sd-radio-icon"><i class="fas fa-coins"></i></div>
+                                <div class="sd-radio-title">Giảm số tiền cố định</div>
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- Giá trị giảm & Giảm tối đa -->
+                    <div class="sd-grid sd-grid-2">
+                        <div class="sd-form-group">
+                            <label for="v-value">Giá trị giảm <span style="color: #ef4444;">*</span></label>
+                            <input type="number" id="v-value" th:field="*{discountValue}" class="sd-form-control"
+                                   placeholder="VD: 10" min="1"
+                                   th:max="${voucherForm.discountType == null or voucherForm.discountType.name() == 'PERCENT' ? 100 : 999999999}" required>
+                            <div class="sd-form-hint" id="valueHint">
+                                <th:block th:if="${voucherForm.discountType == null or voucherForm.discountType.name() == 'PERCENT'}">% (tối đa 100)</th:block>
+                                <th:block th:if="${voucherForm.discountType != null and voucherForm.discountType.name() == 'AMOUNT'}">VNĐ</th:block>
+                            </div>
+                            <div class="sd-form-error" th:if="${#fields.hasErrors('discountValue')}" th:errors="*{discountValue}"></div>
+                        </div>
+                        <div class="sd-form-group" id="maxDiscountGroup">
+                            <label for="v-max">Giảm tối đa (VNĐ)</label>
+                            <input type="number" id="v-max" th:field="*{maxDiscountAmount}" class="sd-form-control"
+                                   placeholder="VD: 200000" min="0" step="1000">
+                            <div class="sd-form-hint">Chỉ áp dụng khi giảm theo %. Để trống = không giới hạn</div>
+                        </div>
+                    </div>
+
+                    <!-- Đơn hàng tối thiểu -->
+                    <div class="sd-form-group">
+                        <label for="v-min">Giá trị đơn hàng tối thiểu (VNĐ)</label>
+                        <input type="number" id="v-min" th:field="*{minOrderValue}" class="sd-form-control"
+                               placeholder="VD: 100000" min="0" step="1000">
+                        <div class="sd-form-hint">Để trống hoặc 0 = không yêu cầu</div>
+                    </div>
+
+                    <!-- Số lượng -->
+                    <div class="sd-form-group">
+                        <label for="v-qty">Số lượng voucher <span style="color: #ef4444;">*</span></label>
+                        <input type="number" id="v-qty" th:field="*{quantity}" class="sd-form-control"
+                               placeholder="VD: 1000" min="1" step="1" required>
+                        <div class="sd-form-hint">Tổng số lượt sử dụng</div>
+                        <div class="sd-form-error" th:if="${#fields.hasErrors('quantity')}" th:errors="*{quantity}"></div>
+                    </div>
+
+                    <!-- Thời gian -->
+                    <div class="sd-form-group">
+                        <label>Thời gian hiệu lực</label>
+                        <div class="sd-grid sd-grid-2" style="gap: 12px;">
+                            <div>
+                                <label for="v-start" style="font-size: 13px; color: #64748b; display: block; margin-bottom: 4px;">Ngày bắt đầu</label>
+                                <input type="datetime-local" id="v-start" th:field="*{startDate}" class="sd-form-control"
+                                       th:value="${voucherForm.startDate != null ? #temporals.format(voucherForm.startDate, 'yyyy-MM-dd''T''HH:mm') : ''}">
+                                <div class="sd-form-hint">Để trống = bắt đầu ngay</div>
+                            </div>
+                            <div>
+                                <label for="v-end" style="font-size: 13px; color: #64748b; display: block; margin-bottom: 4px;">Ngày kết thúc</label>
+                                <input type="datetime-local" id="v-end" th:field="*{endDate}" class="sd-form-control"
+                                       th:value="${voucherForm.endDate != null ? #temporals.format(voucherForm.endDate, 'yyyy-MM-dd''T''HH:mm') : ''}">
+                                <div class="sd-form-hint">Để trống = không hết hạn</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Submit -->
+                    <div class="sd-form-actions" style="margin-top: 24px;">
+                        <a th:href="@{/admin/vouchers}" class="sd-btn sd-btn-secondary">Hủy</a>
+                        <button type="submit" class="sd-btn sd-btn-primary">
+                            <i class="fas fa-check"></i> Tạo Voucher WEB
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Preview -->
+        <div>
+            <div class="sd-card">
+                <div class="sd-card-head">
+                    <h3><i class="fas fa-eye"></i> Xem trước</h3>
+                </div>
+                <div class="sd-card-body">
+                    <div id="voucherPreview" class="sd-voucher-preview">
+                        <div class="sd-voucher-header">
+                            <div class="sd-voucher-discount" id="previewDiscount">0%</div>
+                            <div class="sd-voucher-label">GIẢM</div>
+                        </div>
+                        <div class="sd-voucher-code" id="previewCode">YOUR_CODE</div>
+                        <div class="sd-voucher-info" id="previewInfo">Áp dụng cho đơn hàng từ 0đ</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</main>
+
+<th:block th:fragment="page-scripts">
+    <style>
+        .sd-radio-card {
+            flex: 1;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 16px;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-align: center;
+        }
+        .sd-radio-card:hover { border-color: #6366f1; }
+        .sd-radio-card.selected { border-color: #6366f1; background: #eef2ff; }
+        .sd-radio-card input { display: none; }
+        .sd-radio-icon { font-size: 24px; margin-bottom: 8px; color: #6366f1; }
+        .sd-radio-title { font-weight: 600; color: #1e293b; font-size: 14px; }
+        .sd-voucher-preview {
+            background: linear-gradient(135deg, #6366f1, #8b5cf6);
+            border-radius: 12px;
+            padding: 24px;
+            color: white;
+            text-align: center;
+        }
+        .sd-voucher-header { margin-bottom: 16px; }
+        .sd-voucher-discount { font-size: 48px; font-weight: 700; line-height: 1; }
+        .sd-voucher-label { font-size: 14px; letter-spacing: 2px; opacity: 0.9; margin-top: 4px; }
+        .sd-voucher-code {
+            font-family: monospace;
+            font-size: 20px;
+            font-weight: 700;
+            letter-spacing: 3px;
+            background: rgba(255,255,255,0.2);
+            padding: 12px 20px;
+            border-radius: 8px;
+            display: inline-block;
+            margin-bottom: 12px;
+        }
+        .sd-voucher-info { font-size: 13px; opacity: 0.85; }
+    </style>
+    <script>
+        (function() {
+            var codeInput = document.querySelector('[name="code"]');
+            var valueInput = document.querySelector('[name="discountValue"]');
+            var minOrderInput = document.querySelector('[name="minOrderValue"]');
+            var radioOptions = document.querySelectorAll('.sd-radio-card input[name="discountType"]');
 
             function updatePreview() {
-                const code = codeInput?.value || 'YOUR_CODE';
-                const value = valueInput?.value || '0';
-                const type = document.querySelector('[name="discountType"]:checked')?.value || 'PERCENT';
-                const minOrder = minOrderInput?.value || '0';
+                var code = codeInput ? codeInput.value : '';
+                var value = valueInput ? valueInput.value : '0';
+                var type = 'PERCENT';
+                for (var i = 0; i < radioOptions.length; i++) {
+                    if (radioOptions[i].checked) {
+                        type = radioOptions[i].value;
+                        break;
+                    }
+                }
+                var minOrder = minOrderInput ? minOrderInput.value : '0';
 
-                document.getElementById('previewCode').textContent = code.toUpperCase();
-                document.getElementById('previewDiscount').textContent = (type === 'PERCENT' ? value + '%' : 'Giảm ' + parseInt(value || 0).toLocaleString('vi-VN') + 'đ');
-                document.getElementById('previewInfo').textContent = 'Áp dụng cho đơn hàng từ ' + parseInt(minOrder || 0).toLocaleString('vi-VN') + 'đ trở lên';
+                var previewCode = document.getElementById('previewCode');
+                var previewDiscount = document.getElementById('previewDiscount');
+                var previewInfo = document.getElementById('previewInfo');
+                if (previewCode) previewCode.textContent = code.toUpperCase() || 'YOUR_CODE';
+                if (previewDiscount) {
+                    if (type === 'PERCENT') {
+                        previewDiscount.textContent = (value || '0') + '%';
+                    } else {
+                        var amount = parseInt(value || 0);
+                        previewDiscount.textContent = amount.toLocaleString('vi-VN') + 'đ';
+                    }
+                }
+                if (previewInfo) {
+                    var min = parseInt(minOrder || 0);
+                    previewInfo.textContent = 'Áp dụng cho đơn hàng từ ' + min.toLocaleString('vi-VN') + 'đ';
+                }
             }
 
-            codeInput?.addEventListener('input', updatePreview);
-            valueInput?.addEventListener('input', updatePreview);
-            minOrderInput?.addEventListener('input', updatePreview);
+            function selectRadio() {
+                var parent = this.closest('.sd-radio-card');
+                if (parent) {
+                    document.querySelectorAll('.sd-radio-card').forEach(function(el) {
+                        el.classList.remove('selected');
+                    });
+                    parent.classList.add('selected');
+                }
+                updatePreview();
+            }
+
+            for (var i = 0; i < radioOptions.length; i++) {
+                radioOptions[i].addEventListener('change', selectRadio);
+                var p = radioOptions[i].closest('.sd-radio-card');
+                if (p) p.addEventListener('click', selectRadio);
+            }
+
+            if (codeInput) codeInput.addEventListener('input', updatePreview);
+            if (valueInput) valueInput.addEventListener('input', updatePreview);
+            if (minOrderInput) minOrderInput.addEventListener('input', updatePreview);
 
             // Auto uppercase
-            codeInput?.addEventListener('input', function() {
-                this.value = this.value.toUpperCase().replace(/[^A-Z0-9_-]/g, '');
-            });
+            if (codeInput) {
+                codeInput.addEventListener('input', function() {
+                    this.value = this.value.toUpperCase().replace(/[^A-Z0-9_-]/g, '');
+                });
+            }
 
             updatePreview();
-        });
+        })();
     </script>
+</th:block>
 </body>
 </html>

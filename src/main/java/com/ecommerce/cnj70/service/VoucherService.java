@@ -61,6 +61,11 @@ public interface VoucherService {
     List<Voucher> getAvailableVouchersByShop(String shopId);
     
     /**
+     * Đếm số voucher khả dụng (active, còn hạn, còn lượt)
+     */
+    long countAvailableVouchers();
+    
+    /**
      * Tăng số lượt đã sử dụng voucher
      */
     void incrementUsed(String voucherId);

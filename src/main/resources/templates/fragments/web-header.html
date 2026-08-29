@@ -25,6 +25,12 @@
                     <i class="fas fa-th-large home-nav-icon"></i>
                     <span>Sản phẩm</span>
                 </a>
+                <a th:href="@{/vouchers}" id="nav-vouchers" class="home-nav-link home-nav-link-hot">
+                    <i class="fas fa-ticket-alt home-nav-icon"></i>
+                    <span>Voucher</span>
+                    <span class="nav-hot-badge" th:if="${availableVoucherCount != null and availableVoucherCount > 0}" th:text="${availableVoucherCount}">0</span>
+                    <span class="nav-hot-pill" th:unless="${availableVoucherCount != null and availableVoucherCount > 0}">HOT</span>
+                </a>
                 <a th:href="@{/orders}" id="nav-orders" class="home-nav-link">
                     <i class="fas fa-receipt home-nav-icon"></i>
                     <span>Đơn hàng</span>
@@ -119,6 +125,11 @@
                 </a>
                 <a th:href="@{/products}" class="home-mobile-nav-link">
                     <i class="fas fa-th-large"></i> Sản phẩm
+                </a>
+                <a th:href="@{/vouchers}" class="home-mobile-nav-link home-mobile-nav-link-hot">
+                    <i class="fas fa-ticket-alt"></i> Voucher
+                    <span class="nav-hot-badge nav-hot-badge-mobile" th:if="${availableVoucherCount != null and availableVoucherCount > 0}" th:text="${availableVoucherCount}">0</span>
+                    <span class="nav-hot-pill nav-hot-pill-mobile" th:unless="${availableVoucherCount != null and availableVoucherCount > 0}">HOT</span>
                 </a>
                 <a th:href="@{/orders}" class="home-mobile-nav-link">
                     <i class="fas fa-receipt"></i> Đơn hàng

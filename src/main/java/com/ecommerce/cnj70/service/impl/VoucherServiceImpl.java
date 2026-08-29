@@ -204,6 +204,11 @@ public class VoucherServiceImpl implements VoucherService {
     }
     
     @Override
+    public long countAvailableVouchers() {
+        return getAvailableVouchers().size();
+    }
+    
+    @Override
     public void incrementUsed(String voucherId) {
         Voucher voucher = getVoucherById(voucherId);
         voucher.setUsed(voucher.getUsed() + 1);
