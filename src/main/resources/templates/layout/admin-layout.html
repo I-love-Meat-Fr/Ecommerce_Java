@@ -119,20 +119,28 @@
             // Wire the Admin global search to the matching module list when on a supported page.
             // /admin/users  -> search users (email / fullName)
             // /admin/categories -> search categories (name)
+            // /admin/shops -> search shops (name)
+            // /admin/orders -> search orders (customer name / customer id)
             // Other modules keep the plain input (no form submit, no parameter leakage).
             (function wireAdminSearch() {
                 const searchInput = document.getElementById('adminGlobalSearch');
                 if (!searchInput) return;
                 const isUserPage = path === '/admin/users' || path.startsWith('/admin/users/');
                 const isCategoryPage = path === '/admin/categories' || path.startsWith('/admin/categories/');
-                if (!isUserPage && !isCategoryPage) return;
+                const isShopPage = path === '/admin/shops' || path.startsWith('/admin/shops/');
+                const isOrderPage = path === '/admin/orders' || path.startsWith('/admin/orders/');
+                if (!isUserPage && !isCategoryPage && !isShopPage && !isOrderPage) return;
                 const url = new URL(window.location.href);
                 const currentQ = url.searchParams.get('q') || '';
                 searchInput.placeholder = isCategoryPage
-                    ? 'Tìm danh mục theo tên...'
-                    : 'Tìm email hoặc họ tên...';
+                    ? 'Tim danh muc theo ten...'
+                    : isShopPage
+                    ? 'Tim shop theo ten...'
+                    : isOrderPage
+                    ? 'Tim don hang theo ten hoac ID khach hang...'
+                    : 'Tim email hoac ho ten...';
                 searchInput.value = currentQ;
-                const basePath = isCategoryPage ? '/admin/categories' : '/admin/users';
+                const basePath = isCategoryPage ? '/admin/categories' : isShopPage ? '/admin/shops' : isOrderPage ? '/admin/orders' : '/admin/users';
                 searchInput.addEventListener('keydown', function (e) {
                     if (e.key === 'Enter') {
                         e.preventDefault();

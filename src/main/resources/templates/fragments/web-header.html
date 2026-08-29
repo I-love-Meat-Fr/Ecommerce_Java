@@ -1,4 +1,5 @@
-<header class="home-header" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/springsecurity6">
+<header class="home-header" xmlns:th="http://www.thymeleaf.org"
+    xmlns:sec="http://www.thymeleaf.org/extras/springsecurity6">
     <div class="container">
         <div class="home-header-inner">
 
@@ -38,7 +39,8 @@
                 <a th:href="@{/cart}" id="nav-cart" class="home-nav-link">
                     <i class="fas fa-shopping-cart home-nav-icon"></i>
                     <span>Giỏ hàng</span>
-                    <span class="nav-cart-badge" th:if="${cartCount != null and cartCount > 0}" th:text="${cartCount}">0</span>
+                    <span class="nav-cart-badge" th:if="${cartCount != null and cartCount > 0}"
+                        th:text="${cartCount}">0</span>
                 </a>
             </nav>
 
@@ -48,12 +50,14 @@
                 <div sec:authorize="isAuthenticated()" class="home-authenticated">
                     <a th:href="@{/cart}" class="home-icon-btn" title="Giỏ hàng" id="cart-btn">
                         <i class="fas fa-shopping-cart"></i>
-                        <span class="nav-cart-badge" th:if="${cartCount != null and cartCount > 0}" th:text="${cartCount}">0</span>
+                        <span class="nav-cart-badge" th:if="${cartCount != null and cartCount > 0}"
+                            th:text="${cartCount}">0</span>
                     </a>
                     <a th:href="@{/orders}" class="home-icon-btn" title="Đơn hàng" id="orders-btn">
                         <i class="fas fa-receipt"></i>
                     </a>
-                    <a th:href="@{/vendor}" sec:authorize="hasRole('VENDOR')" class="home-icon-btn home-icon-btn-vendor" title="Quản lý Shop" id="vendor-btn">
+                    <a th:href="@{/vendor}" sec:authorize="hasRole('VENDOR')" class="home-icon-btn home-icon-btn-vendor"
+                        title="Quản lý Shop" id="vendor-btn">
                         <i class="fas fa-store"></i>
                         <span class="home-icon-label">Kênh người bán</span>
                     </a>
@@ -66,7 +70,8 @@
                         </button>
                         <div class="home-user-dropdown" id="user-dropdown">
                             <div class="home-user-dropdown-header">
-                                <div class="home-user-name" sec:authorize="isAuthenticated()" th:text="${#authentication.name}">Username</div>
+                                <div class="home-user-name" sec:authorize="isAuthenticated()"
+                                    th:text="${#authentication.name}">Username</div>
                                 <div class="home-user-email">Xem và chỉnh sửa hồ sơ</div>
                             </div>
                             <div class="home-user-dropdown-divider"></div>
@@ -81,7 +86,8 @@
                             </a>
                             <div class="home-user-dropdown-divider"></div>
                             <form th:action="@{/auth/logout}" method="post">
-                                <button type="submit" class="home-dropdown-item home-dropdown-item-danger" id="logout-btn">
+                                <button type="submit" class="home-dropdown-item home-dropdown-item-danger"
+                                    id="logout-btn">
                                     <i class="fas fa-sign-out-alt"></i> Đăng xuất
                                 </button>
                             </form>
@@ -136,7 +142,8 @@
                 </a>
                 <a th:href="@{/cart}" class="home-mobile-nav-link">
                     <i class="fas fa-shopping-cart"></i> Giỏ hàng
-                    <span class="nav-cart-badge" th:if="${cartCount != null and cartCount > 0}" th:text="${cartCount}">0</span>
+                    <span class="nav-cart-badge" th:if="${cartCount != null and cartCount > 0}"
+                        th:text="${cartCount}">0</span>
                 </a>
             </nav>
             <div sec:authorize="isAuthenticated()" class="home-mobile-auth">

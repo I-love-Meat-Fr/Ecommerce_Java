@@ -156,12 +156,8 @@
                     <i class="fas fa-chevron-left"></i> Trước
                 </span>
 
-                <th:block th:each="i : ${pageNumbers}">
-                    <a th:if="${i != page}"
-                       th:href="@{/admin/categories(page=${i}, size=${size}, q=${q})}"
-                       class="sd-page-link"
-                       th:text="${i + 1}">1</a>
-                    <span th:if="${i == page}" class="sd-page-link sd-page-active" th:text="${i + 1}">1</span>
+                <th:block th:each="i : ${pageNumbers}" th:if="${i == page}">
+                    <span class="sd-page-link sd-page-active" th:text="${i + 1}">1</span>
                 </th:block>
 
                 <a th:if="${hasNext}"

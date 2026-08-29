@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/springsecurity6"
+      th:replace="~{layout/admin-layout :: layout(title='Quản lý cửa hàng - CNJ70 Admin', content=~{::main-content}, scripts=~{::page-scripts})}">
+<head>
+    <title>Quản lý cửa hàng - CNJ70 Admin</title>
+</head>
+<body>
+<main th:fragment="main-content">
+    <div class="sd-page-head">
+        <div class="sd-page-head-title">
+            <h1>Quản lý cửa hàng</h1>
+            <p>Danh sách shop cho phép Admin quản lý trạng thái và duyệt.</p>
+        </div>
+        <div class="sd-page-head-actions">
+            <span class="sd-badge sd-badge-slate">
+                <i class="fas fa-store"></i>
+                <span th:text="${totalItems}">0</span> shop
+            </span>
+        </div>
+    </div>
+
+    <div th:if="${q != null and !#strings.isEmpty(q)}" class="sd-card" style="margin-bottom:16px;">
+        <div class="sd-card-body" style="display:flex;align-items:center;gap:10px;">
+            <i class="fas fa-filter"></i>
+            <span>Lọc theo:</span>
+            <span class="sd-badge sd-badge-slate" th:text="${q}">keyword</span>
+            <a th:href="@{/admin/shops(page=0, size=${size})}" class="sd-btn sd-btn-secondary sd-btn-sm" style="margin-left:auto;">
+                <i class="fas fa-times"></i> Bỏ lọc
+            </a>
+        </div>
+    </div>
+
+    <div class="sd-card">
+        <div class="sd-card-body sd-card-body-flush">
+            <table class="sd-table">
+                <thead>
+                    <tr>
+                        <th>Tên shop</th>
+                        <th>Chủ shop</th>
+                        <th>Trạng thái</th>
+                        <th style="text-align:right;">Thao tác</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr th:if="${#lists.isEmpty(shops)}">
+                        <td colspan="4">
+                            <div class="sd-empty">
+                                <i class="fas fa-store-slash"></i>
+                                <h3 th:if="${q != null and !#strings.isEmpty(q)}">Không tìm thấy shop</h3>
+                                <h3 th:unless="${q != null and !#strings.isEmpty(q)}">Chưa có shop chờ duyệt</h3>
+                                <p th:if="${q != null and !#strings.isEmpty(q)}">Không có shop nào khớp với từ khóa.</p>
+                                <p th:unless="${q != null and !#strings.isEmpty(q)}">Hiện chưa có shop nào cần duyệt.</p>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr th:each="shop : ${shops}">
+                        <td>
+                            <div class="sd-table-title" th:text="${shop.shopName}">Shop name</div>
+                            <div class="sd-table-sub sd-mono" th:text="${shop.id}">id</div>
+                        </td>
+                        <td>
+                            <div class="sd-table-sub" th:text="${shop.ownerId}">owner</div>
+                        </td>
+                        <td>
+                            <span th:if="${shop.status.name() == 'APPROVED'}" class="sd-badge sd-badge-green">
+                                <i class="fas fa-circle-check"></i> Đã duyệt
+                            </span>
+                            <span th:if="${shop.status.name() == 'PENDING'}" class="sd-badge sd-badge-amber">
+                                <i class="fas fa-hourglass-half"></i> Chờ duyệt
+                            </span>
+                            <span th:if="${shop.status.name() == 'REJECTED'}" class="sd-badge sd-badge-red">
+                                <i class="fas fa-circle-xmark"></i> Từ chối
+                            </span>
+                            <div style="margin-top:4px;">
+                                <span th:if="${shop.active}" class="sd-badge sd-badge-green">Active</span>
+                                <span th:unless="${shop.active}" class="sd-badge sd-badge-slate">Inactive</span>
+                            </div>
+                        </td>
+                        <td style="text-align:right; white-space:nowrap;">
+                            <a th:href="@{/admin/shops/{id}(id=${shop.id}, page=${page}, size=${size}, q=${q})}"
+                               class="sd-btn sd-btn-secondary sd-btn-sm">
+                                <i class="fas fa-eye"></i> Xem
+                            </a>
+                            <th:block th:if="${shop.status.name() != 'APPROVED'}">
+                                <form th:action="@{/admin/shops/{id}/approve(id=${shop.id}, page=${page}, size=${size}, q=${q})}"
+                                      method="post" style="display:inline;">
+                                    <button type="submit" class="sd-btn sd-btn-primary sd-btn-sm">
+                                        <i class="fas fa-check"></i> Duyệt
+                                    </button>
+                                </form>
+                            </th:block>
+                            <th:block th:if="${shop.status.name() == 'APPROVED'}">
+                                <form th:action="@{/admin/shops/{id}/reject(id=${shop.id}, page=${page}, size=${size}, q=${q})}"
+                                      method="post" style="display:inline;"
+                                      onsubmit="return confirm('Bạn có chắc muốn từ chối shop này?');">
+                                    <button type="submit" class="sd-btn sd-btn-danger sd-btn-sm">
+                                        <i class="fas fa-xmark"></i> Từ chối
+                                    </button>
+                                </form>
+                            </th:block>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="sd-card-body" th:if="${totalPages > 0}"
+             style="display:flex;justify-content:center;border-top:1px solid var(--border,#e2e8f0);">
+            <nav class="sd-pagination" aria-label="Phân trang">
+                <a th:if="${hasPrev}"
+                   th:href="@{/admin/shops(page=${page - 1}, size=${size}, q=${q})}"
+                   class="sd-page-link">
+                    <i class="fas fa-chevron-left"></i> Trước
+                </a>
+                <span th:unless="${hasPrev}" class="sd-page-link sd-page-disabled">
+                    <i class="fas fa-chevron-left"></i> Trước
+                </span>
+
+                <th:block th:each="i : ${pageNumbers}" th:if="${i == page}">
+                    <span class="sd-page-link sd-page-active" th:text="${i + 1}">1</span>
+                </th:block>
+
+                <a th:if="${hasNext}"
+                   th:href="@{/admin/shops(page=${page + 1}, size=${size}, q=${q})}"
+                   class="sd-page-link">
+                    Sau <i class="fas fa-chevron-right"></i>
+                </a>
+                <span th:unless="${hasNext}" class="sd-page-link sd-page-disabled">
+                    Sau <i class="fas fa-chevron-right"></i>
+                </span>
+            </nav>
+        </div>
+    </div>
+</main>
+
+<th:block th:fragment="page-scripts">
+<script>
+(function() {
+    var searchInput = document.getElementById('adminGlobalSearch');
+    if (!searchInput) return;
+    var isShopPage = (window.location.pathname === '/admin/shops');
+    if (!isShopPage) return;
+    var url = new URL(window.location.href);
+    var currentQ = url.searchParams.get('q') || '';
+    searchInput.placeholder = 'Tim shop theo ten...';
+    searchInput.value = currentQ;
+    searchInput.addEventListener('keydown', function(e) {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            var q = encodeURIComponent(searchInput.value.trim());
+            window.location.href = q ? '/admin/shops?q=' + q : '/admin/shops';
+        }
+    });
+})();
+</script>
+</th:block>
+</body>
+</html>

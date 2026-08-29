@@ -2,6 +2,8 @@ package com.ecommerce.cnj70.repository;
 
 import com.ecommerce.cnj70.document.Order;
 import com.ecommerce.cnj70.enums.OrderStatus;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.mongodb.repository.MongoRepository;
 import org.springframework.stereotype.Repository;
 
@@ -25,4 +27,7 @@ public interface OrderRepository extends MongoRepository<Order, String> {
     List<Order> findByShopIdAndStatusIn(String shopId, List<OrderStatus> statuses);
 
     long countByShopId(String shopId);
+
+    Page<Order> findByUserNameContainingIgnoreCaseOrUserIdContaining(
+            String userName, String userId, Pageable pageable);
 }
