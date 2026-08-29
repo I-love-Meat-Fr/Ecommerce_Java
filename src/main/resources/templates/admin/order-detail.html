@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/springsecurity6"
+      th:replace="~{layout/admin-layout :: layout(title='Chi tiết đơn hàng - CNJ70 Admin', content=~{::main-content}, scripts=~{::page-scripts})}">
+<head>
+    <title>Chi tiết đơn hàng - CNJ70 Admin</title>
+</head>
+<body>
+<main th:fragment="main-content">
+    <div class="sd-page-head">
+        <div class="sd-page-head-title">
+            <h1>Chi tiết đơn hàng</h1>
+            <p>Xem thông tin chi tiết và trạng thái đơn hàng.</p>
+        </div>
+        <div class="sd-page-head-actions">
+            <a th:href="@{/admin/orders(page=${page}, size=${size}, q=${q})}" class="sd-btn sd-btn-secondary sd-btn-sm">
+                <i class="fas fa-arrow-left"></i> Quay lại
+            </a>
+        </div>
+    </div>
+
+    <div class="sd-card" style="margin-bottom:20px;">
+        <div class="sd-card-head">
+            <div>
+                <h3><i class="fas fa-info-circle"></i> Thông tin đơn hàng</h3>
+                <p>Thông tin cơ bản của đơn hàng.</p>
+            </div>
+        </div>
+        <div class="sd-card-body">
+            <div class="sd-detail-grid">
+                <div class="sd-detail-item">
+                    <div class="sd-detail-label">ID đơn hàng</div>
+                    <div class="sd-detail-value sd-mono" th:text="${order.id}">id</div>
+                </div>
+                <div class="sd-detail-item">
+                    <div class="sd-detail-label">Trạng thái</div>
+                    <div class="sd-detail-value">
+                        <span th:if="${order.status.name() == 'PENDING'}" class="sd-badge sd-badge-amber">
+                            <i class="fas fa-clock"></i> Chờ xác nhận
+                        </span>
+                        <span th:if="${order.status.name() == 'PREPARING'}" class="sd-badge sd-badge-sky">
+                            <i class="fas fa-box"></i> Đang chuẩn bị
+                        </span>
+                        <span th:if="${order.status.name() == 'SHIPPING'}" class="sd-badge sd-badge-sky">
+                            <i class="fas fa-truck"></i> Đang giao
+                        </span>
+                        <span th:if="${order.status.name() == 'DELIVERED'}" class="sd-badge sd-badge-green">
+                            <i class="fas fa-circle-check"></i> Đã giao
+                        </span>
+                        <span th:if="${order.status.name() == 'CANCELLED'}" class="sd-badge sd-badge-red">
+                            <i class="fas fa-ban"></i> Đã hủy
+                        </span>
+                    </div>
+                </div>
+                <div class="sd-detail-item">
+                    <div class="sd-detail-label">Ngày tạo</div>
+                    <div class="sd-detail-value"
+                         th:text="${order.createdAt != null} ? ${#temporals.format(order.createdAt, 'dd/MM/yyyy HH:mm')} : '-'">-</div>
+                </div>
+                <div class="sd-detail-item">
+                    <div class="sd-detail-label">Ngày cập nhật</div>
+                    <div class="sd-detail-value"
+                         th:text="${order.updatedAt != null} ? ${#temporals.format(order.updatedAt, 'dd/MM/yyyy HH:mm')} : '-'">-</div>
+                </div>
+                <div class="sd-detail-item">
+                    <div class="sd-detail-label">Thanh toán</div>
+                    <div class="sd-detail-value">
+                        <span th:if="${order.paymentMethod != null}" th:text="${order.paymentMethod.name()}">COD</span>
+                        <span th:unless="${order.paymentMethod != null}">-</span>
+                        <span th:if="${order.paid}" class="sd-badge sd-badge-green" style="margin-left:8px;">
+                            <i class="fas fa-check"></i> Đã thanh toán
+                        </span>
+                        <span th:unless="${order.paid}" class="sd-badge sd-badge-slate" style="margin-left:8px;">
+                            <i class="fas fa-clock"></i> Chưa thanh toán
+                        </span>
+                    </div>
+                </div>
+                <div class="sd-detail-item" th:if="${order.deliveredAt != null}">
+                    <div class="sd-detail-label">Ngày giao hàng</div>
+                    <div class="sd-detail-value"
+                         th:text="${#temporals.format(order.deliveredAt, 'dd/MM/yyyy HH:mm')}">-</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="sd-card" style="margin-bottom:20px;">
+        <div class="sd-card-head">
+            <div>
+                <h3><i class="fas fa-user"></i> Thông tin khách hàng</h3>
+                <p>Thông tin người đặt hàng.</p>
+            </div>
+        </div>
+        <div class="sd-card-body">
+            <div class="sd-detail-grid">
+                <div class="sd-detail-item">
+                    <div class="sd-detail-label">Họ và tên</div>
+                    <div class="sd-detail-value" th:text="${order.userName} ?: '-'">-</div>
+                </div>
+                <div class="sd-detail-item">
+                    <div class="sd-detail-label">Email</div>
+                    <div class="sd-detail-value" th:text="${order.userEmail} ?: '-'">-</div>
+                </div>
+                <div class="sd-detail-item">
+                    <div class="sd-detail-label">Số điện thoại</div>
+                    <div class="sd-detail-value" th:text="${order.userPhone} ?: '-'">-</div>
+                </div>
+                <div class="sd-detail-item" style="grid-column: 1 / -1;">
+                    <div class="sd-detail-label">Địa chỉ giao hàng</div>
+                    <div class="sd-detail-value" th:text="${order.shippingAddress} ?: '-'">-</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="sd-card" style="margin-bottom:20px;" th:if="${order.shops != null and not #lists.isEmpty(order.shops)}">
+        <div class="sd-card-head">
+            <div>
+                <h3><i class="fas fa-store"></i> Sản phẩm theo cửa hàng</h3>
+                <p>Danh sách sản phẩm trong đơn hàng, nhóm theo cửa hàng.</p>
+            </div>
+        </div>
+        <div class="sd-card-body sd-card-body-flush">
+            <th:block th:each="shopGroup : ${order.shops}">
+                <div style="padding:16px; border-bottom:1px solid var(--border,#e2e8f0);">
+                    <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;">
+                        <i class="fas fa-store" style="color:var(--primary);"></i>
+                        <span class="sd-table-title" th:text="${shopGroup.shopName}">Tên cửa hàng</span>
+                        <span class="sd-badge sd-badge-slate" style="font-size:11px;"
+                              th:text="${shopGroup.items.size()} + ' sản phẩm'">n sản phẩm</span>
+                    </div>
+                    <table class="sd-table" style="margin:0;">
+                        <thead>
+                            <tr>
+                                <th style="width:50px;"></th>
+                                <th>Sản phẩm</th>
+                                <th style="text-align:right;">Đơn giá</th>
+                                <th style="text-align:right;">Số lượng</th>
+                                <th style="text-align:right;">Thành tiền</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr th:each="item : ${shopGroup.items}">
+                                <td>
+                                    <img th:if="${item.imageUrl != null and item.imageUrl != ''}"
+                                         th:src="@{${item.imageUrl}}"
+                                         style="width:40px;height:40px;object-fit:cover;border-radius:4px;"
+                                         alt="product">
+                                    <div th:unless="${item.imageUrl != null and item.imageUrl != ''}"
+                                         style="width:40px;height:40px;background:var(--bg-muted);border-radius:4px;display:flex;align-items:center;justify-content:center;">
+                                        <i class="fas fa-image" style="color:var(--text-muted);font-size:14px;"></i>
+                                    </div>
+                                </td>
+                                <td>
+                                    <div th:text="${item.productName} ?: '-'">Sản phẩm</div>
+                                    <div class="sd-table-sub sd-mono" th:text="${item.productId}">pid</div>
+                                </td>
+                                <td style="text-align:right;" th:text="${#numbers.formatDecimal(item.price, 0, 'COMMA', 0, 'POINT')} + ' đ'">0 đ</td>
+                                <td style="text-align:right;" th:text="${item.quantity}">0</td>
+                                <td style="text-align:right;font-weight:600;"
+                                    th:text="${#numbers.formatDecimal(item.subtotal, 0, 'COMMA', 0, 'POINT')} + ' đ'">0 đ</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <div style="text-align:right;margin-top:8px;padding-top:8px;border-top:1px dashed var(--border,#e2e8f0);">
+                        <span style="color:var(--text-muted);font-size:13px;">Tổng cửa hàng: </span>
+                        <span style="font-weight:600;"
+                              th:text="${#numbers.formatDecimal(shopGroup.shopSubtotal, 0, 'COMMA', 0, 'POINT')} + ' đ'">0 đ</span>
+                    </div>
+                </div>
+            </th:block>
+        </div>
+    </div>
+
+    <div class="sd-card">
+        <div class="sd-card-head">
+            <div>
+                <h3><i class="fas fa-calculator"></i> Tổng cộng đơn hàng</h3>
+                <p>Tổng kết chi phí đơn hàng.</p>
+            </div>
+        </div>
+        <div class="sd-card-body">
+            <div style="max-width:400px;margin-left:auto;">
+                <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border,#e2e8f0);">
+                    <span>Tổng sản phẩm</span>
+                    <span th:text="${#numbers.formatDecimal(order.subtotal, 0, 'COMMA', 0, 'POINT')} + ' đ'">0 đ</span>
+                </div>
+                <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border,#e2e8f0);">
+                    <span>Phí giao hàng</span>
+                    <span th:text="${#numbers.formatDecimal(order.shippingFee, 0, 'COMMA', 0, 'POINT')} + ' đ'">0 đ</span>
+                </div>
+                <div style="display:flex;justify-content:space-between;padding:12px 0;font-weight:700;font-size:18px;">
+                    <span>Tổng cộng</span>
+                    <span style="color:var(--primary);"
+                          th:text="${#numbers.formatDecimal(order.totalAmount, 0, 'COMMA', 0, 'POINT')} + ' đ'">0 đ</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</main>
+
+<th:block th:fragment="page-scripts"></th:block>
+</body>
+</html>

@@ -25,33 +25,33 @@
             <div class="sd-stat-head">
                 <div class="sd-stat-icon sd-indigo"><i class="fas fa-users"></i></div>
             </div>
-            <div class="sd-stat-label">Người dùng</div>
+            <div class="sd-stat-label">Tổng người dùng</div>
             <div class="sd-stat-value" th:text="${stats.totalUsers}">0</div>
-            <div class="sd-stat-foot">Tổng số tài khoản</div>
+            <div class="sd-stat-foot">Tổng số tài khoản trong hệ thống</div>
         </div>
         <div class="sd-stat">
             <div class="sd-stat-head">
                 <div class="sd-stat-icon sd-red"><i class="fas fa-store"></i></div>
             </div>
-            <div class="sd-stat-label">Cửa hàng</div>
+            <div class="sd-stat-label">Tổng cửa hàng</div>
             <div class="sd-stat-value" th:text="${stats.totalShops}">0</div>
-            <div class="sd-stat-foot">Đang hoạt động: <strong th:text="${stats.activeVendors}">0</strong></div>
+            <div class="sd-stat-foot">Tất cả cửa hàng đã đăng ký</div>
         </div>
         <div class="sd-stat">
             <div class="sd-stat-head">
                 <div class="sd-stat-icon sd-green"><i class="fas fa-box-open"></i></div>
             </div>
-            <div class="sd-stat-label">Sản phẩm</div>
+            <div class="sd-stat-label">Tổng sản phẩm</div>
             <div class="sd-stat-value" th:text="${stats.totalProducts}">0</div>
-            <div class="sd-stat-foot">Đang bán: <strong th:text="${stats.activeProducts}">0</strong></div>
+            <div class="sd-stat-foot">Tổng sản phẩm trong hệ thống</div>
         </div>
         <div class="sd-stat">
             <div class="sd-stat-head">
                 <div class="sd-stat-icon sd-amber"><i class="fas fa-shopping-bag"></i></div>
             </div>
-            <div class="sd-stat-label">Đơn hàng</div>
+            <div class="sd-stat-label">Tổng đơn hàng</div>
             <div class="sd-stat-value" th:text="${stats.totalOrders}">0</div>
-            <div class="sd-stat-foot">Tổng đơn hàng</div>
+            <div class="sd-stat-foot">Tổng đơn hàng đã tạo</div>
         </div>
     </div>
 
@@ -60,7 +60,7 @@
             <div class="sd-card-head">
                 <div>
                     <h3><i class="fas fa-chart-line"></i> Doanh thu nền tảng</h3>
-                    <p>Tổng doanh thu từ các đơn đã giao</p>
+                    <p>Tổng doanh thu từ các đơn đã giao thành công</p>
                 </div>
                 <span class="sd-badge sd-badge-indigo">All-time</span>
             </div>
@@ -127,20 +127,20 @@
                         <div class="sd-quick-sub">Danh mục sản phẩm</div>
                     </div>
                 </a>
-                <a th:href="@{/home}" class="sd-quick-card">
-                    <div class="sd-quick-icon"><i class="fas fa-globe"></i></div>
-                    <div class="sd-quick-body">
-                        <div class="sd-quick-title">Xem website</div>
-                        <div class="sd-quick-sub">Trang khách hàng</div>
-                    </div>
-                </a>
-                <span class="sd-quick-card sd-quick-card-disabled" aria-disabled="true">
+                <a th:href="@{/admin/shops}" class="sd-quick-card">
                     <div class="sd-quick-icon"><i class="fas fa-store"></i></div>
                     <div class="sd-quick-body">
-                        <div class="sd-quick-title">Cửa hàng</div>
-                        <div class="sd-quick-sub">Sẽ có trong Phase 5</div>
+                        <div class="sd-quick-title">Quản lý cửa hàng</div>
+                        <div class="sd-quick-sub">Phê duyệt và theo dõi shop</div>
                     </div>
-                </span>
+                </a>
+                <a th:href="@{/admin/orders}" class="sd-quick-card">
+                    <div class="sd-quick-icon"><i class="fas fa-cart-shopping"></i></div>
+                    <div class="sd-quick-body">
+                        <div class="sd-quick-title">Quản lý đơn hàng</div>
+                        <div class="sd-quick-sub">Theo dõi đơn hàng toàn hệ thống</div>
+                    </div>
+                </a>
             </div>
         </div>
     </div>
@@ -154,6 +154,7 @@
             if (!trend || trend.length === 0) return;
             var labels = trend.map(function(t){ return t.label; });
             var revenue = trend.map(function(t){ return Number(t.revenue); });
+            var orders = trend.map(function(t){ return Number(t.orders); });
             var options = {
                 chart: {
                     type: 'area',
@@ -162,8 +163,11 @@
                     fontFamily: 'Work Sans, sans-serif',
                     zoom: { enabled: false }
                 },
-                series: [{ name: 'Doanh thu', data: revenue }],
-                colors: ['#6366f1'],
+                series: [
+                    { name: 'Doanh thu', data: revenue },
+                    { name: 'Đơn hàng', data: orders }
+                ],
+                colors: ['#6366f1', '#10b981'],
                 stroke: { curve: 'smooth', width: 3 },
                 fill: {
                     type: 'gradient',
@@ -177,16 +181,27 @@
                     axisBorder: { show: false },
                     axisTicks: { show: false }
                 },
-                yaxis: {
-                    labels: {
-                        style: { colors: '#64748b', fontSize: '12px' },
-                        formatter: function(v){ return new Intl.NumberFormat('vi-VN').format(v); }
+                yaxis: [
+                    {
+                        seriesName: 'Doanh thu',
+                        labels: {
+                            style: { colors: '#64748b', fontSize: '12px' },
+                            formatter: function(v){ return new Intl.NumberFormat('vi-VN').format(v) + ' đ'; }
+                        }
+                    },
+                    {
+                        seriesName: 'Đơn hàng',
+                        opposite: true,
+                        labels: {
+                            style: { colors: '#64748b', fontSize: '12px' },
+                            formatter: function(v){ return new Intl.NumberFormat('vi-VN').format(v); }
+                        }
                     }
-                },
-                legend: { show: false },
+                ],
+                legend: { show: true, position: 'top', horizontalAlign: 'left' },
                 tooltip: {
                     theme: 'light',
-                    y: { formatter: function(v){ return new Intl.NumberFormat('vi-VN').format(v) + ' đ'; } }
+                    y: { formatter: function(v){ return new Intl.NumberFormat('vi-VN').format(v); } }
                 }
             };
             new ApexCharts(document.querySelector('#adminRevenueChart'), options).render();

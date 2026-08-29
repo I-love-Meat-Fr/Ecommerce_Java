@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/springsecurity6"
+      th:replace="~{layout/admin-layout :: layout(title='Chi tiết cửa hàng - CNJ70 Admin', content=~{::main-content}, scripts=~{::page-scripts})}">
+<head>
+    <title>Chi tiết cửa hàng - CNJ70 Admin</title>
+</head>
+<body>
+<main th:fragment="main-content">
+    <div class="sd-page-head">
+        <div class="sd-page-head-title">
+            <h1 th:text="${shop.shopName}">Tên cửa hàng</h1>
+            <p>Xem chi tiết và thực hiện các thao tác quản lý cửa hàng.</p>
+        </div>
+        <div class="sd-page-head-actions">
+            <a th:href="@{/admin/shops(page=${page}, size=${size}, q=${q})}" class="sd-btn sd-btn-secondary sd-btn-sm">
+                <i class="fas fa-arrow-left"></i> Quay lại
+            </a>
+        </div>
+    </div>
+
+    <div class="sd-card" style="margin-bottom:20px;">
+        <div class="sd-card-head">
+            <div>
+                <h3><i class="fas fa-shop"></i> Thông tin cơ bản</h3>
+                <p>Thông tin chi tiết về cửa hàng và chủ cửa hàng.</p>
+            </div>
+        </div>
+        <div class="sd-card-body">
+            <div class="sd-detail-grid">
+                <div class="sd-detail-item">
+                    <div class="sd-detail-label">ID cửa hàng</div>
+                    <div class="sd-detail-value sd-mono" th:text="${shop.id}">id</div>
+                </div>
+                <div class="sd-detail-item">
+                    <div class="sd-detail-label">Tên cửa hàng</div>
+                    <div class="sd-detail-value" th:text="${shop.shopName}">name</div>
+                </div>
+                <div class="sd-detail-item">
+                    <div class="sd-detail-label">Mô tả</div>
+                    <div class="sd-detail-value" th:text="${shop.description} ?: '-'">Mô tả</div>
+                </div>
+                <div class="sd-detail-item">
+                    <div class="sd-detail-label">Chủ cửa hàng</div>
+                    <div class="sd-detail-value" th:if="${owner != null}">
+                        <div th:text="${owner.fullName} ?: '-'">Tên chủ</div>
+                        <div class="sd-detail-sub sd-mono" th:text="${owner.email}">email</div>
+                    </div>
+                    <div class="sd-detail-value sd-mono" th:unless="${owner != null}" th:text="${shop.ownerId}">
+                        owner id
+                    </div>
+                </div>
+                <div class="sd-detail-item">
+                    <div class="sd-detail-label">Trạng thái duyệt</div>
+                    <div class="sd-detail-value">
+                        <span th:if="${shop.status.name() == 'APPROVED'}" class="sd-badge sd-badge-green">
+                            <i class="fas fa-circle-check"></i> Đã duyệt
+                        </span>
+                        <span th:if="${shop.status.name() == 'PENDING'}" class="sd-badge sd-badge-amber">
+                            <i class="fas fa-hourglass-half"></i> Chờ duyệt
+                        </span>
+                        <span th:if="${shop.status.name() == 'REJECTED'}" class="sd-badge sd-badge-red">
+                            <i class="fas fa-circle-xmark"></i> Từ chối
+                        </span>
+                    </div>
+                </div>
+                <div class="sd-detail-item">
+                    <div class="sd-detail-label">Trạng thái hoạt động</div>
+                    <div class="sd-detail-value">
+                        <span th:if="${shop.active}" class="sd-badge sd-badge-green">
+                            <i class="fas fa-circle"></i> Hoạt động
+                        </span>
+                        <span th:unless="${shop.active}" class="sd-badge sd-badge-slate">
+                            <i class="fas fa-circle-xmark"></i> Không hoạt động
+                        </span>
+                    </div>
+                </div>
+                <div class="sd-detail-item">
+                    <div class="sd-detail-label">Ngày tạo</div>
+                    <div class="sd-detail-value"
+                         th:text="${shop.createdAt != null} ? ${#temporals.format(shop.createdAt, 'dd/MM/yyyy HH:mm')} : '-'">-</div>
+                </div>
+                <div class="sd-detail-item">
+                    <div class="sd-detail-label">Ngày cập nhật</div>
+                    <div class="sd-detail-value"
+                         th:text="${shop.updatedAt != null} ? ${#temporals.format(shop.updatedAt, 'dd/MM/yyyy HH:mm')} : '-'">-</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="sd-card">
+        <div class="sd-card-head">
+            <div>
+                <h3><i class="fas fa-gear"></i> Thao tác</h3>
+                <p>Quản lý trạng thái duyệt và hoạt động của cửa hàng.</p>
+            </div>
+        </div>
+        <div class="sd-card-body">
+            <div class="sd-action-row" style="margin-bottom:16px;">
+                <th:block th:if="${shop.status.name() == 'PENDING'}">
+                    <span class="sd-badge sd-badge-amber">
+                        <i class="fas fa-hourglass-half"></i> Chờ duyệt
+                    </span>
+                </th:block>
+                <th:block th:if="${shop.status.name() == 'APPROVED'}">
+                    <span class="sd-badge sd-badge-green">
+                        <i class="fas fa-circle-check"></i> Đã duyệt
+                    </span>
+                </th:block>
+                <th:block th:if="${shop.status.name() == 'REJECTED'}">
+                    <span class="sd-badge sd-badge-red">
+                        <i class="fas fa-circle-xmark"></i> Từ chối
+                    </span>
+                </th:block>
+            </div>
+
+            <div class="sd-action-row" style="flex-wrap:wrap; gap:10px;">
+                <th:block>
+                    <form th:action="@{/admin/shops/{id}/approve(id=${shop.id}, page=${page}, size=${size}, q=${q})}"
+                          method="post" style="display:inline;">
+                        <button type="submit" class="sd-btn sd-btn-primary"
+                                th:disabled="${shop.status.name() == 'APPROVED'}">
+                            <i class="fas fa-check"></i> Duyệt cửa hàng
+                        </button>
+                    </form>
+                </th:block>
+                <th:block>
+                    <form th:action="@{/admin/shops/{id}/reject(id=${shop.id}, page=${page}, size=${size}, q=${q})}"
+                          method="post" style="display:inline;"
+                          onsubmit="return confirm('Bạn có chắc muốn từ chối cửa hàng này?');">
+                        <button type="submit" class="sd-btn sd-btn-danger"
+                                th:disabled="${shop.status.name() == 'REJECTED'}">
+                            <i class="fas fa-xmark"></i> Từ chối cửa hàng
+                        </button>
+                    </form>
+                </th:block>
+
+                <th:block th:if="${shop.active}">
+                    <form th:action="@{/admin/shops/{id}/deactivate(id=${shop.id}, page=${page}, size=${size}, q=${q})}"
+                          method="post" style="display:inline;"
+                          onsubmit="return confirm('Bạn có chắc muốn ngừng hoạt động cửa hàng này?');">
+                        <button type="submit" class="sd-btn sd-btn-secondary">
+                            <i class="fas fa-ban"></i> Ngừng hoạt động
+                        </button>
+                    </form>
+                </th:block>
+                <th:block th:unless="${shop.active}">
+                    <form th:action="@{/admin/shops/{id}/activate(id=${shop.id}, page=${page}, size=${size}, q=${q})}"
+                          method="post" style="display:inline;">
+                        <button type="submit" class="sd-btn sd-btn-primary">
+                            <i class="fas fa-play"></i> Kích hoạt lại
+                        </button>
+                    </form>
+                </th:block>
+            </div>
+        </div>
+    </div>
+</main>
+
+<th:block th:fragment="page-scripts"></th:block>
+</body>
+</html>

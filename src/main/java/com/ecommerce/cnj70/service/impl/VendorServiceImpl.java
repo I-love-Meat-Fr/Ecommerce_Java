@@ -9,6 +9,7 @@ import com.ecommerce.cnj70.dto.response.VendorDashboardRes;
 import com.ecommerce.cnj70.dto.response.VendorProfileRes;
 import com.ecommerce.cnj70.enums.OrderStatus;
 import com.ecommerce.cnj70.enums.ProductStatus;
+import com.ecommerce.cnj70.enums.ShopStatus;
 import com.ecommerce.cnj70.exception.BadRequestException;
 import com.ecommerce.cnj70.exception.ResourceNotFoundException;
 import com.ecommerce.cnj70.exception.UnauthorizedException;
@@ -88,7 +89,7 @@ public class VendorServiceImpl implements VendorService {
                 .description(request.getDescription())
                 .logoUrl(request.getLogoUrl())
                 .bannerUrl(request.getBannerUrl())
-                .verified(false)
+                .status(ShopStatus.PENDING)
                 .active(true)
                 .build();
         
