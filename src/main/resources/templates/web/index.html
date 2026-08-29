@@ -397,7 +397,57 @@
             </div>
         </section>
 
-        <!-- 9. Top Vendors -->
+        <!-- 9. Vouchers -->
+        <section class="home-voucher-section reveal">
+            <div class="container">
+                <div class="section-label">
+                    <h2><i class="fas fa-ticket-alt" style="color:#ee4d2d;margin-right:8px"></i>Voucher giảm giá</h2>
+                    <div class="sl-line"></div>
+                    <a th:href="@{/vouchers}" class="sl-link">Xem tất cả <i class="fas fa-arrow-right"></i></a>
+                </div>
+
+                <!-- Có voucher khả dụng -->
+                <div class="home-voucher-grid" th:if="${not #lists.isEmpty(availableVouchers)}">
+                    <a th:href="@{/vouchers}" class="home-voucher-card" th:each="v : ${availableVouchers}">
+                        <div class="hv-left">
+                            <div class="hv-discount" th:if="${v.discountType.name() == 'PERCENT'}">
+                                <span th:text="${#numbers.formatDecimal(v.discountValue, 0, 'COMMA', 0, 'POINT')}">15</span><span>%</span>
+                            </div>
+                            <div class="hv-discount" th:if="${v.discountType.name() == 'AMOUNT'}">
+                                <span th:text="${@money.format(v.discountValue)}">50K</span>
+                            </div>
+                            <div class="hv-type-badge" th:text="${v.type.name() == 'WEB'} ? 'Toàn sàn' : 'Shop ' + ${v.shopName}">WEB</div>
+                        </div>
+                        <div class="hv-right">
+                            <div class="hv-name" th:text="${v.name}">Tên voucher</div>
+                            <div class="hv-code">
+                                <i class="far fa-copy"></i>
+                                <span th:text="${v.code}">CODE</span>
+                            </div>
+                            <div class="hv-meta">
+                                <span class="hv-meta-item"><i class="far fa-clock"></i> HSD: <span th:text="${#temporals.format(v.endDate, 'dd/MM/yyyy')}">--</span></span>
+                                <span class="hv-meta-item"><i class="fas fa-fire"></i> Còn <span th:text="${v.remainingQuantity}">0</span> lượt</span>
+                            </div>
+                            <div class="hv-cta">Dùng ngay <i class="fas fa-chevron-right"></i></div>
+                        </div>
+                    </a>
+                </div>
+
+                <!-- Không có voucher khả dụng: hiển thị card mời xem -->
+                <div class="home-voucher-empty" th:unless="${not #lists.isEmpty(availableVouchers)}">
+                    <a th:href="@{/vouchers}" class="hv-empty-card">
+                        <div class="hv-empty-icon"><i class="fas fa-ticket-alt"></i></div>
+                        <div class="hv-empty-text">
+                            <h3>Kho voucher</h3>
+                            <p>Xem tất cả mã giảm giá đang có tại CNJ70 Shop</p>
+                            <span class="hv-empty-cta">Khám phá ngay <i class="fas fa-arrow-right"></i></span>
+                        </div>
+                    </a>
+                </div>
+            </div>
+        </section>
+
+        <!-- 10. Top Vendors -->
         <section class="vendors-section reveal">
             <div class="container">
                 <div class="section-label">

@@ -2,9 +2,11 @@ package com.ecommerce.cnj70.controller.web;
 
 import com.ecommerce.cnj70.document.Category;
 import com.ecommerce.cnj70.document.Product;
+import com.ecommerce.cnj70.document.Voucher;
 import com.ecommerce.cnj70.enums.ProductStatus;
 import com.ecommerce.cnj70.repository.CategoryRepository;
 import com.ecommerce.cnj70.service.ProductService;
+import com.ecommerce.cnj70.service.VoucherService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -15,21 +17,24 @@ import java.util.List;
 @Controller
 @RequiredArgsConstructor
 public class HomeController {
-    
+
     private final ProductService productService;
     private final CategoryRepository categoryRepository;
-    
+    private final VoucherService voucherService;
+
     @GetMapping("/home")
     public String homePage(Model model) {
         List<Product> products = productService.getActiveProducts();
         List<Product> newArrivals = productService.getNewArrivals(8);
         List<Product> featuredProducts = productService.getFeaturedProducts(8);
         List<Category> categories = categoryRepository.findByActiveTrueOrderBySortOrderAsc();
-        
+        List<Voucher> availableVouchers = voucherService.getAvailableVouchers();
+
         model.addAttribute("products", products);
         model.addAttribute("newArrivals", newArrivals);
         model.addAttribute("featuredProducts", featuredProducts);
         model.addAttribute("categories", categories);
+        model.addAttribute("availableVouchers", availableVouchers);
         return "web/index";
     }
 

@@ -4,6 +4,7 @@ import com.ecommerce.cnj70.document.User;
 import com.ecommerce.cnj70.repository.UserRepository;
 import com.ecommerce.cnj70.security.CustomUserDetails;
 import com.ecommerce.cnj70.service.VendorService;
+import com.ecommerce.cnj70.service.VoucherService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.Authentication;
 import org.springframework.ui.Model;
@@ -19,6 +20,7 @@ public class GlobalControllerAdvice {
     
     private final VendorService vendorService;
     private final UserRepository userRepository;
+    private final VoucherService voucherService;
     
     /**
      * Thêm hasShop vào model cho vendor pages
@@ -37,6 +39,19 @@ public class GlobalControllerAdvice {
             }
         } else {
             model.addAttribute("hasShop", false);
+        }
+    }
+    
+    /**
+     * Thêm số lượng voucher khả dụng để hiển thị badge ở header
+     */
+    @ModelAttribute
+    public void addVoucherCount(Model model) {
+        try {
+            long count = voucherService.countAvailableVouchers();
+            model.addAttribute("availableVoucherCount", count);
+        } catch (Exception e) {
+            model.addAttribute("availableVoucherCount", 0L);
         }
     }
 }

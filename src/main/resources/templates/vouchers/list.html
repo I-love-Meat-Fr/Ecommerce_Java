@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.w3.org/1999/xhtml"
+<html xmlns:th="http://www.thymeleaf.org"
       xmlns:sec="http://www.thymeleaf.org/extras/springsecurity6">
 <head>
     <meta charset="UTF-8">
@@ -7,12 +7,36 @@
     <title>Danh sách Voucher - CNJ70 Shop</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Work+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Work+Sans:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            blockContainer: true,
+            corePlugins: {
+                preflight: false,
+                container: false
+            },
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Work Sans', 'Inter', 'system-ui', 'sans-serif']
+                    }
+                }
+            }
+        }
+    </script>
     <link rel="stylesheet" th:href="@{/css/style.css}">
+    <link rel="stylesheet" th:href="@{/css/home.css}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        body { font-family: 'Work Sans', sans-serif; background: #f5f5f5; }
-        .voucher-container { max-width: 1200px; margin: 40px auto; padding: 0 20px; }
+        .voucher-container {
+            max-width: 1200px;
+            width: 100%;
+            margin: 0 auto;
+            padding: 40px 20px;
+            box-sizing: border-box;
+        }
         .voucher-header { margin-bottom: 30px; }
         .voucher-header h1 { font-size: 28px; font-weight: 700; color: #333; margin: 0 0 8px 0; }
         .voucher-header p { color: #666; margin: 0; }
@@ -36,10 +60,10 @@
         .remaining-pill { background: #e8f5e9; color: #2e7d32; padding: 2px 8px; border-radius: 10px; font-size: 11px; font-weight: 500; }
     </style>
 </head>
-<body>
-    <!-- Header -->
-    <div th:replace="~{fragments/web-header :: header}"></div>
+<body class="home-page">
+    <div th:replace="fragments/web-header"></div>
 
+    <main class="main-content">
     <div class="voucher-container">
         <div class="voucher-header">
             <h1><i class="fas fa-ticket"></i> Kho Voucher</h1>
@@ -78,8 +102,8 @@
                         <div class="voucher-name" th:text="${voucher.name}">Tên Voucher</div>
                         <div class="voucher-code" th:text="${voucher.code}">CODE123</div>
                         <div class="voucher-meta">
-                            <span th:if="${voucher.minOrderValue != null and voucher.minOrderValue > 0}">
-                                <i class="fas fa-shopping-cart"></i> Đơn tối thiểu <th:block th:text="${#numbers.formatDecimal(voucher.minOrderValue, 0, 'POINT', 0, 'DEFAULT')}">100.000đ</th:block>
+                            <span th:if="${voucher.minOrderValue != null and voucher.minOrderValue.compareTo(T(java.math.BigDecimal).ZERO) > 0}">
+                                <i class="fas fa-shopping-cart"></i> Đơn tối thiểu <span th:text="${#numbers.formatDecimal(voucher.minOrderValue, 0, 'POINT', 0, 'DEFAULT')}">100.000đ</span>
                             </span>
                             <span th:if="${voucher.maxDiscountAmount != null}" class="remaining-pill">
                                 Giảm tối đa <th:block th:text="${#numbers.formatDecimal(voucher.maxDiscountAmount, 0, 'POINT', 0, 'DEFAULT')}">200.000đ</th:block>
@@ -98,8 +122,11 @@
             </div>
         </div>
     </div>
+    </main>
 
-    <!-- Footer -->
-    <div th:replace="~{fragments/web-footer :: footer}"></div>
+    <div th:replace="fragments/web-footer"></div>
+
+    <script th:src="@{/js/main.js}"></script>
+    <script th:src="@{/js/home.js}"></script>
 </body>
 </html>
