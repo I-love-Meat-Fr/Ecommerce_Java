@@ -10,7 +10,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Work+Sans:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" th:href="@{/css/style.css}">
     <link rel="stylesheet" th:href="@{/css/home.css}">
-    <link rel="stylesheet" th:href="@{/css/product-detail.css}">
+    <link rel="stylesheet" th:href="@{/css/product-detail.css?v=20250901002}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body class="pdp-page">
@@ -380,11 +380,11 @@
                                     <h4 class="pdp-write-review-title">
                                         <i class="fas fa-edit"></i> Viết đánh giá của bạn
                                     </h4>
-                                    <form th:action="@{/products/{id}/reviews(id=${product.id})}" method="post" class="pdp-review-form">
+                                    <form th:action="@{/products/{id}/reviews(id=${product.id})}" method="post" class="pdp-review-form" id="pdp-review-form">
                                         <div class="pdp-review-form-group">
                                             <label class="pdp-review-form-label">Đánh giá của bạn <span class="required">*</span></label>
                                             <div class="pdp-rating-input" id="rating-input">
-                                                <input type="radio" name="rating" value="5" id="star5" required>
+                                                <input type="radio" name="rating" value="5" id="star5">
                                                 <label for="star5" title="5 sao"><i class="fas fa-star"></i></label>
                                                 <input type="radio" name="rating" value="4" id="star4">
                                                 <label for="star4" title="4 sao"><i class="fas fa-star"></i></label>
@@ -398,12 +398,14 @@
                                         </div>
                                         <div class="pdp-review-form-group">
                                             <label for="comment" class="pdp-review-form-label">Nhận xét của bạn <span class="required">*</span></label>
-                                            <textarea id="comment" name="comment" rows="4" class="pdp-review-textarea" 
+                                            <textarea id="comment" name="comment" rows="3" class="pdp-review-textarea"
                                                       placeholder="Chia sẻ trải nghiệm của bạn về sản phẩm này..." required></textarea>
                                         </div>
-                                        <button type="submit" class="pdp-btn-submit-review">
-                                            <i class="fas fa-paper-plane"></i> Gửi đánh giá
-                                        </button>
+                                        <div class="pdp-review-form-footer">
+                                            <button type="submit" class="pdp-btn-submit-review">
+                                                <i class="fas fa-paper-plane"></i> Gửi đánh giá
+                                            </button>
+                                        </div>
                                     </form>
                                 </div>
                                 <div class="pdp-already-reviewed" th:if="${hasReviewed != null and hasReviewed}">
@@ -433,17 +435,17 @@
                                                     </th:block>
                                                 </div>
                                             </div>
-                                            <span class="pdp-review-date" th:text="${#temporals.format(review.createdAt, 'dd/MM/yyyy')}">01/01/2024</span>
+                                            <span class="pdp-review-date" th:text="${review.createdAt != null} ? ${#temporals.format(review.createdAt, 'dd/MM/yyyy')} : ''">01/01/2024</span>
                                             <div class="pdp-review-text" th:text="${review.comment}">Nội dung đánh giá</div>
                                             
                                             <!-- Edit/Delete buttons for own review -->
-                                            <div class="pdp-review-actions" sec:authorize="isAuthenticated()" 
+                                            <div class="pdp-review-actions" sec:authorize="isAuthenticated()"
                                                  th:if="${#authentication.principal.id == review.userId}">
-                                                <button type="button" class="pdp-review-edit-btn" 
-                                                        th:onclick="'editReview(\'' + ${review.id} + '\', ' + ${review.rating} + ', \'' + ${review.comment} + '\')'">
+                                                <button type="button" class="pdp-review-edit-btn"
+                                                        th:attr="data-review-id=${review.id},data-review-rating=${review.rating},data-review-comment=${review.comment}">
                                                     <i class="fas fa-edit"></i> Sửa
                                                 </button>
-                                                <form th:action="@{/reviews/{id}/delete(id=${review.id})}" method="post" 
+                                                <form th:action="@{/reviews/{id}/delete(id=${review.id})}" method="post"
                                                       style="display:inline;" onsubmit="return confirm('Bạn có chắc muốn xóa đánh giá này?');">
                                                     <button type="submit" class="pdp-review-delete-btn">
                                                         <i class="fas fa-trash-alt"></i> Xóa
@@ -511,7 +513,40 @@
 
     <script th:src="@{/js/main.js}"></script>
     <script th:src="@{/js/home.js}" defer></script>
+    <!-- #region DEBUG: Hidden debug log capture textarea -->
+    <textarea id="dbg-log-capture" style="position:fixed;bottom:0;left:0;width:1px;height:1px;overflow:hidden;z-index:-1;" readonly></textarea>
+    <!-- #endregion -->
     <script>
+        // Lightweight debug logger - writes to hidden textarea (capturable from DevTools)
+        var _dbg = [];
+        function _log(msg, data) {
+            var entry = JSON.stringify({ts: Date.now(), msg: msg, data: data});
+            _dbg.push(entry);
+            var ta = document.getElementById('dbg-log-capture');
+            if (ta) ta.value = _dbg.join('\n');
+            console.log('[PDP-DEBUG] ' + msg, data);
+        }
+
+        // Helper: send log to backend endpoint via sendBeacon (no CORS issues)
+        function _send(payload) {
+            try {
+                var url = '/debug/log';
+                var blob = new Blob([JSON.stringify(payload)], {type: 'application/json'});
+                if (navigator.sendBeacon) {
+                    navigator.sendBeacon(url, blob);
+                } else {
+                    fetch(url, {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(payload)});
+                }
+            } catch(e) { console.error('[PDP-DEBUG] send failed', e); }
+        }
+
+        // #region DEBUG: Hypothesis A - script execution starts
+        try {
+            _log('PDP_script_start', {url: window.location.href, ua: navigator.userAgent.substring(0, 80)});
+            _send({sessionId:'04f262', runId:'initial', hypothesisId:'A', location:'product-detail.html:start', message:'script executed', data:{url:window.location.href}, timestamp:Date.now()});
+        } catch(e) { _log('PDP_script_start_ERR', {err: e.message}); }
+        // #endregion
+
         // Populate thumbnails from Thymeleaf data
         (function() {
             const thumbsContainer = document.getElementById('pdp-thumbs');
@@ -669,11 +704,15 @@
         const stickyHeader = document.getElementById('pdp-sticky-header');
         const tabsSection = document.querySelector('.pdp-tabs-section');
 
+        // #region DEBUG: Hypothesis B - sticky header overlap check
+        let lastScrollY = 0;
+        // #endregion
+
         function handleScroll() {
             if (!tabsSection) return;
             const rect = tabsSection.getBoundingClientRect();
             const inView = rect.top <= 120;
-            
+
             if (tabsNav) {
                 if (rect.top <= 70 && rect.bottom > 200) {
                     tabsNav.classList.add('sticky');
@@ -692,6 +731,79 @@
         window.addEventListener('scroll', handleScroll);
         handleScroll();
 
+        // #region DEBUG: Hypothesis B/C/D - inspect tab nav state before binding
+        (function inspectTabsNav() {
+            try {
+                const tabsNav = document.getElementById('pdp-tabs-nav');
+                const allTabs = document.querySelectorAll('.pdp-tab');
+                const computedNav = tabsNav ? window.getComputedStyle(tabsNav) : null;
+                const logs = {
+                    tabsNavExists: !!tabsNav,
+                    tabsNavPointerEvents: computedNav ? computedNav.pointerEvents : 'N/A',
+                    tabsNavPosition: computedNav ? computedNav.position : 'N/A',
+                    tabsNavZIndex: computedNav ? computedNav.zIndex : 'N/A',
+                    tabsNavOverflow: computedNav ? computedNav.overflow : 'N/A',
+                    tabsNavIsSticky: computedNav ? (computedNav.position === 'sticky' || computedNav.position === '-webkit-sticky') : false,
+                    tabsNavRect: tabsNav ? JSON.stringify(tabsNav.getBoundingClientRect()) : 'N/A',
+                    totalTabCount: allTabs.length,
+                    tabDetails: Array.from(allTabs).map(function(t){
+                        var comp = window.getComputedStyle(t);
+                        return {
+                            text: t.textContent.trim().substring(0, 30),
+                            className: t.className,
+                            pointerEvents: comp.pointerEvents,
+                            visibility: comp.visibility,
+                            opacity: comp.opacity,
+                            display: comp.display,
+                            disabled: t.disabled
+                        };
+                    })
+                };
+                _log('tabs_nav_inspection', logs);
+                _send({sessionId:'04f262', runId:'initial', hypothesisId:'B', location:'product-detail.html:inspect', message:'Tabs nav inspection', data:logs, timestamp:Date.now()});
+
+                // Also check if there's any element covering the tabs nav
+                var elBelow = null;
+                if (tabsNav) {
+                    var rect = tabsNav.getBoundingClientRect();
+                    var centerX = rect.left + rect.width / 2;
+                    var centerY = rect.top + 10;
+                    elBelow = document.elementFromPoint(centerX, centerY);
+                }
+                var elAtCenter = {tag: elBelow ? elBelow.tagName : null, id: elBelow ? elBelow.id : null, className: elBelow ? elBelow.className.substring(0, 60) : null, isTabsNav: elBelow === tabsNav || (tabsNav && tabsNav.contains(elBelow))};
+                _log('element_at_tab_nav', elAtCenter);
+                _send({sessionId:'04f262', runId:'initial', hypothesisId:'D', location:'product-detail.html:elementAtPoint', message:'Element at tab nav coordinates', data:elAtCenter, timestamp:Date.now()});
+
+            } catch(e) {
+                _log('inspect_error', {err: e.message});
+            }
+        })();
+        // #endregion
+
+        // #region DEBUG: Global click listener - what element receives clicks on tab area?
+        document.addEventListener('click', function(e) {
+            var target = e.target;
+            if (!target) return;
+            var rect = target.getBoundingClientRect ? target.getBoundingClientRect() : null;
+            // Only log clicks near the tab nav area (within viewport range where tabs exist)
+            if (rect && rect.top >= 60 && rect.top <= 300) {
+                var entry = {
+                    targetTag: target.tagName,
+                    targetId: target.id,
+                    targetClass: target.className.substring(0, 80),
+                    targetRect: JSON.stringify({top: Math.round(rect.top), left: Math.round(rect.left), width: Math.round(rect.width), height: Math.round(rect.height)}),
+                    activeTabs: document.querySelectorAll('.pdp-tab.active').length,
+                    activePanels: document.querySelectorAll('.pdp-tab-panel.active').length,
+                    descPanelDisplay: document.querySelector('#tab-description') ? window.getComputedStyle(document.querySelector('#tab-description')).display : 'N/A',
+                    specsPanelDisplay: document.querySelector('#tab-specs') ? window.getComputedStyle(document.querySelector('#tab-specs')).display : 'N/A',
+                    reviewsPanelDisplay: document.querySelector('#tab-reviews') ? window.getComputedStyle(document.querySelector('#tab-reviews')).display : 'N/A'
+                };
+                _log('click_in_tab_area', entry);
+                _send({sessionId:'04f262', runId:'initial', hypothesisId:'C', location:'product-detail.html:click', message:'Click near tab area', data:entry, timestamp:Date.now()});
+            }
+        });
+        // #endregion
+
         // Tabs switching
         document.querySelectorAll('.pdp-tab').forEach(tab => {
             tab.addEventListener('click', () => {
@@ -701,8 +813,218 @@
                 document.querySelectorAll('.pdp-tab-panel').forEach(p => p.classList.remove('active'));
                 const panel = document.getElementById('tab-' + tabId);
                 if (panel) panel.classList.add('active');
+                // #region DEBUG: Hypothesis A - tab click fired
+                try {
+                    _log('tab_click', {tabId: tabId, panelFound: !!panel, activePanels: document.querySelectorAll('.pdp-tab-panel.active').length});
+                    _send({sessionId:'04f262', runId:'initial', hypothesisId:'A', location:'product-detail.html:tab_click', message:'Tab clicked', data:{tabId:tabId, panelFound:!!panel, activePanels:document.querySelectorAll('.pdp-tab-panel.active').length}, timestamp:Date.now()});
+                } catch(e) {}
+                // #endregion
+                // #region DEBUG: recheck submit button after panel activation
+                try {
+                    const panelCs = window.getComputedStyle(panel);
+                    const panelR = panel.getBoundingClientRect();
+
+                    // Check button INSIDE reviews panel specifically
+                    const reviewPanel = document.querySelector('#tab-reviews');
+                    const btnInReviews = reviewPanel ? reviewPanel.querySelector('.pdp-btn-submit-review') : null;
+                    const formInReviews = reviewPanel ? reviewPanel.querySelector('.pdp-review-form') : null;
+                    const footerInReviews = reviewPanel ? reviewPanel.querySelector('.pdp-review-form-footer') : null;
+                    const writeSection = reviewPanel ? reviewPanel.querySelector('.pdp-write-review-section') : null;
+                    const loginSection = reviewPanel ? reviewPanel.querySelector('.pdp-login-to-review') : null;
+                    const alreadyReviewed = reviewPanel ? reviewPanel.querySelector('.pdp-already-reviewed') : null;
+                    const authCheck = reviewPanel ? reviewPanel.querySelector('[sec\\:authorize]') : null;
+
+                    // Any .pdp-btn-submit-review in DOM
+                    const btnAny = document.querySelector('.pdp-btn-submit-review');
+                    const btnIsInReviews = btnAny && reviewPanel && reviewPanel.contains(btnAny);
+                    const btnIsInModal = btnAny && !btnIsInReviews;
+
+                    let btnFullStyles = null;
+                    let btnFullRect = null;
+                    if (btnInReviews) {
+                        const cs = window.getComputedStyle(btnInReviews);
+                        const r = btnInReviews.getBoundingClientRect();
+                        btnFullStyles = {
+                            display: cs.display,
+                            visibility: cs.visibility,
+                            opacity: cs.opacity,
+                            width: cs.width, height: cs.height,
+                            position: cs.position,
+                            overflow: cs.overflow,
+                            lineHeight: cs.lineHeight,
+                            fontSize: cs.fontSize,
+                            padding: cs.padding,
+                            margin: cs.margin,
+                            background: cs.background,
+                            color: cs.color,
+                            border: cs.border,
+                            borderRadius: cs.borderRadius,
+                            minWidth: cs.minWidth, minHeight: cs.minHeight,
+                            maxWidth: cs.maxWidth, maxHeight: cs.maxHeight,
+                            verticalAlign: cs.verticalAlign,
+                            textAlign: cs.textAlign,
+                            whiteSpace: cs.whiteSpace,
+                            boxSizing: cs.boxSizing,
+                            pointerEvents: cs.pointerEvents
+                        };
+                        btnFullRect = {w: Math.round(r.width), h: Math.round(r.height), top: Math.round(r.top), left: Math.round(r.left), bottom: Math.round(r.bottom), right: Math.round(r.right)};
+                    }
+
+                    // Parent chain styles for button
+                    let parentChain = [];
+                    let parent = btnInReviews ? btnInReviews.parentElement : null;
+                    for (let i = 0; i < 8 && parent; i++) {
+                        const pcs = window.getComputedStyle(parent);
+                        const pr = parent.getBoundingClientRect();
+                        parentChain.push({
+                            tag: parent.tagName,
+                            cls: parent.className.substring(0, 50),
+                            display: pcs.display,
+                            visibility: pcs.visibility,
+                            opacity: pcs.opacity,
+                            overflow: pcs.overflow,
+                            overflowX: pcs.overflowX,
+                            overflowY: pcs.overflowY,
+                            width: pcs.width, height: pcs.height,
+                            position: pcs.position,
+                            rect: {w: Math.round(pr.width), h: Math.round(pr.height), top: Math.round(pr.top), left: Math.round(pr.left)}
+                        });
+                        parent = parent.parentElement;
+                    }
+
+                    const report = {
+                        tabId: tabId,
+                        panelActive: panel.classList.contains('active'),
+                        panelDisplay: panelCs.display,
+                        panelRect: {w: Math.round(panelR.width), h: Math.round(panelR.height), top: Math.round(panelR.top)},
+                        // Sections in reviews panel
+                        writeSectionExists: !!writeSection,
+                        loginSectionExists: !!loginSection,
+                        alreadyReviewedExists: !!alreadyReviewed,
+                        // Form elements in reviews panel
+                        formInReviewsExists: !!formInReviews,
+                        footerInReviewsExists: !!footerInReviews,
+                        btnInReviewsExists: !!btnInReviews,
+                        btnInReviewsStyles: btnFullStyles,
+                        btnInReviewsRect: btnFullRect,
+                        // Any button in DOM
+                        btnAnyExists: !!btnAny,
+                        btnIsInReviews: btnIsInReviews,
+                        btnIsInModal: btnIsInModal,
+                        // Viewport
+                        viewport: {w: window.innerWidth, h: window.innerHeight},
+                        scrollY: window.scrollY
+                    };
+
+                    _log('after_tab_show_FULL', report);
+                    _send({sessionId:'04f262', runId:'initial', hypothesisId:'PANEL_SHOW', location:'product-detail.html:after_tab_show', message:'Full button visibility check', data:report, timestamp:Date.now()});
+
+                    // Auto-scroll button into view if in reviews tab
+                    if (tabId === 'reviews' && btnInReviews) {
+                        btnInReviews.scrollIntoView({behavior: 'smooth', block: 'nearest'});
+                        _log('btn_scrolled_into_view', {tabId: tabId, btnRect: btnInReviews.getBoundingClientRect()});
+                    }
+                } catch(e) { _log('after_tab_show_ERR', {err: e.message, stack: e.stack}); }
+                // #endregion
             });
         });
+
+        // #region DEBUG: Hypothesis A - confirm tab binding complete
+        try {
+            var bindInfo = {
+                tabCount: document.querySelectorAll('.pdp-tab').length,
+                panelCount: document.querySelectorAll('.pdp-tab-panel').length,
+                descActive: document.querySelector('#tab-description') ? document.querySelector('#tab-description').classList.contains('active') : false,
+                specsActive: document.querySelector('#tab-specs') ? document.querySelector('#tab-specs').classList.contains('active') : false,
+                reviewsActive: document.querySelector('#tab-reviews') ? document.querySelector('#tab-reviews').classList.contains('active') : false
+            };
+            _log('tab_bind_complete', bindInfo);
+            _send({sessionId:'04f262', runId:'initial', hypothesisId:'A', location:'product-detail.html:tab_bind_complete', message:'Tab binding complete', data:bindInfo, timestamp:Date.now()});
+        } catch(e) { _log('tab_bind_complete_ERR', {err: e.message}); }
+        // #endregion
+
+        // #region DEBUG: check submit button
+        try {
+            const btn = document.querySelector('.pdp-btn-submit-review');
+            const btnFooter = document.querySelector('.pdp-review-form-footer');
+            const btnExists = !!btn;
+            let btnStyles = {};
+            let footerStyles = {};
+            let parentChain = [];
+            if (btn) {
+                const cs = window.getComputedStyle(btn);
+                const r = btn.getBoundingClientRect();
+                btnStyles = {
+                    display: cs.display,
+                    visibility: cs.visibility,
+                    opacity: cs.opacity,
+                    width: cs.width,
+                    height: cs.height,
+                    minWidth: cs.minWidth,
+                    minHeight: cs.minHeight,
+                    position: cs.position,
+                    overflow: cs.overflow,
+                    lineHeight: cs.lineHeight,
+                    fontSize: cs.fontSize,
+                    rect: {w: Math.round(r.width), h: Math.round(r.height)},
+                    offset: {w: btn.offsetWidth, h: btn.offsetHeight},
+                    textContent: btn.textContent.trim().substring(0, 30)
+                };
+            }
+            if (btnFooter) {
+                const cs = window.getComputedStyle(btnFooter);
+                const r = btnFooter.getBoundingClientRect();
+                footerStyles = {
+                    display: cs.display,
+                    width: cs.width,
+                    height: cs.height,
+                    overflow: cs.overflow,
+                    rect: {w: Math.round(r.width), h: Math.round(r.height)},
+                    offset: {w: btnFooter.offsetWidth, h: btnFooter.offsetHeight}
+                };
+            }
+            // Walk up parent chain to find any container with zero height
+            let p = btn ? btn.parentElement : null;
+            let depth = 0;
+            while (p && depth < 10) {
+                const cs = window.getComputedStyle(p);
+                const r = p.getBoundingClientRect();
+                parentChain.push({
+                    tag: p.tagName,
+                    cls: p.className,
+                    id: p.id,
+                    display: cs.display,
+                    width: Math.round(r.width),
+                    height: Math.round(r.height),
+                    offsetH: p.offsetHeight,
+                    offsetW: p.offsetWidth,
+                    overflow: cs.overflow,
+                    position: cs.position
+                });
+                p = p.parentElement;
+                depth++;
+            }
+            // Also check current sheet rules matching the button
+            let matchingRules = [];
+            try {
+                for (const sheet of document.styleSheets) {
+                    try {
+                        for (const rule of sheet.cssRules || []) {
+                            if (rule.selectorText && (
+                                rule.selectorText.includes('pdp-btn-submit-review') ||
+                                rule.selectorText.includes('pdp-review-form-footer') ||
+                                rule.selectorText.includes('pdp-review-form')
+                            )) {
+                                matchingRules.push({selector: rule.selectorText, cssText: rule.style.cssText});
+                            }
+                        }
+                    } catch(e) { /* cross-origin */ }
+                }
+            } catch(e) {}
+            _log('submit_btn_check', {btnExists, btnStyles, footerStyles, parentChain: parentChain.slice(0, 5), matchingRules});
+            _send({sessionId:'04f262', runId:'initial', hypothesisId:'SUBMIT_BTN', location:'product-detail.html:submit_btn_check', message:'Submit button check', data:{btnExists, btnStyles, footerStyles, parentChain, matchingRules, btnIsInReviews: btn && document.querySelector('#tab-reviews') && document.querySelector('#tab-reviews').contains(btn), btnIsInModal: btn && document.querySelector('.pdp-review-edit-modal') && document.querySelector('.pdp-review-edit-modal').contains(btn)}, timestamp:Date.now()});
+        } catch(e) { _log('submit_btn_check_ERR', {err: e.message, stack: e.stack}); }
+        // #endregion
 
         // Image zoom
         const mainImage = document.getElementById('main-image');
@@ -715,6 +1037,16 @@
                 if (imageDim) imageDim.style.display = 'none';
             });
         }
+
+        // Wire up review edit buttons (using data-attributes to avoid template injection issues)
+        document.querySelectorAll('.pdp-review-edit-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                const id = this.getAttribute('data-review-id');
+                const rating = parseInt(this.getAttribute('data-review-rating') || '0', 10);
+                const comment = this.getAttribute('data-review-comment') || '';
+                editReview(id, rating, comment);
+            });
+        });
 
         // Review Edit/Delete functionality
         function editReview(reviewId, currentRating, currentComment) {
@@ -734,7 +1066,7 @@
                         <div class="pdp-review-form-group">
                             <label class="pdp-review-form-label">Đánh giá của bạn <span class="required">*</span></label>
                             <div class="pdp-rating-input" id="edit-rating-input">
-                                <input type="radio" name="rating" value="5" id="edit-star5" ${currentRating === 5 ? 'checked' : ''} required>
+                                <input type="radio" name="rating" value="5" id="edit-star5" ${currentRating === 5 ? 'checked' : ''}>
                                 <label for="edit-star5" title="5 sao"><i class="fas fa-star"></i></label>
                                 <input type="radio" name="rating" value="4" id="edit-star4" ${currentRating === 4 ? 'checked' : ''}>
                                 <label for="edit-star4" title="4 sao"><i class="fas fa-star"></i></label>
@@ -786,6 +1118,31 @@
                 closeEditModal();
             }
         });
+
+        // Validate rating on submit (HTML5 can't focus hidden radios)
+        const reviewForm = document.getElementById('pdp-review-form');
+        if (reviewForm) {
+            reviewForm.addEventListener('submit', function(e) {
+                const ratingInput = reviewForm.querySelector('input[name="rating"]:checked');
+                const commentInput = reviewForm.querySelector('textarea[name="comment"]');
+                // #region DEBUG: log submit attempts
+                try {
+                    _log('submit_attempt', {hasRating: !!ratingInput, rating: ratingInput ? ratingInput.value : null, commentLen: commentInput ? commentInput.value.trim().length : 0});
+                    _send({sessionId:'04f262', runId:'initial', hypothesisId:'SUBMIT_VALIDATION', location:'product-detail.html:submit_attempt', message:'Form submit attempt', data:{hasRating:!!ratingInput, rating: ratingInput ? ratingInput.value : null, commentLen: commentInput ? commentInput.value.trim().length : 0}, timestamp:Date.now()});
+                } catch(err) {}
+                // #endregion
+                if (!ratingInput) {
+                    e.preventDefault();
+                    alert('Vui lòng chọn số sao đánh giá trước khi gửi.');
+                    return false;
+                }
+                if (!commentInput || !commentInput.value.trim()) {
+                    e.preventDefault();
+                    alert('Vui lòng nhập nhận xét của bạn.');
+                    return false;
+                }
+            });
+        }
     </script>
 </body>
 </html>
