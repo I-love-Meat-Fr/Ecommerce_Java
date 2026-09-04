@@ -1,0 +1,27 @@
+/* ============================================================
+   Tailwind CSS Input File - CNJ70 Ecommerce
+   Build pipeline: src/main/resources/static/css/tailwind-input.css
+                → src/main/resources/static/css/tailwind.css
+   Run:  npm run build:css       (production, minified)
+         npm run watch:css       (development, auto-rebuild)
+   ============================================================ */
+
+@import "tailwindcss";
+
+/* Custom theme tokens (Tailwind v4 CSS-first config) */
+@theme {
+  --color-shopee-orange: #ee4d2d;
+  --color-shopee-orange-dark: #d73211;
+  --color-shopee-orange-light: #ff7733;
+  --color-shopee-gold: #ffd700;
+  --color-shopee-bg: #f5f5f5;
+
+  --font-family-sans: 'Work Sans', 'Inter', system-ui, sans-serif;
+}
+
+/* Custom utilities phổ biến dùng trong templates */
+@layer utilities {
+  .text-shopee { color: var(--color-shopee-orange); }
+  .bg-shopee { background-color: var(--color-shopee-orange); }
+  .border-shopee { border-color: var(--color-shopee-orange); }
+}
