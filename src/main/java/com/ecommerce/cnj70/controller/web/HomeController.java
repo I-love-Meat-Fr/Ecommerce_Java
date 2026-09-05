@@ -26,7 +26,7 @@ public class HomeController {
     public String homePage(Model model) {
         List<Product> products = productService.getActiveProducts();
         List<Product> newArrivals = productService.getNewArrivals(8);
-        List<Product> featuredProducts = productService.getFeaturedProducts(8);
+        List<Product> featuredProducts = productService.getActiveProducts().stream().limit(8).toList();
         List<Category> categories = categoryRepository.findByActiveTrueOrderBySortOrderAsc();
         List<Voucher> availableVouchers = voucherService.getAvailableVouchers();
 

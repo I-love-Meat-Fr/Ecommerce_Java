@@ -16,6 +16,7 @@
         initMarqueePause();
         initLoadMore();
         initQuickView();
+        initProductCardFav();
         initNewsletter();
         initNavbar();
         initBannerSlider();
@@ -499,6 +500,8 @@
                     if (count < 6) {
                         card.style.display = 'block';
                         card.setAttribute('data-hidden', 'false');
+                        // Inject fav button into newly revealed cards
+                        injectFavButton(card);
                         count++;
                     }
                 });
@@ -510,6 +513,37 @@
                 }
             });
         });
+    }
+
+    /* ---------- Product Card: Inject heart (Shopee style) ---------- */
+    function initProductCardFav() {
+        document.querySelectorAll('.product-card').forEach(injectFavButton);
+    }
+
+    function injectFavButton(card) {
+        if (!card || card.querySelector('.pc-fav')) return;
+        const wrap = card.querySelector('.product-card-img-wrap');
+        if (!wrap) return;
+
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'pc-fav';
+        btn.setAttribute('aria-label', 'Yêu thích');
+        btn.innerHTML = '<i class="far fa-heart"></i>';
+
+        btn.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            this.classList.toggle('is-active');
+            const icon = this.querySelector('i');
+            if (this.classList.contains('is-active')) {
+                icon.className = 'fas fa-heart';
+            } else {
+                icon.className = 'far fa-heart';
+            }
+        });
+
+        wrap.appendChild(btn);
     }
 
     /* ---------- Quick View Modal ---------- */

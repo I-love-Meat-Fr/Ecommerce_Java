@@ -1,6 +1,5 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org"
-      xmlns:sec="http://www.thymeleaf.org/extras/springsecurity6">
+<html>
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -27,12 +26,122 @@
             }
         }
     </script>
-    <link rel="stylesheet" th:href="@{/css/style.css}">
-    <link rel="stylesheet" th:href="@{/css/home.css}">
+    <link rel="stylesheet" href="/css/style.css">
+    <link rel="stylesheet" href="/css/home.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body class="home-page">
-    <div th:replace="fragments/web-header"></div>
+    <header class="home-header">
+    <div class="container">
+        <div class="home-header-inner">
+
+            <!-- Logo -->
+            <div class="home-logo">
+                <a href="/home" id="logo-link" class="home-logo-link">
+                    <div class="home-logo-icon">
+                        <i class="fas fa-shopping-bag"></i>
+                    </div>
+                    <div class="home-logo-text">
+                        <span class="home-logo-brand">CNJ70</span>
+                        <span class="home-logo-sub">Shop</span>
+                    </div>
+                </a>
+            </div>
+
+            <!-- Center: Nav Links -->
+            <nav class="home-nav" aria-label="Điều hướng chính">
+                <a href="/home" id="nav-home" class="home-nav-link">
+                    <i class="fas fa-home home-nav-icon"></i>
+                    <span>Trang chủ</span>
+                </a>
+                <a href="/products" id="nav-products" class="home-nav-link">
+                    <i class="fas fa-th-large home-nav-icon"></i>
+                    <span>Sản phẩm</span>
+                </a>
+                <a href="/vouchers" id="nav-vouchers" class="home-nav-link home-nav-link-hot">
+                    <i class="fas fa-ticket-alt home-nav-icon"></i>
+                    <span>Voucher</span>
+                    <span class="nav-hot-badge">5</span>
+                    
+                </a>
+                <a href="/orders" id="nav-orders" class="home-nav-link">
+                    <i class="fas fa-receipt home-nav-icon"></i>
+                    <span>Đơn hàng</span>
+                </a>
+                <a href="/cart" id="nav-cart" class="home-nav-link">
+                    <i class="fas fa-shopping-cart home-nav-icon"></i>
+                    <span>Giỏ hàng</span>
+                    
+                </a>
+            </nav>
+
+            <!-- Right: Actions -->
+            <div class="home-header-actions">
+                <!-- Logged in: icons row -->
+                
+
+                <!-- Logged out -->
+                <div class="home-auth-guest">
+                    <a class="home-btn-login" href="/auth/login" id="login-btn">
+                        <i class="fas fa-sign-in-alt"></i> Đăng nhập
+                    </a>
+                    <a class="home-btn-register" href="/auth/register" id="register-btn">
+                        <i class="fas fa-user-plus"></i> Đăng ký
+                    </a>
+                </div>
+            </div>
+
+            <!-- Mobile Hamburger -->
+            <button class="home-hamburger" id="home-hamburger-btn" aria-label="Mở menu">
+                <span></span>
+                <span></span>
+                <span></span>
+            </button>
+        </div>
+
+        <!-- Mobile Menu Overlay -->
+        <div class="home-mobile-menu" id="home-mobile-menu">
+            <div class="home-mobile-menu-header">
+                <div class="home-mobile-logo">
+                    <i class="fas fa-shopping-bag"></i>
+                    <span>CNJ70 Shop</span>
+                </div>
+                <button class="home-mobile-close" id="home-mobile-close">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <nav class="home-mobile-nav">
+                <a href="/home" class="home-mobile-nav-link">
+                    <i class="fas fa-home"></i> Trang chủ
+                </a>
+                <a href="/products" class="home-mobile-nav-link">
+                    <i class="fas fa-th-large"></i> Sản phẩm
+                </a>
+                <a href="/vouchers" class="home-mobile-nav-link home-mobile-nav-link-hot">
+                    <i class="fas fa-ticket-alt"></i> Voucher
+                    <span class="nav-hot-badge nav-hot-badge-mobile">5</span>
+                    
+                </a>
+                <a href="/orders" class="home-mobile-nav-link">
+                    <i class="fas fa-receipt"></i> Đơn hàng
+                </a>
+                <a href="/cart" class="home-mobile-nav-link">
+                    <i class="fas fa-shopping-cart"></i> Giỏ hàng
+                    
+                </a>
+            </nav>
+            
+            <div class="home-mobile-auth">
+                <a class="home-mobile-login" href="/auth/login">
+                    <i class="fas fa-sign-in-alt"></i> Đăng nhập
+                </a>
+                <a class="home-mobile-register" href="/auth/register">
+                    <i class="fas fa-user-plus"></i> Đăng ký
+                </a>
+            </div>
+        </div>
+    </div>
+</header>
 
     <main class="main-content">
 
@@ -71,7 +180,7 @@
         <!-- 2. Search Section -->
         <div class="home-search-section">
             <div class="container">
-                <form th:action="@{/products}" method="get" class="search-wrapper">
+                <form action="/products" method="get" class="search-wrapper">
                     <div class="search-input-wrap">
                         <i class="fas fa-search si-icon"></i>
                         <input type="text" name="search" placeholder="Tìm kiếm sản phẩm, thương hiệu, shop..." aria-label="Tìm kiếm sản phẩm">
@@ -104,7 +213,7 @@
                                 <div class="banner-tag"><i class="fas fa-bolt"></i> MEGA SALE</div>
                                 <h2 class="banner-title">Giảm đến <span class="banner-highlight">50%</span><br>tất cả sản phẩm</h2>
                                 <p class="banner-desc">Cơ hội duy nhất trong năm - săn deal khủng từ hàng trăm nhà bán uy tín trên toàn quốc.</p>
-                                <a th:href="@{/products}" class="banner-cta"><i class="fas fa-shopping-bag"></i> Mua sắm ngay</a>
+                                <a href="/products" class="banner-cta"><i class="fas fa-shopping-bag"></i> Mua sắm ngay</a>
                             </div>
                             <div class="banner-decor banner-decor-1"></div>
                         </div>
@@ -114,7 +223,7 @@
                                 <div class="banner-tag"><i class="fas fa-store"></i> DÀNH CHO NGƯỜI BÁN</div>
                                 <h2 class="banner-title">Mở shop <span class="banner-highlight">miễn phí</span><br>kinh doanh ngay hôm nay</h2>
                                 <p class="banner-desc">Tiếp cận hàng triệu khách hàng, quản lý đơn hàng dễ dàng, không lo vận chuyển.</p>
-                                <a th:href="@{/auth/register}" class="banner-cta"><i class="fas fa-rocket"></i> Đăng ký ngay</a>
+                                <a href="/auth/register" class="banner-cta"><i class="fas fa-rocket"></i> Đăng ký ngay</a>
                             </div>
                             <div class="banner-decor banner-decor-2"></div>
                         </div>
@@ -124,7 +233,7 @@
                                 <div class="banner-tag"><i class="fas fa-truck"></i> FREESHIP 100%</div>
                                 <h2 class="banner-title">Miễn phí vận chuyển<br>cho <span class="banner-highlight">đơn từ 99K</span></h2>
                                 <p class="banner-desc">Áp dụng toàn quốc - không giới hạn số lần - tận hưởng mua sắm không lo phí ship.</p>
-                                <a th:href="@{/products}" class="banner-cta"><i class="fas fa-tag"></i> Xem ưu đãi</a>
+                                <a href="/products" class="banner-cta"><i class="fas fa-tag"></i> Xem ưu đãi</a>
                             </div>
                             <div class="banner-decor banner-decor-3"></div>
                         </div>
@@ -142,7 +251,7 @@
         </section>
 
         <!-- 5. Categories -->
-        <section class="categories-section reveal" th:if="${not #lists.isEmpty(categories)}">
+        <section class="categories-section reveal">
             <div class="container">
                 <div class="cat-header">
                     <h2>Danh mục sản phẩm</h2>
@@ -150,9 +259,45 @@
                     <div class="cat-header-line"></div>
                 </div>
                 <div class="cat-grid">
-                    <a th:each="cat, iter : ${categories}" th:href="@{/products(category=${cat.id})}" class="cat-card" th:if="${iter.index < 16}">
+                    <a href="/products?category=6a8fe365f3767c30080d2cea" class="cat-card">
                         <div class="cat-icon"><i class="fas fa-folder"></i></div>
-                        <div class="cat-name" th:text="${cat.name}">Danh mục</div>
+                        <div class="cat-name">PC &amp; Máy tính bàn</div>
+                        <div class="cat-count">Xem ngay</div>
+                    </a><a href="/products?category=6a8fe365f3767c30080d2ceb" class="cat-card">
+                        <div class="cat-icon"><i class="fas fa-folder"></i></div>
+                        <div class="cat-name">Laptop</div>
+                        <div class="cat-count">Xem ngay</div>
+                    </a><a href="/products?category=6a8fe365f3767c30080d2cec" class="cat-card">
+                        <div class="cat-icon"><i class="fas fa-folder"></i></div>
+                        <div class="cat-name">Điện thoại</div>
+                        <div class="cat-count">Xem ngay</div>
+                    </a><a href="/products?category=6a8fe365f3767c30080d2ced" class="cat-card">
+                        <div class="cat-icon"><i class="fas fa-folder"></i></div>
+                        <div class="cat-name">Máy tính bảng</div>
+                        <div class="cat-count">Xem ngay</div>
+                    </a><a href="/products?category=6a8fe365f3767c30080d2cee" class="cat-card">
+                        <div class="cat-icon"><i class="fas fa-folder"></i></div>
+                        <div class="cat-name">Linh kiện máy tính</div>
+                        <div class="cat-count">Xem ngay</div>
+                    </a><a href="/products?category=6a8fe365f3767c30080d2cef" class="cat-card">
+                        <div class="cat-icon"><i class="fas fa-folder"></i></div>
+                        <div class="cat-name">Màn hình</div>
+                        <div class="cat-count">Xem ngay</div>
+                    </a><a href="/products?category=6a8fe365f3767c30080d2cf0" class="cat-card">
+                        <div class="cat-icon"><i class="fas fa-folder"></i></div>
+                        <div class="cat-name">Thiết bị âm thanh</div>
+                        <div class="cat-count">Xem ngay</div>
+                    </a><a href="/products?category=6a8fe365f3767c30080d2cf1" class="cat-card">
+                        <div class="cat-icon"><i class="fas fa-folder"></i></div>
+                        <div class="cat-name">Phụ kiện công nghệ</div>
+                        <div class="cat-count">Xem ngay</div>
+                    </a><a href="/products?category=6a8fe365f3767c30080d2cf2" class="cat-card">
+                        <div class="cat-icon"><i class="fas fa-folder"></i></div>
+                        <div class="cat-name">Thiết bị mạng</div>
+                        <div class="cat-count">Xem ngay</div>
+                    </a><a href="/products?category=6a8fe365f3767c30080d2cf3" class="cat-card">
+                        <div class="cat-icon"><i class="fas fa-folder"></i></div>
+                        <div class="cat-name">Đồng hồ thông minh</div>
                         <div class="cat-count">Xem ngay</div>
                     </a>
                 </div>
@@ -160,7 +305,7 @@
         </section>
 
         <!-- 6. Flash Deal Strip -->
-        <section class="flash-deal-section reveal" th:if="${not #lists.isEmpty(featuredProducts)}">
+        <section class="flash-deal-section reveal">
             <div class="flash-deal-container">
                 <div class="flash-deal-header">
                     <div class="flash-deal-head-left">
@@ -181,29 +326,29 @@
                     </a>
                 </div>
                 <div class="flash-deal-grid">
-                    <th:block th:each="product, iter : ${featuredProducts}" th:if="${iter.index < 4}">
-                        <a th:href="@{/products/{id}(id=${product.id})}" class="flash-deal-card">
+                    
+                        <a href="/products/6a86e99da672993ccc5261fa" class="flash-deal-card">
                             <div class="flash-deal-card-img-wrap">
-                                <img th:src="${product.thumbnailUrl ?: 'https://placehold.co/400x400/f5f5f5/9ca3af?text=No+Img'}" th:alt="${product.name}" class="flash-deal-card-img">
-                                <div class="flash-deal-badge" th:text="'-' + ${@money.flashDiscount(product.id)} + '%'">-30%</div>
+                                <img src="/uploads/7fe13501a2844ddb84268b5bd3df93d1.webp" alt="Laptop Lenovo Legion Y7000X 2026 | Core 7 245HX, 16GB, 512GB, RTX 5060 8GB, 15.3 icnh WQXGA OLED 165Hz, Win 11" class="flash-deal-card-img">
+                                <div class="flash-deal-badge">-27%</div>
                             </div>
                             <div class="flash-deal-card-body">
-                                <div class="flash-deal-card-name" th:text="${product.name}">Tên sản phẩm</div>
+                                <div class="flash-deal-card-name">Laptop Lenovo Legion Y7000X 2026 | Core 7 245HX, 16GB, 512GB, RTX 5060 8GB, 15.3 icnh WQXGA OLED 165Hz, Win 11</div>
                                 <div class="flash-deal-card-price">
-                                    <span class="flash-price" th:text="${@money.format(product.price)}">0đ</span>
-                                    <span class="flash-price-old" th:text="${@money.flashOriginalPrice(product.id, product.price)}">0đ</span>
+                                    <span class="flash-price">24.000.000 ₫</span>
+                                    <span class="flash-price-old">30.480.000 ₫</span>
                                 </div>
                                 <div class="flash-deal-progress">
                                     <div class="flash-deal-progress-bar">
-                                        <span th:style="'width:' + ${@money.flashProgress(product.id)} + '%'">76%</span>
-                                        <div class="flash-deal-progress-label">
-                                            ĐÃ BÁN <th:block th:text="${@money.flashProgress(product.id)}">0</th:block>%
-                                        </div>
+                                        <span style="width:83%">76%</span>
+                                    </div>
+                                    <div class="flash-deal-progress-label">
+                                        ĐÃ BÁN 553
                                     </div>
                                 </div>
                             </div>
                         </a>
-                    </th:block>
+                    
                 </div>
             </div>
         </section>
@@ -217,175 +362,136 @@
                 </div>
                 <div class="tab-bar reveal">
                     <button class="tab-btn active" data-tab="featured">
-                        <i class="fas fa-fire" style="color:#ef4444"></i> Nổi bật <span class="tab-count" th:text="${featuredProducts.size()}">0</span>
+                        <i class="fas fa-fire" style="color:#ef4444"></i> Nổi bật <span class="tab-count">1</span>
                     </button>
                     <button class="tab-btn" data-tab="new">
-                        <i class="fas fa-sparkles" style="color:#10b981"></i> Mới về <span class="tab-count" th:text="${newArrivals.size()}">0</span>
+                        <i class="fas fa-sparkles" style="color:#10b981"></i> Mới về <span class="tab-count">1</span>
                     </button>
                     <button class="tab-btn" data-tab="all">
-                        <i class="fas fa-th-large" style="color:#0fb5b0"></i> Tất cả <span class="tab-count" th:text="${products.size()}">0</span>
+                        <i class="fas fa-th-large" style="color:#0fb5b0"></i> Tất cả <span class="tab-count">1</span>
                     </button>
                 </div>
 
                 <!-- Tab: Featured -->
                 <div class="tab-panel active" data-panel="featured">
-                    <div class="tab-grid" th:if="${not #lists.isEmpty(featuredProducts)}">
-                        <th:block th:each="product, iter : ${featuredProducts}">
-                            <div class="product-card" th:style="${iter.index >= 6} ? 'display:none'" th:attr="data-hidden=${iter.index >= 6}">
-                                <a th:href="@{/products/{id}(id=${product.id})}" class="product-card-link">
+                    <div class="tab-grid">
+                        
+                            <div class="product-card" data-hidden="false">
+                                <a href="/products/6a86e99da672993ccc5261fa" class="product-card-link">
                                     <div class="product-card-img-wrap">
-                                        <img th:src="${product.thumbnailUrl ?: 'https://placehold.co/300x300/f1f5f9/94a3b8?text=No+Img'}" th:alt="${product.name}" class="product-card-img">
+                                        <img src="/uploads/7fe13501a2844ddb84268b5bd3df93d1.webp" alt="Laptop Lenovo Legion Y7000X 2026 | Core 7 245HX, 16GB, 512GB, RTX 5060 8GB, 15.3 icnh WQXGA OLED 165Hz, Win 11" class="product-card-img">
                                         <span class="product-card-badge"><i class="fas fa-fire"></i> HOT</span>
                                     </div>
                                     <div class="product-card-body">
-                                        <h3 class="product-card-name" th:text="${product.name}">Tên sản phẩm</h3>
-                                        <div class="product-card-price" th:text="${@money.format(product.price)}">0 đ</div>
+                                        <h3 class="product-card-name">Laptop Lenovo Legion Y7000X 2026 | Core 7 245HX, 16GB, 512GB, RTX 5060 8GB, 15.3 icnh WQXGA OLED 165Hz, Win 11</h3>
+                                        <div class="product-card-price">24.000.000 ₫</div>
                                         <div class="product-card-meta">
-                                            <span class="product-card-rating" th:if="${product.rating > 0}">
+                                            <span class="product-card-rating">
                                                 <span class="product-card-stars">
-                                                    <i class="fas fa-star" th:classappend="${product.rating >= 1} ? ' filled'"></i>
-                                                    <i class="fas fa-star" th:classappend="${product.rating >= 2} ? ' filled'"></i>
-                                                    <i class="fas fa-star" th:classappend="${product.rating >= 3} ? ' filled'"></i>
-                                                    <i class="fas fa-star" th:classappend="${product.rating >= 4} ? ' filled'"></i>
-                                                    <i class="fas fa-star" th:classappend="${product.rating >= 5} ? ' filled'"></i>
+                                                    <i class="fas fa-star  filled"></i>
+                                                    <i class="fas fa-star  filled"></i>
+                                                    <i class="fas fa-star  filled"></i>
+                                                    <i class="fas fa-star  filled"></i>
+                                                    <i class="fas fa-star"></i>
                                                 </span>
-                                                <span class="product-card-rating-value" th:text="${#numbers.formatDecimal(product.rating, 1, 1)}">0.0</span>
+                                                <span class="product-card-rating-value">4.0</span>
                                             </span>
-                                            <span class="product-card-sold"
-                                                  th:classappend="${product.rating <= 0} ? ' no-sep'"
-                                                  th:if="${product.sold > 0}">
-                                                Đã bán <th:block th:text="${@money.formatSold(product.sold)}">0</th:block>
+                                            <span class="product-card-sold">
+                                                Đã bán 553
                                             </span>
                                         </div>
-                                        <div class="product-card-shop" th:if="${product.shopName}">
-                                            <i class="fas fa-shield-alt"></i> Cung cấp bởi: <span th:text="${product.shopName}">Shop</span>
+                                        <div class="product-card-shop">
+                                            <i class="fas fa-shield-alt"></i> Cung cấp bởi: <span>Test Vendor Shop</span>
                                         </div>
                                     </div>
                                 </a>
-                                <div class="product-card-action" sec:authorize="isAuthenticated()">
-                                    <form th:action="@{/api/cart/add}" method="post" class="add-to-cart-form">
-                                        <input type="hidden" name="productId" th:value="${product.id}">
-                                        <button type="submit" class="add-cart-btn">
-                                            <i class="fas fa-cart-plus"></i> Thêm vào giỏ
-                                        </button>
-                                    </form>
-                                </div>
+                                
                             </div>
-                        </th:block>
+                        
                     </div>
-                    <button class="load-more-btn" th:if="${featuredProducts.size() > 6}">
-                        <i class="fas fa-plus"></i> Xem thêm sản phẩm nổi bật
-                    </button>
-                    <div th:unless="${not #lists.isEmpty(featuredProducts)}" class="empty-inline">
-                        <i class="fas fa-box-open" style="margin-right:8px;color:#94a3b8"></i> Chưa có sản phẩm nổi bật
-                    </div>
+                    
+                    
                 </div>
 
                 <!-- Tab: New -->
                 <div class="tab-panel" data-panel="new">
-                    <div class="tab-grid" th:if="${not #lists.isEmpty(newArrivals)}">
-                        <th:block th:each="product, iter : ${newArrivals}">
-                            <div class="product-card" th:style="${iter.index >= 6} ? 'display:none'" th:attr="data-hidden=${iter.index >= 6}">
-                                <a th:href="@{/products/{id}(id=${product.id})}" class="product-card-link">
+                    <div class="tab-grid">
+                        
+                            <div class="product-card" data-hidden="false">
+                                <a href="/products/6a86e99da672993ccc5261fa" class="product-card-link">
                                     <div class="product-card-img-wrap">
-                                        <img th:src="${product.thumbnailUrl ?: 'https://placehold.co/300x300/f1f5f9/94a3b8?text=No+Img'}" th:alt="${product.name}" class="product-card-img">
+                                        <img src="/uploads/7fe13501a2844ddb84268b5bd3df93d1.webp" alt="Laptop Lenovo Legion Y7000X 2026 | Core 7 245HX, 16GB, 512GB, RTX 5060 8GB, 15.3 icnh WQXGA OLED 165Hz, Win 11" class="product-card-img">
                                         <span class="product-card-badge badge-new"><i class="fas fa-sparkles"></i> Mới</span>
                                     </div>
                                     <div class="product-card-body">
-                                        <h3 class="product-card-name" th:text="${product.name}">Tên sản phẩm</h3>
-                                        <div class="product-card-price" th:text="${@money.format(product.price)}">0 đ</div>
+                                        <h3 class="product-card-name">Laptop Lenovo Legion Y7000X 2026 | Core 7 245HX, 16GB, 512GB, RTX 5060 8GB, 15.3 icnh WQXGA OLED 165Hz, Win 11</h3>
+                                        <div class="product-card-price">24.000.000 ₫</div>
                                         <div class="product-card-meta">
-                                            <span class="product-card-rating" th:if="${product.rating > 0}">
+                                            <span class="product-card-rating">
                                                 <span class="product-card-stars">
-                                                    <i class="fas fa-star" th:classappend="${product.rating >= 1} ? ' filled'"></i>
-                                                    <i class="fas fa-star" th:classappend="${product.rating >= 2} ? ' filled'"></i>
-                                                    <i class="fas fa-star" th:classappend="${product.rating >= 3} ? ' filled'"></i>
-                                                    <i class="fas fa-star" th:classappend="${product.rating >= 4} ? ' filled'"></i>
-                                                    <i class="fas fa-star" th:classappend="${product.rating >= 5} ? ' filled'"></i>
+                                                    <i class="fas fa-star  filled"></i>
+                                                    <i class="fas fa-star  filled"></i>
+                                                    <i class="fas fa-star  filled"></i>
+                                                    <i class="fas fa-star  filled"></i>
+                                                    <i class="fas fa-star"></i>
                                                 </span>
-                                                <span class="product-card-rating-value" th:text="${#numbers.formatDecimal(product.rating, 1, 1)}">0.0</span>
+                                                <span class="product-card-rating-value">4.0</span>
                                             </span>
-                                            <span class="product-card-sold"
-                                                  th:classappend="${product.rating <= 0} ? ' no-sep'"
-                                                  th:if="${product.sold > 0}">
-                                                Đã bán <th:block th:text="${@money.formatSold(product.sold)}">0</th:block>
+                                            <span class="product-card-sold">
+                                                Đã bán 553
                                             </span>
                                         </div>
                                         <div class="product-card-shop">
-                                            <i class="fas fa-shield-alt"></i> Cung cấp bởi: <span th:text="${product.shopName}">Shop</span>
+                                            <i class="fas fa-shield-alt"></i> Cung cấp bởi: <span>Test Vendor Shop</span>
                                         </div>
                                     </div>
                                 </a>
-                                <div class="product-card-action" sec:authorize="isAuthenticated()">
-                                    <form th:action="@{/api/cart/add}" method="post" class="add-to-cart-form">
-                                        <input type="hidden" name="productId" th:value="${product.id}">
-                                        <button type="submit" class="add-cart-btn">
-                                            <i class="fas fa-cart-plus"></i> Thêm vào giỏ
-                                        </button>
-                                    </form>
-                                </div>
+                                
                             </div>
-                        </th:block>
+                        
                     </div>
-                    <button class="load-more-btn" th:if="${newArrivals.size() > 6}">
-                        <i class="fas fa-plus"></i> Xem thêm sản phẩm mới
-                    </button>
-                    <div th:unless="${not #lists.isEmpty(newArrivals)}" class="empty-inline">
-                        <i class="fas fa-box-open" style="margin-right:8px;color:#94a3b8"></i> Chưa có sản phẩm mới
-                    </div>
+                    
+                    
                 </div>
 
                 <!-- Tab: All -->
                 <div class="tab-panel" data-panel="all">
-                    <div class="tab-grid" th:if="${not #lists.isEmpty(products)}">
-                        <th:block th:each="product, iter : ${products}">
-                            <div class="product-card" th:style="${iter.index >= 6} ? 'display:none'" th:attr="data-hidden=${iter.index >= 6}">
-                                <a th:href="@{/products/{id}(id=${product.id})}" class="product-card-link">
+                    <div class="tab-grid">
+                        
+                            <div class="product-card" data-hidden="false">
+                                <a href="/products/6a86e99da672993ccc5261fa" class="product-card-link">
                                     <div class="product-card-img-wrap">
-                                        <img th:src="${product.thumbnailUrl ?: 'https://placehold.co/300x300/f1f5f9/94a3b8?text=No+Img'}" th:alt="${product.name}" class="product-card-img">
+                                        <img src="/uploads/7fe13501a2844ddb84268b5bd3df93d1.webp" alt="Laptop Lenovo Legion Y7000X 2026 | Core 7 245HX, 16GB, 512GB, RTX 5060 8GB, 15.3 icnh WQXGA OLED 165Hz, Win 11" class="product-card-img">
                                     </div>
                                     <div class="product-card-body">
-                                        <h3 class="product-card-name" th:text="${product.name}">Tên sản phẩm</h3>
-                                        <div class="product-card-price" th:text="${@money.format(product.price)}">0 đ</div>
+                                        <h3 class="product-card-name">Laptop Lenovo Legion Y7000X 2026 | Core 7 245HX, 16GB, 512GB, RTX 5060 8GB, 15.3 icnh WQXGA OLED 165Hz, Win 11</h3>
+                                        <div class="product-card-price">24.000.000 ₫</div>
                                         <div class="product-card-meta">
-                                            <span class="product-card-rating" th:if="${product.rating > 0}">
+                                            <span class="product-card-rating">
                                                 <span class="product-card-stars">
-                                                    <i class="fas fa-star" th:classappend="${product.rating >= 1} ? ' filled'"></i>
-                                                    <i class="fas fa-star" th:classappend="${product.rating >= 2} ? ' filled'"></i>
-                                                    <i class="fas fa-star" th:classappend="${product.rating >= 3} ? ' filled'"></i>
-                                                    <i class="fas fa-star" th:classappend="${product.rating >= 4} ? ' filled'"></i>
-                                                    <i class="fas fa-star" th:classappend="${product.rating >= 5} ? ' filled'"></i>
+                                                    <i class="fas fa-star  filled"></i>
+                                                    <i class="fas fa-star  filled"></i>
+                                                    <i class="fas fa-star  filled"></i>
+                                                    <i class="fas fa-star  filled"></i>
+                                                    <i class="fas fa-star"></i>
                                                 </span>
-                                                <span class="product-card-rating-value" th:text="${#numbers.formatDecimal(product.rating, 1, 1)}">0.0</span>
+                                                <span class="product-card-rating-value">4.0</span>
                                             </span>
-                                            <span class="product-card-sold"
-                                                  th:classappend="${product.rating <= 0} ? ' no-sep'"
-                                                  th:if="${product.sold > 0}">
-                                                Đã bán <th:block th:text="${@money.formatSold(product.sold)}">0</th:block>
+                                            <span class="product-card-sold">
+                                                Đã bán 553
                                             </span>
                                         </div>
                                         <div class="product-card-shop">
-                                            <i class="fas fa-shield-alt"></i> Cung cấp bởi: <span th:text="${product.shopName}">Shop</span>
+                                            <i class="fas fa-shield-alt"></i> Cung cấp bởi: <span>Test Vendor Shop</span>
                                         </div>
                                     </div>
                                 </a>
-                                <div class="product-card-action" sec:authorize="isAuthenticated()">
-                                    <form th:action="@{/api/cart/add}" method="post" class="add-to-cart-form">
-                                        <input type="hidden" name="productId" th:value="${product.id}">
-                                        <button type="submit" class="add-cart-btn">
-                                            <i class="fas fa-cart-plus"></i> Thêm vào giỏ
-                                        </button>
-                                    </form>
-                                </div>
+                                
                             </div>
-                        </th:block>
+                        
                     </div>
-                    <button class="load-more-btn" th:if="${products.size() > 6}">
-                        <i class="fas fa-plus"></i> Xem thêm tất cả sản phẩm
-                    </button>
-                    <div th:unless="${not #lists.isEmpty(products)}" class="empty-inline">
-                        <i class="fas fa-box-open" style="margin-right:8px;color:#94a3b8"></i> Chưa có sản phẩm nào
-                    </div>
+                    
+                    
                 </div>
             </div>
         </section>
@@ -394,7 +500,7 @@
         <section class="promo-section reveal">
             <div class="container">
                 <div class="promo-grid">
-                    <a th:href="@{/products}" class="promo-card">
+                    <a href="/products" class="promo-card">
                         <div class="promo-card-inner">
                             <div class="promo-icon-wrap"><i class="fas fa-percentage"></i></div>
                             <div class="promo-text">
@@ -404,7 +510,7 @@
                             </div>
                         </div>
                     </a>
-                    <a th:href="@{/products}" class="promo-card teal-fill">
+                    <a href="/products" class="promo-card teal-fill">
                         <div class="promo-card-inner">
                             <div class="promo-icon-wrap"><i class="fas fa-truck"></i></div>
                             <div class="promo-text">
@@ -428,26 +534,104 @@
                 </div>
 
                 <!-- Có voucher khả dụng -->
-                <div class="home-voucher-grid" th:if="${not #lists.isEmpty(availableVouchers)}">
-                    <a th:href="@{/vouchers}" class="home-voucher-card" th:each="v : ${availableVouchers}">
+                <div class="home-voucher-grid">
+                    <a href="/vouchers" class="home-voucher-card">
                         <div class="hv-left">
-                            <div class="hv-discount" th:if="${v.discountType.name() == 'PERCENT'}">
-                                <span th:text="${#numbers.formatDecimal(v.discountValue, 0, 'COMMA', 0, 'POINT')}">15</span><span>%</span>
+                            <div class="hv-discount">
+                                <span>20</span><span>%</span>
                             </div>
-                            <div class="hv-discount" th:if="${v.discountType.name() == 'AMOUNT'}">
-                                <span th:text="${@money.format(v.discountValue)}">50K</span>
-                            </div>
-                            <div class="hv-type-badge" th:text="${v.type.name() == 'WEB'} ? 'Toàn sàn' : 'Shop ' + ${v.shopName}">WEB</div>
+                            
+                            <div class="hv-type-badge">Toàn sàn</div>
                         </div>
                         <div class="hv-right">
-                            <div class="hv-name" th:text="${v.name}">Tên voucher</div>
+                            <div class="hv-name">Phase11 Updated</div>
                             <div class="hv-code">
                                 <i class="far fa-copy"></i>
-                                <span th:text="${v.code}">CODE</span>
+                                <span>PHASE11_1918</span>
                             </div>
                             <div class="hv-meta">
-                                <span class="hv-meta-item"><i class="far fa-clock"></i> HSD: <span th:text="${#temporals.format(v.endDate, 'dd/MM/yyyy')}">--</span></span>
-                                <span class="hv-meta-item"><i class="fas fa-fire"></i> Còn <span th:text="${v.remainingQuantity}">0</span> lượt</span>
+                                <span class="hv-meta-item"><i class="far fa-clock"></i> HSD: <span></span></span>
+                                <span class="hv-meta-item"><i class="fas fa-fire"></i> Còn <span>50</span> lượt</span>
+                            </div>
+                            <div class="hv-cta">Dùng ngay <i class="fas fa-chevron-right"></i></div>
+                        </div>
+                    </a><a href="/vouchers" class="home-voucher-card">
+                        <div class="hv-left">
+                            <div class="hv-discount">
+                                <span>10</span><span>%</span>
+                            </div>
+                            
+                            <div class="hv-type-badge">Toàn sàn</div>
+                        </div>
+                        <div class="hv-right">
+                            <div class="hv-name">Voucher chào mừng giảm 10%</div>
+                            <div class="hv-code">
+                                <i class="far fa-copy"></i>
+                                <span>WELCOME10</span>
+                            </div>
+                            <div class="hv-meta">
+                                <span class="hv-meta-item"><i class="far fa-clock"></i> HSD: <span></span></span>
+                                <span class="hv-meta-item"><i class="fas fa-fire"></i> Còn <span>100</span> lượt</span>
+                            </div>
+                            <div class="hv-cta">Dùng ngay <i class="fas fa-chevron-right"></i></div>
+                        </div>
+                    </a><a href="/vouchers" class="home-voucher-card">
+                        <div class="hv-left">
+                            <div class="hv-discount">
+                                <span>20</span><span>%</span>
+                            </div>
+                            
+                            <div class="hv-type-badge">Toàn sàn</div>
+                        </div>
+                        <div class="hv-right">
+                            <div class="hv-name">Giảm 20% đơn hàng</div>
+                            <div class="hv-code">
+                                <i class="far fa-copy"></i>
+                                <span>SAVE20</span>
+                            </div>
+                            <div class="hv-meta">
+                                <span class="hv-meta-item"><i class="far fa-clock"></i> HSD: <span></span></span>
+                                <span class="hv-meta-item"><i class="fas fa-fire"></i> Còn <span>50</span> lượt</span>
+                            </div>
+                            <div class="hv-cta">Dùng ngay <i class="fas fa-chevron-right"></i></div>
+                        </div>
+                    </a><a href="/vouchers" class="home-voucher-card">
+                        <div class="hv-left">
+                            
+                            <div class="hv-discount">
+                                <span>50.000 ₫</span>
+                            </div>
+                            <div class="hv-type-badge">Toàn sàn</div>
+                        </div>
+                        <div class="hv-right">
+                            <div class="hv-name">Giảm 50.000đ thiết bị công nghệ</div>
+                            <div class="hv-code">
+                                <i class="far fa-copy"></i>
+                                <span>TECH50K</span>
+                            </div>
+                            <div class="hv-meta">
+                                <span class="hv-meta-item"><i class="far fa-clock"></i> HSD: <span></span></span>
+                                <span class="hv-meta-item"><i class="fas fa-fire"></i> Còn <span>30</span> lượt</span>
+                            </div>
+                            <div class="hv-cta">Dùng ngay <i class="fas fa-chevron-right"></i></div>
+                        </div>
+                    </a><a href="/vouchers" class="home-voucher-card">
+                        <div class="hv-left">
+                            <div class="hv-discount">
+                                <span>30</span><span>%</span>
+                            </div>
+                            
+                            <div class="hv-type-badge">Toàn sàn</div>
+                        </div>
+                        <div class="hv-right">
+                            <div class="hv-name">Siêu giảm giá 30%</div>
+                            <div class="hv-code">
+                                <i class="far fa-copy"></i>
+                                <span>BIGSALE30</span>
+                            </div>
+                            <div class="hv-meta">
+                                <span class="hv-meta-item"><i class="far fa-clock"></i> HSD: <span></span></span>
+                                <span class="hv-meta-item"><i class="fas fa-fire"></i> Còn <span>20</span> lượt</span>
                             </div>
                             <div class="hv-cta">Dùng ngay <i class="fas fa-chevron-right"></i></div>
                         </div>
@@ -455,16 +639,7 @@
                 </div>
 
                 <!-- Không có voucher khả dụng: hiển thị card mời xem -->
-                <div class="home-voucher-empty" th:unless="${not #lists.isEmpty(availableVouchers)}">
-                    <a th:href="@{/vouchers}" class="hv-empty-card">
-                        <div class="hv-empty-icon"><i class="fas fa-ticket-alt"></i></div>
-                        <div class="hv-empty-text">
-                            <h3>Kho voucher</h3>
-                            <p>Xem tất cả mã giảm giá đang có tại CNJ70 Shop</p>
-                            <span class="hv-empty-cta">Khám phá ngay <i class="fas fa-arrow-right"></i></span>
-                        </div>
-                    </a>
-                </div>
+                
             </div>
         </section>
 
@@ -474,7 +649,7 @@
                 <div class="section-label">
                     <h2>Top Nhà bán</h2>
                     <div class="sl-line"></div>
-                    <a th:href="@{/products}" class="sl-link">Xem tất cả <i class="fas fa-arrow-right"></i></a>
+                    <a href="/products" class="sl-link">Xem tất cả <i class="fas fa-arrow-right"></i></a>
                 </div>
                 <div class="vendor-grid">
                     <a href="#" class="vendor-card">
@@ -545,35 +720,7 @@
                         </div>
 
                         <!-- Mini Dashboard (logged in) -->
-                        <div sec:authorize="isAuthenticated()" class="mini-dash-section reveal" style="padding-top:40px;">
-                            <div class="section-label">
-                                <h2>Tài khoản của tôi</h2>
-                                <div class="sl-line"></div>
-                            </div>
-                            <div class="mini-dash-grid">
-                                <a th:href="@{/orders}" class="mini-dash-card">
-                                    <div class="mini-dash-icon"><i class="fas fa-receipt"></i></div>
-                                    <div class="mini-dash-info">
-                                        <div class="mini-dash-label">Đơn gần nhất</div>
-                                        <div class="mini-dash-value">Xem ngay</div>
-                                    </div>
-                                </a>
-                                <a th:href="@{/cart}" class="mini-dash-card">
-                                    <div class="mini-dash-icon"><i class="fas fa-heart"></i></div>
-                                    <div class="mini-dash-info">
-                                        <div class="mini-dash-label">Yêu thích</div>
-                                        <div class="mini-dash-value">0 sản phẩm</div>
-                                    </div>
-                                </a>
-                                <a th:href="@{/vendor}" class="mini-dash-card">
-                                    <div class="mini-dash-icon"><i class="fas fa-store"></i></div>
-                                    <div class="mini-dash-info">
-                                        <div class="mini-dash-label">Shop của tôi</div>
-                                        <div class="mini-dash-value">Quản lý</div>
-                                    </div>
-                                </a>
-                            </div>
-                        </div>
+                        
 
                         <!-- Activity List -->
                         <div class="section-label reveal" style="margin-top:40px;">
@@ -775,7 +922,7 @@
         </section>
 
         <!-- 14. CTA Section -->
-        <section class="cta-section reveal" sec:authorize="!isAuthenticated()">
+        <section class="cta-section reveal">
             <div class="container">
                 <div class="cta-inner">
                     <div class="cta-text">
@@ -783,10 +930,10 @@
                         <p>Trở thành người bán trên CNJ70 Shop và tiếp cận hàng triệu khách hàng tiềm năng</p>
                     </div>
                     <div class="cta-actions">
-                        <a th:href="@{/auth/register}" class="btn-teal" id="cta-register-btn">
+                        <a href="/auth/register" class="btn-teal" id="cta-register-btn">
                             <i class="fas fa-rocket"></i> Đăng ký ngay
                         </a>
-                        <a th:href="@{/home}" class="btn-outline-teal">
+                        <a href="/home" class="btn-outline-teal">
                             <i class="fas fa-info-circle"></i> Tìm hiểu thêm
                         </a>
                     </div>
@@ -795,9 +942,70 @@
         </section>
     </main>
 
-    <div th:replace="fragments/web-footer"></div>
+    <footer class="footer">
+    <div class="container">
+        <div class="footer-content">
+            <div class="footer-section footer-brand">
+                <div class="footer-logo">
+                    <a href="/home" id="footer-logo-link">
+                        <span class="logo-icon"><i class="fas fa-shopping-bag"></i></span>
+                        CNJ70 Shop
+                    </a>
+                </div>
+                <p>Nền tảng thương mại điện tử đa nhà bán hàng hàng đầu Việt Nam. Kết nối người mua và người bán trên toàn quốc.</p>
+                <div class="footer-social">
+                    <a href="#" aria-label="Facebook" id="social-facebook"><i class="fab fa-facebook-f"></i></a>
+                    <a href="#" aria-label="Instagram" id="social-instagram"><i class="fab fa-instagram"></i></a>
+                    <a href="#" aria-label="Youtube" id="social-youtube"><i class="fab fa-youtube"></i></a>
+                    <a href="#" aria-label="Twitter" id="social-twitter"><i class="fab fa-twitter"></i></a>
+                    <a href="#" aria-label="TikTok" id="social-tiktok"><i class="fab fa-tiktok"></i></a>
+                </div>
+            </div>
+            <div class="footer-section">
+                <h4>Về chúng tôi</h4>
+                <a href="#">Giới thiệu</a>
+                <a href="#">Tuyển dụng</a>
+                <a href="#">Tin tức</a>
+                <a href="#">Liên hệ</a>
+            </div>
+            <div class="footer-section">
+                <h4>Hỗ trợ khách hàng</h4>
+                <a href="#">Trung tâm trợ giúp</a>
+                <a href="#">Chính sách đổi trả</a>
+                <a href="#">Chính sách vận chuyển</a>
+                <a href="#">Phương thức thanh toán</a>
+            </div>
+            <div class="footer-section">
+                <h4>Liên kết</h4>
+                <a href="#">Điều khoản sử dụng</a>
+                <a href="#">Chính sách bảo mật</a>
+                <a href="#">Chính sách giải quyết khiếu nại</a>
+                <a href="#">Sơ đồ website</a>
+            </div>
+            <div class="footer-section">
+                <h4>Liên hệ</h4>
+                <p><i class="fas fa-map-marker-alt"></i> 123 Đường ABC, Quận 1, TP.HCM</p>
+                <p><i class="fas fa-phone"></i> Hotline: 1900-1234</p>
+                <p><i class="fas fa-envelope"></i> Email: support@cnj70.com</p>
+                <p><i class="fas fa-clock"></i> Thứ 2 - Thứ 6: 8h00 - 17h00</p>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <div class="footer-bottom-content">
+                <p>&copy; 2026 CNJ70 Shop. Tất cả quyền được bảo lưu.</p>
+                <div class="payment-methods">
+                    <i class="fab fa-cc-visa" title="Visa"></i>
+                    <i class="fab fa-cc-mastercard" title="Mastercard"></i>
+                    <i class="fas fa-money-bill-wave" title="Tiền mặt"></i>
+                    <i class="fas fa-wallet" title="Ví điện tử"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+</footer>
 
-    <script th:src="@{/js/main.js}"></script>
-    <script th:src="@{/js/home.js}" defer></script>
+
+    <script src="/js/main.js"></script>
+    <script src="/js/home.js" defer></script>
 </body>
 </html>

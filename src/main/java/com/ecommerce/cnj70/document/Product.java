@@ -72,6 +72,9 @@ public class Product {
     @Builder.Default
     private int reviewCount = 0;
 
+    @Builder.Default
+    private int sold = 0;
+
     @CreatedDate
     private LocalDateTime createdAt;
 
