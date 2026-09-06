@@ -160,50 +160,61 @@
         </section>
 
         <!-- 6. Flash Deal Strip -->
-        <section class="flash-deal-section reveal" th:if="${not #lists.isEmpty(featuredProducts)}">
-            <div class="flash-deal-container">
-                <div class="flash-deal-header">
-                    <div class="flash-deal-head-left">
-                        <div class="flash-deal-logo">
-                            <i class="fas fa-bolt"></i>
-                            <span>FLASH SALE KHUNG GIỜ VÀNG</span>
+        <section class="flash-deal-section reveal">
+            <div class="container">
+                <div class="flash-deal-wrapper">
+                    <div class="flash-deal-header">
+                        <div class="flash-header-left">
+                            <i class="fas fa-bolt flash-bolt-icon"></i>
+                            <span class="flash-title-text">FLASH SALE KHUNG GIỜ VÀNG</span>
+                            <div class="flash-countdown-box">
+                                <span class="cd-box cd-number">02</span>
+                                <span class="cd-colon">:</span>
+                                <span class="cd-box cd-number">15</span>
+                                <span class="cd-colon">:</span>
+                                <span class="cd-box cd-number">48</span>
+                            </div>
+                        </div>
+                        <a th:href="@{/products}" class="flash-see-all">Xem tất cả &gt;</a>
+                    </div>
+                    <div class="flash-scroll-container">
+                        <div class="flash-products-track" th:if="${not #lists.isEmpty(flashSaleStats)}">
+                            <th:block th:each="stat, iter : ${flashSaleStats}">
+                                <a th:href="@{/products/{id}(id=${stat.product.id})}" class="flash-card-item">
+                                    <div class="flash-card-thumb">
+                                        <span class="flash-badge" th:if="${stat.hasDiscount}" th:text="'-' + ${stat.discountPercent} + '%'">-30%</span>
+                                        <span class="flash-badge flash-badge-soft" th:unless="${stat.hasDiscount}">HOT</span>
+                                        <img th:src="${stat.product.thumbnailUrl ?: 'https://placehold.co/300x300/f1f5f9/94a3b8?text=No+Img'}" th:alt="${stat.product.name}" class="flash-card-img">
+                                    </div>
+                                    <div class="flash-card-content">
+                                        <h3 class="flash-card-title" th:text="${stat.product.name}">Tên sản phẩm Flash Sale</h3>
+                                        <div class="flash-card-price" th:text="${@money.format(stat.product.price)}">249.000đ</div>
+                                        <div class="flash-progress-track">
+                                            <div class="flash-progress-fill" th:style="'width:' + ${stat.soldCount >= 100 ? 90 : (stat.soldCount * 100 / 100)} + '%'">.</div>
+                                        </div>
+                                        <span class="flash-sold-text">ĐÃ BÁN <th:block th:text="${stat.soldCount}">0</th:block></span>
+                                    </div>
+                                </a>
+                            </th:block>
+                            <th:block th:each="stat, iter : ${flashSaleStats}">
+                                <a th:href="@{/products/{id}(id=${stat.product.id})}" class="flash-card-item" aria-hidden="true">
+                                    <div class="flash-card-thumb">
+                                        <span class="flash-badge" th:if="${stat.hasDiscount}" th:text="'-' + ${stat.discountPercent} + '%'">-30%</span>
+                                        <span class="flash-badge flash-badge-soft" th:unless="${stat.hasDiscount}">HOT</span>
+                                        <img th:src="${stat.product.thumbnailUrl ?: 'https://placehold.co/300x300/f1f5f9/94a3b8?text=No+Img'}" th:alt="${stat.product.name}" class="flash-card-img">
+                                    </div>
+                                    <div class="flash-card-content">
+                                        <h3 class="flash-card-title" th:text="${stat.product.name}">Tên sản phẩm Flash Sale</h3>
+                                        <div class="flash-card-price" th:text="${@money.format(stat.product.price)}">249.000đ</div>
+                                        <div class="flash-progress-track">
+                                            <div class="flash-progress-fill" th:style="'width:' + ${stat.soldCount >= 100 ? 90 : (stat.soldCount * 100 / 100)} + '%'">.</div>
+                                        </div>
+                                        <span class="flash-sold-text">ĐÃ BÁN <th:block th:text="${stat.soldCount}">0</th:block></span>
+                                    </div>
+                                </a>
+                            </th:block>
                         </div>
                     </div>
-                    <div class="flash-deal-countdown">
-                        <div class="cd-block"><span class="cd-number">02</span></div>
-                        <span class="cd-colon">:</span>
-                        <div class="cd-block"><span class="cd-number">15</span></div>
-                        <span class="cd-colon">:</span>
-                        <div class="cd-block"><span class="cd-number">48</span></div>
-                    </div>
-                    <a href="/products" class="flash-deal-see-all">
-                        Xem tất cả <i class="fas fa-chevron-right"></i>
-                    </a>
-                </div>
-                <div class="flash-deal-grid">
-                    <th:block th:each="product, iter : ${featuredProducts}" th:if="${iter.index < 4}">
-                        <a th:href="@{/products/{id}(id=${product.id})}" class="flash-deal-card">
-                            <div class="flash-deal-card-img-wrap">
-                                <img th:src="${product.thumbnailUrl ?: 'https://placehold.co/400x400/f5f5f5/9ca3af?text=No+Img'}" th:alt="${product.name}" class="flash-deal-card-img">
-                                <div class="flash-deal-badge" th:text="'-' + ${@money.flashDiscount(product.id)} + '%'">-30%</div>
-                            </div>
-                            <div class="flash-deal-card-body">
-                                <div class="flash-deal-card-name" th:text="${product.name}">Tên sản phẩm</div>
-                                <div class="flash-deal-card-price">
-                                    <span class="flash-price" th:text="${@money.format(product.price)}">0đ</span>
-                                    <span class="flash-price-old" th:text="${@money.flashOriginalPrice(product.id, product.price)}">0đ</span>
-                                </div>
-                                <div class="flash-deal-progress">
-                                    <div class="flash-deal-progress-bar">
-                                        <span th:style="'width:' + ${@money.flashProgress(product.id)} + '%'">76%</span>
-                                        <div class="flash-deal-progress-label">
-                                            ĐÃ BÁN <th:block th:text="${@money.flashProgress(product.id)}">0</th:block>%
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </a>
-                    </th:block>
                 </div>
             </div>
         </section>
