@@ -280,8 +280,8 @@
                     <div class="pdp-tabs-content">
                         <!-- Description Tab -->
                         <div class="pdp-tab-panel active" id="tab-description">
-                            <div class="pdp-desc-content" th:if="${product.description != null and !product.description.isEmpty()}">
-                                <p th:text="${product.description}">Mô tả sản phẩm</p>
+                            <div class="pdp-desc-content" th:if="${product.description != null and !product.description.isEmpty()}" th:utext="${product.description}">
+                                <p>Mô tả sản phẩm</p>
                             </div>
                             <div class="pdp-empty-pane" th:if="${product.description == null or product.description.isEmpty()}">
                                 <i class="fas fa-info-circle"></i>

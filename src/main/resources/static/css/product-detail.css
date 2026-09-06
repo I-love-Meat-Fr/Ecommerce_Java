@@ -897,13 +897,153 @@
     display: block;
 }
 
-/* Description */
+/* Description — renders TinyMCE HTML. We escape the content with th:utext
+   on the page side, so style every HTML element the editor can produce. */
 .pdp-desc-content {
     font-size: 14px;
     line-height: 1.7;
     color: var(--ink-soft);
-    white-space: pre-line;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
 }
+
+/* Reset first/last child margins so it sits nicely inside the tab panel */
+.pdp-desc-content > :first-child { margin-top: 0 !important; }
+.pdp-desc-content > :last-child  { margin-bottom: 0 !important; }
+
+.pdp-desc-content p {
+    margin: 0 0 12px;
+}
+
+.pdp-desc-content h1,
+.pdp-desc-content h2,
+.pdp-desc-content h3,
+.pdp-desc-content h4,
+.pdp-desc-content h5,
+.pdp-desc-content h6 {
+    color: var(--ink);
+    font-weight: 700;
+    line-height: 1.35;
+    margin: 22px 0 10px;
+    letter-spacing: -0.01em;
+}
+
+.pdp-desc-content h1 { font-size: 22px; }
+.pdp-desc-content h2 { font-size: 19px; }
+.pdp-desc-content h3 { font-size: 17px; }
+.pdp-desc-content h4 { font-size: 15px; }
+.pdp-desc-content h5 { font-size: 14px; }
+.pdp-desc-content h6 { font-size: 13px; color: var(--muted); }
+
+.pdp-desc-content strong,
+.pdp-desc-content b { color: var(--ink); font-weight: 700; }
+.pdp-desc-content em,
+.pdp-desc-content i { font-style: italic; }
+.pdp-desc-content u { text-decoration: underline; text-underline-offset: 2px; }
+.pdp-desc-content s,
+.pdp-desc-content strike,
+.pdp-desc-content del { color: var(--muted); }
+
+.pdp-desc-content a {
+    color: var(--teal);
+    text-decoration: none;
+    border-bottom: 1px solid transparent;
+    transition: border-color 0.15s ease;
+}
+.pdp-desc-content a:hover { border-bottom-color: var(--teal); }
+
+.pdp-desc-content ul,
+.pdp-desc-content ol {
+    margin: 0 0 14px;
+    padding-left: 22px;
+}
+.pdp-desc-content ul { list-style: disc; }
+.pdp-desc-content ol { list-style: decimal; }
+.pdp-desc-content li { margin: 4px 0; }
+.pdp-desc-content li > ul,
+.pdp-desc-content li > ol { margin: 4px 0 4px; }
+
+.pdp-desc-content blockquote {
+    margin: 14px 0;
+    padding: 10px 14px;
+    border-left: 3px solid var(--teal);
+    background: var(--teal-soft);
+    color: var(--ink);
+    border-radius: 0 6px 6px 0;
+    font-style: italic;
+}
+.pdp-desc-content blockquote p:last-child { margin-bottom: 0; }
+
+.pdp-desc-content code {
+    font-family: "SF Mono", Menlo, Consolas, monospace;
+    font-size: 12.5px;
+    background: #f1f5f9;
+    color: #0f172a;
+    padding: 2px 6px;
+    border-radius: 4px;
+}
+.pdp-desc-content pre {
+    font-family: "SF Mono", Menlo, Consolas, monospace;
+    font-size: 12.5px;
+    background: #0f172a;
+    color: #e2e8f0;
+    padding: 12px 14px;
+    border-radius: 6px;
+    overflow-x: auto;
+    margin: 14px 0;
+    line-height: 1.55;
+}
+.pdp-desc-content pre code {
+    background: transparent;
+    color: inherit;
+    padding: 0;
+    border-radius: 0;
+}
+
+.pdp-desc-content img,
+.pdp-desc-content figure.image {
+    max-width: 100%;
+    height: auto !important;
+    border-radius: 6px;
+    margin: 10px 0;
+    display: block;
+}
+.pdp-desc-content figure { margin: 14px 0; }
+.pdp-desc-content figcaption {
+    text-align: center;
+    font-size: 12px;
+    color: var(--muted);
+    margin-top: 6px;
+}
+
+.pdp-desc-content table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 14px 0;
+    font-size: 13px;
+}
+.pdp-desc-content table th,
+.pdp-desc-content table td {
+    border: 1px solid var(--line);
+    padding: 8px 10px;
+    text-align: left;
+    vertical-align: top;
+}
+.pdp-desc-content table th {
+    background: var(--teal-soft);
+    color: var(--ink);
+    font-weight: 700;
+}
+.pdp-desc-content table tr:nth-child(even) td { background: #f8fafc; }
+
+.pdp-desc-content hr {
+    border: none;
+    border-top: 1px dashed var(--line);
+    margin: 18px 0;
+}
+
+/* PreserveTinyMCE colour spans without stripping them */
+.pdp-desc-content span[style*="color"] { color: inherit; }
 
 .pdp-empty-pane {
     text-align: center;
