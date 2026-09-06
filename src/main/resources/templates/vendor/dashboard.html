@@ -8,9 +8,11 @@
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Work+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Work+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 
     <link rel="stylesheet" th:href="@{/css/dashboard.css}">
+    <link rel="stylesheet" th:href="@{/css/vendor-shared.css}">
+    <link rel="stylesheet" th:href="@{/css/vendor-dashboard.css}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body>
@@ -111,202 +113,276 @@
             <!-- CONTENT -->
             <main class="sd-content">
 
-<th:block th:if="${stats.shopSummary == null}">
-    <div class="sd-alert sd-alert-info">
-        <i class="fas fa-circle-info"></i>
-        <div class="sd-alert-content">
-            <strong>Bạn chưa có cửa hàng</strong>
-            <p>Tạo cửa hàng ngay để bắt đầu đăng bán sản phẩm và theo dõi doanh thu.</p>
-        </div>
-        <a th:href="@{/vendor/shop/create}" class="sd-btn sd-btn-primary sd-btn-sm">
-            <i class="fas fa-plus"></i> Tạo cửa hàng
-        </a>
-    </div>
-</th:block>
-
-<div class="sd-page-head">
-    <div class="sd-page-head-title">
-        <h1>Tổng quan cửa hàng</h1>
-        <p th:if="${stats.shopSummary != null}">
-            Xin chào, <strong th:text="${stats.shopSummary.shopName}">Shop</strong>. Đây là tình hình kinh doanh của bạn.
-        </p>
-        <p th:if="${stats.shopSummary == null}">Tạo cửa hàng để bắt đầu kinh doanh.</p>
-    </div>
-    <div class="sd-page-head-actions">
-        <a th:href="@{/vendor/products/create}" class="sd-btn sd-btn-primary sd-btn-sm">
-            <i class="fas fa-plus"></i> Thêm sản phẩm
-        </a>
-    </div>
-</div>
-
-<!-- Stats Cards -->
-<div class="sd-stats-grid sd-stats-4" th:if="${stats.shopSummary != null}">
-    <div class="sd-stat">
-        <div class="sd-stat-head">
-            <div class="sd-stat-icon sd-indigo"><i class="fas fa-box"></i></div>
-            <span class="sd-delta" th:classappend="${stats.outOfStockProducts > 0} ? 'sd-delta-down' : 'sd-delta-up'">
-                <i class="fas" th:classappend="${stats.outOfStockProducts > 0} ? 'fa-exclamation-circle' : 'fa-check-circle'"></i>
-                <span th:text="${stats.outOfStockProducts} + ' hết hàng'">0</span>
-            </span>
-        </div>
-        <div class="sd-stat-label">Tổng sản phẩm</div>
-        <div class="sd-stat-value" th:text="${stats.totalProducts}">0</div>
-        <div class="sd-stat-foot">Đang kinh doanh trên shop</div>
-    </div>
-
-    <div class="sd-stat">
-        <div class="sd-stat-head">
-            <div class="sd-stat-icon sd-amber"><i class="fas fa-hourglass-half"></i></div>
-            <span class="sd-delta sd-delta-flat">Cần xử lý</span>
-        </div>
-        <div class="sd-stat-label">Chờ xử lý</div>
-        <div class="sd-stat-value" th:text="${stats.pendingOrders}">0</div>
-        <div class="sd-stat-foot">Đơn hàng mới cần xác nhận</div>
-    </div>
-
-    <div class="sd-stat">
-        <div class="sd-stat-head">
-            <div class="sd-stat-icon sd-sky"><i class="fas fa-truck"></i></div>
-            <span class="sd-delta sd-delta-flat">Đang vận chuyển</span>
-        </div>
-        <div class="sd-stat-label">Đang giao</div>
-        <div class="sd-stat-value" th:text="${stats.processingOrders}">0</div>
-        <div class="sd-stat-foot">Đơn đang vận chuyển</div>
-    </div>
-
-    <div class="sd-stat">
-        <div class="sd-stat-head">
-            <div class="sd-stat-icon sd-green"><i class="fas fa-circle-check"></i></div>
-            <span class="sd-delta sd-delta-up"><i class="fas fa-arrow-up"></i> Hoàn thành</span>
-        </div>
-        <div class="sd-stat-label">Đã giao</div>
-        <div class="sd-stat-value" th:text="${stats.completedOrders}">0</div>
-        <div class="sd-stat-foot">Đơn hàng hoàn tất</div>
-    </div>
-</div>
-
-<!-- Revenue Cards -->
-<div class="sd-stats-grid sd-stats-2" th:if="${stats.shopSummary != null}">
-    <div class="sd-stat">
-        <div class="sd-stat-head">
-            <div class="sd-stat-icon sd-green"><i class="fas fa-wallet"></i></div>
-            <span class="sd-delta sd-delta-up"><i class="fas fa-arrow-trend-up"></i> +12.5%</span>
-        </div>
-        <div class="sd-stat-label">Doanh thu tổng</div>
-        <div class="sd-stat-value" style="font-size:30px;" th:text="${@money.format(stats.totalRevenue)}">0đ</div>
-        <div class="sd-stat-foot">Từ tất cả đơn đã giao</div>
-    </div>
-    <div class="sd-stat">
-        <div class="sd-stat-head">
-            <div class="sd-stat-icon sd-indigo"><i class="fas fa-calendar-days"></i></div>
-            <span class="sd-delta sd-delta-up"><i class="fas fa-arrow-up"></i> Tháng này</span>
-        </div>
-        <div class="sd-stat-label">Doanh thu tháng</div>
-        <div class="sd-stat-value" style="font-size:30px;" th:text="${@money.format(stats.monthlyRevenue)}">0đ</div>
-        <div class="sd-stat-foot">Tính đến hiện tại</div>
-    </div>
-</div>
-
-<!-- Chart + Order Status -->
-<div class="sd-grid sd-grid-3-2" style="margin-bottom:20px;" th:if="${stats.shopSummary != null}">
-    <div class="sd-card">
-        <div class="sd-card-head">
-            <div>
-                <h3>Doanh thu 7 ngày</h3>
-                <p>Biến động theo ngày</p>
-            </div>
-            <span class="sd-badge sd-badge-indigo">Hôm nay</span>
-        </div>
-        <div class="sd-card-body">
-            <div id="vendorRevenueChart" class="sd-chart-wrap sd-chart-tall"></div>
-        </div>
-    </div>
-
-    <div class="sd-card">
-        <div class="sd-card-head">
-            <h3>Tình trạng đơn hàng</h3>
-        </div>
-        <div class="sd-card-body">
-            <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
-                <div class="sd-order-item">
-                    <div class="sd-order-icon" style="background:var(--warning-soft);color:var(--warning);">
-                        <i class="fas fa-hourglass-half"></i>
+                <!-- ====== EMPTY STATE (chưa có shop) ====== -->
+                <th:block th:if="${stats.shopSummary == null}">
+                    <div class="vd-empty">
+                        <div class="vd-empty-icon"><i class="fas fa-store"></i></div>
+                        <h2>Bạn chưa có cửa hàng</h2>
+                        <p>Tạo cửa hàng ngay để bắt đầu đăng bán sản phẩm và theo dõi doanh thu trên CNJ70 Shop.</p>
+                        <a th:href="@{/vendor/shop/create}" class="vd-btn vd-btn-solid">
+                            <i class="fas fa-plus"></i> Tạo cửa hàng ngay
+                        </a>
                     </div>
-                    <div class="sd-order-info">
-                        <div class="sd-order-count" th:text="${stats.pendingOrders}">0</div>
-                        <div class="sd-order-label">Chờ xử lý</div>
+                </th:block>
+
+                <!-- ====== HERO BANNER ====== -->
+                <th:block th:if="${stats.shopSummary != null}">
+                <section class="vd-hero">
+                    <div class="vd-hero-inner">
+                        <div class="vd-hero-shop">
+                            <div class="vd-hero-logo">
+                                <img th:if="${stats.shopSummary.logoUrl != null and !stats.shopSummary.logoUrl.isEmpty()}"
+                                     th:src="${stats.shopSummary.logoUrl}" th:alt="${stats.shopSummary.shopName}">
+                                <i th:unless="${stats.shopSummary.logoUrl != null and !stats.shopSummary.logoUrl.isEmpty()}"
+                                   class="fas fa-store"></i>
+                            </div>
+                            <div class="vd-hero-info">
+                                <span class="vd-hero-greeting">Chào mừng trở lại 👋</span>
+                                <h1 th:text="${stats.shopSummary.shopName}">Tên shop</h1>
+                                <div class="vd-hero-meta">
+                                    <span class="vd-pill vd-pill-success" th:if="${stats.shopSummary.active}">
+                                        <i class="fas fa-circle-check"></i> Đang hoạt động
+                                    </span>
+                                    <span class="vd-pill vd-pill-warn" th:unless="${stats.shopSummary.active}">
+                                        <i class="fas fa-circle-pause"></i> Tạm ngưng
+                                    </span>
+                                    <span class="vd-pill vd-pill-muted" th:if="${stats.shopSummary.verified}">
+                                        <i class="fas fa-shield-halved"></i> Đã xác minh
+                                    </span>
+                                    <span class="vd-hero-meta-item" th:if="${stats.shopSummary.createdAt != null}">
+                                        <i class="fas fa-calendar"></i>
+                                        Tham gia từ <th:block th:text="${#temporals.format(stats.shopSummary.createdAt, 'MM/yyyy')}">—</th:block>
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="vd-hero-actions">
+                            <a th:href="@{/vendor/products/create}" class="vd-btn vd-btn-primary">
+                                <i class="fas fa-plus"></i> Thêm sản phẩm
+                            </a>
+                            <a th:href="@{/home}" class="vd-btn vd-btn-ghost">
+                                <i class="fas fa-globe"></i> Xem website
+                            </a>
+                        </div>
+                    </div>
+
+                    <!-- Mini KPI strip -->
+                    <div class="vd-hero-kpis">
+                        <div class="vd-kpi">
+                            <span class="vd-kpi-value" th:text="${@money.format(stats.totalRevenue)}">0đ</span>
+                            <span class="vd-kpi-label">Doanh thu tổng</span>
+                        </div>
+                        <div class="vd-kpi">
+                            <span class="vd-kpi-value" th:text="${stats.totalOrders}">0</span>
+                            <span class="vd-kpi-label">Đơn hàng</span>
+                        </div>
+                        <div class="vd-kpi">
+                            <span class="vd-kpi-value" th:text="${stats.totalProducts}">0</span>
+                            <span class="vd-kpi-label">Sản phẩm</span>
+                        </div>
+                    </div>
+                </section>
+                </th:block>
+
+                <!-- ====== STAT CARDS ====== -->
+                <div class="vd-stats-grid" th:if="${stats.shopSummary != null}">
+
+                    <div class="vd-stat-card vd-stat-teal">
+                        <div class="vd-stat-icon vd-icon-teal"><i class="fas fa-wallet"></i></div>
+                        <div class="vd-stat-label">Doanh thu tổng</div>
+                        <div class="vd-stat-value" th:text="${@money.format(stats.totalRevenue)}">0đ</div>
+                        <div class="vd-stat-foot">
+                            <span class="vd-trend vd-trend-up"><i class="fas fa-arrow-up"></i> +12.5%</span>
+                            <span>so với tháng trước</span>
+                        </div>
+                    </div>
+
+                    <div class="vd-stat-card vd-stat-green">
+                        <div class="vd-stat-icon vd-icon-green"><i class="fas fa-calendar-days"></i></div>
+                        <div class="vd-stat-label">Doanh thu tháng</div>
+                        <div class="vd-stat-value" th:text="${@money.format(stats.monthlyRevenue)}">0đ</div>
+                        <div class="vd-stat-foot">
+                            <span class="vd-trend vd-trend-up"><i class="fas fa-arrow-trend-up"></i> Tháng này</span>
+                            <span>tính đến hiện tại</span>
+                        </div>
+                    </div>
+
+                    <div class="vd-stat-card vd-stat-blue">
+                        <div class="vd-stat-icon vd-icon-blue"><i class="fas fa-receipt"></i></div>
+                        <div class="vd-stat-label">Tổng đơn hàng</div>
+                        <div class="vd-stat-value" th:text="${stats.totalOrders}">0</div>
+                        <div class="vd-stat-foot">
+                            <span class="vd-trend" th:classappend="${stats.pendingOrders > 0} ? 'vd-trend-down' : 'vd-trend-flat'">
+                                <i class="fas"
+                                   th:classappend="${stats.pendingOrders > 0} ? 'fa-hourglass-half' : 'fa-circle-check'"></i>
+                                <span th:text="${stats.pendingOrders}">0</span> chờ xử lý
+                            </span>
+                        </div>
+                    </div>
+
+                    <div class="vd-stat-card vd-stat-orange">
+                        <div class="vd-stat-icon vd-icon-orange"><i class="fas fa-boxes-stacked"></i></div>
+                        <div class="vd-stat-label">Sản phẩm</div>
+                        <div class="vd-stat-value" th:text="${stats.totalProducts}">0</div>
+                        <div class="vd-stat-foot">
+                            <span class="vd-trend" th:classappend="${stats.outOfStockProducts > 0} ? 'vd-trend-down' : 'vd-trend-up'">
+                                <i class="fas"
+                                   th:classappend="${stats.outOfStockProducts > 0} ? 'fa-triangle-exclamation' : 'fa-circle-check'"></i>
+                                <span th:text="${stats.outOfStockProducts}">0</span> hết hàng
+                            </span>
+                        </div>
+                    </div>
+
+                </div>
+
+                <!-- ====== CHARTS ROW ====== -->
+                <div class="vd-grid vd-grid-2-1" th:if="${stats.shopSummary != null}">
+
+                    <div class="vd-card">
+                        <div class="vd-card-head">
+                            <div class="vd-card-head-title">
+                                <h3>Biến động doanh thu &amp; đơn hàng</h3>
+                                <p>Theo dõi 7 ngày gần nhất</p>
+                            </div>
+                            <div class="vd-tabs">
+                                <button class="vd-tab active">7 ngày</button>
+                                <button class="vd-tab" disabled>30 ngày</button>
+                                <button class="vd-tab" disabled>Năm</button>
+                            </div>
+                        </div>
+                        <div class="vd-card-body">
+                            <div id="vendorRevenueChart" class="vd-chart"></div>
+                        </div>
+                    </div>
+
+                    <div class="vd-card">
+                        <div class="vd-card-head">
+                            <div class="vd-card-head-title">
+                                <h3>Tình trạng đơn hàng</h3>
+                                <p>Phân bổ theo trạng thái</p>
+                            </div>
+                        </div>
+                        <div class="vd-card-body">
+                            <div id="vendorOrderStatusChart" class="vd-chart-donut"></div>
+                            <div class="vd-chart-legend">
+                                <div class="vd-legend-item">
+                                    <span class="vd-legend-dot" style="background:#f59e0b"></span>
+                                    <span>Chờ xử lý</span>
+                                    <span class="vd-legend-count" th:text="${stats.pendingOrders}">0</span>
+                                </div>
+                                <div class="vd-legend-item">
+                                    <span class="vd-legend-dot" style="background:#3b82f6"></span>
+                                    <span>Đang giao</span>
+                                    <span class="vd-legend-count" th:text="${stats.processingOrders}">0</span>
+                                </div>
+                                <div class="vd-legend-item">
+                                    <span class="vd-legend-dot" style="background:#10b981"></span>
+                                    <span>Hoàn thành</span>
+                                    <span class="vd-legend-count" th:text="${stats.completedOrders}">0</span>
+                                </div>
+                                <div class="vd-legend-item">
+                                    <span class="vd-legend-dot" style="background:#ef4444"></span>
+                                    <span>Đã hủy</span>
+                                    <span class="vd-legend-count" th:text="${stats.cancelledOrders}">0</span>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
-                <div class="sd-order-item">
-                    <div class="sd-order-icon" style="background:var(--info-soft);color:var(--info);">
-                        <i class="fas fa-box-open"></i>
-                    </div>
-                    <div class="sd-order-info">
-                        <div class="sd-order-count" th:text="${stats.processingOrders}">0</div>
-                        <div class="sd-order-label">Đang xử lý</div>
-                    </div>
-                </div>
-                <div class="sd-order-item">
-                    <div class="sd-order-icon" style="background:var(--success-soft);color:var(--success);">
-                        <i class="fas fa-truck"></i>
-                    </div>
-                    <div class="sd-order-info">
-                        <div class="sd-order-count" th:text="${stats.completedOrders}">0</div>
-                        <div class="sd-order-label">Đã giao</div>
-                    </div>
-                </div>
-                <div class="sd-order-item">
-                    <div class="sd-order-icon" style="background:var(--danger-soft);color:var(--danger);">
-                        <i class="fas fa-circle-xmark"></i>
-                    </div>
-                    <div class="sd-order-info">
-                        <div class="sd-order-count" th:text="${stats.cancelledOrders}">0</div>
-                        <div class="sd-order-label">Đã hủy</div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
 
-<!-- Quick Actions -->
-<div class="sd-card" th:if="${stats.shopSummary != null}">
-    <div class="sd-card-head">
-        <h3>Thao tác nhanh</h3>
-    </div>
-    <div class="sd-card-body">
-        <div class="sd-quick-grid">
-            <a th:href="@{/vendor/products/create}" class="sd-quick-card">
-                <div class="sd-quick-icon"><i class="fas fa-plus-circle"></i></div>
-                <div class="sd-quick-body">
-                    <div class="sd-quick-title">Thêm sản phẩm</div>
-                    <div class="sd-quick-sub">Đăng bán sản phẩm mới</div>
+                <!-- ====== TOP PRODUCTS + QUICK ACTIONS ====== -->
+                <div class="vd-grid vd-grid-1-1" th:if="${stats.shopSummary != null}">
+
+                    <div class="vd-card">
+                        <div class="vd-card-head">
+                            <div class="vd-card-head-title">
+                                <h3>Sản phẩm bán chạy</h3>
+                                <p>Top sản phẩm theo số đơn</p>
+                            </div>
+                            <a th:href="@{/vendor/products}" class="vd-link">Xem tất cả <i class="fas fa-arrow-right"></i></a>
+                        </div>
+                        <div class="vd-card-body">
+                            <th:block th:if="${not #lists.isEmpty(stats.topProducts)}">
+                                <div class="vd-product-list">
+                                    <div th:each="p, iter : ${stats.topProducts}" class="vd-product-item">
+                                        <span class="vd-product-rank" th:text="${iter.count}">1</span>
+                                        <img class="vd-product-thumb"
+                                             th:src="${p.imageUrl != null and !p.imageUrl.isEmpty() ? p.imageUrl : 'https://placehold.co/120x120/f1f7f6/94a3b8?text=SP'}"
+                                             th:alt="${p.productName}">
+                                        <div class="vd-product-info">
+                                            <div class="vd-product-name" th:text="${p.productName}">Tên sản phẩm</div>
+                                            <div class="vd-product-meta">
+                                                <span><i class="fas fa-cart-shopping"></i><th:block th:text="${p.orderCount}">0</th:block> đơn</span>
+                                                <span><i class="fas fa-circle-check"></i>Đã bán</span>
+                                            </div>
+                                        </div>
+                                        <div class="vd-product-price" th:text="${@money.format(p.revenue)}">0đ</div>
+                                    </div>
+                                </div>
+                            </th:block>
+
+                            <div class="vd-empty-mini" th:if="${#lists.isEmpty(stats.topProducts)}">
+                                <i class="fas fa-box-open"></i>
+                                <p>Chưa có đơn hàng nào để thống kê.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="vd-card">
+                        <div class="vd-card-head">
+                            <div class="vd-card-head-title">
+                                <h3>Thao tác nhanh</h3>
+                                <p>Truy cập các chức năng thường dùng</p>
+                            </div>
+                        </div>
+                        <div class="vd-card-body">
+                            <div class="vd-actions-grid">
+                                <a th:href="@{/vendor/products/create}" class="vd-action">
+                                    <div class="vd-action-icon"><i class="fas fa-plus"></i></div>
+                                    <div>
+                                        <div class="vd-action-title">Thêm sản phẩm</div>
+                                        <div class="vd-action-sub">Đăng bán sản phẩm mới</div>
+                                    </div>
+                                </a>
+                                <a th:href="@{/vendor/products}" class="vd-action">
+                                    <div class="vd-action-icon" style="background:#8b5cf6"><i class="fas fa-boxes-stacked"></i></div>
+                                    <div>
+                                        <div class="vd-action-title">Quản lý sản phẩm</div>
+                                        <div class="vd-action-sub">Cập nhật tồn kho, giá bán</div>
+                                    </div>
+                                </a>
+                                <a th:href="@{/vendor/orders}" class="vd-action">
+                                    <div class="vd-action-icon" style="background:#f59e0b"><i class="fas fa-clipboard-list"></i></div>
+                                    <div>
+                                        <div class="vd-action-title">Xem đơn hàng</div>
+                                        <div class="vd-action-sub">Xử lý đơn mới</div>
+                                    </div>
+                                </a>
+                                <a th:href="@{/vendor/shop}" class="vd-action">
+                                    <div class="vd-action-icon" style="background:#ef4444"><i class="fas fa-store"></i></div>
+                                    <div>
+                                        <div class="vd-action-title">Cài đặt shop</div>
+                                        <div class="vd-action-sub">Logo, banner, mô tả</div>
+                                    </div>
+                                </a>
+                                <a th:href="@{/vendor/vouchers}" class="vd-action">
+                                    <div class="vd-action-icon" style="background:#3b82f6"><i class="fas fa-ticket"></i></div>
+                                    <div>
+                                        <div class="vd-action-title">Tạo voucher</div>
+                                        <div class="vd-action-sub">Khuyến mãi cho khách</div>
+                                    </div>
+                                </a>
+                                <a th:href="@{/home}" class="vd-action">
+                                    <div class="vd-action-icon" style="background:#475569"><i class="fas fa-globe"></i></div>
+                                    <div>
+                                        <div class="vd-action-title">Xem website</div>
+                                        <div class="vd-action-sub">Trải nghiệm khách hàng</div>
+                                    </div>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
                 </div>
-            </a>
-            <a th:href="@{/vendor/products}" class="sd-quick-card">
-                <div class="sd-quick-icon"><i class="fas fa-boxes-stacked"></i></div>
-                <div class="sd-quick-body">
-                    <div class="sd-quick-title">Quản lý sản phẩm</div>
-                    <div class="sd-quick-sub">Cập nhật tồn kho, giá bán</div>
-                </div>
-            </a>
-            <a th:href="@{/vendor/orders}" class="sd-quick-card">
-                <div class="sd-quick-icon"><i class="fas fa-clipboard-list"></i></div>
-                <div class="sd-quick-body">
-                    <div class="sd-quick-title">Xem đơn hàng</div>
-                    <div class="sd-quick-sub">Xử lý đơn mới</div>
-                </div>
-            </a>
-            <a th:href="@{/vendor/shop}" class="sd-quick-card">
-                <div class="sd-quick-icon"><i class="fas fa-store"></i></div>
-                <div class="sd-quick-body">
-                    <div class="sd-quick-title">Cài đặt shop</div>
-                    <div class="sd-quick-sub">Logo, banner, mô tả</div>
-                </div>
-            </a>
-        </div>
-    </div>
-</div>
 
             </main>
         </div>
@@ -324,49 +400,98 @@
                 shell.classList.toggle('sidebar-expanded');
                 localStorage.setItem(STORAGE_KEY, shell.classList.contains('sidebar-expanded') ? '1' : '0');
             });
-            const path = window.location.pathname.replace(/\/$/, '');
-            document.querySelectorAll('.sd-nav-item[data-match]').forEach(el => {
-                const match = el.getAttribute('data-match');
-                if (match && (path === match || path.startsWith(match + '/'))) {
-                    el.classList.add('active');
-                }
-            });
             document.querySelectorAll('.sd-sidebar-avatar, .sd-topbar-avatar').forEach(el => {
                 const name = (el.textContent || '').trim();
                 if (!name) return;
                 el.textContent = name.charAt(0).toUpperCase();
             });
+            document.querySelectorAll('.vd-tab').forEach(tab => {
+                tab.addEventListener('click', () => {
+                    if (tab.disabled) return;
+                    tab.parentElement.querySelectorAll('.vd-tab').forEach(t => t.classList.remove('active'));
+                    tab.classList.add('active');
+                });
+            });
         })();
     </script>
-    <script th:if="${stats.shopSummary != null}">
+
+    <script th:if="${stats.shopSummary != null}" th:inline="javascript">
         (function() {
             const trend = /*[[${stats.revenueTrend}]]*/ [];
-            if (!trend || trend.length === 0) return;
-            const labels = trend.map(t => t.label);
-            const revenue = trend.map(t => Number(t.revenue));
-            const orders = trend.map(t => Number(t.orders));
-            const options = {
-                chart: { type: 'area', height: 320, toolbar: { show: false }, fontFamily: 'Work Sans, sans-serif', zoom: { enabled: false } },
-                series: [{ name: 'Doanh thu', data: revenue }, { name: 'Đơn hàng', data: orders }],
-                colors: ['#6366f1', '#10b981'],
-                stroke: { curve: 'smooth', width: 3 },
-                fill: { type: 'gradient', gradient: { shadeIntensity: 1, opacityFrom: 0.35, opacityTo: 0, stops: [0, 90, 100] } },
-                dataLabels: { enabled: false },
-                grid: { borderColor: '#e2e8f0', strokeDashArray: 4, xaxis: { lines: { show: false } } },
-                xaxis: {
-                    categories: labels,
-                    labels: { style: { colors: '#64748b', fontSize: '12px' } },
-                    axisBorder: { show: false },
-                    axisTicks: { show: false }
-                },
-                yaxis: [
-                    { labels: { style: { colors: '#64748b', fontSize: '12px' }, formatter: v => new Intl.NumberFormat('vi-VN').format(v) } },
-                    { opposite: true, labels: { style: { colors: '#64748b', fontSize: '12px' } } }
-                ],
+            const fmt = v => new Intl.NumberFormat('vi-VN').format(v);
+
+            if (trend && trend.length > 0) {
+                const labels = trend.map(t => t.label);
+                const revenue = trend.map(t => Number(t.revenue));
+                const orders  = trend.map(t => Number(t.orders));
+
+                new ApexCharts(document.querySelector('#vendorRevenueChart'), {
+                    chart: { type: 'area', height: 320, toolbar: { show: false }, fontFamily: 'Work Sans, sans-serif', zoom: { enabled: false } },
+                    series: [
+                        { name: 'Doanh thu', data: revenue },
+                        { name: 'Đơn hàng',  data: orders  }
+                    ],
+                    colors: ['#0fb5b0', '#f59e0b'],
+                    stroke: { curve: 'smooth', width: 3 },
+                    fill: { type: 'gradient', gradient: { shadeIntensity: 1, opacityFrom: 0.35, opacityTo: 0, stops: [0, 90, 100] } },
+                    dataLabels: { enabled: false },
+                    grid: { borderColor: '#e6efee', strokeDashArray: 4, xaxis: { lines: { show: false } } },
+                    xaxis: {
+                        categories: labels,
+                        labels: { style: { colors: '#475569', fontSize: '12px' } },
+                        axisBorder: { show: false }, axisTicks: { show: false }
+                    },
+                    yaxis: [
+                        { labels: { style: { colors: '#475569', fontSize: '12px' }, formatter: v => fmt(v) } },
+                        { opposite: true, labels: { style: { colors: '#475569', fontSize: '12px' } } }
+                    ],
+                    legend: { position: 'top', horizontalAlign: 'left', markers: { width: 10, height: 10, radius: 12 }, fontSize: '12.5px', labels: { colors: '#475569' } },
+                    tooltip: { theme: 'light', y: { formatter: v => fmt(v) } }
+                }).render();
+            } else {
+                document.querySelector('#vendorRevenueChart').innerHTML =
+                    '<div style="height:320px;display:flex;align-items:center;justify-content:center;color:#94a3b8;font-size:13px;">Chưa có dữ liệu doanh thu</div>';
+            }
+
+            const statusData = [
+                Number(/*[[${stats.pendingOrders}]]*/ 0),
+                Number(/*[[${stats.processingOrders}]]*/ 0),
+                Number(/*[[${stats.completedOrders}]]*/ 0),
+                Number(/*[[${stats.cancelledOrders}]]*/ 0)
+            ];
+            new ApexCharts(document.querySelector('#vendorOrderStatusChart'), {
+                chart: { type: 'donut', height: 240, fontFamily: 'Work Sans, sans-serif' },
+                series: statusData,
+                labels: ['Chờ xử lý', 'Đang giao', 'Hoàn thành', 'Đã hủy'],
+                colors: ['#f59e0b', '#3b82f6', '#10b981', '#ef4444'],
                 legend: { show: false },
-                tooltip: { theme: 'light', y: { formatter: v => new Intl.NumberFormat('vi-VN').format(v) } }
-            };
-            new ApexCharts(document.querySelector('#vendorRevenueChart'), options).render();
+                dataLabels: { enabled: false },
+                stroke: { width: 3, colors: ['#fff'] },
+                plotOptions: {
+                    pie: {
+                        donut: {
+                            size: '72%',
+                            labels: {
+                                show: true,
+                                total: {
+                                    show: true,
+                                    label: 'Tổng đơn',
+                                    color: '#94a3b8',
+                                    fontSize: '12px',
+                                    fontWeight: 600
+                                },
+                                value: {
+                                    color: '#0b1320',
+                                    fontSize: '24px',
+                                    fontWeight: 800,
+                                    formatter: v => fmt(Number(v))
+                                }
+                            }
+                        }
+                    }
+                },
+                tooltip: { y: { formatter: v => fmt(v) + ' đơn' } }
+            }).render();
         })();
     </script>
 </body>

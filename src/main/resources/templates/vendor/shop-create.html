@@ -9,14 +9,8 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Work+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" th:href="@{/css/dashboard.css}">
+    <link rel="stylesheet" th:href="@{/css/vendor-shared.css}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <style>
-        .preview-img { margin-top:10px; max-width:160px; border-radius:var(--radius); border:1px solid var(--border); }
-        .preview-banner { margin-top:10px; max-width:100%; max-height:160px; border-radius:var(--radius); border:1px solid var(--border); }
-        .file-hint { font-size:11.5px; color:var(--text-faint); margin-top:4px; }
-        .sd-form-hint { display:block; font-size:11.5px; color:var(--text-faint); margin-top:4px; }
-        .sd-form-error { color:var(--danger); font-size:12px; margin-top:4px; }
-    </style>
 </head>
 <body>
     <div class="sd-app" id="appShell">
@@ -35,14 +29,14 @@
                 </div>
                 <div class="sd-sidebar-nav-section">
                     <span class="sd-sidebar-nav-title">Quản lý</span>
-                    <a th:href="@{/vendor/shop}" class="sd-nav-item"><i class="fas fa-store"></i><span class="sd-nav-label">Cửa hàng</span></a>
+                    <a th:href="@{/vendor/shop}" class="sd-nav-item active"><i class="fas fa-store"></i><span class="sd-nav-label">Cửa hàng</span></a>
                     <a th:href="@{/vendor/products}" class="sd-nav-item"><i class="fas fa-box"></i><span class="sd-nav-label">Sản phẩm</span></a>
                     <a th:href="@{/vendor/orders}" class="sd-nav-item"><i class="fas fa-cart-shopping"></i><span class="sd-nav-label">Đơn hàng</span></a>
                 </div>
                 <div class="sd-sidebar-nav-section">
                     <span class="sd-sidebar-nav-title">Khác</span>
                     <a th:href="@{/home}" class="sd-nav-item"><i class="fas fa-globe"></i><span class="sd-nav-label">Xem website</span></a>
-                    <form th:action="@{/auth/logout}" method="post" style="margin:0;">
+                    <form th:action="@{/auth/logout}" method="post" class="sd-logout-form">
                         <button type="submit" class="sd-nav-item"><i class="fas fa-arrow-right-from-bracket"></i><span class="sd-nav-label">Đăng xuất</span></button>
                     </form>
                 </div>
@@ -76,18 +70,20 @@
             </div>
 
             <main class="sd-content">
-                <div class="sd-page-head">
-                    <div class="sd-page-head-title">
-                        <h1>Tạo cửa hàng</h1>
-                        <p>Điền thông tin để bắt đầu kinh doanh trên CNJ70.</p>
+
+                <div class="vd-page-hero">
+                    <div class="vd-page-hero-left">
+                        <div class="vd-page-hero-icon"><i class="fas fa-store"></i></div>
+                        <div class="vd-page-hero-info">
+                            <h2>Tạo cửa hàng</h2>
+                            <p>Điền thông tin để bắt đầu kinh doanh trên CNJ70.</p>
+                        </div>
                     </div>
                 </div>
 
-                <div th:if="${error}" class="sd-alert sd-alert-warning" style="background:var(--danger-soft);color:var(--danger);border:1px solid transparent;padding:12px 16px;border-radius:var(--radius);margin-bottom:16px;display:flex;align-items:center;gap:10px;font-size:13.5px;">
-                    <i class="fas fa-triangle-exclamation"></i><span th:text="${error}"></span>
-                </div>
+                <div th:if="${error}" class="sd-alert sd-alert-danger"><i class="fas fa-triangle-exclamation"></i><span th:text="${error}"></span></div>
 
-                <div class="sd-card" style="max-width:720px;">
+                <div class="sd-card" style="max-width:760px;">
                     <div class="sd-card-head">
                         <div>
                             <h3>Thông tin cửa hàng</h3>
@@ -99,36 +95,43 @@
                             <div class="sd-form-group">
                                 <label>Tên cửa hàng *</label>
                                 <input type="text" class="sd-form-control" th:field="*{shopName}" required minlength="3" maxlength="100" placeholder="VD: Cửa hàng ABC">
-                                <small class="sd-form-hint">Tên shop phải từ 3-100 ký tự, duy nhất không trùng lặp</small>
+                                <div class="sd-form-hint">Tên shop phải từ 3-100 ký tự, duy nhất không trùng lặp</div>
                                 <div th:if="${#fields.hasErrors('shopName')}" class="sd-form-error" th:errors="*{shopName}"></div>
                             </div>
                             <div class="sd-form-group">
                                 <label>Mô tả cửa hàng</label>
                                 <textarea class="sd-form-control" th:field="*{description}" rows="4" maxlength="500" placeholder="Giới thiệu về cửa hàng của bạn..."></textarea>
-                                <small class="sd-form-hint">Tối đa 500 ký tự</small>
+                                <div class="sd-form-hint">Tối đa 500 ký tự</div>
                                 <div th:if="${#fields.hasErrors('description')}" class="sd-form-error" th:errors="*{description}"></div>
                             </div>
                             <div class="sd-form-group">
                                 <label>Logo cửa hàng</label>
-                                <input type="file" id="logoFile" name="logoFile" accept="image/png,image/jpeg,image/jpg,image/webp,image/gif">
-                                <small class="file-hint">JPG, PNG, WEBP, GIF. Tối đa 5MB.</small>
-                                <img id="logoPreview" class="preview-img" style="display:none;">
+                                <div class="vd-upload" onclick="document.getElementById('logoFile').click()">
+                                    <i class="fas fa-cloud-arrow-up"></i>
+                                    <p>Nhấn để chọn logo (JPG, PNG, WEBP, GIF. Tối đa 5MB)</p>
+                                </div>
+                                <input type="file" id="logoFile" name="logoFile" accept="image/png,image/jpeg,image/jpg,image/webp,image/gif" style="display:none;">
+                                <img id="logoPreview" class="vd-preview-img" style="display:none;">
                                 <input type="hidden" id="logoUrl" th:field="*{logoUrl}">
                             </div>
                             <div class="sd-form-group">
                                 <label>Banner cửa hàng</label>
-                                <input type="file" id="bannerFile" name="bannerFile" accept="image/png,image/jpeg,image/jpg,image/webp,image/gif">
-                                <small class="file-hint">JPG, PNG, WEBP, GIF. Tối đa 5MB.</small>
-                                <img id="bannerPreview" class="preview-banner" style="display:none;">
+                                <div class="vd-upload" onclick="document.getElementById('bannerFile').click()">
+                                    <i class="fas fa-image"></i>
+                                    <p>Nhấn để chọn banner (JPG, PNG, WEBP, GIF. Tối đa 5MB)</p>
+                                </div>
+                                <input type="file" id="bannerFile" name="bannerFile" accept="image/png,image/jpeg,image/jpg,image/webp,image/gif" style="display:none;">
+                                <img id="bannerPreview" class="vd-preview-banner" style="display:none;">
                                 <input type="hidden" id="bannerUrl" th:field="*{bannerUrl}">
                             </div>
                             <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:18px;">
                                 <a th:href="@{/vendor/dashboard}" class="sd-btn sd-btn-secondary"><i class="fas fa-xmark"></i> Hủy</a>
-                                <button type="submit" class="sd-btn sd-btn-primary"><i class="fas fa-store"></i> Tạo cửa hàng</button>
+                                <button type="submit" class="sd-btn sd-btn-cta"><i class="fas fa-store"></i> Tạo cửa hàng</button>
                             </div>
                         </form>
                     </div>
                 </div>
+
             </main>
         </div>
     </div>
