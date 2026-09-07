@@ -29,7 +29,18 @@ public class HomeController {
         List<Product> products = productService.getActiveProducts();
         List<Product> newArrivals = productService.getNewArrivals(8);
         List<Product> featuredProducts = productService.getActiveProducts().stream().limit(8).toList();
-        List<FlashSaleStat> flashSaleStats = buildFlashSaleStats(featuredProducts);
+        // Flash-sale strip: only surface products that already have real
+        // sales activity in the database so the section reflects genuine
+        // movement, not every active SKU. Falls back to featuredProducts
+        // when nothing has sold yet so the section is never empty.
+        List<Product> flashSaleSource = productService.getActiveProducts().stream()
+                .filter(p -> p.getSold() > 0)
+                .limit(8)
+                .toList();
+        if (flashSaleSource.isEmpty()) {
+            flashSaleSource = featuredProducts;
+        }
+        List<FlashSaleStat> flashSaleStats = buildFlashSaleStats(flashSaleSource);
         List<Category> categories = categoryRepository.findByActiveTrueOrderBySortOrderAsc();
         List<Voucher> availableVouchers = voucherService.getAvailableVouchers();
 
@@ -44,9 +55,15 @@ public class HomeController {
 
     /**
      * Build the Flash Sale stats for the strip on the home page.
-     * Discount percentage and sold count are derived deterministically
-     * from the product ID so each product shows a stable value across
-     * page reloads, similar to the previous MoneyHelper helpers.
+     * Every value shown in the strip is derived from real data on the
+     * product document (no hash-based placeholders):
+     * <ul>
+     *     <li>{@code soldCount} – mirrors {@link Product#getSold()} from the DB.</li>
+     *     <li>{@code progressPercent} – {@code sold / (sold + stock)} capped at 99%.</li>
+     *     <li>{@code hasDiscount} / {@code discountPercent} – only set when the product
+     *         carries an explicit original price; otherwise the template renders the
+     *         non-numeric HOT badge.</li>
+     * </ul>
      */
     private List<FlashSaleStat> buildFlashSaleStats(List<Product> featuredProducts) {
         List<FlashSaleStat> stats = new ArrayList<>();
@@ -54,15 +71,21 @@ public class HomeController {
             return stats;
         }
         for (Product product : featuredProducts) {
-            int hash = Math.abs(String.valueOf(product.getId()).hashCode());
-            int discountPercent = 20 + (hash % 41); // 20..60
-            int soldCount = 20 + (hash % 171);      // 20..190
-            boolean hasDiscount = discountPercent > 0;
+            int sold = Math.max(0, product.getSold());
+            int stock = Math.max(0, product.getStock());
+            long total = (long) sold + (long) stock;
+            int progressPercent = total > 0
+                    ? (int) Math.min(99L, Math.round((double) sold * 100.0 / total))
+                    : 0;
+            boolean hasDiscount = false;
+            int discountPercent = 0;
+
             stats.add(FlashSaleStat.builder()
                     .product(product)
                     .hasDiscount(hasDiscount)
                     .discountPercent(discountPercent)
-                    .soldCount(soldCount)
+                    .soldCount(sold)
+                    .progressPercent(progressPercent)
                     .build());
         }
         return stats;

@@ -11,6 +11,7 @@
         initCountUp();
         initTabs();
         initFlashCountdown();
+        initFlashMarquee();
         initActivityFeed();
         initFAQ();
         initMarqueePause();
@@ -481,6 +482,79 @@
                     track.style.animationPlayState = 'running';
                 });
             }
+        }
+    }
+
+    /* ---------- Flash-sale marquee: recycle, don't duplicate ----------
+     * The HTML renders each flash-sale product exactly once. JS moves the
+     * track left at a steady speed, and whenever the first card drifts fully
+     * off the left edge it is appended to the end of the track and the
+     * translation is compensated by its own width + gap. Result: the strip
+     * scrolls right-to-left forever, and the viewport never shows two copies
+     * of the same product - which is what broke the pure-CSS approach when
+     * the DB only had 1-2 items.
+     */
+    function initFlashMarquee() {
+        const container = document.querySelector('.flash-scroll-container');
+        const track = document.querySelector('.flash-products-track');
+        if (!container || !track) return;
+
+        const cards = Array.from(track.children);
+        if (cards.length === 0) return;
+
+        const GAP = 16;            // px, must match `.flash-products-track { gap: 16px }`
+        const BASE_SPEED = 0.55;   // px per frame (~33 px/sec at 60fps)
+        let pos = 0;
+        let paused = false;
+        let rafId = null;
+        let lastTs = null;
+        let warmed = false;
+
+        function tick(ts) {
+            if (lastTs == null) lastTs = ts;
+            const dt = Math.min(ts - lastTs, 50); // clamp big tab-switch deltas
+            lastTs = ts;
+
+            if (!paused && warmed) {
+                const pxThisFrame = BASE_SPEED * (dt / 16.6667);
+                pos -= pxThisFrame;
+
+                // Recycle any card that has scrolled fully past the left edge.
+                // Using firstElementChild.offsetWidth is fine because all cards
+                // share the same width per the CSS rule on `.flash-card-item`.
+                let first = track.firstElementChild;
+                while (first && first.offsetLeft + first.offsetWidth + pos < 0) {
+                    pos += first.offsetWidth + GAP;
+                    track.appendChild(first);
+                    first = track.firstElementChild;
+                }
+
+                track.style.transform = 'translate3d(' + pos.toFixed(2) + 'px, 0, 0)';
+            }
+
+            rafId = requestAnimationFrame(tick);
+        }
+
+        // Pause on hover so the user can actually click a card.
+        container.addEventListener('mouseenter', function() { paused = true; });
+        container.addEventListener('mouseleave', function() { paused = false; });
+        // Pause when the tab is hidden so the loop does not fast-forward.
+        document.addEventListener('visibilitychange', function() {
+            lastTs = null;
+        });
+
+        // Warm up: measure widths after fonts/images are ready so the very
+        // first frame already has the correct card geometry.
+        function warmUp() {
+            warmed = true;
+            lastTs = null;
+            rafId = requestAnimationFrame(tick);
+        }
+
+        if (document.readyState === 'complete') {
+            warmUp();
+        } else {
+            window.addEventListener('load', warmUp, { once: true });
         }
     }
 

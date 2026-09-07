@@ -4,56 +4,328 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Thanh toán - CNJ70 Ecommerce</title>
+    <meta name="description" content="Thanh toán đơn hàng - CNJ70 Shop">
+    <title>Thanh toán - CNJ70 Shop</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Work+Sans:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" th:href="@{/css/style.css}">
+    <link rel="stylesheet" th:href="@{/css/home.css}">
+    <link rel="stylesheet" th:href="@{/css/checkout.css}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
-<body>
+<body class="checkout-page">
     <div th:replace="fragments/web-header"></div>
-    
+
     <main class="main-content">
-        <div class="container">
-            <h1>Thanh toán</h1>
-            
-            <div th:if="${error}" class="alert alert-error" th:text="${error}"></div>
-            
-            <form th:action="@{/checkout}" th:object="${checkoutReq}" method="post" class="checkout-form">
-                <div class="form-section">
-                    <h2>Thông tin giao hàng</h2>
-                    
-                    <div class="form-group">
-                        <label for="shippingAddress">Địa chỉ giao hàng *</label>
-                        <textarea id="shippingAddress" th:field="*{shippingAddress}" required 
-                                  placeholder="Nhập địa chỉ đầy đủ"></textarea>
+        <!-- Hero -->
+        <section class="checkout-hero">
+            <div class="container">
+                <nav class="checkout-breadcrumb">
+                    <a th:href="@{/home}"><i class="fas fa-home"></i> Trang chủ</a>
+                    <i class="fas fa-chevron-right"></i>
+                    <a th:href="@{/cart}">Giỏ hàng</a>
+                    <i class="fas fa-chevron-right"></i>
+                    <span>Thanh toán</span>
+                </nav>
+                <div class="checkout-hero-inner">
+                    <div class="checkout-hero-left">
+                        <span class="checkout-hero-tag">
+                            <i class="fas fa-credit-card"></i> Xác nhận đơn hàng
+                        </span>
+                        <h1>
+                            Thanh toán
+                            <th:block th:if="${totalQuantity > 0}">
+                                — <span class="teal-word" th:text="${totalQuantity}">0</span> sản phẩm
+                            </th:block>
+                        </h1>
+                        <p th:if="${totalQuantity > 0}">
+                            Kiểm tra kỹ thông tin đơn hàng và địa chỉ giao hàng trước khi xác nhận thanh toán.
+                        </p>
                     </div>
-                    
-                    <div class="form-group">
-                        <label for="phone">Số điện thoại *</label>
-                        <input type="tel" id="phone" th:field="*{phone}" required 
-                               placeholder="Nhập số điện thoại">
+                    <div class="checkout-hero-right" th:if="${totalQuantity > 0}">
+                        <div class="checkout-hero-stat">
+                            <i class="fas fa-box"></i>
+                            <div>
+                                <strong th:text="${cart != null ? #lists.size(cart.items) : 0}">0</strong>
+                                <span>loại sản phẩm</span>
+                            </div>
+                        </div>
+                        <div class="checkout-hero-stat">
+                            <i class="fas fa-cubes"></i>
+                            <div>
+                                <strong th:text="${totalQuantity}">0</strong>
+                                <span>tổng số lượng</span>
+                            </div>
+                        </div>
                     </div>
                 </div>
+            </div>
+        </section>
+
+        <!-- Body -->
+        <section class="checkout-section">
+            <div class="container">
                 
-                <div class="form-section">
-                    <h2>Phương thức thanh toán</h2>
+                <!-- Has items: show checkout form -->
+                <div th:if="${cart != null and not #lists.isEmpty(cart.items)}" class="checkout-layout">
                     
-                    <div class="payment-methods">
-                        <label class="payment-option">
-                            <input type="radio" th:field="*{paymentMethod}" value="COD" checked>
-                            <span class="payment-name">Thanh toán khi nhận hàng (COD)</span>
-                        </label>
-                        <label class="payment-option">
-                            <input type="radio" th:field="*{paymentMethod}" value="VNPAY">
-                            <span class="payment-name">Thanh toán qua VNPAY</span>
-                        </label>
+                    <!-- Left column -->
+                    <div class="checkout-items-col">
+                        
+                        <!-- Error / Success Alert -->
+                        <div th:if="${error}" class="checkout-alert checkout-alert-error">
+                            <i class="fas fa-exclamation-circle"></i>
+                            <span th:text="${error}">Có lỗi xảy ra</span>
+                        </div>
+                        
+                        <!-- Cart Items (grouped by shop) -->
+                        <th:block th:each="shopEntry : ${itemsByShop}">
+                            <article class="checkout-shop-group">
+                                <header class="checkout-shop-header">
+                                    <i class="fas fa-store"></i>
+                                    <span class="checkout-shop-name"
+                                          th:text="${shopEntry.value[0].shopName != null ? shopEntry.value[0].shopName : 'Cửa hàng'}">Cửa hàng</span>
+                                    <span class="checkout-shop-count">
+                                        <th:block th:text="${#lists.size(shopEntry.value)}">0</th:block> sản phẩm
+                                    </span>
+                                </header>
+                                <div class="checkout-item-list">
+                                    <th:block th:each="item : ${shopEntry.value}">
+                                        <div class="checkout-item">
+                                            <a th:href="@{/products/{id}(id=${item.productId})}" class="checkout-item-thumb">
+                                                <img th:src="${@image.productImage(item.imageUrl)}"
+                                                     th:alt="${item.productName}"
+                                                     onerror="this.src='https://placehold.co/120x120/f0f7f6/94a3b8?text=No+Img'; this.onerror=null;">
+                                            </a>
+                                            <div class="checkout-item-info">
+                                                <a th:href="@{/products/{id}(id=${item.productId})}" class="checkout-item-name" th:text="${item.productName}">Tên sản phẩm</a>
+                                                <div class="checkout-item-meta">
+                                                    <span class="checkout-item-price" th:text="${@money.format(item.price)}">0đ</span>
+                                                    <span class="checkout-item-qty">x<span th:text="${item.quantity}">0</span></span>
+                                                </div>
+                                            </div>
+                                            <div class="checkout-item-right">
+                                                <span class="checkout-item-subtotal" th:text="${@money.format(item.subtotal)}">0đ</span>
+                                            </div>
+                                        </div>
+                                    </th:block>
+                                </div>
+                            </article>
+                        </th:block>
+
+                        <!-- Shipping + Payment Form -->
+                        <div class="checkout-form-card">
+                            <header class="checkout-form-header">
+                                <i class="fas fa-truck"></i>
+                                <h3>Thông tin giao hàng & Thanh toán</h3>
+                            </header>
+                            <div class="checkout-form-body">
+                                <form th:action="@{/checkout}" th:object="${checkoutReq}" method="post" id="checkout-form" novalidate>
+                                    
+                                    <!-- Contact info -->
+                                    <div class="form-section-title">
+                                        <i class="fas fa-user-circle"></i>
+                                        Thông tin liên hệ
+                                    </div>
+                                    
+                                    <div class="form-row">
+                                        <div class="co-form-group">
+                                            <label for="phone">Số điện thoại <span class="required-mark">*</span></label>
+                                            <input type="tel" id="phone" th:field="*{phone}"
+                                                   class="co-input"
+                                                   placeholder="Nhập số điện thoại"
+                                                   autocomplete="tel" required>
+                                            <div class="co-field-error" th:if="${#fields.hasErrors('phone')}" th:errors="*{phone}"></div>
+                                        </div>
+                                        <div class="co-form-group">
+                                            <label for="shippingAddress">Địa chỉ giao hàng <span class="required-mark">*</span></label>
+                                            <input type="text" id="shippingAddress" th:field="*{shippingAddress}"
+                                                   class="co-input"
+                                                   placeholder="Số nhà, đường, phường/xã, quận/huyện, tỉnh/thành phố"
+                                                   autocomplete="street-address" required>
+                                            <div class="co-field-error" th:if="${#fields.hasErrors('shippingAddress')}" th:errors="*{shippingAddress}"></div>
+                                        </div>
+                                    </div>
+                                    
+                                    <th:block th:if="${user != null}">
+                                        <div class="co-notes">
+                                            <i class="fas fa-info-circle"></i>
+                                            <span>Thông tin được điền sẵn từ hồ sơ của bạn. Bạn có thể chỉnh sửa trước khi xác nhận đơn hàng.</span>
+                                        </div>
+                                    </th:block>
+                                    
+                                    <!-- Payment method -->
+                                    <div class="form-section-title" style="margin-top: 24px;">
+                                        <i class="fas fa-wallet"></i>
+                                        Phương thức thanh toán
+                                    </div>
+                                    
+                                    <div class="payment-options">
+                                        <label class="payment-option selected" data-value="COD">
+                                            <input type="radio" th:field="*{paymentMethod}" value="COD" checked>
+                                            <div class="payment-option-content">
+                                                <div class="payment-option-icon">
+                                                    <i class="fas fa-money-bill-wave"></i>
+                                                </div>
+                                                <div>
+                                                    <div class="payment-option-name">Thanh toán khi nhận hàng (COD)</div>
+                                                    <div class="payment-option-desc">Trả tiền mặt khi nhận được hàng</div>
+                                                </div>
+                                            </div>
+                                            <div class="payment-option-check"></div>
+                                        </label>
+                                        
+                                        <label class="payment-option" data-value="VNPAY">
+                                            <input type="radio" th:field="*{paymentMethod}" value="VNPAY">
+                                            <div class="payment-option-content">
+                                                <div class="payment-option-icon">
+                                                    <i class="fas fa-qrcode"></i>
+                                                </div>
+                                                <div>
+                                                    <div class="payment-option-name">Thanh toán qua VNPAY</div>
+                                                    <div class="payment-option-desc">Thanh toán trực tuyến qua cổng VNPAY</div>
+                                                </div>
+                                            </div>
+                                            <div class="payment-option-check"></div>
+                                        </label>
+                                    </div>
+                                    
+                                    <!-- Place order button -->
+                                    <button type="submit" class="btn-place-order" id="btn-place-order">
+                                        <i class="fas fa-lock"></i>
+                                        Xác nhận đặt hàng
+                                    </button>
+                                    
+                                    <div class="co-notes" style="margin-top: 12px; justify-content: center;">
+                                        <i class="fas fa-shield-alt"></i>
+                                        <span>Thông tin thanh toán của bạn được bảo mật và mã hóa</span>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
                     </div>
+
+                    <!-- Right column: Order Summary -->
+                    <aside class="checkout-summary-card">
+                        <header class="checkout-summary-header">
+                            <i class="fas fa-receipt"></i>
+                            <h3>Tóm tắt đơn hàng</h3>
+                        </header>
+                        <div class="checkout-summary-body">
+                            <!-- Items preview -->
+                            <div class="summary-items-list">
+                                <th:block th:each="item : ${cart.items}">
+                                    <div class="summary-item-row">
+                                        <div class="summary-item-thumb">
+                                            <img th:src="${@image.productImage(item.imageUrl)}"
+                                                 th:alt="${item.productName}"
+                                                 onerror="this.src='https://placehold.co/60x60/f0f7f6/94a3b8?text=No'; this.onerror=null;">
+                                        </div>
+                                        <div class="summary-item-info">
+                                            <div class="summary-item-name" th:text="${item.productName}">Tên sản phẩm</div>
+                                            <div class="summary-item-qty">x<span th:text="${item.quantity}">0</span></div>
+                                        </div>
+                                        <div class="summary-item-price" th:text="${@money.format(item.subtotal)}">0đ</div>
+                                    </div>
+                                </th:block>
+                            </div>
+                            
+                            <div class="summary-divider"></div>
+                            
+                            <!-- Totals -->
+                            <div class="summary-row">
+                                <span>Tạm tính</span>
+                                <span class="summary-value" th:text="${@money.format(cartTotal)}">0đ</span>
+                            </div>
+                            <div class="summary-row">
+                                <span>Phí vận chuyển</span>
+                                <span class="summary-value">15.000đ</span>
+                            </div>
+                            <div class="summary-row discount" style="display: none;">
+                                <span>Giảm giá</span>
+                                <span class="summary-value">-0đ</span>
+                            </div>
+                            
+                            <div class="summary-total-row">
+                                <span class="summary-total-label">Tổng cộng</span>
+                                <span class="summary-total-value" th:text="${@money.format(cartTotal.add(java.math.BigDecimal.valueOf(15000)))}">0đ</span>
+                            </div>
+                        </div>
+                        
+                        <!-- Trust badges -->
+                        <ul class="checkout-trust">
+                            <li><i class="fas fa-shield-alt"></i> Thanh toán an toàn &amp; bảo mật</li>
+                            <li><i class="fas fa-undo"></i> Đổi trả miễn phí trong 7 ngày</li>
+                            <li><i class="fas fa-truck"></i> Giao hàng tận nơi toàn quốc</li>
+                            <li><i class="fas fa-headset"></i> Hỗ trợ 24/7</li>
+                        </ul>
+                    </aside>
                 </div>
-                
-                <button type="submit" class="btn btn-primary btn-lg">Đặt hàng</button>
-            </form>
-        </div>
+
+                <!-- Empty cart state -->
+                <div th:if="${cart == null or #lists.isEmpty(cart.items)}" class="checkout-empty-state">
+                    <div class="checkout-empty-icon">
+                        <i class="fas fa-shopping-cart"></i>
+                    </div>
+                    <h2>Giỏ hàng của bạn đang trống</h2>
+                    <p>Không có sản phẩm nào trong giỏ hàng. Hãy thêm sản phẩm để tiến hành thanh toán.</p>
+                    <a th:href="@{/products}" class="btn-shop-now">
+                        <i class="fas fa-shopping-bag"></i> Khám phá sản phẩm
+                    </a>
+                </div>
+            </div>
+        </section>
     </main>
-    
+
     <div th:replace="fragments/web-footer"></div>
+
+    <script th:src="@{/js/main.js}"></script>
+    <script th:src="@{/js/home.js}" defer></script>
+    <script>
+        // Payment option visual selection
+        document.querySelectorAll('.payment-option').forEach(option => {
+            option.addEventListener('click', function() {
+                document.querySelectorAll('.payment-option').forEach(o => o.classList.remove('selected'));
+                this.classList.add('selected');
+                const radio = this.querySelector('input[type="radio"]');
+                if (radio) radio.checked = true;
+            });
+        });
+
+        // Form validation before submit
+        document.getElementById('checkout-form')?.addEventListener('submit', function(e) {
+            const phone = document.getElementById('phone').value.trim();
+            const address = document.getElementById('shippingAddress').value.trim();
+            const btn = document.getElementById('btn-place-order');
+            
+            let valid = true;
+            
+            // Clear previous errors
+            document.querySelectorAll('.co-input.is-error').forEach(el => el.classList.remove('is-error'));
+            
+            if (!phone) {
+                document.getElementById('phone').classList.add('is-error');
+                valid = false;
+            }
+            
+            if (!address) {
+                document.getElementById('shippingAddress').classList.add('is-error');
+                valid = false;
+            }
+            
+            if (!valid) {
+                e.preventDefault();
+                alert('Vui lòng điền đầy đủ thông tin bắt buộc (số điện thoại và địa chỉ giao hàng).');
+                return;
+            }
+            
+            // Disable button to prevent double submit
+            if (btn) {
+                btn.disabled = true;
+                btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Đang xử lý...';
+            }
+        });
+    </script>
 </body>
 </html>

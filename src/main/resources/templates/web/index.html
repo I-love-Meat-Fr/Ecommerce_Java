@@ -80,15 +80,17 @@
                         <i class="fas fa-search"></i> Tìm nhanh
                     </button>
                 </form>
-                <div class="quick-filters">
-                    <button class="filter-chip active">Tất cả</button>
-                    <button class="filter-chip">Thời trang</button>
-                    <button class="filter-chip">Công nghệ</button>
-                    <button class="filter-chip">Nhà cửa</button>
-                    <button class="filter-chip">Sức khoẻ</button>
-                    <button class="filter-chip">Sách</button>
-                    <button class="filter-chip">Thể thao</button>
-                    <button class="filter-chip">Làm đẹp</button>
+                <div class="quick-filters" th:if="${not #lists.isEmpty(categories)}">
+                    <a th:href="@{/products}"
+                       class="filter-chip active">
+                        <i class="fas fa-th"></i> Tất cả
+                    </a>
+                    <a th:each="cat : ${categories}"
+                       th:href="@{/products(category=${cat.id})}"
+                       class="filter-chip">
+                        <i th:class="'fas ' + ${@categoryIcon.iconFor(cat.name)}"></i>
+                        <span th:text="${cat.name}">Danh mục</span>
+                    </a>
                 </div>
             </div>
         </div>
@@ -197,29 +199,18 @@
                                         <h3 class="flash-card-title" th:text="${stat.product.name}">Tên sản phẩm Flash Sale</h3>
                                         <div class="flash-card-price" th:text="${@money.format(stat.product.price)}">249.000đ</div>
                                         <div class="flash-progress-track">
-                                            <div class="flash-progress-fill" th:style="'width:' + ${stat.soldCount >= 100 ? 90 : (stat.soldCount * 100 / 100)} + '%'">.</div>
+                                            <div class="flash-progress-fill" th:style="'width:' + ${stat.progressPercent} + '%'">.</div>
                                         </div>
-                                        <span class="flash-sold-text">ĐÃ BÁN <th:block th:text="${stat.soldCount}">0</th:block></span>
+                                        <span class="flash-sold-text">ĐÃ BÁN <th:block th:text="${@money.formatSold(stat.soldCount)}">0</th:block></span>
                                     </div>
                                 </a>
                             </th:block>
-                            <th:block th:each="stat, iter : ${flashSaleStats}">
-                                <a th:href="@{/products/{id}(id=${stat.product.id})}" class="flash-card-item" aria-hidden="true">
-                                    <div class="flash-card-thumb">
-                                        <span class="flash-badge" th:if="${stat.hasDiscount}" th:text="'-' + ${stat.discountPercent} + '%'">-30%</span>
-                                        <span class="flash-badge flash-badge-soft" th:unless="${stat.hasDiscount}">HOT</span>
-                                        <img th:src="${stat.product.thumbnailUrl ?: 'https://placehold.co/300x300/f1f5f9/94a3b8?text=No+Img'}" th:alt="${stat.product.name}" class="flash-card-img">
-                                    </div>
-                                    <div class="flash-card-content">
-                                        <h3 class="flash-card-title" th:text="${stat.product.name}">Tên sản phẩm Flash Sale</h3>
-                                        <div class="flash-card-price" th:text="${@money.format(stat.product.price)}">249.000đ</div>
-                                        <div class="flash-progress-track">
-                                            <div class="flash-progress-fill" th:style="'width:' + ${stat.soldCount >= 100 ? 90 : (stat.soldCount * 100 / 100)} + '%'">.</div>
-                                        </div>
-                                        <span class="flash-sold-text">ĐÃ BÁN <th:block th:text="${stat.soldCount}">0</th:block></span>
-                                    </div>
-                                </a>
-                            </th:block>
+                            <!-- The track is intentionally rendered with only the real
+                                 products. The marquee logic in home.js (initFlashMarquee)
+                                 moves cards that drift off the left edge back to the end
+                                 of the track. This keeps the original CSS-only "duplicate
+                                 the strip" trick from ever showing two copies of the same
+                                 product on screen, even when the DB has just 1-2 items. -->
                         </div>
                     </div>
                 </div>

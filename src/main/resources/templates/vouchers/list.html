@@ -4,129 +4,251 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Danh sách Voucher - CNJ70 Shop</title>
+    <meta name="description" content="Kho voucher CNJ70 Shop - Mã giảm giá hấp dẫn">
+    <title>Kho Voucher - CNJ70 Shop</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Work+Sans:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
-
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-        tailwind.config = {
-            blockContainer: true,
-            corePlugins: {
-                preflight: false,
-                container: false
-            },
-            theme: {
-                extend: {
-                    fontFamily: {
-                        sans: ['Work Sans', 'Inter', 'system-ui', 'sans-serif']
-                    }
-                }
-            }
-        }
-    </script>
     <link rel="stylesheet" th:href="@{/css/style.css}">
     <link rel="stylesheet" th:href="@{/css/home.css}">
+    <link rel="stylesheet" th:href="@{/css/voucher.css}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <style>
-        .voucher-container {
-            max-width: 1200px;
-            width: 100%;
-            margin: 0 auto;
-            padding: 40px 20px;
-            box-sizing: border-box;
-        }
-        .voucher-header { margin-bottom: 30px; }
-        .voucher-header h1 { font-size: 28px; font-weight: 700; color: #333; margin: 0 0 8px 0; }
-        .voucher-header p { color: #666; margin: 0; }
-        .voucher-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(350px, 1fr)); gap: 20px; }
-        .voucher-card { background: #fff; border-radius: 8px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.1); display: flex; }
-        .voucher-left { background: linear-gradient(135deg, #ee4d2d 0%, #ff7337 100%); color: #fff; padding: 20px; min-width: 140px; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; }
-        .voucher-discount { font-size: 28px; font-weight: 700; }
-        .voucher-discount span { font-size: 14px; font-weight: 500; }
-        .voucher-type-badge { background: rgba(255,255,255,0.2); padding: 4px 10px; border-radius: 12px; font-size: 11px; margin-top: 8px; }
-        .voucher-right { flex: 1; padding: 16px 20px; display: flex; flex-direction: column; justify-content: space-between; }
-        .voucher-name { font-weight: 600; color: #333; font-size: 15px; margin-bottom: 6px; }
-        .voucher-code { font-family: monospace; background: #f5f5f5; padding: 4px 10px; border-radius: 4px; font-size: 14px; color: #ee4d2d; font-weight: 600; display: inline-block; margin-bottom: 8px; }
-        .voucher-meta { font-size: 12px; color: #888; display: flex; gap: 16px; flex-wrap: wrap; }
-        .voucher-meta i { margin-right: 4px; }
-        .voucher-expire { color: #ee4d2d; font-weight: 500; }
-        .voucher-empty { text-align: center; padding: 60px 20px; background: #fff; border-radius: 8px; }
-        .voucher-empty i { font-size: 48px; color: #ccc; margin-bottom: 16px; }
-        .voucher-empty h3 { color: #666; margin: 0 0 8px 0; }
-        .voucher-empty p { color: #999; margin: 0; }
-        .shop-badge { display: inline-flex; align-items: center; gap: 4px; font-size: 11px; background: #fff3e0; color: #e65100; padding: 2px 8px; border-radius: 4px; margin-bottom: 6px; }
-        .remaining-pill { background: #e8f5e9; color: #2e7d32; padding: 2px 8px; border-radius: 10px; font-size: 11px; font-weight: 500; }
-    </style>
 </head>
-<body class="home-page">
+<body class="voucher-page">
     <div th:replace="fragments/web-header"></div>
 
     <main class="main-content">
-    <div class="voucher-container">
-        <div class="voucher-header">
-            <h1><i class="fas fa-ticket"></i> Kho Voucher</h1>
-            <p>Danh sách các mã giảm giá hấp dẫn đang có sẵn</p>
-        </div>
-
-        <!-- Empty state -->
-        <div th:if="${#lists.isEmpty(vouchers)}" class="voucher-empty">
-            <i class="fas fa-ticket-alt"></i>
-            <h3>Chưa có voucher nào</h3>
-            <p>Hiện tại chưa có voucher khả dụng. Hãy quay lại sau nhé!</p>
-        </div>
-
-        <!-- Voucher grid -->
-        <div th:unless="${#lists.isEmpty(vouchers)}" class="voucher-grid">
-            <div th:each="voucher : ${vouchers}" class="voucher-card">
-                <div class="voucher-left">
-                    <div class="voucher-discount">
-                        <th:block th:if="${voucher.discountType.name() == 'PERCENT'}" th:text="${voucher.discountValue.intValue()} + '%'">10%</th:block>
-                        <th:block th:if="${voucher.discountType.name() == 'AMOUNT'}">
-                            <span>Giảm</span>
-                            <th:block th:text="${#numbers.formatDecimal(voucher.discountValue, 0, 'POINT', 0, 'DEFAULT')}">50.000đ</th:block>
-                        </th:block>
+        <!-- Hero -->
+        <section class="voucher-hero">
+            <div class="container">
+                <nav class="voucher-breadcrumb">
+                    <a th:href="@{/home}"><i class="fas fa-home"></i> Trang chủ</a>
+                    <i class="fas fa-chevron-right"></i>
+                    <span>Kho Voucher</span>
+                </nav>
+                <div class="voucher-hero-inner">
+                    <div class="voucher-hero-left">
+                        <span class="voucher-hero-tag">
+                            <i class="fas fa-ticket-alt"></i> Ưu đãi hấp dẫn
+                        </span>
+                        <h1>
+                            Kho <span class="teal-word">Voucher</span>
+                            <th:block th:if="${not #lists.isEmpty(vouchers)}">
+                                — <span class="teal-word" th:text="${#lists.size(vouchers)}">0</span> mã
+                            </th:block>
+                        </h1>
+                        <p>Khám phá và sử dụng ngay các mã giảm giá đang có sẵn cho đơn hàng của bạn.</p>
                     </div>
-                    <div class="voucher-type-badge">
-                        <th:block th:if="${voucher.type.name() == 'SHOP'}">SHOP</th:block>
-                        <th:block th:if="${voucher.type.name() == 'WEB'}">WEB</th:block>
+                    <div class="voucher-hero-right" th:if="${not #lists.isEmpty(vouchers)}">
+                        <div class="voucher-hero-stat">
+                            <i class="fas fa-ticket-alt"></i>
+                            <div>
+                                <strong th:text="${#lists.size(vouchers)}">0</strong>
+                                <span>voucher khả dụng</span>
+                            </div>
+                        </div>
                     </div>
                 </div>
-                <div class="voucher-right">
-                    <div>
-                        <div th:if="${voucher.type.name() == 'SHOP'}" class="shop-badge">
-                            <i class="fas fa-store"></i>
-                            <span th:text="${voucher.shopName}">Tên Shop</span>
-                        </div>
-                        <div class="voucher-name" th:text="${voucher.name}">Tên Voucher</div>
-                        <div class="voucher-code" th:text="${voucher.code}">CODE123</div>
-                        <div class="voucher-meta">
-                            <span th:if="${voucher.minOrderValue != null and voucher.minOrderValue.compareTo(T(java.math.BigDecimal).ZERO) > 0}">
-                                <i class="fas fa-shopping-cart"></i> Đơn tối thiểu <span th:text="${#numbers.formatDecimal(voucher.minOrderValue, 0, 'POINT', 0, 'DEFAULT')}">100.000đ</span>
-                            </span>
-                            <span th:if="${voucher.maxDiscountAmount != null}" class="remaining-pill">
-                                Giảm tối đa <th:block th:text="${#numbers.formatDecimal(voucher.maxDiscountAmount, 0, 'POINT', 0, 'DEFAULT')}">200.000đ</th:block>
-                            </span>
-                        </div>
-                    </div>
-                    <div class="voucher-meta">
-                        <span class="remaining-pill">
-                            <i class="fas fa-check-circle"></i> Còn <th:block th:text="${voucher.quantity - voucher.used}">50</th:block> lượt
-                        </span>
-                        <span th:if="${voucher.endDate != null}" class="voucher-expire">
-                            <i class="fas fa-clock"></i> Hết hạn: <th:block th:text="${#temporals.format(voucher.endDate, 'dd/MM/yyyy')}">31/12/2024</th:block>
-                        </span>
+            </div>
+        </section>
+
+        <!-- Filter bar -->
+        <div class="voucher-filter-bar" th:if="${not #lists.isEmpty(vouchers)}">
+            <div class="container">
+                <div class="voucher-filter-inner">
+                    <div class="voucher-filter-tabs">
+                        <button class="voucher-filter-tab active" data-filter="all">
+                            <i class="fas fa-th-large"></i> Tất cả
+                        </button>
+                        <button class="voucher-filter-tab" data-filter="SHOP">
+                            <i class="fas fa-store"></i> Voucher Shop
+                        </button>
+                        <button class="voucher-filter-tab" data-filter="WEB">
+                            <i class="fas fa-globe"></i> Voucher toàn sàn
+                        </button>
                     </div>
                 </div>
             </div>
         </div>
-    </div>
+
+        <!-- Voucher list -->
+        <section class="voucher-section">
+            <div class="container">
+
+                <!-- Empty state -->
+                <div th:if="${#lists.isEmpty(vouchers)}" class="voucher-empty">
+                    <div class="voucher-empty-icon">
+                        <i class="fas fa-ticket-alt"></i>
+                    </div>
+                    <h2>Chưa có voucher nào</h2>
+                    <p>Hiện tại chưa có voucher khả dụng. Hãy quay lại sau để nhận những mã giảm giá hấp dẫn nhé!</p>
+                    <a th:href="@{/home}" class="voucher-empty-btn">
+                        <i class="fas fa-home"></i> Về trang chủ
+                    </a>
+                </div>
+
+                <!-- Voucher grid -->
+                <div th:unless="${#lists.isEmpty(vouchers)}" class="voucher-grid" id="voucher-grid">
+                    <article th:each="voucher : ${vouchers}"
+                             class="voucher-card"
+                             th:attr="data-type=${voucher.type.name()}">
+                        
+                        <!-- Left: discount -->
+                        <div class="voucher-left">
+                            <div class="voucher-discount">
+                                <th:block th:if="${voucher.discountType.name() == 'PERCENT'}"
+                                          th:text="${voucher.discountValue.intValue()} + '%'">10%</th:block>
+                                <th:block th:if="${voucher.discountType.name() == 'AMOUNT'}">
+                                    <th:block th:text="${#numbers.formatDecimal(voucher.discountValue, 0, 'POINT', 0, 'DEFAULT')}">50.000</th:block>
+                                </th:block>
+                            </div>
+                            <th:block th:if="${voucher.discountType.name() == 'AMOUNT'}">
+                                <div class="voucher-discount-suffix">VND</div>
+                            </th:block>
+                            <th:block th:if="${voucher.discountType.name() == 'PERCENT'}">
+                                <div class="voucher-discount-suffix">OFF</div>
+                            </th:block>
+                            <div class="voucher-type-badge">
+                                <th:block th:if="${voucher.type.name() == 'SHOP'}">SHOP</th:block>
+                                <th:block th:if="${voucher.type.name() == 'WEB'}">WEB</th:block>
+                            </div>
+                        </div>
+
+                        <!-- Right: info -->
+                        <div class="voucher-right">
+                            <th:block th:if="${voucher.type.name() == 'SHOP' and voucher.shopName != null}">
+                                <span class="voucher-shop-name">
+                                    <i class="fas fa-store"></i>
+                                    <span th:text="${voucher.shopName}">Tên Shop</span>
+                                </span>
+                            </th:block>
+                            
+                            <h3 class="voucher-name" th:text="${voucher.name}">Tên Voucher</h3>
+
+                            <!-- Meta tags -->
+                            <div class="voucher-meta">
+                                <th:block th:if="${voucher.minOrderValue != null and voucher.minOrderValue.compareTo(T(java.math.BigDecimal).ZERO) > 0}">
+                                    <span class="voucher-meta-item">
+                                        <i class="fas fa-shopping-cart"></i>
+                                        Đơn từ <th:block th:text="${#numbers.formatDecimal(voucher.minOrderValue, 0, 'POINT', 0, 'DEFAULT')}">100.000</th:block>đ
+                                    </span>
+                                </th:block>
+                                <th:block th:if="${voucher.maxDiscountAmount != null and voucher.discountType.name() == 'PERCENT'}">
+                                    <span class="voucher-meta-pill">
+                                        <i class="fas fa-arrow-down"></i>
+                                        Giảm tối đa <th:block th:text="${#numbers.formatDecimal(voucher.maxDiscountAmount, 0, 'POINT', 0, 'DEFAULT')}">200.000</th:block>đ
+                                    </span>
+                                </th:block>
+                            </div>
+
+                            <div class="voucher-meta">
+                                <span class="voucher-meta-pill">
+                                    <i class="fas fa-fire"></i>
+                                    Còn <th:block th:text="${voucher.quantity - voucher.used}">50</th:block> lượt
+                                </span>
+                                <th:block th:if="${voucher.endDate != null}">
+                                    <th:block th:with="endDate=${voucher.endDate}, now=${T(java.time.LocalDateTime).now()}">
+                                        <span class="voucher-meta-item"
+                                              th:classappend="${endDate.isBefore(now.plusDays(7))} ? 'is-warn' : ''">
+                                            <i class="fas fa-clock"></i>
+                                            HSD: <th:block th:text="${#temporals.format(voucher.endDate, 'dd/MM/yyyy')}">31/12/2026</th:block>
+                                        </span>
+                                    </th:block>
+                                </th:block>
+                            </div>
+
+                            <!-- Code + copy -->
+                            <div class="voucher-code-wrap">
+                                <code class="voucher-code" th:text="${voucher.code}">CODE123</code>
+                                <button type="button"
+                                        class="voucher-copy-btn"
+                                        th:attr="data-code=${voucher.code}"
+                                        title="Sao chép mã">
+                                    <i class="fas fa-copy"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </article>
+                </div>
+            </div>
+        </section>
     </main>
 
     <div th:replace="fragments/web-footer"></div>
 
     <script th:src="@{/js/main.js}"></script>
-    <script th:src="@{/js/home.js}"></script>
+    <script th:src="@{/js/home.js}" defer></script>
+    <script>
+        // Filter tabs
+        document.querySelectorAll('.voucher-filter-tab').forEach(function(tab) {
+            tab.addEventListener('click', function() {
+                document.querySelectorAll('.voucher-filter-tab').forEach(function(t) {
+                    t.classList.remove('active');
+                });
+                tab.classList.add('active');
+
+                var filter = tab.dataset.filter;
+                document.querySelectorAll('.voucher-card').forEach(function(card) {
+                    if (filter === 'all' || card.dataset.type === filter) {
+                        card.style.display = '';
+                        card.style.animation = 'vcFadeIn 0.3s ease forwards';
+                    } else {
+                        card.style.display = 'none';
+                    }
+                });
+            });
+        });
+
+        // Copy voucher code to clipboard
+        function showVoucherToast(message) {
+            var existing = document.querySelector('.voucher-toast');
+            if (existing) existing.remove();
+
+            var toast = document.createElement('div');
+            toast.className = 'voucher-toast';
+            toast.innerHTML = '<i class="fas fa-check-circle"></i><span></span>';
+            toast.querySelector('span').textContent = message;
+            document.body.appendChild(toast);
+
+            setTimeout(() => {
+                toast.style.animation = 'vcSlideIn 0.3s ease reverse';
+                setTimeout(() => toast.remove(), 300);
+            }, 2200);
+        }
+
+        document.querySelectorAll('.voucher-copy-btn').forEach(function(btn) {
+            btn.addEventListener('click', function() {
+                var code = btn.dataset.code || '';
+                if (!code) return;
+
+                if (navigator.clipboard && navigator.clipboard.writeText) {
+                    navigator.clipboard.writeText(code).then(function() {
+                        btn.classList.add('copied');
+                        btn.innerHTML = '<i class="fas fa-check"></i>';
+                        showVoucherToast('Đã sao chép mã: ' + code);
+                        setTimeout(function() {
+                            btn.classList.remove('copied');
+                            btn.innerHTML = '<i class="fas fa-copy"></i>';
+                        }, 1800);
+                    });
+                } else {
+                    // Fallback for older browsers
+                    var temp = document.createElement('textarea');
+                    temp.value = code;
+                    document.body.appendChild(temp);
+                    temp.select();
+                    document.execCommand('copy');
+                    document.body.removeChild(temp);
+                    btn.classList.add('copied');
+                    btn.innerHTML = '<i class="fas fa-check"></i>';
+                    showVoucherToast('Đã sao chép mã: ' + code);
+                    setTimeout(function() {
+                        btn.classList.remove('copied');
+                        btn.innerHTML = '<i class="fas fa-copy"></i>';
+                    }, 1800);
+                }
+            });
+        });
+    </script>
 </body>
 </html>

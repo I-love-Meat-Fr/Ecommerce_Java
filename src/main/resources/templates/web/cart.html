@@ -80,7 +80,9 @@
                                     <th:block th:each="item : ${shopEntry.value}">
                                         <div class="cart-item-card" th:data-product-id="${item.productId}">
                                             <a th:href="@{/products/{id}(id=${item.productId})}" class="cart-item-thumb">
-                                                <img th:src="${item.imageUrl ?: 'https://placehold.co/120x120/f0f7f6/94a3b8?text=No+Img'}" th:alt="${item.productName}">
+                                                <img th:src="${@image.productImage(item.imageUrl)}"
+                                                     th:alt="${item.productName}"
+                                                     onerror="this.src='https://placehold.co/120x120/f0f7f6/94a3b8?text=No+Img'; this.onerror=null;">
                                             </a>
                                             <div class="cart-item-info">
                                                 <a th:href="@{/products/{id}(id=${item.productId})}" class="cart-item-name" th:text="${item.productName}">Tên sản phẩm</a>

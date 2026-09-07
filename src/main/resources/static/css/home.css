@@ -914,6 +914,16 @@
     font-weight: 600;
     cursor: pointer;
     transition: all 0.18s ease;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    white-space: nowrap;
+}
+
+.filter-chip i {
+    font-size: 11px;
+    opacity: 0.85;
 }
 
 .filter-chip:hover,
@@ -921,6 +931,7 @@
     border-color: var(--teal);
     background: var(--teal-soft);
     color: var(--teal-deep);
+    text-decoration: none;
 }
 
 /* ---------- Hero Section ---------- */
@@ -1457,17 +1468,23 @@
 .flash-scroll-container {
     overflow: hidden;
     padding: 4px 0 16px 0;
+    -webkit-mask-image: linear-gradient(to right, transparent 0, #000 24px, #000 calc(100% - 24px), transparent 100%);
+            mask-image: linear-gradient(to right, transparent 0, #000 24px, #000 calc(100% - 24px), transparent 100%);
 }
 
 .flash-products-track {
     display: flex;
     gap: 16px;
-    animation: flash-scroll 30s linear infinite;
     width: max-content;
+    /* The track is translated by home.js (initFlashMarquee). No CSS animation
+       here on purpose: we want JS to recycle cards off the left edge to keep
+       each visible product unique, even when the DB only has 1-2 items. */
+    will-change: transform;
+    transform: translate3d(0, 0, 0);
 }
 
-.flash-products-track:hover {
-    animation-play-state: paused;
+.flash-products-track.is-paused {
+    transition: none;
 }
 
 @keyframes flash-scroll {
