@@ -10,28 +10,54 @@
     <div class="sd-page-head">
         <div class="sd-page-head-title">
             <h1>Quản lý người dùng</h1>
-            <p>Danh sách toàn bộ tài khoản trong hệ thống (CUSTOMER, VENDOR, ADMIN).</p>
-        </div>
-        <div class="sd-page-head-actions">
-            <span class="sd-badge sd-badge-slate">
-                <i class="fas fa-users"></i>
-                <span th:text="${totalItems} + ' tài khoản'">0</span>
-            </span>
+            <p>Quản lý tài khoản và phân quyền người dùng trong hệ thống.</p>
         </div>
     </div>
 
-    <div th:if="${q != null and !#strings.isEmpty(q)}" class="sd-card" style="margin-bottom:16px;">
-        <div class="sd-card-body" style="display:flex;align-items:center;gap:10px;">
-            <i class="fas fa-filter"></i>
-            <span>Đang lọc theo:</span>
-            <span class="sd-badge sd-badge-slate" th:text="${q}">keyword</span>
-            <a th:href="@{/admin/users}" class="sd-btn sd-btn-secondary sd-btn-sm" style="margin-left:auto;">
-                <i class="fas fa-times"></i> Bỏ lọc
-            </a>
+    <!-- Stats Cards -->
+    <div class="dash-stats" style="margin-bottom:20px;">
+        <div class="dash-stat-card dash-stat-primary">
+            <div class="dash-stat-icon-wrap">
+                <div class="dash-stat-icon"><i class="fas fa-users"></i></div>
+            </div>
+            <div class="dash-stat-value" th:text="${totalItems}">0</div>
+            <div class="dash-stat-label">Tổng tài khoản</div>
+        </div>
+        <div class="dash-stat-card dash-stat-success">
+            <div class="dash-stat-icon-wrap">
+                <div class="dash-stat-icon"><i class="fas fa-user-check"></i></div>
+            </div>
+            <div class="dash-stat-value" th:text="${activeUsers ?: 0}">0</div>
+            <div class="dash-stat-label">Đang hoạt động</div>
+        </div>
+        <div class="dash-stat-card dash-stat-warning">
+            <div class="dash-stat-icon-wrap">
+                <div class="dash-stat-icon"><i class="fas fa-user-clock"></i></div>
+            </div>
+            <div class="dash-stat-value" th:text="${pendingUsers ?: 0}">0</div>
+            <div class="dash-stat-label">Chờ xác minh</div>
+        </div>
+        <div class="dash-stat-card" style="background:linear-gradient(135deg,#64748b 0%,#94a3b8 100%);color:white;border:none;">
+            <div class="dash-stat-icon-wrap">
+                <div class="dash-stat-icon"><i class="fas fa-user-shield"></i></div>
+            </div>
+            <div class="dash-stat-value" th:text="${adminCount ?: 0}">0</div>
+            <div class="dash-stat-label">Quản trị viên</div>
         </div>
     </div>
 
-    <div class="sd-card">
+    <div th:if="${q != null and !#strings.isEmpty(q)}" class="sd-alert sd-alert-info" style="margin-bottom:16px;">
+        <i class="fas fa-filter"></i>
+        <div class="sd-alert-content">
+            <strong>Đang lọc:</strong>
+            <span th:text="${q}">keyword</span>
+        </div>
+        <a th:href="@{/admin/users}" class="sd-btn sd-btn-secondary sd-btn-sm">
+            <i class="fas fa-times"></i> Bỏ lọc
+        </a>
+    </div>
+
+    <div class="dash-card">
         <div class="sd-card-body sd-card-body-flush">
             <table class="sd-table">
                 <thead>

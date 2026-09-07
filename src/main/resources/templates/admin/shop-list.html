@@ -10,28 +10,54 @@
     <div class="sd-page-head">
         <div class="sd-page-head-title">
             <h1>Quản lý cửa hàng</h1>
-            <p>Danh sách shop cho phép Admin quản lý trạng thái và duyệt.</p>
-        </div>
-        <div class="sd-page-head-actions">
-            <span class="sd-badge sd-badge-slate">
-                <i class="fas fa-store"></i>
-                <span th:text="${totalItems}">0</span> shop
-            </span>
+            <p>Phê duyệt và quản lý cửa hàng trên nền tảng.</p>
         </div>
     </div>
 
-    <div th:if="${q != null and !#strings.isEmpty(q)}" class="sd-card" style="margin-bottom:16px;">
-        <div class="sd-card-body" style="display:flex;align-items:center;gap:10px;">
-            <i class="fas fa-filter"></i>
-            <span>Lọc theo:</span>
-            <span class="sd-badge sd-badge-slate" th:text="${q}">keyword</span>
-            <a th:href="@{/admin/shops(page=0, size=${size})}" class="sd-btn sd-btn-secondary sd-btn-sm" style="margin-left:auto;">
-                <i class="fas fa-times"></i> Bỏ lọc
-            </a>
+    <!-- Stats Cards -->
+    <div class="dash-stats" style="margin-bottom:20px;">
+        <div class="dash-stat-card dash-stat-primary">
+            <div class="dash-stat-icon-wrap">
+                <div class="dash-stat-icon"><i class="fas fa-store"></i></div>
+            </div>
+            <div class="dash-stat-value" th:text="${totalItems}">0</div>
+            <div class="dash-stat-label">Tổng cửa hàng</div>
+        </div>
+        <div class="dash-stat-card dash-stat-success">
+            <div class="dash-stat-icon-wrap">
+                <div class="dash-stat-icon"><i class="fas fa-circle-check"></i></div>
+            </div>
+            <div class="dash-stat-value" th:text="${approvedShops ?: 0}">0</div>
+            <div class="dash-stat-label">Đã duyệt</div>
+        </div>
+        <div class="dash-stat-card dash-stat-warning">
+            <div class="dash-stat-icon-wrap">
+                <div class="dash-stat-icon"><i class="fas fa-hourglass-half"></i></div>
+            </div>
+            <div class="dash-stat-value" th:text="${pendingShops ?: 0}">0</div>
+            <div class="dash-stat-label">Chờ duyệt</div>
+        </div>
+        <div class="dash-stat-card dash-stat-danger">
+            <div class="dash-stat-icon-wrap">
+                <div class="dash-stat-icon"><i class="fas fa-circle-xmark"></i></div>
+            </div>
+            <div class="dash-stat-value" th:text="${rejectedShops ?: 0}">0</div>
+            <div class="dash-stat-label">Từ chối</div>
         </div>
     </div>
 
-    <div class="sd-card">
+    <div th:if="${q != null and !#strings.isEmpty(q)}" class="sd-alert sd-alert-info" style="margin-bottom:16px;">
+        <i class="fas fa-filter"></i>
+        <div class="sd-alert-content">
+            <strong>Đang lọc:</strong>
+            <span th:text="${q}">keyword</span>
+        </div>
+        <a th:href="@{/admin/shops}" class="sd-btn sd-btn-secondary sd-btn-sm">
+            <i class="fas fa-times"></i> Bỏ lọc
+        </a>
+    </div>
+
+    <div class="dash-card">
         <div class="sd-card-body sd-card-body-flush">
             <table class="sd-table">
                 <thead>

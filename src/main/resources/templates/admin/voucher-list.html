@@ -10,7 +10,7 @@
     <div class="sd-page-head">
         <div class="sd-page-head-title">
             <h1>Quản lý Voucher WEB</h1>
-            <p>Voucher áp dụng cho toàn bộ sản phẩm trên hệ thống.</p>
+            <p>Tạo và quản lý voucher giảm giá toàn hệ thống.</p>
         </div>
         <div class="sd-page-head-actions">
             <a th:href="@{/vouchers}" class="sd-btn sd-btn-secondary sd-btn-sm" target="_blank">
@@ -19,23 +19,40 @@
             </a>
             <a th:href="@{/admin/vouchers/create}" class="sd-btn sd-btn-primary sd-btn-sm">
                 <i class="fas fa-plus"></i>
-                <span>Tạo Voucher WEB</span>
+                <span>Tạo Voucher</span>
             </a>
         </div>
     </div>
 
-    <!-- Thông tin voucher -->
-    <div class="sd-card" style="margin-bottom: 20px;">
-        <div class="sd-card-body" style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap;">
-            <div style="display: flex; align-items: center; gap: 8px; color: #6366f1;">
-                <i class="fas fa-ticket-alt" style="font-size: 20px;"></i>
-                <span style="font-weight: 600;" th:text="${#lists.size(vouchers)}">0</span>
-                <span style="color: #64748b;">voucher</span>
+    <!-- Stats Cards -->
+    <div class="dash-stats" style="margin-bottom:20px;">
+        <div class="dash-stat-card" style="background:linear-gradient(135deg,#f59e0b 0%,#fbbf24 100%);color:white;border:none;">
+            <div class="dash-stat-icon-wrap">
+                <div class="dash-stat-icon"><i class="fas fa-ticket"></i></div>
             </div>
-            <div style="margin-left: auto; font-size: 13px; color: #64748b;">
-                <i class="fas fa-info-circle"></i>
-                Người dùng xem danh sách tại trang <a href="/vouchers" target="_blank" style="color: #6366f1;">/vouchers</a>
+            <div class="dash-stat-value" th:text="${#lists.size(vouchers)}">0</div>
+            <div class="dash-stat-label">Tổng Voucher</div>
+        </div>
+        <div class="dash-stat-card dash-stat-success">
+            <div class="dash-stat-icon-wrap">
+                <div class="dash-stat-icon"><i class="fas fa-circle-check"></i></div>
             </div>
+            <div class="dash-stat-value" th:text="${activeVouchers ?: 0}">0</div>
+            <div class="dash-stat-label">Đang hoạt động</div>
+        </div>
+        <div class="dash-stat-card dash-stat-primary">
+            <div class="dash-stat-icon-wrap">
+                <div class="dash-stat-icon"><i class="fas fa-ticket-simple"></i></div>
+            </div>
+            <div class="dash-stat-value" th:text="${totalRemaining ?: 0}">0</div>
+            <div class="dash-stat-label">Lượt sử dụng còn lại</div>
+        </div>
+        <div class="dash-stat-card" style="background:linear-gradient(135deg,#64748b 0%,#94a3b8 100%);color:white;border:none;">
+            <div class="dash-stat-icon-wrap">
+                <div class="dash-stat-icon"><i class="fas fa-percent"></i></div>
+            </div>
+            <div class="dash-stat-value" th:text="${percentVouchers ?: 0}">0</div>
+            <div class="dash-stat-label">Voucher % giảm</div>
         </div>
     </div>
 

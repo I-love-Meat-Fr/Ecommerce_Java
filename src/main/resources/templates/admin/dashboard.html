@@ -1,151 +1,218 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org"
-      xmlns:sec="http://www.thymeleaf.org/extras/springsecurity6"
+      xmlns:sec="http://www.th3ymeleaf.org/extras/spring-security6"
       th:replace="~{layout/admin-layout :: layout(title='Admin Dashboard - CNJ70', content=~{::main-content}, scripts=~{::page-scripts})}">
 <head>
     <title>Admin Dashboard - CNJ70</title>
 </head>
 <body>
 <main th:fragment="main-content">
-    <div class="sd-page-head">
-        <div class="sd-page-head-title">
-            <h1>Tổng quan hệ thống</h1>
-            <p>Xin chào, quản trị viên. Dưới đây là bức tranh toàn cảnh về hệ thống.</p>
+
+    <!-- Hero Section -->
+    <div class="dash-hero">
+        <div class="dash-hero-content">
+            <div class="dash-greeting">
+                <h1>Chào mừng trở lại, <span class="dash-name-highlight" sec:authentication="name">Admin</span></h1>
+                <p class="dash-greeting-sub">Đây là tổng quan về hoạt động của nền tảng CNJ70</p>
+            </div>
+            <div class="dash-hero-actions">
+                <a th:href="@{/home}" class="dash-btn dash-btn-outline">
+                    <i class="fas fa-globe"></i>
+                    <span>Xem Website</span>
+                </a>
+            </div>
         </div>
-        <div class="sd-page-head-actions">
-            <a th:href="@{/home}" class="sd-btn sd-btn-secondary sd-btn-sm">
-                <i class="fas fa-globe"></i>
-                <span>Xem website</span>
-            </a>
+        <div class="dash-hero-bg">
+            <div class="dash-hero-blob dash-hero-blob-1"></div>
+            <div class="dash-hero-blob dash-hero-blob-2"></div>
         </div>
     </div>
 
-    <div class="sd-stats-grid sd-stats-4">
-        <div class="sd-stat">
-            <div class="sd-stat-head">
-                <div class="sd-stat-icon sd-indigo"><i class="fas fa-users"></i></div>
+    <!-- Stats Grid -->
+    <div class="dash-stats">
+        <div class="dash-stat-card dash-stat-primary">
+            <div class="dash-stat-icon-wrap">
+                <div class="dash-stat-icon">
+                    <i class="fas fa-users"></i>
+                </div>
+                <div class="dash-stat-trend dash-trend-up">
+                    <i class="fas fa-arrow-up"></i>
+                    <span>12%</span>
+                </div>
             </div>
-            <div class="sd-stat-label">Tổng người dùng</div>
-            <div class="sd-stat-value" th:text="${stats.totalUsers}">0</div>
-            <div class="sd-stat-foot">Tổng số tài khoản trong hệ thống</div>
+            <div class="dash-stat-value" th:text="${stats.totalUsers}">0</div>
+            <div class="dash-stat-label">Tổng người dùng</div>
+            <div class="dash-stat-spark">
+                <svg viewBox="0 0 100 30" preserveAspectRatio="none">
+                    <path d="M0,25 L15,20 L30,22 L45,15 L60,18 L75,10 L100,5" fill="none" stroke="rgba(255,255,255,0.4)" stroke-width="2"/>
+                </svg>
+            </div>
         </div>
-        <div class="sd-stat">
-            <div class="sd-stat-head">
-                <div class="sd-stat-icon sd-red"><i class="fas fa-store"></i></div>
+
+        <div class="dash-stat-card dash-stat-success">
+            <div class="dash-stat-icon-wrap">
+                <div class="dash-stat-icon">
+                    <i class="fas fa-store"></i>
+                </div>
+                <div class="dash-stat-trend dash-trend-up">
+                    <i class="fas fa-arrow-up"></i>
+                    <span>8%</span>
+                </div>
             </div>
-            <div class="sd-stat-label">Tổng cửa hàng</div>
-            <div class="sd-stat-value" th:text="${stats.totalShops}">0</div>
-            <div class="sd-stat-foot">Tất cả cửa hàng đã đăng ký</div>
+            <div class="dash-stat-value" th:text="${stats.totalShops}">0</div>
+            <div class="dash-stat-label">Tổng cửa hàng</div>
+            <div class="dash-stat-spark">
+                <svg viewBox="0 0 100 30" preserveAspectRatio="none">
+                    <path d="M0,20 L15,22 L30,18 L45,20 L60,15 L75,12 L100,8" fill="none" stroke="rgba(255,255,255,0.4)" stroke-width="2"/>
+                </svg>
+            </div>
         </div>
-        <div class="sd-stat">
-            <div class="sd-stat-head">
-                <div class="sd-stat-icon sd-green"><i class="fas fa-box-open"></i></div>
+
+        <div class="dash-stat-card dash-stat-warning">
+            <div class="dash-stat-icon-wrap">
+                <div class="dash-stat-icon">
+                    <i class="fas fa-box-open"></i>
+                </div>
+                <div class="dash-stat-trend dash-trend-up">
+                    <i class="fas fa-arrow-up"></i>
+                    <span>24%</span>
+                </div>
             </div>
-            <div class="sd-stat-label">Tổng sản phẩm</div>
-            <div class="sd-stat-value" th:text="${stats.totalProducts}">0</div>
-            <div class="sd-stat-foot">Tổng sản phẩm trong hệ thống</div>
+            <div class="dash-stat-value" th:text="${stats.totalProducts}">0</div>
+            <div class="dash-stat-label">Tổng sản phẩm</div>
+            <div class="dash-stat-spark">
+                <svg viewBox="0 0 100 30" preserveAspectRatio="none">
+                    <path d="M0,25 L15,20 L30,22 L45,12 L60,15 L75,8 L100,3" fill="none" stroke="rgba(255,255,255,0.4)" stroke-width="2"/>
+                </svg>
+            </div>
         </div>
-        <div class="sd-stat">
-            <div class="sd-stat-head">
-                <div class="sd-stat-icon sd-amber"><i class="fas fa-shopping-bag"></i></div>
+
+        <div class="dash-stat-card dash-stat-danger">
+            <div class="dash-stat-icon-wrap">
+                <div class="dash-stat-icon">
+                    <i class="fas fa-shopping-bag"></i>
+                </div>
+                <div class="dash-stat-trend dash-trend-up">
+                    <i class="fas fa-arrow-up"></i>
+                    <span>18%</span>
+                </div>
             </div>
-            <div class="sd-stat-label">Tổng đơn hàng</div>
-            <div class="sd-stat-value" th:text="${stats.totalOrders}">0</div>
-            <div class="sd-stat-foot">Tổng đơn hàng đã tạo</div>
+            <div class="dash-stat-value" th:text="${stats.totalOrders}">0</div>
+            <div class="dash-stat-label">Tổng đơn hàng</div>
+            <div class="dash-stat-spark">
+                <svg viewBox="0 0 100 30" preserveAspectRatio="none">
+                    <path d="M0,22 L15,18 L30,20 L45,15 L60,12 L75,10 L100,5" fill="none" stroke="rgba(255,255,255,0.4)" stroke-width="2"/>
+                </svg>
+            </div>
         </div>
     </div>
 
-    <div class="sd-grid sd-grid-3-2">
-        <div class="sd-card">
-            <div class="sd-card-head">
-                <div>
+    <!-- Main Content Grid -->
+    <div class="dash-main-grid">
+        <!-- Revenue Card -->
+        <div class="dash-card dash-card-chart">
+            <div class="dash-card-header">
+                <div class="dash-card-title-group">
                     <h3><i class="fas fa-chart-line"></i> Doanh thu nền tảng</h3>
                     <p>Tổng doanh thu từ các đơn đã giao thành công</p>
                 </div>
-                <span class="sd-badge sd-badge-indigo">All-time</span>
+                <div class="dash-card-badge">All-time</div>
             </div>
-            <div class="sd-card-body">
-                <div style="text-align:center; padding: 16px 0;">
-                    <div style="font-size:32px; font-weight:700; letter-spacing:-0.02em;"
-                         th:text="${@money.format(stats.totalPlatformRevenue)}">0đ</div>
-                    <div class="sd-text-muted" style="margin-top:6px; font-size:12.5px;">Tổng doanh thu đơn đã giao</div>
-                </div>
-                <div id="adminRevenueChart" class="sd-chart-wrap sd-chart-tall"></div>
+            <div class="dash-revenue-display">
+                <div class="dash-revenue-value" th:text="${@money.format(stats.totalPlatformRevenue)}">0đ</div>
+                <div class="dash-revenue-label">Tổng doanh thu</div>
             </div>
+            <div id="adminRevenueChart" class="dash-chart-container"></div>
         </div>
 
-        <div class="sd-card">
-            <div class="sd-card-head">
-                <div>
-                    <h3><i class="fas fa-clock"></i> Hoạt động gần đây</h3>
+        <!-- Activity Card -->
+        <div class="dash-card dash-card-activity">
+            <div class="dash-card-header">
+                <div class="dash-card-title-group">
+                    <h3><i class="fas fa-bolt"></i> Hoạt động gần đây</h3>
                     <p>5 đơn hàng mới nhất</p>
                 </div>
             </div>
-            <div class="sd-card-body sd-card-body-flush">
-                <div th:if="${not #lists.isEmpty(stats.recentActivities)}" class="sd-activity-list">
-                    <div class="sd-activity-item" th:each="act : ${stats.recentActivities}">
-                        <div class="sd-activity-icon"
-                             th:classappend="${act.type == 'ORDER' ? 'sd-amber' : 'sd-indigo'}">
-                            <i class="fas"
-                               th:classappend="${act.type == 'ORDER' ? 'fa-receipt' : 'fa-circle-info'}"></i>
+            <div class="dash-card-body" th:if="${not #lists.isEmpty(stats.recentActivities)}">
+                <div class="dash-activity-list">
+                    <div class="dash-activity-item" th:each="act : ${stats.recentActivities}">
+                        <div class="dash-activity-icon-wrap" th:classappend="${act.type == 'ORDER' ? 'dash-icon-order' : 'dash-icon-info'}">
+                            <i class="fas" th:classappend="${act.type == 'ORDER' ? 'fa-receipt' : 'fa-circle-info'}"></i>
                         </div>
-                        <div class="sd-activity-body">
-                            <div class="sd-activity-text" th:text="${act.description}">Mô tả hoạt động</div>
-                            <div class="sd-activity-time" th:text="${act.time}">Thời gian</div>
+                        <div class="dash-activity-content">
+                            <div class="dash-activity-text" th:text="${act.description}">Mô tả hoạt động</div>
+                            <div class="dash-activity-time" th:text="${act.time}">Thời gian</div>
+                        </div>
+                        <div class="dash-activity-arrow">
+                            <i class="fas fa-chevron-right"></i>
                         </div>
                     </div>
                 </div>
-                <div th:if="${#lists.isEmpty(stats.recentActivities)}" class="sd-empty">
-                    <i class="fas fa-inbox"></i>
-                    <h3>Chưa có hoạt động</h3>
-                    <p>Không có hoạt động nào gần đây</p>
-                </div>
+            </div>
+            <div class="dash-empty" th:if="${#lists.isEmpty(stats.recentActivities)}">
+                <div class="dash-empty-icon"><i class="fas fa-inbox"></i></div>
+                <h3>Chưa có hoạt động</h3>
+                <p>Không có hoạt động nào gần đây</p>
             </div>
         </div>
     </div>
 
-    <div class="sd-card">
-        <div class="sd-card-head">
-            <div>
-                <h3><i class="fas fa-bolt"></i> Thao tác nhanh</h3>
+    <!-- Quick Actions -->
+    <div class="dash-card dash-card-quick">
+        <div class="dash-card-header">
+            <div class="dash-card-title-group">
+                <h3><i class="fas fa-rocket"></i> Thao tác nhanh</h3>
                 <p>Truy cập nhanh các khu vực quản lý</p>
             </div>
         </div>
-        <div class="sd-card-body">
-            <div class="sd-quick-grid">
-                <a th:href="@{/admin/users}" class="sd-quick-card">
-                    <div class="sd-quick-icon"><i class="fas fa-user-cog"></i></div>
-                    <div class="sd-quick-body">
-                        <div class="sd-quick-title">Quản lý người dùng</div>
-                        <div class="sd-quick-sub">Khách hàng đã đăng ký</div>
+        <div class="dash-card-body">
+            <div class="dash-quick-grid">
+                <a th:href="@{/admin/users}" class="dash-quick-card">
+                    <div class="dash-quick-icon dash-icon-users">
+                        <i class="fas fa-user-cog"></i>
+                    </div>
+                    <div class="dash-quick-content">
+                        <div class="dash-quick-title">Quản lý người dùng</div>
+                        <div class="dash-quick-sub">Khách hàng đã đăng ký</div>
+                    </div>
+                    <div class="dash-quick-arrow">
+                        <i class="fas fa-arrow-right"></i>
                     </div>
                 </a>
-                <a th:href="@{/admin/categories}" class="sd-quick-card">
-                    <div class="sd-quick-icon"><i class="fas fa-tag"></i></div>
-                    <div class="sd-quick-body">
-                        <div class="sd-quick-title">Quản lý danh mục</div>
-                        <div class="sd-quick-sub">Danh mục sản phẩm</div>
+                <a th:href="@{/admin/categories}" class="dash-quick-card">
+                    <div class="dash-quick-icon dash-icon-tags">
+                        <i class="fas fa-tag"></i>
+                    </div>
+                    <div class="dash-quick-content">
+                        <div class="dash-quick-title">Quản lý danh mục</div>
+                        <div class="dash-quick-sub">Danh mục sản phẩm</div>
+                    </div>
+                    <div class="dash-quick-arrow">
+                        <i class="fas fa-arrow-right"></i>
                     </div>
                 </a>
-                <a th:href="@{/admin/vouchers}" class="sd-quick-card">
-                    <div class="sd-quick-icon"><i class="fas fa-ticket"></i></div>
-                    <div class="sd-quick-body">
-                        <div class="sd-quick-title">Voucher WEB</div>
-                        <div class="sd-quick-sub">Mã giảm giá toàn hệ thống</div>
+                <a th:href="@{/admin/vouchers}" class="dash-quick-card">
+                    <div class="dash-quick-icon dash-icon-voucher">
+                        <i class="fas fa-ticket"></i>
+                    </div>
+                    <div class="dash-quick-content">
+                        <div class="dash-quick-title">Voucher WEB</div>
+                        <div class="dash-quick-sub">Mã giảm giá toàn hệ thống</div>
+                    </div>
+                    <div class="dash-quick-arrow">
+                        <i class="fas fa-arrow-right"></i>
                     </div>
                 </a>
-                <a th:href="@{/home}" class="sd-quick-card">
-                    <div class="sd-quick-icon"><i class="fas fa-globe"></i></div>
-                    <div class="sd-quick-body">
-                        <div class="sd-quick-title">Quản lý cửa hàng</div>
-                        <div class="sd-quick-sub">Phê duyệt và theo dõi shop</div>
+                <a th:href="@{/admin/orders}" class="dash-quick-card">
+                    <div class="dash-quick-icon dash-icon-orders">
+                        <i class="fas fa-cart-shopping"></i>
                     </div>
-                </a>
-                <a th:href="@{/admin/orders}" class="sd-quick-card">
-                    <div class="sd-quick-icon"><i class="fas fa-cart-shopping"></i></div>
-                    <div class="sd-quick-body">
-                        <div class="sd-quick-title">Quản lý đơn hàng</div>
-                        <div class="sd-quick-sub">Theo dõi đơn hàng toàn hệ thống</div>
+                    <div class="dash-quick-content">
+                        <div class="dash-quick-title">Quản lý đơn hàng</div>
+                        <div class="dash-quick-sub">Theo dõi đơn hàng toàn hệ thống</div>
+                    </div>
+                    <div class="dash-quick-arrow">
+                        <i class="fas fa-arrow-right"></i>
                     </div>
                 </a>
             </div>
@@ -165,10 +232,11 @@
             var options = {
                 chart: {
                     type: 'area',
-                    height: 260,
+                    height: 300,
                     toolbar: { show: false },
-                    fontFamily: 'Work Sans, sans-serif',
-                    zoom: { enabled: false }
+                    fontFamily: 'Inter, sans-serif',
+                    zoom: { enabled: false },
+                    background: 'transparent'
                 },
                 series: [
                     { name: 'Doanh thu', data: revenue },
@@ -178,13 +246,27 @@
                 stroke: { curve: 'smooth', width: 3 },
                 fill: {
                     type: 'gradient',
-                    gradient: { shadeIntensity: 1, opacityFrom: 0.35, opacityTo: 0, stops: [0, 90, 100] }
+                    gradient: {
+                        shadeIntensity: 1,
+                        opacityFrom: 0.4,
+                        opacityTo: 0.05,
+                        stops: [0, 90, 100]
+                    }
                 },
                 dataLabels: { enabled: false },
-                grid: { borderColor: '#e2e8f0', strokeDashArray: 4, xaxis: { lines: { show: false } } },
+                grid: { 
+                    borderColor: '#f1f5f9', 
+                    strokeDashArray: 4, 
+                    xaxis: { lines: { show: false } },
+                    yaxis: { lines: { show: true } },
+                    padding: { left: 10, right: 10 }
+                },
                 xaxis: {
                     categories: labels,
-                    labels: { style: { colors: '#64748b', fontSize: '12px' } },
+                    labels: { 
+                        style: { colors: '#94a3b8', fontSize: '12px', fontWeight: 500 },
+                        offsetY: 5
+                    },
                     axisBorder: { show: false },
                     axisTicks: { show: false }
                 },
@@ -192,7 +274,7 @@
                     {
                         seriesName: 'Doanh thu',
                         labels: {
-                            style: { colors: '#64748b', fontSize: '12px' },
+                            style: { colors: '#94a3b8', fontSize: '12px' },
                             formatter: function(v){ return new Intl.NumberFormat('vi-VN').format(v) + ' đ'; }
                         }
                     },
@@ -200,14 +282,23 @@
                         seriesName: 'Đơn hàng',
                         opposite: true,
                         labels: {
-                            style: { colors: '#64748b', fontSize: '12px' },
+                            style: { colors: '#94a3b8', fontSize: '12px' },
                             formatter: function(v){ return new Intl.NumberFormat('vi-VN').format(v); }
                         }
                     }
                 ],
-                legend: { show: true, position: 'top', horizontalAlign: 'left' },
+                legend: { 
+                    show: true, 
+                    position: 'top', 
+                    horizontalAlign: 'left',
+                    fontSize: '13px',
+                    fontWeight: 500,
+                    labels: { colors: '#64748b' },
+                    markers: { width: 12, height: 12, radius: 6 }
+                },
                 tooltip: {
                     theme: 'light',
+                    style: { fontSize: '13px', fontFamily: 'Inter, sans-serif' },
                     y: { formatter: function(v){ return new Intl.NumberFormat('vi-VN').format(v); } }
                 }
             };

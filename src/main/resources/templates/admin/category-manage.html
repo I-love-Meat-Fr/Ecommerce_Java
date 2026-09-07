@@ -10,28 +10,47 @@
     <div class="sd-page-head">
         <div class="sd-page-head-title">
             <h1>Quản lý danh mục</h1>
-            <p>Thêm, sửa, xóa các danh mục sản phẩm trong hệ thống.</p>
-        </div>
-        <div class="sd-page-head-actions">
-            <span class="sd-badge sd-badge-slate">
-                <i class="fas fa-tags"></i>
-                <span th:text="${totalItems} + ' danh mục'">0</span>
-            </span>
+            <p>Tạo và quản lý danh mục sản phẩm trên nền tảng.</p>
         </div>
     </div>
 
-    <div th:if="${q != null and !#strings.isEmpty(q)}" class="sd-card" style="margin-bottom:16px;">
-        <div class="sd-card-body" style="display:flex;align-items:center;gap:10px;">
-            <i class="fas fa-filter"></i>
-            <span>Đang lọc theo:</span>
-            <span class="sd-badge sd-badge-slate" th:text="${q}">keyword</span>
-            <a th:href="@{/admin/categories(page=0, size=${size})}" class="sd-btn sd-btn-secondary sd-btn-sm" style="margin-left:auto;">
-                <i class="fas fa-times"></i> Bỏ lọc
-            </a>
+    <!-- Stats Cards -->
+    <div class="dash-stats" style="margin-bottom:20px;">
+        <div class="dash-stat-card dash-stat-primary">
+            <div class="dash-stat-icon-wrap">
+                <div class="dash-stat-icon"><i class="fas fa-tags"></i></div>
+            </div>
+            <div class="dash-stat-value" th:text="${totalItems}">0</div>
+            <div class="dash-stat-label">Tổng danh mục</div>
+        </div>
+        <div class="dash-stat-card dash-stat-success">
+            <div class="dash-stat-icon-wrap">
+                <div class="dash-stat-icon"><i class="fas fa-circle-check"></i></div>
+            </div>
+            <div class="dash-stat-value" th:text="${activeCategories ?: 0}">0</div>
+            <div class="dash-stat-label">Đang hoạt động</div>
+        </div>
+        <div class="dash-stat-card dash-stat-warning">
+            <div class="dash-stat-icon-wrap">
+                <div class="dash-stat-icon"><i class="fas fa-ban"></i></div>
+            </div>
+            <div class="dash-stat-value" th:text="${inactiveCategories ?: 0}">0</div>
+            <div class="dash-stat-label">Tạm khóa</div>
         </div>
     </div>
 
-    <div class="sd-card" style="margin-bottom:20px;">
+    <div th:if="${q != null and !#strings.isEmpty(q)}" class="sd-alert sd-alert-info" style="margin-bottom:16px;">
+        <i class="fas fa-filter"></i>
+        <div class="sd-alert-content">
+            <strong>Đang lọc:</strong>
+            <span th:text="${q}">keyword</span>
+        </div>
+        <a th:href="@{/admin/categories}" class="sd-btn sd-btn-secondary sd-btn-sm">
+            <i class="fas fa-times"></i> Bỏ lọc
+        </a>
+    </div>
+
+    <div class="dash-card" style="margin-bottom:20px;">
         <div class="sd-card-head">
             <div>
                 <h3 th:if="${editMode == null or !editMode}">

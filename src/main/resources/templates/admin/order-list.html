@@ -10,28 +10,55 @@
     <div class="sd-page-head">
         <div class="sd-page-head-title">
             <h1>Quản lý đơn hàng</h1>
-            <p>Xem và theo dõi trạng thái các đơn hàng trong hệ thống.</p>
-        </div>
-        <div class="sd-page-head-actions">
-            <span class="sd-badge sd-badge-slate">
-                <i class="fas fa-cart-shopping"></i>
-                <span th:text="${totalItems}">0</span> đơn hàng
-            </span>
+            <p>Theo dõi và quản lý đơn hàng toàn hệ thống.</p>
         </div>
     </div>
 
-    <div th:if="${q != null and !#strings.isEmpty(q)}" class="sd-card" style="margin-bottom:16px;">
-        <div class="sd-card-body" style="display:flex;align-items:center;gap:10px;">
-            <i class="fas fa-filter"></i>
-            <span>Đang lọc theo:</span>
-            <span class="sd-badge sd-badge-slate" th:text="${q}">keyword</span>
-            <span style="margin-left:auto;color:var(--text-muted);font-size:13px;">
-                <span th:text="${totalItems}">0</span> kết quả
-            </span>
+    <!-- Stats Cards -->
+    <div class="dash-stats" style="margin-bottom:20px;">
+        <div class="dash-stat-card dash-stat-primary">
+            <div class="dash-stat-icon-wrap">
+                <div class="dash-stat-icon"><i class="fas fa-cart-shopping"></i></div>
+            </div>
+            <div class="dash-stat-value" th:text="${totalItems}">0</div>
+            <div class="dash-stat-label">Tổng đơn hàng</div>
+        </div>
+        <div class="dash-stat-card dash-stat-warning">
+            <div class="dash-stat-icon-wrap">
+                <div class="dash-stat-icon"><i class="fas fa-clock"></i></div>
+            </div>
+            <div class="dash-stat-value" th:text="${pendingOrders ?: 0}">0</div>
+            <div class="dash-stat-label">Chờ xác nhận</div>
+        </div>
+        <div class="dash-stat-card" style="background:linear-gradient(135deg,#0ea5e9 0%,#38bdf8 100%);color:white;border:none;">
+            <div class="dash-stat-icon-wrap">
+                <div class="dash-stat-icon"><i class="fas fa-truck-fast"></i></div>
+            </div>
+            <div class="dash-stat-value" th:text="${shippingOrders ?: 0}">0</div>
+            <div class="dash-stat-label">Đang giao</div>
+        </div>
+        <div class="dash-stat-card dash-stat-success">
+            <div class="dash-stat-icon-wrap">
+                <div class="dash-stat-icon"><i class="fas fa-circle-check"></i></div>
+            </div>
+            <div class="dash-stat-value" th:text="${completedOrders ?: 0}">0</div>
+            <div class="dash-stat-label">Đã giao thành công</div>
         </div>
     </div>
 
-    <div class="sd-card">
+    <div th:if="${q != null and !#strings.isEmpty(q)}" class="sd-alert sd-alert-info" style="margin-bottom:16px;">
+        <i class="fas fa-filter"></i>
+        <div class="sd-alert-content">
+            <strong>Đang lọc:</strong>
+            <span th:text="${q}">keyword</span>
+            <span th:text="' (' + ${totalItems} + ' kết quả)'">kết quả</span>
+        </div>
+        <a th:href="@{/admin/orders}" class="sd-btn sd-btn-secondary sd-btn-sm">
+            <i class="fas fa-times"></i> Bỏ lọc
+        </a>
+    </div>
+
+    <div class="dash-card">
         <div class="sd-card-body sd-card-body-flush">
             <table class="sd-table">
                 <thead>
