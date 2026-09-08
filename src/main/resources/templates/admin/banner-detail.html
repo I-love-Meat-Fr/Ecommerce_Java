@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/springsecurity6"
+      th:replace="~{layout/admin-layout :: layout(title='Chi tiết Banner - CNJ70 Admin', content=~{::main-content}, scripts=~{::page-scripts})}">
+<head>
+    <title>Chi tiết Banner - CNJ70 Admin</title>
+</head>
+<body>
+<main th:fragment="main-content">
+    <div class="sd-page-head">
+        <div class="sd-page-head-title">
+            <h1>Chi tiết Banner</h1>
+            <p th:text="${banner.title}">title</p>
+        </div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;">
+            <a th:href="@{/admin/banners(page=${page}, size=${size}, q=${q}, status=${status})}"
+               class="sd-btn sd-btn-secondary sd-btn-sm">
+                <i class="fas fa-arrow-left"></i> Quay lại
+            </a>
+            <a th:href="@{/admin/banners/{id}/edit(id=${banner.id}, page=${page}, size=${size}, q=${q}, status=${status})}"
+               class="sd-btn sd-btn-primary sd-btn-sm">
+                <i class="fas fa-pen"></i> Sửa
+            </a>
+            <form th:if="${banner.status != 'PUBLISHED'}"
+                  th:action="@{/admin/banners/{id}/publish(id=${banner.id}, page=${page}, size=${size}, q=${q}, status=${status})}"
+                  method="post" style="display:inline;">
+                <button type="submit" class="sd-btn sd-btn-primary sd-btn-sm">
+                    <i class="fas fa-check"></i> Publish
+                </button>
+            </form>
+            <form th:if="${banner.status == 'PUBLISHED'}"
+                  th:action="@{/admin/banners/{id}/unpublish(id=${banner.id}, page=${page}, size=${size}, q=${q}, status=${status})}"
+                  method="post" style="display:inline;">
+                <button type="submit" class="sd-btn sd-btn-warning sd-btn-sm">
+                    <i class="fas fa-eye-slash"></i> Unpublish
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <div th:if="${flashSuccess != null}" class="sd-alert sd-alert-success">
+        <i class="fas fa-circle-check"></i>
+        <span th:text="${flashSuccess}">flashSuccess</span>
+    </div>
+    <div th:if="${flashError != null}" class="sd-alert sd-alert-error">
+        <i class="fas fa-circle-exclamation"></i>
+        <span th:text="${flashError}">flashError</span>
+    </div>
+
+    <div class="sd-card">
+        <div class="sd-card-body" style="display:grid;grid-template-columns:1fr 1fr;gap:24px;">
+            <div>
+                <div style="display:flex;gap:10px;align-items:center;margin-bottom:10px;">
+                    <span class="sd-badge"
+                          th:classappend="${banner.status == 'PUBLISHED' ? 'sd-badge-green' : 'sd-badge-slate'}"
+                          th:text="${banner.status == 'PUBLISHED' ? 'Đã Publish' : 'Chưa Publish'}">status</span>
+                    <span class="sd-badge sd-badge-slate"
+                          th:text="${banner.position != null ? banner.position : 'Chưa gán vị trí'}">pos</span>
+                    <span class="sd-badge sd-badge-blue"
+                          th:text="${'Thứ tự: ' + (banner.sortOrder != null ? banner.sortOrder : 0)}">order</span>
+                </div>
+
+                <h2 th:text="${banner.title}" style="margin-top:0;">title</h2>
+                <p th:text="${banner.description}" style="color:#475569;">description</p>
+
+                <table class="sd-table" style="margin-top:14px;">
+                    <tbody>
+                        <tr>
+                            <th style="width:160px;">Tag</th>
+                            <td>
+                                <i th:class="${banner.tagIcon != null ? banner.tagIcon : 'fas fa-tag'}" style="margin-right:6px;"></i>
+                                <span th:text="${banner.tag != null ? banner.tag : '—'}">tag</span>
+                            </td>
+                        </tr>
+                        <tr>
+                            <th>Theme</th>
+                            <td th:text="${banner.theme != null ? banner.theme : 'Mặc định'}">theme</td>
+                        </tr>
+                        <tr>
+                            <th>CTA Text</th>
+                            <td>
+                                <span th:text="${banner.ctaText != null ? banner.ctaText : '—'}">cta</span>
+                                <i th:if="${banner.ctaIcon != null and !#strings.isEmpty(banner.ctaIcon)}"
+                                   th:class="${banner.ctaIcon}" style="margin-left:6px;"></i>
+                            </td>
+                        </tr>
+                        <tr>
+                            <th>Link</th>
+                            <td>
+                                <code th:if="${banner.link != null and !#strings.isEmpty(banner.link)}"
+                                      th:text="${banner.link}">link</code>
+                                <span th:unless="${banner.link != null and !#strings.isEmpty(banner.link)}">—</span>
+                            </td>
+                        </tr>
+                        <tr>
+                            <th>ID</th>
+                            <td><code th:text="${banner.id}">id</code></td>
+                        </tr>
+                        <tr>
+                            <th>Created</th>
+                            <td th:text="${banner.createdAt != null ? #temporals.format(banner.createdAt, 'yyyy-MM-dd HH:mm') : '—'}">created</td>
+                        </tr>
+                        <tr>
+                            <th>Updated</th>
+                            <td th:text="${banner.updatedAt != null ? #temporals.format(banner.updatedAt, 'yyyy-MM-dd HH:mm') : '—'}">updated</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <div>
+                <label class="sd-form-label">Ảnh banner</label>
+                <div th:if="${banner.imageUrl != null and !#strings.isEmpty(banner.imageUrl)}"
+                     style="border:1px solid var(--border,#e2e8f0);border-radius:8px;overflow:hidden;background:#f1f5f9;">
+                    <img th:src="${banner.imageUrl}" th:alt="${banner.title}"
+                         style="width:100%;height:auto;display:block;" />
+                </div>
+                <div th:unless="${banner.imageUrl != null and !#strings.isEmpty(banner.imageUrl)}"
+                     style="height:200px;display:flex;align-items:center;justify-content:center;
+                            border:1px dashed var(--border,#cbd5e1);border-radius:8px;color:#94a3b8;">
+                    <i class="fas fa-image" style="font-size:32px;"></i>
+                </div>
+                <small style="color:#64748b;font-size:12px;display:block;margin-top:8px;"
+                       th:if="${banner.imageUrl != null and !#strings.isEmpty(banner.imageUrl)}">
+                    URL: <code th:text="${banner.imageUrl}">url</code>
+                </small>
+            </div>
+        </div>
+
+        <div class="sd-card-body" style="border-top:1px solid var(--border,#e2e8f0);display:flex;justify-content:space-between;align-items:center;">
+            <small style="color:#64748b;font-size:12px;">
+                Phase 17: Banner đang Publish sẽ hiển thị trên Customer Home theo vị trí đã gán.
+            </small>
+            <form th:action="@{/admin/banners/{id}/delete(id=${banner.id}, page=${page}, size=${size}, q=${q}, status=${status})}"
+                  method="post"
+                  onsubmit="return confirm('Xóa banner này? Hành động không thể hoàn tác.');">
+                <button type="submit" class="sd-btn sd-btn-danger sd-btn-sm">
+                    <i class="fas fa-trash"></i> Xóa banner
+                </button>
+            </form>
+        </div>
+    </div>
+</main>
+
+<th:block th:fragment="page-scripts"></th:block>
+</body>
+</html>

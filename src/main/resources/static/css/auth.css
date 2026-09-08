@@ -954,3 +954,49 @@
         height: 48px;
     }
 }
+
+/* ============================================================================
+ * UI PHASE 5 — Auth Skip Link (WCAG 2.4.1 Bypass Blocks)
+ * ----------------------------------------------------------------------------
+ * Auth pages (login/register) là self-contained, không dùng layout. Skip-link
+ * cho phép keyboard/screen-reader users bypass decorative content.
+ * ============================================================================ */
+.auth-skip-link {
+    position: absolute;
+    top: -100px;
+    left: 16px;
+    z-index: 100000;
+    padding: 10px 16px;
+    background: #ffffff;
+    color: #0f172a;
+    border: 2px solid #4f46e5;
+    border-radius: 6px;
+    font-family: inherit;
+    font-size: 14px;
+    font-weight: 600;
+    text-decoration: none;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    transition: top 180ms ease;
+}
+
+.auth-skip-link:focus,
+.auth-skip-link:focus-visible {
+    top: 16px;
+    outline: 2px solid #4f46e5;
+    outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .auth-skip-link {
+        transition: none;
+    }
+}
+
+@media (forced-colors: active) {
+    .auth-skip-link {
+        border: 2px solid CanvasText;
+        background: Canvas;
+        color: CanvasText;
+        forced-color-adjust: none;
+    }
+}

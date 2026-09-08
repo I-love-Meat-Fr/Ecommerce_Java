@@ -30,4 +30,13 @@ public interface OrderRepository extends MongoRepository<Order, String> {
 
     Page<Order> findByUserNameContainingIgnoreCaseOrUserIdContaining(
             String userName, String userId, Pageable pageable);
+
+    // === Phase 10: Order Status Filter (Admin) ===
+    Page<Order> findByStatus(OrderStatus status, Pageable pageable);
+
+    Page<Order> findByStatusAndUserNameContainingIgnoreCase(
+            OrderStatus status, String userName, Pageable pageable);
+
+    Page<Order> findByStatusAndUserIdContainingIgnoreCase(
+            OrderStatus status, String userId, Pageable pageable);
 }

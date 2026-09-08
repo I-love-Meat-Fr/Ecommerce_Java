@@ -20,6 +20,12 @@
         </div>
     </div>
 
+    <!-- Flash messages -->
+    <div th:if="${success}" class="sd-alert sd-alert-success" style="margin-bottom:16px;">
+        <i class="fas fa-circle-check"></i>
+        <span th:text="${success}">Thành công</span>
+    </div>
+
     <!-- Info box -->
     <div class="sd-card" style="margin-bottom: 20px;">
         <div class="sd-card-body" style="display: flex; gap: 12px; align-items: flex-start; background: #eff6ff; border-radius: 8px; padding: 16px;">

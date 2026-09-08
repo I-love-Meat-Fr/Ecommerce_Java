@@ -30,6 +30,7 @@ public class AdminDashboardRes {
         private String type;
         private String description;
         private String time;
+        private String orderId;
     }
 
     @Data

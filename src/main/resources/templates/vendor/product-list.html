@@ -1,197 +1,144 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org"
-      xmlns:sec="http://www.thymeleaf.org/extras/springsecurity6">
+      xmlns:sec="http://www.thymeleaf.org/extras/springsecurity6"
+      th:replace="~{layout/vendor-layout :: layout(title='Quản lý sản phẩm - CNJ70 Vendor', content=~{::main-content}, scripts=~{::page-scripts})}">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Quản lý sản phẩm - CNJ70 Vendor</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Work+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" th:href="@{/css/dashboard.css}">
-    <link rel="stylesheet" th:href="@{/css/vendor-shared.css}">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body>
-    <div class="sd-app" id="appShell">
-        <aside class="sd-sidebar">
-            <div class="sd-sidebar-header">
-                <div class="sd-sidebar-logo"><i class="fas fa-bolt"></i></div>
-                <div class="sd-sidebar-brand">
-                    <span class="sd-sidebar-brand-name">CNJ70 Shop</span>
-                    <span class="sd-sidebar-brand-sub">Vendor Console</span>
-                </div>
+<main th:fragment="main-content">
+
+    <!-- PAGE HERO -->
+    <div class="vd-page-hero">
+        <div class="vd-page-hero-left">
+            <div class="vd-page-hero-icon"><i class="fas fa-boxes-stacked"></i></div>
+            <div class="vd-page-hero-info">
+                <h2>Quản lý sản phẩm</h2>
+                <p>Danh sách sản phẩm đang kinh doanh của bạn.</p>
             </div>
-            <nav class="sd-sidebar-nav">
-                <div class="sd-sidebar-nav-section">
-                    <span class="sd-sidebar-nav-title">Tổng quan</span>
-                    <a th:href="@{/vendor/dashboard}" class="sd-nav-item"><i class="fas fa-house"></i><span class="sd-nav-label">Dashboard</span></a>
-                </div>
-                <div class="sd-sidebar-nav-section">
-                    <span class="sd-sidebar-nav-title">Quản lý</span>
-                    <a th:href="@{/vendor/shop}" class="sd-nav-item"><i class="fas fa-store"></i><span class="sd-nav-label">Cửa hàng</span></a>
-                    <a th:href="@{/vendor/products}" class="sd-nav-item active"><i class="fas fa-box"></i><span class="sd-nav-label">Sản phẩm</span></a>
-                    <a th:href="@{/vendor/orders}" class="sd-nav-item"><i class="fas fa-cart-shopping"></i><span class="sd-nav-label">Đơn hàng</span></a>
-                    <a th:href="@{/vendor/vouchers}" class="sd-nav-item"><i class="fas fa-ticket"></i><span class="sd-nav-label">Voucher</span></a>
-                </div>
-                <div class="sd-sidebar-nav-section">
-                    <span class="sd-sidebar-nav-title">Khác</span>
-                    <a th:href="@{/home}" class="sd-nav-item"><i class="fas fa-globe"></i><span class="sd-nav-label">Xem website</span></a>
-                    <form th:action="@{/auth/logout}" method="post" class="sd-logout-form">
-                        <button type="submit" class="sd-nav-item"><i class="fas fa-arrow-right-from-bracket"></i><span class="sd-nav-label">Đăng xuất</span></button>
-                    </form>
-                </div>
-            </nav>
-            <div class="sd-sidebar-footer">
-                <div class="sd-sidebar-user">
-                    <div class="sd-sidebar-avatar" sec:authentication="name">V</div>
-                    <div class="sd-sidebar-user-info">
-                        <div class="sd-sidebar-user-name" sec:authentication="name">Vendor</div>
-                        <div class="sd-sidebar-user-role">Vendor</div>
-                    </div>
-                </div>
-            </div>
-        </aside>
-
-        <div class="sd-main">
-            <div class="sd-topbar">
-                <button class="sd-topbar-toggle" type="button" id="sidebarToggle"><i class="fas fa-bars"></i></button>
-                <div class="sd-topbar-search">
-                    <i class="fas fa-magnifying-glass"></i>
-                    <input type="text" placeholder="Tìm sản phẩm...">
-                </div>
-                <div class="sd-topbar-actions">
-                    <button class="sd-icon-btn" type="button"><i class="fas fa-bell"></i><span class="sd-icon-btn-dot"></span></button>
-                    <div class="sd-topbar-divider"></div>
-                    <div class="sd-topbar-profile">
-                        <div class="sd-topbar-avatar" sec:authentication="name">V</div>
-                        <span class="sd-topbar-profile-name" sec:authentication="name">Vendor</span>
-                    </div>
-                </div>
-            </div>
-
-            <main class="sd-content">
-
-                <!-- PAGE HERO -->
-                <div class="vd-page-hero">
-                    <div class="vd-page-hero-left">
-                        <div class="vd-page-hero-icon"><i class="fas fa-boxes-stacked"></i></div>
-                        <div class="vd-page-hero-info">
-                            <h2>Quản lý sản phẩm</h2>
-                            <p>Danh sách sản phẩm đang kinh doanh của bạn.</p>
-                        </div>
-                    </div>
-                    <div class="vd-page-hero-actions">
-                        <a th:href="@{/vendor/products/create}" class="sd-btn sd-btn-cta"><i class="fas fa-plus"></i> Thêm sản phẩm</a>
-                    </div>
-                </div>
-
-                <!-- ALERTS -->
-                <div th:if="${success}" class="sd-alert sd-alert-success"><i class="fas fa-circle-check"></i><span th:text="${success}"></span></div>
-                <div th:if="${error}" class="sd-alert sd-alert-danger"><i class="fas fa-triangle-exclamation"></i><span th:text="${error}"></span></div>
-
-                <!-- TOOLBAR -->
-                <div class="vd-toolbar">
-                    <div class="vd-toolbar-search">
-                        <i class="fas fa-magnifying-glass"></i>
-                        <input type="text" placeholder="Tìm theo tên sản phẩm...">
-                    </div>
-                    <select>
-                        <option>Tất cả trạng thái</option>
-                        <option>Đang bán</option>
-                        <option>Bản nháp</option>
-                        <option>Ngừng bán</option>
-                    </select>
-                    <select>
-                        <option>Tất cả danh mục</option>
-                    </select>
-                </div>
-
-                <!-- TABLE / EMPTY -->
-                <div class="sd-card">
-                    <div class="sd-card-body sd-card-body-flush">
-                        <div th:if="${#lists.isEmpty(products)}" class="sd-empty">
-                            <i class="fas fa-box-open"></i>
-                            <h3>Chưa có sản phẩm nào</h3>
-                            <p>Bắt đầu bán hàng bằng cách thêm sản phẩm đầu tiên của bạn.</p>
-                            <a th:href="@{/vendor/products/create}" class="sd-btn sd-btn-cta"><i class="fas fa-plus"></i> Thêm sản phẩm</a>
-                        </div>
-
-                        <table th:unless="${#lists.isEmpty(products)}" class="sd-table">
-                            <thead>
-                                <tr>
-                                    <th>Sản phẩm</th>
-                                    <th>Danh mục</th>
-                                    <th>Giá</th>
-                                    <th>Tồn kho</th>
-                                    <th>Trạng thái</th>
-                                    <th style="text-align:right;">Thao tác</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr th:each="product : ${products}">
-                                    <td>
-                                        <div class="vd-row-stack">
-                                            <div class="vd-row-thumb">
-                                                <img th:if="${product.thumbnailUrl}" th:src="${product.thumbnailUrl}" alt="">
-                                                <i th:unless="${product.thumbnailUrl}" class="fas fa-image"></i>
-                                            </div>
-                                            <div>
-                                                <div class="vd-row-name" th:text="${product.name}">Tên sản phẩm</div>
-                                                <div class="vd-row-sub" th:text="${product.brand != null ? product.brand : '—'}">Brand</div>
-                                            </div>
-                                        </div>
-                                    </td>
-                                    <td th:text="${product.categoryName != null ? product.categoryName : 'Chưa phân loại'}">Danh mục</td>
-                                    <td><strong th:text="${@money.format(product.price)}">0đ</strong></td>
-                                    <td>
-                                        <span class="vd-stock-pill"
-                                              th:classappend="${product.stock <= 0 ? 'out' : (product.stock <= 10 ? 'low' : '')}"
-                                              th:text="${product.stock}">0</span>
-                                    </td>
-                                    <td>
-                                        <span class="sd-badge"
-                                              th:classappend="${product.status.name() == 'ACTIVE' ? 'sd-badge-green' : (product.status.name() == 'DRAFT' ? 'sd-badge-slate' : 'sd-badge-red')}"
-                                              th:text="${product.status.name() == 'ACTIVE' ? 'Đang bán' : (product.status.name() == 'DRAFT' ? 'Bản nháp' : 'Ngừng bán')}">ACTIVE</span>
-                                    </td>
-                                    <td>
-                                        <div class="vd-row-actions">
-                                            <a th:href="@{/vendor/products/edit/{id}(id=${product.id})}" class="sd-btn sd-btn-secondary sd-btn-sm" title="Sửa">
-                                                <i class="fas fa-pen"></i>
-                                            </a>
-                                            <form th:action="@{/vendor/products/delete/{id}(id=${product.id})}" method="post" class="sd-logout-form">
-                                                <button type="submit" class="sd-btn sd-btn-danger sd-btn-sm" onclick="return confirm('Bạn có chắc muốn xóa sản phẩm này?')" title="Xóa">
-                                                    <i class="fas fa-trash"></i>
-                                                </button>
-                                            </form>
-                                        </div>
-                                    </td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-
-            </main>
+        </div>
+        <div class="vd-page-hero-actions">
+            <span class="vd-page-hero-stat">
+                <i class="fas fa-layer-group"></i>
+                <span th:text="${#lists.size(products)}">0</span> sản phẩm
+            </span>
+            <a th:href="@{/vendor/products/create}" class="sd-btn sd-btn-cta"><i class="fas fa-plus"></i> Thêm sản phẩm</a>
         </div>
     </div>
 
-    <script>
-        (function() {
-            const shell = document.getElementById('appShell');
-            const toggle = document.getElementById('sidebarToggle');
-            const KEY = 'cnj70-sidebar-expanded';
-            if (localStorage.getItem(KEY) === '1') shell.classList.add('sidebar-expanded');
-            toggle?.addEventListener('click', () => {
-                shell.classList.toggle('sidebar-expanded');
-                localStorage.setItem(KEY, shell.classList.contains('sidebar-expanded') ? '1' : '0');
-            });
-            document.querySelectorAll('.sd-sidebar-avatar, .sd-topbar-avatar').forEach(el => {
-                const name = (el.textContent || '').trim();
-                if (!name) return;
-                el.textContent = name.charAt(0).toUpperCase();
-            });
-        })();
-    </script>
+    <!-- ALERTS -->
+    <div th:if="${success}" class="sd-alert sd-alert-success"><i class="fas fa-circle-check"></i><span th:text="${success}"></span></div>
+    <div th:if="${error}" class="sd-alert sd-alert-danger"><i class="fas fa-triangle-exclamation"></i><span th:text="${error}"></span></div>
+
+    <!-- TOOLBAR -->
+    <div class="sd-card vd-toolbar" style="margin-bottom:20px;">
+        <div class="sd-card-body">
+            <form th:action="@{/vendor/products}" method="get" class="vd-toolbar-form">
+                <input type="text" name="q" th:value="${q}"
+                       placeholder="Tìm theo tên sản phẩm..."
+                       class="vd-toolbar-search"
+                       style="padding:8px 10px;border:1px solid var(--border,#e2e8f0);border-radius:6px;" />
+                <select name="status" class="vd-toolbar-select"
+                        style="padding:8px 10px;border:1px solid var(--border,#e2e8f0);border-radius:6px;">
+                    <option value="">Tất cả trạng thái</option>
+                    <option value="ACTIVE" th:selected="${status == 'ACTIVE'}">Đang bán</option>
+                    <option value="DRAFT" th:selected="${status == 'DRAFT'}">Bản nháp</option>
+                    <option value="OUT_OF_STOCK" th:selected="${status == 'OUT_OF_STOCK'}">Ngừng bán</option>
+                </select>
+                <select name="category" class="vd-toolbar-select"
+                        style="padding:8px 10px;border:1px solid var(--border,#e2e8f0);border-radius:6px;">
+                    <option value="">Tất cả danh mục</option>
+                </select>
+                <button type="submit" class="sd-btn sd-btn-primary sd-btn-sm vd-toolbar-btn">
+                    <i class="fas fa-search"></i> Lọc
+                </button>
+                <a th:href="@{/vendor/products}"
+                   class="sd-btn sd-btn-secondary sd-btn-sm vd-toolbar-btn">
+                    <i class="fas fa-rotate-left"></i> Đặt lại
+                </a>
+            </form>
+        </div>
+    </div>
+
+    <!-- TABLE / EMPTY -->
+    <div class="sd-card">
+        <div class="sd-card-body sd-card-body-flush">
+            <div th:if="${#lists.isEmpty(products)}" class="sd-empty">
+                <i class="fas fa-box-open"></i>
+                <h3>Chưa có sản phẩm nào</h3>
+                <p>Bắt đầu bán hàng bằng cách thêm sản phẩm đầu tiên của bạn.</p>
+                <a th:href="@{/vendor/products/create}" class="sd-btn sd-btn-cta"><i class="fas fa-plus"></i> Thêm sản phẩm</a>
+            </div>
+
+            <table th:unless="${#lists.isEmpty(products)}" class="sd-table">
+                <thead>
+                    <tr>
+                        <th class="sd-col-stt">STT</th>
+                        <th>Sản phẩm</th>
+                        <th>Danh mục</th>
+                        <th>Giá</th>
+                        <th>Tồn kho</th>
+                        <th>Trạng thái</th>
+                        <th style="text-align:right;">Thao tác</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr th:if="${#lists.isEmpty(products)}">
+                        <td colspan="7">
+                            <div class="sd-empty">
+                                <i class="fas fa-box-open"></i>
+                                <h3>Chưa có sản phẩm nào</h3>
+                                <p>Bắt đầu bán hàng bằng cách thêm sản phẩm đầu tiên của bạn.</p>
+                                <a th:href="@{/vendor/products/create}" class="sd-btn sd-btn-cta"><i class="fas fa-plus"></i> Thêm sản phẩm</a>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr th:each="product, iter : ${products}">
+                        <td class="sd-col-stt" th:text="${iter.count}">1</td>
+                        <td>
+                            <div class="vd-row-stack">
+                                <div class="vd-row-thumb">
+                                    <img th:if="${product.thumbnailUrl}" th:src="${product.thumbnailUrl}" alt="">
+                                    <i th:unless="${product.thumbnailUrl}" class="fas fa-image"></i>
+                                </div>
+                                <div>
+                                    <div class="vd-row-name" th:text="${product.name}">Tên sản phẩm</div>
+                                    <div class="vd-row-sub" th:text="${product.brand != null ? product.brand : '—'}">Brand</div>
+                                </div>
+                            </div>
+                        </td>
+                        <td th:text="${product.categoryName != null ? product.categoryName : 'Chưa phân loại'}">Danh mục</td>
+                        <td><strong th:text="${@money.format(product.price)}">0đ</strong></td>
+                        <td>
+                            <span class="vd-stock-pill"
+                                  th:classappend="${product.stock <= 0 ? 'out' : (product.stock <= 10 ? 'low' : '')}"
+                                  th:text="${product.stock}">0</span>
+                        </td>
+                        <td>
+                            <span class="sd-badge"
+                                  th:classappend="${product.status.name() == 'ACTIVE' ? 'sd-badge-green' : (product.status.name() == 'DRAFT' ? 'sd-badge-slate' : 'sd-badge-red')}"
+                                  th:text="${product.status.name() == 'ACTIVE' ? 'Đang bán' : (product.status.name() == 'DRAFT' ? 'Bản nháp' : 'Ngừng bán')}">ACTIVE</span>
+                        </td>
+                        <td>
+                            <div class="vd-row-actions">
+                                <a th:href="@{/vendor/products/edit/{id}(id=${product.id})}" class="sd-btn sd-btn-secondary sd-btn-sm" title="Sửa">
+                                    <i class="fas fa-pen"></i>
+                                </a>
+                                <form th:action="@{/vendor/products/delete/{id}(id=${product.id})}" method="post" class="sd-logout-form">
+                                    <button type="submit" class="sd-btn sd-btn-danger sd-btn-sm" onclick="return confirm('Bạn có chắc muốn xóa sản phẩm này?')" title="Xóa">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </form>
+                            </div>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+</main>
+
+<th:block th:fragment="page-scripts"></th:block>
 </body>
 </html>

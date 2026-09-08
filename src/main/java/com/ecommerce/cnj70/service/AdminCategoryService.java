@@ -8,6 +8,8 @@ public interface AdminCategoryService {
 
     Page<Category> listCategories(Pageable pageable, String q);
 
+    Page<Category> listCategories(Pageable pageable, String q, Boolean active);
+
     Category getCategoryById(String id);
 
     Category createCategory(String name, String description);

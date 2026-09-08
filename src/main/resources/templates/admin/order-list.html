@@ -12,50 +12,67 @@
             <h1>Quản lý đơn hàng</h1>
             <p>Theo dõi và quản lý đơn hàng toàn hệ thống.</p>
         </div>
-    </div>
-
-    <!-- Stats Cards -->
-    <div class="dash-stats" style="margin-bottom:20px;">
-        <div class="dash-stat-card dash-stat-primary">
-            <div class="dash-stat-icon-wrap">
-                <div class="dash-stat-icon"><i class="fas fa-cart-shopping"></i></div>
-            </div>
-            <div class="dash-stat-value" th:text="${totalItems}">0</div>
-            <div class="dash-stat-label">Tổng đơn hàng</div>
-        </div>
-        <div class="dash-stat-card dash-stat-warning">
-            <div class="dash-stat-icon-wrap">
-                <div class="dash-stat-icon"><i class="fas fa-clock"></i></div>
-            </div>
-            <div class="dash-stat-value" th:text="${pendingOrders ?: 0}">0</div>
-            <div class="dash-stat-label">Chờ xác nhận</div>
-        </div>
-        <div class="dash-stat-card" style="background:linear-gradient(135deg,#0ea5e9 0%,#38bdf8 100%);color:white;border:none;">
-            <div class="dash-stat-icon-wrap">
-                <div class="dash-stat-icon"><i class="fas fa-truck-fast"></i></div>
-            </div>
-            <div class="dash-stat-value" th:text="${shippingOrders ?: 0}">0</div>
-            <div class="dash-stat-label">Đang giao</div>
-        </div>
-        <div class="dash-stat-card dash-stat-success">
-            <div class="dash-stat-icon-wrap">
-                <div class="dash-stat-icon"><i class="fas fa-circle-check"></i></div>
-            </div>
-            <div class="dash-stat-value" th:text="${completedOrders ?: 0}">0</div>
-            <div class="dash-stat-label">Đã giao thành công</div>
+        <div class="sd-page-head-meta">
+            <span class="sd-page-head-meta-label">Tổng đơn hàng</span>
+            <span class="sd-page-head-meta-value" th:text="${totalItems}">0</span>
         </div>
     </div>
 
-    <div th:if="${q != null and !#strings.isEmpty(q)}" class="sd-alert sd-alert-info" style="margin-bottom:16px;">
-        <i class="fas fa-filter"></i>
-        <div class="sd-alert-content">
-            <strong>Đang lọc:</strong>
-            <span th:text="${q}">keyword</span>
-            <span th:text="' (' + ${totalItems} + ' kết quả)'">kết quả</span>
+    <div class="sd-card sd-toolbar" style="margin-bottom:20px;">
+        <div class="sd-card-body">
+            <form th:action="@{/admin/orders}" method="get"
+                  class="sd-toolbar-form">
+                <input type="hidden" name="size" th:value="${size}" />
+                <input type="text" name="q" th:value="${q}"
+                       placeholder="Tìm theo tên hoặc ID khách hàng..."
+                       class="sd-input sd-toolbar-search"
+                       style="padding:8px 10px;border:1px solid var(--border,#e2e8f0);border-radius:6px;" />
+                <select name="status" class="sd-select sd-toolbar-select"
+                        style="padding:8px 10px;border:1px solid var(--border,#e2e8f0);border-radius:6px;">
+                    <option value="">Tất cả trạng thái</option>
+                    <option th:each="s : ${statuses}"
+                            th:value="${s.name()}"
+                            th:text="${s.name() == 'PENDING' ? 'Chờ xác nhận'
+                                  : (s.name() == 'PREPARING' ? 'Đang chuẩn bị'
+                                  : (s.name() == 'SHIPPING' ? 'Đang giao'
+                                  : (s.name() == 'DELIVERED' ? 'Đã giao'
+                                  : (s.name() == 'CANCELLED' ? 'Đã hủy' : s.name()))))}"
+                            th:selected="${status == s.name()}">PENDING</option>
+                </select>
+                <button type="submit" class="sd-btn sd-btn-primary sd-btn-sm sd-toolbar-btn">
+                    <i class="fas fa-search"></i> Lọc
+                </button>
+                <a th:href="@{/admin/orders(page=0, size=${size})}"
+                   class="sd-btn sd-btn-secondary sd-btn-sm sd-toolbar-btn">
+                    <i class="fas fa-rotate-left"></i> Đặt lại
+                </a>
+            </form>
         </div>
-        <a th:href="@{/admin/orders}" class="sd-btn sd-btn-secondary sd-btn-sm">
-            <i class="fas fa-times"></i> Bỏ lọc
-        </a>
+    </div>
+
+    <div class="sd-card" th:if="${(q != null and !#strings.isEmpty(q)) or (status != null and !#strings.isEmpty(status))}"
+         style="margin-bottom:16px;">
+        <div class="sd-card-body" style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+            <i class="fas fa-filter"></i>
+            <span>Đang lọc theo:</span>
+            <span th:if="${q != null and !#strings.isEmpty(q)}" class="sd-badge sd-badge-slate">
+                Từ khóa: <span th:text="${q}">keyword</span>
+            </span>
+            <span th:if="${status != null and !#strings.isEmpty(status)}" class="sd-badge sd-badge-blue">
+                Trạng thái:
+                <th:block th:if="${status == 'PENDING'}">Chờ xác nhận</th:block>
+                <th:block th:if="${status == 'PREPARING'}">Đang chuẩn bị</th:block>
+                <th:block th:if="${status == 'SHIPPING'}">Đang giao</th:block>
+                <th:block th:if="${status == 'DELIVERED'}">Đã giao</th:block>
+                <th:block th:if="${status == 'CANCELLED'}">Đã hủy</th:block>
+            </span>
+            <a th:href="@{/admin/orders(page=0, size=${size})}" class="sd-btn sd-btn-secondary sd-btn-sm" style="margin-left:auto;">
+                <i class="fas fa-times"></i> Bỏ lọc
+            </a>
+            <span style="color:var(--text-muted);font-size:13px;">
+                <span th:text="${totalItems}">0</span> kết quả
+            </span>
+        </div>
     </div>
 
     <div class="dash-card">
@@ -63,6 +80,7 @@
             <table class="sd-table">
                 <thead>
                     <tr>
+                        <th class="sd-col-stt">STT</th>
                         <th>ID</th>
                         <th>Khách hàng</th>
                         <th>Tổng cộng</th>
@@ -73,17 +91,26 @@
                 </thead>
                 <tbody>
                     <tr th:if="${#lists.isEmpty(orders)}">
-                        <td colspan="6">
+                        <td colspan="7">
                             <div class="sd-empty">
                                 <i class="fas fa-cart-shopping"></i>
-                                <h3 th:if="${q != null and !#strings.isEmpty(q)}">Không tìm thấy đơn hàng</h3>
-                                <h3 th:unless="${q != null and !#strings.isEmpty(q)}">Chưa có đơn hàng nào</h3>
-                                <p th:if="${q != null and !#strings.isEmpty(q)}">Không có đơn hàng nào khớp với từ khóa.</p>
-                                <p th:unless="${q != null and !#strings.isEmpty(q)}">Hiện chưa có đơn hàng nào trong hệ thống.</p>
+                                <h3 th:if="${(q != null and !#strings.isEmpty(q)) or (status != null and !#strings.isEmpty(status))}">
+                                    Không tìm thấy đơn hàng
+                                </h3>
+                                <h3 th:unless="${(q != null and !#strings.isEmpty(q)) or (status != null and !#strings.isEmpty(status))}">
+                                    Chưa có đơn hàng nào
+                                </h3>
+                                <p th:if="${(q != null and !#strings.isEmpty(q)) or (status != null and !#strings.isEmpty(status))}">
+                                    Không có đơn hàng nào khớp với bộ lọc hiện tại.
+                                </p>
+                                <p th:unless="${(q != null and !#strings.isEmpty(q)) or (status != null and !#strings.isEmpty(status))}">
+                                    Hiện chưa có đơn hàng nào trong hệ thống.
+                                </p>
                             </div>
                         </td>
                     </tr>
-                    <tr th:each="order : ${orders}">
+                    <tr th:each="order, iter : ${orders}">
+                        <td class="sd-col-stt" th:text="${page * size + iter.count}">1</td>
                         <td>
                             <div class="sd-table-title sd-mono" th:text="${#strings.substring(order.id, 0, 8)}">id</div>
                             <div class="sd-table-sub">
@@ -127,7 +154,7 @@
                             <span th:unless="${order.createdAt != null}">-</span>
                         </td>
                         <td style="text-align:right; white-space:nowrap;">
-                            <a th:href="@{/admin/orders/{id}(id=${order.id}, page=${page}, size=${size}, q=${q})}"
+                            <a th:href="@{/admin/orders/{id}(id=${order.id}, page=${page}, size=${size}, q=${q}, status=${status})}"
                                class="sd-btn sd-btn-secondary sd-btn-sm">
                                 <i class="fas fa-eye"></i> Xem
                             </a>
@@ -141,7 +168,7 @@
              style="display:flex;justify-content:center;border-top:1px solid var(--border,#e2e8f0);">
             <nav class="sd-pagination" aria-label="Phân trang">
                 <a th:if="${hasPrev}"
-                   th:href="@{/admin/orders(page=${page - 1}, size=${size}, q=${q})}"
+                   th:href="@{/admin/orders(page=${page - 1}, size=${size}, q=${q}, status=${status})}"
                    class="sd-page-link">
                     <i class="fas fa-chevron-left"></i> Quay lại
                 </a>
@@ -149,10 +176,12 @@
                     <i class="fas fa-chevron-left"></i> Quay lại
                 </span>
 
-                <span class="sd-page-link sd-page-active" th:text="${page + 1}">1</span>
+                <th:block th:each="i : ${pageNumbers}" th:if="${i == page}">
+                    <span class="sd-page-link sd-page-active" th:text="${i + 1}">1</span>
+                </th:block>
 
                 <a th:if="${hasNext}"
-                   th:href="@{/admin/orders(page=${page + 1}, size=${size}, q=${q})}"
+                   th:href="@{/admin/orders(page=${page + 1}, size=${size}, q=${q}, status=${status})}"
                    class="sd-page-link">
                     Tiếp theo <i class="fas fa-chevron-right"></i>
                 </a>

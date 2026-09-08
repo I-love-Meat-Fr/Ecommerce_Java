@@ -29,6 +29,29 @@ public interface VoucherService {
      * Xóa voucher (soft delete - set active = false)
      */
     void deleteVoucher(String voucherId);
+
+    /**
+     * Phase 11 — Activate WEB Voucher (set active = true).
+     * Chỉ áp dụng cho voucher type = WEB.
+     */
+    Voucher activateWebVoucher(String voucherId);
+
+    /**
+     * Phase 11 — Deactivate WEB Voucher (set active = false).
+     * Chỉ áp dụng cho voucher type = WEB.
+     */
+    Voucher deactivateWebVoucher(String voucherId);
+
+    /**
+     * Phase 11 — Cập nhật WEB Voucher (chỉ áp dụng cho type = WEB).
+     */
+    Voucher updateWebVoucher(String voucherId, VoucherFormReq request);
+
+    /**
+     * Phase 11 — Soft delete WEB Voucher (set active = false).
+     * Chỉ áp dụng cho voucher type = WEB.
+     */
+    void deleteWebVoucher(String voucherId);
     
     /**
      * Tìm voucher theo ID
@@ -49,11 +72,25 @@ public interface VoucherService {
      * Lấy tất cả voucher WEB (của admin)
      */
     List<Voucher> getWebVouchers();
+
+    /**
+     * Phase 12: Admin Voucher Search+Filter+Pagination.
+     * @param active null = tất cả (ALL), true = chỉ active, false = inactive
+     */
+    org.springframework.data.domain.Page<Voucher> getWebVouchers(
+            org.springframework.data.domain.Pageable pageable, String q, Boolean active);
     
     /**
      * Lấy danh sách voucher khả dụng (active, còn hạn, còn lượt)
      */
     List<Voucher> getAvailableVouchers();
+
+    /**
+     * Phase 12: Lấy WEB Voucher khả dụng cho trang công khai Customer.
+     * Chỉ trả type=WEB, active=true, còn hạn, còn lượt.
+     * SHOP Voucher KHÔNG hiển thị trên website.
+     */
+    List<Voucher> getAvailableWebVouchersForCustomer();
     
     /**
      * Lấy danh sách voucher khả dụng của một shop

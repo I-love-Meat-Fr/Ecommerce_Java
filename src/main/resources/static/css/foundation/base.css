@@ -1,0 +1,164 @@
+/* ============================================================================
+ * UI PHASE 1 — BASE FOUNDATION
+ * ----------------------------------------------------------------------------
+ * Minimal global reset + base element styling.
+ * Scope: html, body, headings, paragraphs, links, images, buttons, inputs.
+ *
+ * Quy tắc:
+ *   1. Minimal global selector — KHÔNG dùng "body *".
+ *   2. Predictable specificity — chỉ tag selector, KHÔNG !important.
+ *   3. Token-driven — mọi giá trị đọc từ --ds-* trong tokens.css.
+ *   4. KHÔNG override biến hiện có — các CSS legacy vẫn chạy độc lập.
+ * ============================================================================ */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+  -moz-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+  line-height: var(--ds-line-height-base);
+  font-family: var(--ds-font-family-base);
+  font-size: 16px;
+  color: var(--ds-color-text);
+  background-color: var(--ds-color-background);
+}
+
+body {
+  margin: 0;
+  font-family: var(--ds-font-family-base);
+  font-size: var(--ds-font-size-md);
+  font-weight: var(--ds-font-weight-normal);
+  line-height: var(--ds-line-height-base);
+  color: var(--ds-color-text);
+  background-color: var(--ds-color-background);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+
+/* ---------- Headings ---------- */
+h1, h2, h3, h4, h5, h6 {
+  margin: 0 0 var(--ds-space-3) 0;
+  font-weight: var(--ds-font-weight-semibold);
+  line-height: var(--ds-line-height-tight);
+  color: var(--ds-color-text);
+  letter-spacing: var(--ds-letter-spacing-tight);
+}
+h1 { font-size: var(--ds-font-size-4xl); }
+h2 { font-size: var(--ds-font-size-3xl); }
+h3 { font-size: var(--ds-font-size-2xl); }
+h4 { font-size: var(--ds-font-size-xl); }
+h5 { font-size: var(--ds-font-size-lg); }
+h6 { font-size: var(--ds-font-size-md); }
+
+/* ---------- Paragraph ---------- */
+p {
+  margin: 0 0 var(--ds-space-3) 0;
+}
+
+/* ---------- Links ---------- */
+a {
+  color: var(--ds-color-text-link);
+  text-decoration: none;
+  transition: color var(--ds-transition-fast);
+}
+a:hover {
+  color: var(--ds-color-primary-hover);
+  text-decoration: underline;
+}
+
+/* ---------- Images / media ---------- */
+img,
+svg,
+video,
+canvas,
+audio,
+iframe,
+embed,
+object {
+  display: block;
+  max-width: 100%;
+  height: auto;
+}
+
+/* ---------- Buttons (browser default reset only) ---------- */
+button {
+  cursor: pointer;
+  font-family: inherit;
+  font-size: inherit;
+  line-height: inherit;
+  color: inherit;
+  background: transparent;
+  border: 0;
+  padding: 0;
+}
+button:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+/* ---------- Inputs (browser default reset only) ---------- */
+input,
+select,
+textarea {
+  font-family: inherit;
+  font-size: inherit;
+  line-height: inherit;
+  color: inherit;
+}
+
+/* ---------- Tables ---------- */
+table {
+  border-collapse: collapse;
+  border-spacing: 0;
+  width: 100%;
+}
+
+/* ---------- Selection ---------- */
+::selection {
+  background-color: var(--ds-color-primary-soft);
+  color: var(--ds-color-primary-active);
+}
+
+/* ---------- Scrollbar (Webkit) ---------- */
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+::-webkit-scrollbar-track {
+  background: var(--ds-color-surface-alt);
+}
+::-webkit-scrollbar-thumb {
+  background: var(--ds-color-border-strong);
+  border-radius: var(--ds-radius-full);
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--ds-color-text-faint);
+}
+
+/* ---------- Placeholder ---------- */
+::placeholder {
+  color: var(--ds-color-text-faint);
+  opacity: 1;
+}
+
+/* ---------- Hidden helper (semantic) ---------- */
+.ds-hidden {
+  display: none !important;
+}
+.ds-visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}

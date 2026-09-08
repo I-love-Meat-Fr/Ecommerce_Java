@@ -1,156 +1,79 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org"
-      xmlns:sec="http://www.thymeleaf.org/extras/springsecurity6">
+      xmlns:sec="http://www.thymeleaf.org/extras/springsecurity6"
+      th:replace="~{layout/vendor-layout :: layout(title='Tạo cửa hàng - CNJ70 Vendor', content=~{::main-content}, scripts=~{::page-scripts})}">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Tạo cửa hàng - CNJ70 Vendor</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Work+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" th:href="@{/css/dashboard.css}">
-    <link rel="stylesheet" th:href="@{/css/vendor-shared.css}">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body>
-    <div class="sd-app" id="appShell">
-        <aside class="sd-sidebar">
-            <div class="sd-sidebar-header">
-                <div class="sd-sidebar-logo"><i class="fas fa-bolt"></i></div>
-                <div class="sd-sidebar-brand">
-                    <span class="sd-sidebar-brand-name">CNJ70 Shop</span>
-                    <span class="sd-sidebar-brand-sub">Vendor Console</span>
-                </div>
+<main th:fragment="main-content">
+
+    <div class="vd-page-hero">
+        <div class="vd-page-hero-left">
+            <div class="vd-page-hero-icon"><i class="fas fa-store"></i></div>
+            <div class="vd-page-hero-info">
+                <h2>Tạo cửa hàng</h2>
+                <p>Điền thông tin để bắt đầu kinh doanh trên CNJ70.</p>
             </div>
-            <nav class="sd-sidebar-nav">
-                <div class="sd-sidebar-nav-section">
-                    <span class="sd-sidebar-nav-title">Tổng quan</span>
-                    <a th:href="@{/vendor/dashboard}" class="sd-nav-item"><i class="fas fa-house"></i><span class="sd-nav-label">Dashboard</span></a>
-                </div>
-                <div class="sd-sidebar-nav-section">
-                    <span class="sd-sidebar-nav-title">Quản lý</span>
-                    <a th:href="@{/vendor/shop}" class="sd-nav-item active"><i class="fas fa-store"></i><span class="sd-nav-label">Cửa hàng</span></a>
-                    <a th:href="@{/vendor/products}" class="sd-nav-item"><i class="fas fa-box"></i><span class="sd-nav-label">Sản phẩm</span></a>
-                    <a th:href="@{/vendor/orders}" class="sd-nav-item"><i class="fas fa-cart-shopping"></i><span class="sd-nav-label">Đơn hàng</span></a>
-                </div>
-                <div class="sd-sidebar-nav-section">
-                    <span class="sd-sidebar-nav-title">Khác</span>
-                    <a th:href="@{/home}" class="sd-nav-item"><i class="fas fa-globe"></i><span class="sd-nav-label">Xem website</span></a>
-                    <form th:action="@{/auth/logout}" method="post" class="sd-logout-form">
-                        <button type="submit" class="sd-nav-item"><i class="fas fa-arrow-right-from-bracket"></i><span class="sd-nav-label">Đăng xuất</span></button>
-                    </form>
-                </div>
-            </nav>
-            <div class="sd-sidebar-footer">
-                <div class="sd-sidebar-user">
-                    <div class="sd-sidebar-avatar" sec:authentication="name">V</div>
-                    <div class="sd-sidebar-user-info">
-                        <div class="sd-sidebar-user-name" sec:authentication="name">Vendor</div>
-                        <div class="sd-sidebar-user-role">Vendor</div>
-                    </div>
-                </div>
-            </div>
-        </aside>
-
-        <div class="sd-main">
-            <div class="sd-topbar">
-                <button class="sd-topbar-toggle" type="button" id="sidebarToggle"><i class="fas fa-bars"></i></button>
-                <div class="sd-topbar-search">
-                    <i class="fas fa-magnifying-glass"></i>
-                    <input type="text" placeholder="Tìm kiếm...">
-                </div>
-                <div class="sd-topbar-actions">
-                    <button class="sd-icon-btn" type="button"><i class="fas fa-bell"></i><span class="sd-icon-btn-dot"></span></button>
-                    <div class="sd-topbar-divider"></div>
-                    <div class="sd-topbar-profile">
-                        <div class="sd-topbar-avatar" sec:authentication="name">V</div>
-                        <span class="sd-topbar-profile-name" sec:authentication="name">Vendor</span>
-                    </div>
-                </div>
-            </div>
-
-            <main class="sd-content">
-
-                <div class="vd-page-hero">
-                    <div class="vd-page-hero-left">
-                        <div class="vd-page-hero-icon"><i class="fas fa-store"></i></div>
-                        <div class="vd-page-hero-info">
-                            <h2>Tạo cửa hàng</h2>
-                            <p>Điền thông tin để bắt đầu kinh doanh trên CNJ70.</p>
-                        </div>
-                    </div>
-                </div>
-
-                <div th:if="${error}" class="sd-alert sd-alert-danger"><i class="fas fa-triangle-exclamation"></i><span th:text="${error}"></span></div>
-
-                <div class="sd-card" style="max-width:760px;">
-                    <div class="sd-card-head">
-                        <div>
-                            <h3>Thông tin cửa hàng</h3>
-                            <p>Tên shop và mô tả sẽ hiển thị cho khách hàng.</p>
-                        </div>
-                    </div>
-                    <div class="sd-card-body">
-                        <form th:action="@{/vendor/shop/create}" th:object="${shopFormReq}" method="post" enctype="multipart/form-data">
-                            <div class="sd-form-group">
-                                <label>Tên cửa hàng *</label>
-                                <input type="text" class="sd-form-control" th:field="*{shopName}" required minlength="3" maxlength="100" placeholder="VD: Cửa hàng ABC">
-                                <div class="sd-form-hint">Tên shop phải từ 3-100 ký tự, duy nhất không trùng lặp</div>
-                                <div th:if="${#fields.hasErrors('shopName')}" class="sd-form-error" th:errors="*{shopName}"></div>
-                            </div>
-                            <div class="sd-form-group">
-                                <label>Mô tả cửa hàng</label>
-                                <textarea class="sd-form-control" th:field="*{description}" rows="4" maxlength="500" placeholder="Giới thiệu về cửa hàng của bạn..."></textarea>
-                                <div class="sd-form-hint">Tối đa 500 ký tự</div>
-                                <div th:if="${#fields.hasErrors('description')}" class="sd-form-error" th:errors="*{description}"></div>
-                            </div>
-                            <div class="sd-form-group">
-                                <label>Logo cửa hàng</label>
-                                <div class="vd-upload" onclick="document.getElementById('logoFile').click()">
-                                    <i class="fas fa-cloud-arrow-up"></i>
-                                    <p>Nhấn để chọn logo (JPG, PNG, WEBP, GIF. Tối đa 5MB)</p>
-                                </div>
-                                <input type="file" id="logoFile" name="logoFile" accept="image/png,image/jpeg,image/jpg,image/webp,image/gif" style="display:none;">
-                                <img id="logoPreview" class="vd-preview-img" style="display:none;">
-                                <input type="hidden" id="logoUrl" th:field="*{logoUrl}">
-                            </div>
-                            <div class="sd-form-group">
-                                <label>Banner cửa hàng</label>
-                                <div class="vd-upload" onclick="document.getElementById('bannerFile').click()">
-                                    <i class="fas fa-image"></i>
-                                    <p>Nhấn để chọn banner (JPG, PNG, WEBP, GIF. Tối đa 5MB)</p>
-                                </div>
-                                <input type="file" id="bannerFile" name="bannerFile" accept="image/png,image/jpeg,image/jpg,image/webp,image/gif" style="display:none;">
-                                <img id="bannerPreview" class="vd-preview-banner" style="display:none;">
-                                <input type="hidden" id="bannerUrl" th:field="*{bannerUrl}">
-                            </div>
-                            <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:18px;">
-                                <a th:href="@{/vendor/dashboard}" class="sd-btn sd-btn-secondary"><i class="fas fa-xmark"></i> Hủy</a>
-                                <button type="submit" class="sd-btn sd-btn-cta"><i class="fas fa-store"></i> Tạo cửa hàng</button>
-                            </div>
-                        </form>
-                    </div>
-                </div>
-
-            </main>
         </div>
     </div>
 
-    <script>
+    <div th:if="${error}" class="sd-alert sd-alert-danger"><i class="fas fa-triangle-exclamation"></i><span th:text="${error}"></span></div>
+
+    <div class="sd-card" style="max-width:760px;">
+        <div class="sd-card-head">
+            <div>
+                <h3>Thông tin cửa hàng</h3>
+                <p>Tên shop và mô tả sẽ hiển thị cho khách hàng.</p>
+            </div>
+        </div>
+        <div class="sd-card-body">
+            <form th:action="@{/vendor/shop/create}" th:object="${shopFormReq}" method="post" enctype="multipart/form-data">
+                <div class="sd-form-group">
+                    <label>Tên cửa hàng *</label>
+                    <input type="text" class="sd-form-control" th:field="*{shopName}" required minlength="3" maxlength="100" placeholder="VD: Cửa hàng ABC">
+                    <div class="sd-form-hint">Tên shop phải từ 3-100 ký tự, duy nhất không trùng lặp</div>
+                    <div th:if="${#fields.hasErrors('shopName')}" class="sd-form-error" th:errors="*{shopName}"></div>
+                </div>
+                <div class="sd-form-group">
+                    <label>Mô tả cửa hàng</label>
+                    <textarea class="sd-form-control" th:field="*{description}" rows="4" maxlength="500" placeholder="Giới thiệu về cửa hàng của bạn..."></textarea>
+                    <div class="sd-form-hint">Tối đa 500 ký tự</div>
+                    <div th:if="${#fields.hasErrors('description')}" class="sd-form-error" th:errors="*{description}"></div>
+                </div>
+                <div class="sd-form-group">
+                    <label>Logo cửa hàng</label>
+                    <div class="vd-upload" onclick="document.getElementById('logoFile').click()">
+                        <i class="fas fa-cloud-arrow-up"></i>
+                        <p>Nhấn để chọn logo (JPG, PNG, WEBP, GIF. Tối đa 5MB)</p>
+                    </div>
+                    <input type="file" id="logoFile" name="logoFile" accept="image/png,image/jpeg,image/jpg,image/webp,image/gif" style="display:none;">
+                    <img id="logoPreview" class="vd-preview-img" alt="" style="display:none;">
+                    <input type="hidden" id="logoUrl" th:field="*{logoUrl}">
+                </div>
+                <div class="sd-form-group">
+                    <label>Banner cửa hàng</label>
+                    <div class="vd-upload" onclick="document.getElementById('bannerFile').click()">
+                        <i class="fas fa-image"></i>
+                        <p>Nhấn để chọn banner (JPG, PNG, WEBP, GIF. Tối đa 5MB)</p>
+                    </div>
+                    <input type="file" id="bannerFile" name="bannerFile" accept="image/png,image/jpeg,image/jpg,image/webp,image/gif" style="display:none;">
+                    <img id="bannerPreview" class="vd-preview-banner" alt="" style="display:none;">
+                    <input type="hidden" id="bannerUrl" th:field="*{bannerUrl}">
+                </div>
+                <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:18px;">
+                    <a th:href="@{/vendor/dashboard}" class="sd-btn sd-btn-secondary"><i class="fas fa-xmark"></i> Hủy</a>
+                    <button type="submit" class="sd-btn sd-btn-cta"><i class="fas fa-store"></i> Tạo cửa hàng</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+</main>
+
+<th:block th:fragment="page-scripts">
+    <script th:inline="none">
         (function() {
-            const shell = document.getElementById('appShell');
-            const toggle = document.getElementById('sidebarToggle');
-            const KEY = 'cnj70-sidebar-expanded';
-            if (localStorage.getItem(KEY) === '1') shell.classList.add('sidebar-expanded');
-            toggle?.addEventListener('click', () => {
-                shell.classList.toggle('sidebar-expanded');
-                localStorage.setItem(KEY, shell.classList.contains('sidebar-expanded') ? '1' : '0');
-            });
-            document.querySelectorAll('.sd-sidebar-avatar, .sd-topbar-avatar').forEach(el => {
-                const name = (el.textContent || '').trim();
-                if (!name) return;
-                el.textContent = name.charAt(0).toUpperCase();
-            });
             document.getElementById('logoFile')?.addEventListener('change', function(e) {
                 const f = e.target.files[0]; if (!f) return;
                 const prev = document.getElementById('logoPreview');
@@ -163,5 +86,6 @@
             });
         })();
     </script>
+</th:block>
 </body>
 </html>

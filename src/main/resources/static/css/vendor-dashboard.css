@@ -579,3 +579,35 @@
     .sd-app .vd-hero-shop { gap: 14px; }
     .sd-app .vd-hero-logo { width: 56px; height: 56px; font-size: 20px; }
 }
+
+/* ============================================================================
+ * FIX PHASE 2 — Vendor Stat Cards Clickable + Revenue UI
+ * ----------------------------------------------------------------------------
+ * Stat cards that link to management pages get link indicator + cursor
+ * ============================================================================ */
+.sd-app .vd-stat-card.vd-stat-link {
+    cursor: pointer;
+    text-decoration: none;
+    color: inherit;
+    position: relative;
+}
+
+.sd-app .vd-stat-card.vd-stat-link:hover {
+    border-color: rgba(15, 181, 176, 0.35);
+}
+
+.sd-app .vd-stat-card.vd-stat-link:focus-within {
+    outline: 2px solid var(--primary, #0fb5b0);
+    outline-offset: 2px;
+}
+
+.sd-app .vd-stat-card.vd-stat-link .dash-stat-link-indicator {
+    display: none;
+}
+
+/* ============================================================================
+ * FIX PHASE 2 — Vendor Revenue Chart Series Display
+ * ----------------------------------------------------------------------------
+ * Show both orders and revenue series if data available.
+ * Charts with only revenue keep single series. Line chart preserved.
+ * ============================================================================ */

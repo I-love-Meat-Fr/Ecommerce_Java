@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/springsecurity6"
+      th:replace="~{layout/admin-layout :: layout(title='Banner Form - CNJ70 Admin', content=~{::main-content}, scripts=~{::page-scripts})}">
+<head>
+    <title>Banner Form - CNJ70 Admin</title>
+</head>
+<body>
+<main th:fragment="main-content">
+    <div class="sd-page-head">
+        <div class="sd-page-head-title">
+            <h1 th:if="${isEdit}">Chỉnh sửa Banner</h1>
+            <h1 th:unless="${isEdit}">Tạo Banner mới</h1>
+            <p th:if="${isEdit}">Cập nhật nội dung banner. Trạng thái Publish chỉ thay đổi qua Publish / Unpublish.</p>
+            <p th:unless="${isEdit}">Banner mới tạo sẽ ở trạng thái Unpublish. Dùng nút Publish để hiển thị trên Customer Home.</p>
+        </div>
+        <div>
+            <a th:if="${isEdit}"
+               th:href="@{/admin/banners/{id}(id=${banner.id}, page=${page}, size=${size}, q=${q}, status=${status})}"
+               class="sd-btn sd-btn-secondary sd-btn-sm">
+                <i class="fas fa-arrow-left"></i> Quay lại chi tiết
+            </a>
+            <a th:unless="${isEdit}"
+               th:href="@{/admin/banners(page=0, size=${size}, q=${q}, status=${status})}"
+               class="sd-btn sd-btn-secondary sd-btn-sm">
+                <i class="fas fa-arrow-left"></i> Quay lại danh sách
+            </a>
+        </div>
+    </div>
+
+    <div th:if="${error != null}" class="sd-alert sd-alert-error">
+        <i class="fas fa-circle-exclamation"></i>
+        <span th:text="${error}">error</span>
+    </div>
+
+    <form th:object="${banner}"
+          th:action="${isEdit} ? @{/admin/banners/{id}/edit(id=${banner.id}, page=${page}, size=${size}, q=${q}, status=${status})} : @{/admin/banners/create(page=0, size=${size}, q=${q}, status=${status})}"
+          method="post"
+          enctype="multipart/form-data"
+          class="sd-card">
+        <div class="sd-card-body" style="display:grid;grid-template-columns:repeat(2, 1fr);gap:16px;">
+            <div class="sd-form-row" style="grid-column: span 2;">
+                <label class="sd-form-label">Tiêu đề <span style="color:#ef4444">*</span></label>
+                <input type="text" th:field="*{title}"
+                       class="sd-input"
+                       style="width:100%;padding:8px 10px;border:1px solid var(--border,#e2e8f0);border-radius:6px;"
+                       placeholder="Ví dụ: MEGA SALE - Giảm đến 50%" required />
+            </div>
+
+            <div class="sd-form-row" style="grid-column: span 2;">
+                <label class="sd-form-label">Mô tả</label>
+                <textarea th:field="*{description}" rows="3"
+                          class="sd-input"
+                          style="width:100%;padding:8px 10px;border:1px solid var(--border,#e2e8f0);border-radius:6px;"
+                          placeholder="Mô tả ngắn về banner (hiển thị dưới tiêu đề)"></textarea>
+            </div>
+
+            <div class="sd-form-row">
+                <label class="sd-form-label">Tag label</label>
+                <input type="text" th:field="*{tag}"
+                       class="sd-input"
+                       style="width:100%;padding:8px 10px;border:1px solid var(--border,#e2e8f0);border-radius:6px;"
+                       placeholder="MEGA SALE, FREESHIP 100%, ..." />
+            </div>
+
+            <div class="sd-form-row">
+                <label class="sd-form-label">Tag icon (Font Awesome)</label>
+                <input type="text" th:field="*{tagIcon}"
+                       class="sd-input"
+                       style="width:100%;padding:8px 10px;border:1px solid var(--border,#e2e8f0);border-radius:6px;"
+                       placeholder="fas fa-bolt" />
+            </div>
+
+            <div class="sd-form-row" style="grid-column: span 2;">
+                <label class="sd-form-label">
+                    Hình ảnh banner
+                    <span th:if="${isEdit and banner.imageUrl != null and !#strings.isEmpty(banner.imageUrl)}">
+                        (đã có ảnh — chọn file mới để thay)
+                    </span>
+                </label>
+
+                <div th:if="${isEdit and banner.imageUrl != null and !#strings.isEmpty(banner.imageUrl)}"
+                     style="margin-bottom:8px;display:flex;gap:12px;align-items:center;">
+                    <div style="width:200px;height:120px;border:1px solid var(--border,#e2e8f0);border-radius:6px;overflow:hidden;background:#f1f5f9;">
+                        <img th:src="${banner.imageUrl}" alt="preview" style="width:100%;height:100%;object-fit:cover;" />
+                    </div>
+                    <code th:text="${banner.imageUrl}" style="font-size:12px;color:#475569;">url</code>
+                </div>
+
+                <input type="file" name="imageFile"
+                       accept="image/*"
+                       th:required="${!isEdit}"
+                       style="width:100%;padding:8px 10px;border:1px solid var(--border,#e2e8f0);border-radius:6px;background:#fff;" />
+                <input type="hidden" th:field="*{imageUrl}" th:if="${isEdit and banner.imageUrl != null and !#strings.isEmpty(banner.imageUrl)}" />
+                <small style="color:#64748b;font-size:12px;">
+                    Hỗ trợ: JPG/PNG/WebP. Tối đa 5MB. Ảnh được lưu qua StorageService.
+                </small>
+            </div>
+
+            <div class="sd-form-row">
+                <label class="sd-form-label">Link khi click</label>
+                <input type="text" th:field="*{link}"
+                       class="sd-input"
+                       style="width:100%;padding:8px 10px;border:1px solid var(--border,#e2e8f0);border-radius:6px;"
+                       placeholder="/products hoặc /vouchers hoặc URL đầy đủ" />
+            </div>
+
+            <div class="sd-form-row">
+                <label class="sd-form-label">Theme màu</label>
+                <select th:field="*{theme}" class="sd-select"
+                        style="width:100%;padding:8px 10px;border:1px solid var(--border,#e2e8f0);border-radius:6px;">
+                    <option value="">-- Mặc định --</option>
+                    <option th:each="t : ${themes}" th:value="${t}" th:text="${t}">theme</option>
+                </select>
+            </div>
+
+            <div class="sd-form-row">
+                <label class="sd-form-label">CTA Text</label>
+                <input type="text" th:field="*{ctaText}"
+                       class="sd-input"
+                       style="width:100%;padding:8px 10px;border:1px solid var(--border,#e2e8f0);border-radius:6px;"
+                       placeholder="Mua sắm ngay, Đăng ký ngay, Xem ưu đãi..." />
+            </div>
+
+            <div class="sd-form-row">
+                <label class="sd-form-label">CTA Icon (Font Awesome)</label>
+                <input type="text" th:field="*{ctaIcon}"
+                       class="sd-input"
+                       style="width:100%;padding:8px 10px;border:1px solid var(--border,#e2e8f0);border-radius:6px;"
+                       placeholder="fas fa-shopping-bag" />
+            </div>
+
+            <div class="sd-form-row">
+                <label class="sd-form-label">Vị trí hiển thị</label>
+                <select th:field="*{position}" class="sd-select"
+                        style="width:100%;padding:8px 10px;border:1px solid var(--border,#e2e8f0);border-radius:6px;">
+                    <option value="">-- Chọn vị trí --</option>
+                    <option th:each="p : ${positions}" th:value="${p}" th:text="${p}">position</option>
+                </select>
+                <small style="color:#64748b;font-size:12px;">
+                    HERO_SLIDER: hiển thị ở slider hero. PROMO_GRID: hiển thị ở promo grid.
+                </small>
+            </div>
+
+            <div class="sd-form-row">
+                <label class="sd-form-label">Thứ tự hiển thị</label>
+                <input type="number" th:field="*{sortOrder}"
+                       class="sd-input"
+                       style="width:100%;padding:8px 10px;border:1px solid var(--border,#e2e8f0);border-radius:6px;"
+                       min="0" placeholder="0" />
+                <small style="color:#64748b;font-size:12px;">
+                    Số nhỏ hiển thị trước. Mặc định 0.
+                </small>
+            </div>
+
+            <div th:if="${isEdit}" class="sd-form-row" style="grid-column: span 2;">
+                <label class="sd-form-label">Trạng thái</label>
+                <div>
+                    <span class="sd-badge"
+                          th:classappend="${banner.status == 'PUBLISHED' ? 'sd-badge-green' : 'sd-badge-slate'}"
+                          th:text="${banner.status == 'PUBLISHED' ? 'Đã Publish' : 'Chưa Publish'}">status</span>
+                    <small style="color:#64748b;font-size:12px;margin-left:8px;">
+                        Trạng thái Publish chỉ thay đổi qua nút Publish / Unpublish trong chi tiết banner.
+                    </small>
+                </div>
+            </div>
+        </div>
+
+        <div class="sd-card-body" style="border-top:1px solid var(--border,#e2e8f0);display:flex;justify-content:flex-end;gap:8px;">
+            <a th:href="@{/admin/banners(page=0, size=${size}, q=${q}, status=${status})}"
+               class="sd-btn sd-btn-secondary">
+                <i class="fas fa-times"></i> Hủy
+            </a>
+            <button type="submit" class="sd-btn sd-btn-primary">
+                <i class="fas fa-save"></i>
+                <span th:if="${isEdit}">Cập nhật banner</span>
+                <span th:unless="${isEdit}">Tạo banner</span>
+            </button>
+        </div>
+    </form>
+</main>
+
+<th:block th:fragment="page-scripts"></th:block>
+</body>
+</html>

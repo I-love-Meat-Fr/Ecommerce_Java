@@ -1,11 +1,13 @@
 package com.ecommerce.cnj70.controller.web;
 
+import com.ecommerce.cnj70.document.Banner;
 import com.ecommerce.cnj70.document.Category;
 import com.ecommerce.cnj70.document.FlashSaleStat;
 import com.ecommerce.cnj70.document.Product;
 import com.ecommerce.cnj70.document.Voucher;
 import com.ecommerce.cnj70.enums.ProductStatus;
 import com.ecommerce.cnj70.repository.CategoryRepository;
+import com.ecommerce.cnj70.service.CustomerBannerService;
 import com.ecommerce.cnj70.service.ProductService;
 import com.ecommerce.cnj70.service.VoucherService;
 import lombok.RequiredArgsConstructor;
@@ -23,6 +25,7 @@ public class HomeController {
     private final ProductService productService;
     private final CategoryRepository categoryRepository;
     private final VoucherService voucherService;
+    private final CustomerBannerService customerBannerService;
 
     @GetMapping("/home")
     public String homePage(Model model) {
@@ -44,12 +47,18 @@ public class HomeController {
         List<Category> categories = categoryRepository.findByActiveTrueOrderBySortOrderAsc();
         List<Voucher> availableVouchers = voucherService.getAvailableVouchers();
 
+        // Phase 17 — Banner Dynamic Display (Task 17.19)
+        List<Banner> heroBanners = customerBannerService.getVisibleBanners("HERO_SLIDER");
+        List<Banner> promoBanners = customerBannerService.getVisibleBanners("PROMO_GRID");
+
         model.addAttribute("products", products);
         model.addAttribute("newArrivals", newArrivals);
         model.addAttribute("featuredProducts", featuredProducts);
         model.addAttribute("flashSaleStats", flashSaleStats);
         model.addAttribute("categories", categories);
         model.addAttribute("availableVouchers", availableVouchers);
+        model.addAttribute("heroBanners", heroBanners);
+        model.addAttribute("promoBanners", promoBanners);
         return "web/index";
     }
 

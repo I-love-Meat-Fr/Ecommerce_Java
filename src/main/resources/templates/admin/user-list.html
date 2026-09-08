@@ -12,49 +12,73 @@
             <h1>Quản lý người dùng</h1>
             <p>Quản lý tài khoản và phân quyền người dùng trong hệ thống.</p>
         </div>
-    </div>
-
-    <!-- Stats Cards -->
-    <div class="dash-stats" style="margin-bottom:20px;">
-        <div class="dash-stat-card dash-stat-primary">
-            <div class="dash-stat-icon-wrap">
-                <div class="dash-stat-icon"><i class="fas fa-users"></i></div>
-            </div>
-            <div class="dash-stat-value" th:text="${totalItems}">0</div>
-            <div class="dash-stat-label">Tổng tài khoản</div>
-        </div>
-        <div class="dash-stat-card dash-stat-success">
-            <div class="dash-stat-icon-wrap">
-                <div class="dash-stat-icon"><i class="fas fa-user-check"></i></div>
-            </div>
-            <div class="dash-stat-value" th:text="${activeUsers ?: 0}">0</div>
-            <div class="dash-stat-label">Đang hoạt động</div>
-        </div>
-        <div class="dash-stat-card dash-stat-warning">
-            <div class="dash-stat-icon-wrap">
-                <div class="dash-stat-icon"><i class="fas fa-user-clock"></i></div>
-            </div>
-            <div class="dash-stat-value" th:text="${pendingUsers ?: 0}">0</div>
-            <div class="dash-stat-label">Chờ xác minh</div>
-        </div>
-        <div class="dash-stat-card" style="background:linear-gradient(135deg,#64748b 0%,#94a3b8 100%);color:white;border:none;">
-            <div class="dash-stat-icon-wrap">
-                <div class="dash-stat-icon"><i class="fas fa-user-shield"></i></div>
-            </div>
-            <div class="dash-stat-value" th:text="${adminCount ?: 0}">0</div>
-            <div class="dash-stat-label">Quản trị viên</div>
+        <div class="sd-page-head-meta">
+            <span class="sd-page-head-meta-label">Tổng người dùng</span>
+            <span class="sd-page-head-meta-value" th:text="${totalItems}">0</span>
         </div>
     </div>
 
-    <div th:if="${q != null and !#strings.isEmpty(q)}" class="sd-alert sd-alert-info" style="margin-bottom:16px;">
-        <i class="fas fa-filter"></i>
-        <div class="sd-alert-content">
-            <strong>Đang lọc:</strong>
-            <span th:text="${q}">keyword</span>
+    <div class="sd-card sd-toolbar" style="margin-bottom:20px;">
+        <div class="sd-card-body">
+            <form th:action="@{/admin/users}" method="get"
+                  class="sd-toolbar-form">
+                <input type="hidden" name="size" th:value="${size}" />
+                <input type="text" name="q" th:value="${q}"
+                       placeholder="Tìm theo email hoặc họ tên..."
+                       class="sd-input sd-toolbar-search"
+                       style="padding:8px 10px;border:1px solid var(--border,#e2e8f0);border-radius:6px;" />
+                <select name="role" class="sd-select sd-toolbar-select"
+                        style="padding:8px 10px;border:1px solid var(--border,#e2e8f0);border-radius:6px;">
+                    <option value="">Tất cả vai trò</option>
+                    <option th:each="r : ${roles}"
+                            th:value="${r.name()}"
+                            th:text="${r.name()}"
+                            th:selected="${role == r.name()}">CUSTOMER</option>
+                </select>
+                <select name="status" class="sd-select sd-toolbar-select"
+                        style="padding:8px 10px;border:1px solid var(--border,#e2e8f0);border-radius:6px;">
+                    <option value="">Tất cả trạng thái</option>
+                    <option th:each="s : ${statuses}"
+                            th:value="${s.name()}"
+                            th:text="${s.name() == 'ACTIVE' ? 'Hoạt động' : (s.name() == 'LOCKED' ? 'Đã khóa' : (s.name() == 'UNVERIFIED' ? 'Chưa xác thực' : s.name()))}"
+                            th:selected="${status == s.name()}">ACTIVE</option>
+                </select>
+                <button type="submit" class="sd-btn sd-btn-primary sd-btn-sm sd-toolbar-btn">
+                    <i class="fas fa-search"></i> Lọc
+                </button>
+                <a th:href="@{/admin/users(page=0, size=${size})}"
+                   class="sd-btn sd-btn-secondary sd-btn-sm sd-toolbar-btn">
+                    <i class="fas fa-rotate-left"></i> Đặt lại
+                </a>
+            </form>
         </div>
-        <a th:href="@{/admin/users}" class="sd-btn sd-btn-secondary sd-btn-sm">
-            <i class="fas fa-times"></i> Bỏ lọc
-        </a>
+    </div>
+
+    <div class="sd-card" th:if="${(q != null and !#strings.isEmpty(q)) or (role != null and !#strings.isEmpty(role)) or (status != null and !#strings.isEmpty(status))}"
+         style="margin-bottom:16px;">
+        <div class="sd-card-body" style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+            <i class="fas fa-filter"></i>
+            <span>Đang lọc theo:</span>
+            <span th:if="${q != null and !#strings.isEmpty(q)}" class="sd-badge sd-badge-slate">
+                Từ khóa: <span th:text="${q}">keyword</span>
+            </span>
+            <span th:if="${role != null and !#strings.isEmpty(role)}" class="sd-badge sd-badge-blue">
+                Vai trò: <span th:text="${role}">CUSTOMER</span>
+            </span>
+            <span th:if="${status != null and !#strings.isEmpty(status)}" class="sd-badge sd-badge-blue">
+                Trạng thái:
+                <th:block th:if="${status == 'ACTIVE'}">Hoạt động</th:block>
+                <th:block th:if="${status == 'LOCKED'}">Đã khóa</th:block>
+                <th:block th:if="${status == 'UNVERIFIED'}">Chưa xác thực</th:block>
+            </span>
+            <a th:href="@{/admin/users(page=0, size=${size})}"
+               class="sd-btn sd-btn-secondary sd-btn-sm" style="margin-left:auto;">
+                <i class="fas fa-times"></i> Bỏ lọc
+            </a>
+            <span style="color:var(--text-muted);font-size:13px;">
+                <span th:text="${totalItems}">0</span> kết quả
+            </span>
+        </div>
     </div>
 
     <div class="dash-card">
@@ -62,6 +86,7 @@
             <table class="sd-table">
                 <thead>
                     <tr>
+                        <th class="sd-col-stt">STT</th>
                         <th>Họ tên</th>
                         <th>Email</th>
                         <th>Vai trò</th>
@@ -71,7 +96,7 @@
                 </thead>
                 <tbody>
                     <tr th:if="${#lists.isEmpty(users)}">
-                        <td colspan="5">
+                        <td colspan="6">
                             <div class="sd-empty">
                                 <i class="fas fa-user-slash"></i>
                                 <h3>Không có kết quả</h3>
@@ -80,7 +105,8 @@
                             </div>
                         </td>
                     </tr>
-                    <tr th:each="user : ${users}">
+                    <tr th:each="user, iter : ${users}">
+                        <td class="sd-col-stt" th:text="${page * size + iter.count}">1</td>
                         <td>
                             <div class="sd-table-title" th:text="${user.fullName} ?: '(chưa cập nhật)'">Họ tên</div>
                             <div class="sd-table-sub sd-mono" th:text="${user.id}">id</div>
@@ -124,7 +150,7 @@
              style="display:flex;justify-content:center;border-top:1px solid var(--border,#e2e8f0);">
             <nav class="sd-pagination" aria-label="Phân trang">
                 <a th:if="${hasPrev}"
-                   th:href="@{/admin/users(page=${page - 1}, size=${size}, q=${q})}"
+                   th:href="@{/admin/users(page=${page - 1}, size=${size}, q=${q}, role=${role}, status=${status})}"
                    class="sd-page-link">
                     <i class="fas fa-chevron-left"></i> Trước
                 </a>
@@ -137,7 +163,7 @@
                 </th:block>
 
                 <a th:if="${hasNext}"
-                   th:href="@{/admin/users(page=${page + 1}, size=${size}, q=${q})}"
+                   th:href="@{/admin/users(page=${page + 1}, size=${size}, q=${q}, role=${role}, status=${status})}"
                    class="sd-page-link">
                     Sau <i class="fas fa-chevron-right"></i>
                 </a>

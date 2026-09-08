@@ -1,183 +1,101 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org"
-      xmlns:sec="http://www.thymeleaf.org/extras/springsecurity6">
+      xmlns:sec="http://www.thymeleaf.org/extras/springsecurity6"
+      th:replace="~{layout/vendor-layout :: layout(title='Hồ sơ Vendor - CNJ70', content=~{::main-content}, scripts=~{::page-scripts})}">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Hồ sơ Vendor - CNJ70</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Work+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" th:href="@{/css/dashboard.css}">
-    <link rel="stylesheet" th:href="@{/css/vendor-shared.css}">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body>
-    <div class="sd-app" id="appShell">
-        <aside class="sd-sidebar">
-            <div class="sd-sidebar-header">
-                <div class="sd-sidebar-logo"><i class="fas fa-bolt"></i></div>
-                <div class="sd-sidebar-brand">
-                    <span class="sd-sidebar-brand-name">CNJ70 Shop</span>
-                    <span class="sd-sidebar-brand-sub">Vendor Console</span>
-                </div>
+<main th:fragment="main-content">
+
+    <div class="vd-page-hero">
+        <div class="vd-page-hero-left">
+            <div class="vd-page-hero-icon"><i class="fas fa-id-badge"></i></div>
+            <div class="vd-page-hero-info">
+                <h2>Hồ sơ của tôi</h2>
+                <p>Thông tin tài khoản và cửa hàng.</p>
             </div>
-            <nav class="sd-sidebar-nav">
-                <div class="sd-sidebar-nav-section">
-                    <span class="sd-sidebar-nav-title">Tổng quan</span>
-                    <a th:href="@{/vendor/dashboard}" class="sd-nav-item"><i class="fas fa-house"></i><span class="sd-nav-label">Dashboard</span></a>
-                </div>
-                <div class="sd-sidebar-nav-section">
-                    <span class="sd-sidebar-nav-title">Quản lý</span>
-                    <a th:href="@{/vendor/shop}" class="sd-nav-item"><i class="fas fa-store"></i><span class="sd-nav-label">Cửa hàng</span></a>
-                    <a th:href="@{/vendor/products}" class="sd-nav-item"><i class="fas fa-box"></i><span class="sd-nav-label">Sản phẩm</span></a>
-                    <a th:href="@{/vendor/orders}" class="sd-nav-item"><i class="fas fa-cart-shopping"></i><span class="sd-nav-label">Đơn hàng</span></a>
-                    <a th:href="@{/vendor/vouchers}" class="sd-nav-item"><i class="fas fa-ticket"></i><span class="sd-nav-label">Voucher</span></a>
-                </div>
-                <div class="sd-sidebar-nav-section">
-                    <span class="sd-sidebar-nav-title">Khác</span>
-                    <a th:href="@{/home}" class="sd-nav-item"><i class="fas fa-globe"></i><span class="sd-nav-label">Xem website</span></a>
-                    <form th:action="@{/auth/logout}" method="post" class="sd-logout-form">
-                        <button type="submit" class="sd-nav-item"><i class="fas fa-arrow-right-from-bracket"></i><span class="sd-nav-label">Đăng xuất</span></button>
-                    </form>
-                </div>
-            </nav>
-            <div class="sd-sidebar-footer">
-                <div class="sd-sidebar-user">
-                    <div class="sd-sidebar-avatar" sec:authentication="name">V</div>
-                    <div class="sd-sidebar-user-info">
-                        <div class="sd-sidebar-user-name" sec:authentication="name">Vendor</div>
-                        <div class="sd-sidebar-user-role">Vendor</div>
-                    </div>
-                </div>
-            </div>
-        </aside>
-
-        <div class="sd-main">
-            <div class="sd-topbar">
-                <button class="sd-topbar-toggle" type="button" id="sidebarToggle"><i class="fas fa-bars"></i></button>
-                <div class="sd-topbar-search">
-                    <i class="fas fa-magnifying-glass"></i>
-                    <input type="text" placeholder="Tìm kiếm...">
-                </div>
-                <div class="sd-topbar-actions">
-                    <button class="sd-icon-btn" type="button"><i class="fas fa-bell"></i><span class="sd-icon-btn-dot"></span></button>
-                    <div class="sd-topbar-divider"></div>
-                    <div class="sd-topbar-profile">
-                        <div class="sd-topbar-avatar" sec:authentication="name">V</div>
-                        <span class="sd-topbar-profile-name" sec:authentication="name">Vendor</span>
-                    </div>
-                </div>
-            </div>
-
-            <main class="sd-content">
-
-                <div class="vd-page-hero">
-                    <div class="vd-page-hero-left">
-                        <div class="vd-page-hero-icon"><i class="fas fa-id-badge"></i></div>
-                        <div class="vd-page-hero-info">
-                            <h2>Hồ sơ của tôi</h2>
-                            <p>Thông tin tài khoản và cửa hàng.</p>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- User hero -->
-                <div class="vd-shop-hero">
-                    <div class="vd-shop-logo" style="border-radius:50%;">
-                        <img th:if="${profile.avatarUrl}" th:src="${profile.avatarUrl}" alt="Avatar" style="border-radius:50%;">
-                        <i th:unless="${profile.avatarUrl}" class="fas fa-user"></i>
-                    </div>
-                    <div class="vd-shop-info">
-                        <h2 th:text="${profile.fullName}">Tên Vendor</h2>
-                        <p th:text="${profile.email}">email</p>
-                        <div class="vd-shop-badges">
-                            <span class="sd-badge sd-badge-indigo" th:text="${profile.role}">VENDOR</span>
-                            <span class="sd-badge" th:classappend="${profile.status == 'ACTIVE' ? 'sd-badge-green' : 'sd-badge-amber'}" th:text="${profile.status}">ACTIVE</span>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="sd-card" style="margin-bottom:16px;">
-                    <div class="sd-card-head"><h3>Thông tin cá nhân</h3></div>
-                    <div class="sd-card-body">
-                        <div class="vd-info-grid">
-                            <div class="vd-info-item">
-                                <div class="vd-info-label">Email</div>
-                                <div class="vd-info-value" th:text="${profile.email}">email</div>
-                            </div>
-                            <div class="vd-info-item">
-                                <div class="vd-info-label">Số điện thoại</div>
-                                <div class="vd-info-value" th:text="${profile.phone != null ? profile.phone : 'Chưa cập nhật'}">SĐT</div>
-                            </div>
-                            <div class="vd-info-item">
-                                <div class="vd-info-label">Địa chỉ</div>
-                                <div class="vd-info-value" th:text="${profile.address != null ? profile.address : 'Chưa cập nhật'}">Địa chỉ</div>
-                            </div>
-                            <div class="vd-info-item">
-                                <div class="vd-info-label">Ngày tham gia</div>
-                                <div class="vd-info-value" th:text="${#temporals.format(profile.createdAt, 'dd/MM/yyyy')}">Ngày</div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="sd-card" th:if="${profile.shop != null}">
-                    <div class="sd-card-head"><h3>Cửa hàng của tôi</h3></div>
-                    <div class="sd-card-body">
-                        <div class="vd-shop-hero" style="background:var(--bg-subtle);">
-                            <div class="vd-shop-logo">
-                                <img th:if="${profile.shop.logoUrl}" th:src="${profile.shop.logoUrl}" alt="Logo">
-                                <i th:unless="${profile.shop.logoUrl}" class="fas fa-store"></i>
-                            </div>
-                            <div class="vd-shop-info">
-                                <h2 th:text="${profile.shop.shopName}">Tên shop</h2>
-                                <p th:text="${profile.shop.description != null ? profile.shop.description : 'Chưa có mô tả.'}">Mô tả</p>
-                                <div class="vd-shop-badges">
-                                    <span th:if="${profile.shop.verified}" class="sd-badge sd-badge-green"><i class="fas fa-check-circle"></i> Đã xác minh</span>
-                                    <span th:unless="${profile.shop.verified}" class="sd-badge sd-badge-amber"><i class="fas fa-clock"></i> Chờ xác minh</span>
-                                    <span th:if="${profile.shop.active}" class="sd-badge sd-badge-green">Đang hoạt động</span>
-                                    <span th:unless="${profile.shop.active}" class="sd-badge sd-badge-red">Tạm ngưng</span>
-                                </div>
-                            </div>
-                        </div>
-                        <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:14px;">
-                            <a th:href="@{/vendor/shop}" class="sd-btn sd-btn-primary"><i class="fas fa-pen"></i> Chỉnh sửa cửa hàng</a>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="sd-card" th:unless="${profile.shop != null}">
-                    <div class="sd-card-body">
-                        <div class="sd-empty">
-                            <i class="fas fa-store-slash"></i>
-                            <h3>Bạn chưa có cửa hàng</h3>
-                            <p>Tạo cửa hàng để bắt đầu bán hàng trên CNJ70.</p>
-                            <a th:href="@{/vendor/shop/create}" class="sd-btn sd-btn-cta"><i class="fas fa-plus"></i> Tạo cửa hàng</a>
-                        </div>
-                    </div>
-                </div>
-
-            </main>
         </div>
     </div>
 
-    <script>
-        (function() {
-            const shell = document.getElementById('appShell');
-            const toggle = document.getElementById('sidebarToggle');
-            const KEY = 'cnj70-sidebar-expanded';
-            if (localStorage.getItem(KEY) === '1') shell.classList.add('sidebar-expanded');
-            toggle?.addEventListener('click', () => {
-                shell.classList.toggle('sidebar-expanded');
-                localStorage.setItem(KEY, shell.classList.contains('sidebar-expanded') ? '1' : '0');
-            });
-            document.querySelectorAll('.sd-sidebar-avatar, .sd-topbar-avatar').forEach(el => {
-                const name = (el.textContent || '').trim();
-                if (!name) return;
-                el.textContent = name.charAt(0).toUpperCase();
-            });
-        })();
-    </script>
+    <!-- User hero -->
+    <div class="vd-shop-hero">
+        <div class="vd-shop-logo" style="border-radius:50%;">
+            <img th:if="${profile.avatarUrl}" th:src="${profile.avatarUrl}" alt="Avatar" style="border-radius:50%;">
+            <i th:unless="${profile.avatarUrl}" class="fas fa-user"></i>
+        </div>
+        <div class="vd-shop-info">
+            <h2 th:text="${profile.fullName}">Tên Vendor</h2>
+            <p th:text="${profile.email}">email</p>
+            <div class="vd-shop-badges">
+                <span class="sd-badge sd-badge-indigo" th:text="${profile.role}">VENDOR</span>
+                <span class="sd-badge" th:classappend="${profile.status == 'ACTIVE' ? 'sd-badge-green' : 'sd-badge-amber'}" th:text="${profile.status}">ACTIVE</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="sd-card" style="margin-bottom:16px;">
+        <div class="sd-card-head"><h3>Thông tin cá nhân</h3></div>
+        <div class="sd-card-body">
+            <div class="vd-info-grid">
+                <div class="vd-info-item">
+                    <div class="vd-info-label">Email</div>
+                    <div class="vd-info-value" th:text="${profile.email}">email</div>
+                </div>
+                <div class="vd-info-item">
+                    <div class="vd-info-label">Số điện thoại</div>
+                    <div class="vd-info-value" th:text="${profile.phone != null ? profile.phone : 'Chưa cập nhật'}">SĐT</div>
+                </div>
+                <div class="vd-info-item">
+                    <div class="vd-info-label">Địa chỉ</div>
+                    <div class="vd-info-value" th:text="${profile.address != null ? profile.address : 'Chưa cập nhật'}">Địa chỉ</div>
+                </div>
+                <div class="vd-info-item">
+                    <div class="vd-info-label">Ngày tham gia</div>
+                    <div class="vd-info-value" th:text="${#temporals.format(profile.createdAt, 'dd/MM/yyyy')}">Ngày</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="sd-card" th:if="${profile.shop != null}">
+        <div class="sd-card-head"><h3>Cửa hàng của tôi</h3></div>
+        <div class="sd-card-body">
+            <div class="vd-shop-hero" style="background:var(--bg-subtle);">
+                <div class="vd-shop-logo">
+                    <img th:if="${profile.shop.logoUrl}" th:src="${profile.shop.logoUrl}" alt="Logo">
+                    <i th:unless="${profile.shop.logoUrl}" class="fas fa-store"></i>
+                </div>
+                <div class="vd-shop-info">
+                    <h2 th:text="${profile.shop.shopName}">Tên shop</h2>
+                    <p th:text="${profile.shop.description != null ? profile.shop.description : 'Chưa có mô tả.'}">Mô tả</p>
+                    <div class="vd-shop-badges">
+                        <span th:if="${profile.shop.verified}" class="sd-badge sd-badge-green"><i class="fas fa-check-circle"></i> Đã xác minh</span>
+                        <span th:unless="${profile.shop.verified}" class="sd-badge sd-badge-amber"><i class="fas fa-clock"></i> Chờ xác minh</span>
+                        <span th:if="${profile.shop.active}" class="sd-badge sd-badge-green">Đang hoạt động</span>
+                        <span th:unless="${profile.shop.active}" class="sd-badge sd-badge-red">Tạm ngưng</span>
+                    </div>
+                </div>
+            </div>
+            <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:14px;">
+                <a th:href="@{/vendor/shop}" class="sd-btn sd-btn-primary"><i class="fas fa-pen"></i> Chỉnh sửa cửa hàng</a>
+            </div>
+        </div>
+    </div>
+
+    <div class="sd-card" th:unless="${profile.shop != null}">
+        <div class="sd-card-body">
+            <div class="sd-empty">
+                <i class="fas fa-store-slash"></i>
+                <h3>Bạn chưa có cửa hàng</h3>
+                <p>Tạo cửa hàng để bắt đầu bán hàng trên CNJ70.</p>
+                <a th:href="@{/vendor/shop/create}" class="sd-btn sd-btn-cta"><i class="fas fa-plus"></i> Tạo cửa hàng</a>
+            </div>
+        </div>
+    </div>
+
+</main>
+
+<th:block th:fragment="page-scripts"></th:block>
 </body>
 </html>

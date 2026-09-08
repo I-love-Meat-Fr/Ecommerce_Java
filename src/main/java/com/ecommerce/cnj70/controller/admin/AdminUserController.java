@@ -2,6 +2,7 @@ package com.ecommerce.cnj70.controller.admin;
 
 import com.ecommerce.cnj70.document.User;
 import com.ecommerce.cnj70.enums.AccountStatus;
+import com.ecommerce.cnj70.enums.UserRole;
 import com.ecommerce.cnj70.exception.BusinessException;
 import com.ecommerce.cnj70.security.CustomUserDetails;
 import com.ecommerce.cnj70.service.AdminUserService;
@@ -31,12 +32,17 @@ public class AdminUserController {
     public String userList(@RequestParam(defaultValue = "0") int page,
                            @RequestParam(defaultValue = "5") int size,
                            @RequestParam(required = false) String q,
+                           @RequestParam(required = false) String role,
+                           @RequestParam(required = false) String status,
                            Model model) {
         int safeSize = size <= 0 ? DEFAULT_PAGE_SIZE : Math.min(size, 50);
         int safePage = Math.max(page, 0);
         Pageable pageable = PageRequest.of(safePage, safeSize);
 
-        Page<User> users = adminUserService.listUsers(pageable, q);
+        UserRole roleFilter = parseRole(role);
+        AccountStatus statusFilter = parseStatus(status);
+
+        Page<User> users = adminUserService.listUsers(pageable, q, roleFilter, statusFilter);
 
         model.addAttribute("users", users.getContent());
         model.addAttribute("page", users.getNumber());
@@ -44,6 +50,10 @@ public class AdminUserController {
         model.addAttribute("totalPages", users.getTotalPages());
         model.addAttribute("totalItems", users.getTotalElements());
         model.addAttribute("q", q == null ? "" : q);
+        model.addAttribute("role", roleFilter == null ? "" : roleFilter.name());
+        model.addAttribute("status", statusFilter == null ? "" : statusFilter.name());
+        model.addAttribute("roles", UserRole.values());
+        model.addAttribute("statuses", AccountStatus.values());
         model.addAttribute("hasNext", users.hasNext());
         model.addAttribute("hasPrev", users.hasPrevious());
         model.addAttribute("isFirst", users.isFirst());
@@ -108,5 +118,27 @@ public class AdminUserController {
         int end = Math.min(totalPages - 1, current + 2);
         for (int i = start; i <= end; i++) out.add(i);
         return out;
+    }
+
+    private static UserRole parseRole(String raw) {
+        if (raw == null || raw.isBlank()) return null;
+        String norm = raw.trim().toUpperCase();
+        if ("ALL".equals(norm)) return null;
+        try {
+            return UserRole.valueOf(norm);
+        } catch (IllegalArgumentException ex) {
+            return null;
+        }
+    }
+
+    private static AccountStatus parseStatus(String raw) {
+        if (raw == null || raw.isBlank()) return null;
+        String norm = raw.trim().toUpperCase();
+        if ("ALL".equals(norm)) return null;
+        try {
+            return AccountStatus.valueOf(norm);
+        } catch (IllegalArgumentException ex) {
+            return null;
+        }
     }
 }

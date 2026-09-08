@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/springsecurity6"
+      th:replace="~{layout/admin-layout :: layout(title='Chi tiết đánh giá - CNJ70 Admin', content=~{::main-content}, scripts=~{::page-scripts})}">
+<head>
+    <title>Chi tiết đánh giá - CNJ70 Admin</title>
+</head>
+<body>
+<main th:fragment="main-content">
+    <div class="sd-page-head">
+        <div class="sd-page-head-title">
+            <h1>Chi tiết đánh giá</h1>
+            <p>Thông tin moderation. Admin chỉ xem và xóa đánh giá vi phạm.</p>
+        </div>
+        <div>
+            <a th:href="@{/admin/reviews(page=${page}, size=${size}, q=${q}, rating=${rating})}"
+               class="sd-btn sd-btn-secondary sd-btn-sm">
+                <i class="fas fa-arrow-left"></i> Quay lại danh sách
+            </a>
+        </div>
+    </div>
+
+    <div class="sd-card" style="margin-bottom:16px;">
+        <div class="sd-card-body">
+            <div style="display:flex;gap:16px;align-items:flex-start;margin-bottom:16px;flex-wrap:wrap;">
+                <div th:if="${review.userAvatar != null and !#strings.isEmpty(review.userAvatar)}"
+                     style="flex:0 0 60px;">
+                    <img th:src="${review.userAvatar}" alt="avatar"
+                         style="width:60px;height:60px;border-radius:50%;object-fit:cover;border:1px solid var(--border,#e2e8f0);" />
+                </div>
+                <div th:unless="${review.userAvatar != null and !#strings.isEmpty(review.userAvatar)}"
+                     style="flex:0 0 60px;width:60px;height:60px;border-radius:50%;background:#f1f5f9;display:flex;align-items:center;justify-content:center;color:#94a3b8;">
+                    <i class="fas fa-user" style="font-size:24px;"></i>
+                </div>
+
+                <div style="flex:1;min-width:200px;">
+                    <h2 style="margin:0 0 4px 0;font-size:18px;"
+                        th:text="${review.userName != null ? review.userName : 'Ẩn danh'}">Customer</h2>
+                    <div style="display:flex;gap:8px;flex-wrap:wrap;">
+                        <span class="sd-badge sd-badge-slate">User ID: <span th:text="${review.userId}">id</span></span>
+                        <span class="sd-badge sd-badge-warning">
+                            <span th:text="${review.rating}">5</span> <i class="fas fa-star"></i>
+                        </span>
+                        <span class="sd-badge sd-badge-blue">
+                            Review ID: <span th:text="${review.id}">id</span>
+                        </span>
+                    </div>
+                </div>
+            </div>
+
+            <table class="sd-table" style="margin-bottom:12px;">
+                <tbody>
+                    <tr>
+                        <th style="width:160px;">Sản phẩm</th>
+                        <td>
+                            <div th:if="${product != null}">
+                                <div th:text="${product.name != null ? product.name : '—'}">Tên SP</div>
+                                <small class="sd-table-sub"
+                                       th:text="${product.id != null ? 'Product ID: ' + product.id : ''}">id</small>
+                            </div>
+                            <span th:unless="${product != null}">Không tìm thấy sản phẩm</span>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th>Ngày đánh giá</th>
+                        <td>
+                            <span th:if="${review.createdAt != null}"
+                                  th:text="${#temporals.format(review.createdAt, 'dd/MM/yyyy HH:mm')}">—</span>
+                            <span th:unless="${review.createdAt != null}">—</span>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <h3 style="margin:0 0 8px 0;font-size:14px;">Nội dung đánh giá</h3>
+            <div style="padding:14px;border:1px solid var(--border,#e2e8f0);border-radius:8px;background:#f8fafc;color:#475569;white-space:pre-wrap;line-height:1.6;"
+                 th:text="${review.comment}">Comment</div>
+        </div>
+
+        <div class="sd-card-body"
+             style="border-top:1px solid var(--border,#e2e8f0);display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end;">
+            <form th:action="@{/admin/reviews/{id}/delete(id=${review.id}, page=${page}, size=${size}, q=${q}, rating=${rating})}"
+                  method="post"
+                  onsubmit="return confirm('Xóa đánh giá vi phạm này? Hành động không thể hoàn tác.');">
+                <button type="submit" class="sd-btn sd-btn-danger">
+                    <i class="fas fa-trash"></i> Xóa đánh giá vi phạm
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <div class="sd-card" style="background:#fffbeb;border:1px solid #fde68a;">
+        <div class="sd-card-body" style="display:flex;gap:10px;align-items:flex-start;">
+            <i class="fas fa-info-circle" style="color:#b45309;font-size:20px;margin-top:2px;"></i>
+            <div>
+                <strong style="color:#92400e;">Lưu ý (Phase 15 Contract)</strong>
+                <p style="margin:4px 0 0 0;color:#78350f;">
+                    Hide/Unhide Review hiện chưa được hỗ trợ do Phase 15 LOCK 3 / 6:
+                    schema <code>isHidden</code> chưa được Business Contract chốt.
+                    Product.rating / reviewCount không bị ảnh hưởng theo LOCK 4 (chờ Contract).
+                </p>
+            </div>
+        </div>
+    </div>
+</main>
+
+<th:block th:fragment="page-scripts"></th:block>
+</body>
+</html>

@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/springsecurity6"
+      th:fragment="layout(title, content, scripts)">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="${title} ?: 'Vendor - CNJ70'">Vendor - CNJ70</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Work+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+    <!-- ============================================================
+         UI PHASE 3 — Vendor UI Revolution
+         Vendor-specific layout. KHÔNG đụng admin-layout / dashboard-layout.
+         Load order quan trọng:
+           1. dashboard.css         : base shell + sd-* tokens (indigo)
+           2. vendor-shared.css     : override sang teal + vendor tokens
+           3. vendor-dashboard.css  : vendor-specific dashboard styles
+           4. foundation/index.css  : design system foundation (Phase 1)
+           5. admin-ui.css          : shared sd-input/select/polish (Phase 2)
+         ============================================================ -->
+    <link rel="stylesheet" th:href="@{/css/dashboard.css}">
+    <link rel="stylesheet" th:href="@{/css/vendor-shared.css}">
+    <link rel="stylesheet" th:href="@{/css/vendor-dashboard.css}">
+    <link rel="stylesheet" th:href="@{/css/foundation/index.css}">
+    <link rel="stylesheet" th:href="@{/css/admin-ui.css}">
+    <link rel="stylesheet" th:href="@{/css/vendor-ui.css}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <a class="sd-skip-link" href="#mainContent">Bỏ qua tới nội dung chính</a>
+    <div class="sd-app sd-app-vendor" id="appShell">
+        <!-- Sidebar: dùng fragment có sẵn (đã có sẵn vendor links) -->
+        <aside th:replace="~{fragments/dashboard-sidebar :: sidebar}"></aside>
+
+        <div class="sd-main">
+            <!-- Topbar: dùng fragment có sẵn -->
+            <div th:replace="~{fragments/dashboard-topbar :: topbar}"></div>
+
+            <!-- Page content slot -->
+            <main class="sd-content" id="mainContent" th:replace="${content}"></main>
+        </div>
+    </div>
+
+    <!-- Sidebar toggle + active state JS (giống dashboard-layout) -->
+    <script>
+        (function() {
+            const shell = document.getElementById('appShell');
+            const toggle = document.getElementById('sidebarToggle');
+            const STORAGE_KEY = 'cnj70-sidebar-expanded';
+
+            const persisted = localStorage.getItem(STORAGE_KEY);
+            if (persisted === '1') shell.classList.add('sidebar-expanded');
+
+            toggle?.addEventListener('click', () => {
+                shell.classList.toggle('sidebar-expanded');
+                localStorage.setItem(STORAGE_KEY, shell.classList.contains('sidebar-expanded') ? '1' : '0');
+            });
+
+            const path = window.location.pathname.replace(/\/$/, '');
+            document.querySelectorAll('.sd-nav-item[data-match]').forEach(el => {
+                const match = el.getAttribute('data-match');
+                if (match && (path === match || path.startsWith(match + '/'))) {
+                    el.classList.add('active');
+                }
+            });
+        })();
+    </script>
+
+    <!-- Page-level scripts slot (ApexCharts, TinyMCE init, etc.) -->
+    <th:block th:replace="${scripts}"></th:block>
+</body>
+</html>

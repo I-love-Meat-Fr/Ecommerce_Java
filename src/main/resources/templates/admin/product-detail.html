@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/springsecurity6"
+      th:replace="~{layout/admin-layout :: layout(title='Chi tiết sản phẩm - CNJ70 Admin', content=~{::main-content}, scripts=~{::page-scripts})}">
+<head>
+    <title>Chi tiết sản phẩm - CNJ70 Admin</title>
+</head>
+<body>
+<main th:fragment="main-content">
+    <div class="sd-page-head">
+        <div class="sd-page-head-title">
+            <h1>Chi tiết sản phẩm</h1>
+            <p>Thông tin moderation. Admin chỉ xem và thực hiện Hide/Unhide/Delete.</p>
+        </div>
+        <div>
+            <a th:href="@{/admin/products(page=${page}, size=${size}, q=${q}, status=${status})}"
+               class="sd-btn sd-btn-secondary sd-btn-sm">
+                <i class="fas fa-arrow-left"></i> Quay lại danh sách
+            </a>
+        </div>
+    </div>
+
+    <div class="sd-card" style="margin-bottom:16px;">
+        <div class="sd-card-body" style="display:flex;gap:24px;flex-wrap:wrap;align-items:flex-start;">
+            <div style="flex:0 0 220px;">
+                <div th:if="${product.thumbnailUrl != null and !#strings.isEmpty(product.thumbnailUrl)}"
+                     style="width:220px;height:220px;border:1px solid var(--border,#e2e8f0);border-radius:8px;overflow:hidden;background:#f8fafc;">
+                    <img th:src="${product.thumbnailUrl}" alt="thumbnail"
+                         style="width:100%;height:100%;object-fit:cover;" />
+                </div>
+                <div th:unless="${product.thumbnailUrl != null and !#strings.isEmpty(product.thumbnailUrl)}"
+                     style="width:220px;height:220px;border:1px dashed var(--border,#e2e8f0);border-radius:8px;display:flex;align-items:center;justify-content:center;color:#94a3b8;background:#f8fafc;">
+                    <i class="fas fa-image" style="font-size:48px;"></i>
+                </div>
+            </div>
+
+            <div style="flex:1;min-width:260px;">
+                <h2 style="margin:0 0 8px 0;" th:text="${product.name}">Tên sản phẩm</h2>
+                <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px;">
+                    <span class="sd-badge"
+                          th:classappend="${product.status.name() == 'ACTIVE' ? 'sd-badge-green' :
+                                          (product.status.name() == 'HIDDEN' ? 'sd-badge-slate' :
+                                          (product.status.name() == 'OUT_OF_STOCK' ? 'sd-badge-warning' :
+                                          'sd-badge-blue'))}"
+                          th:text="${product.status.name() == 'DRAFT' ? 'Nháp' :
+                                    (product.status.name() == 'ACTIVE' ? 'Đang bán' :
+                                    (product.status.name() == 'OUT_OF_STOCK' ? 'Hết hàng' :
+                                    (product.status.name() == 'HIDDEN' ? 'Đã ẩn' : product.status.name())))}">ACTIVE</span>
+                    <span class="sd-badge sd-badge-slate">
+                        ID: <span th:text="${product.id}">id</span>
+                    </span>
+                </div>
+
+                <table class="sd-table" style="margin-bottom:12px;">
+                    <tbody>
+                        <tr>
+                            <th style="width:160px;">Giá bán</th>
+                            <td>
+                                <span th:text="${product.price != null ? #numbers.formatDecimal(product.price, 0, 'COMMA', 0, 'POINT') + ' đ' : '—'}">0 đ</span>
+                            </td>
+                        </tr>
+                        <tr>
+                            <th>Tồn kho</th>
+                            <td><span th:text="${product.stock}">0</span></td>
+                        </tr>
+                        <tr>
+                            <th>Danh mục</th>
+                            <td>
+                                <span th:text="${product.categoryName != null ? product.categoryName : '—'}">Danh mục</span>
+                                <small class="sd-table-sub" th:if="${product.categoryId != null}"
+                                       th:text="' (ID: ' + ${product.categoryId} + ')'">id</small>
+                            </td>
+                        </tr>
+                        <tr>
+                            <th>Vendor / Shop</th>
+                            <td>
+                                <div th:text="${product.shopName != null ? product.shopName : '—'}">Shop</div>
+                                <small class="sd-table-sub" th:if="${product.shopId != null}"
+                                       th:text="' (ID: ' + ${product.shopId} + ')'">id</small>
+                            </td>
+                        </tr>
+                        <tr>
+                            <th>Thương hiệu</th>
+                            <td><span th:text="${product.brand != null ? product.brand : '—'}">—</span></td>
+                        </tr>
+                        <tr>
+                            <th>Hãng</th>
+                            <td><span th:text="${product.manufacturer != null ? product.manufacturer : '—'}">—</span></td>
+                        </tr>
+                        <tr>
+                            <th>Bảo hành</th>
+                            <td>
+                                <span th:if="${product.warrantyMonths != null}"
+                                      th:text="${product.warrantyMonths + ' tháng'}">0 tháng</span>
+                                <span th:unless="${product.warrantyMonths != null}">—</span>
+                            </td>
+                        </tr>
+                        <tr>
+                            <th>Đánh giá</th>
+                            <td>
+                                <span th:text="${product.rating}">0.0</span>
+                                <small class="sd-table-sub">
+                                    (<span th:text="${product.reviewCount}">0</span> đánh giá,
+                                    đã bán <span th:text="${product.sold}">0</span>)
+                                </small>
+                            </td>
+                        </tr>
+                        <tr>
+                            <th>Ngày tạo</th>
+                            <td>
+                                <span th:if="${product.createdAt != null}"
+                                      th:text="${#temporals.format(product.createdAt, 'dd/MM/yyyy HH:mm')}">—</span>
+                                <span th:unless="${product.createdAt != null}">—</span>
+                            </td>
+                        </tr>
+                        <tr>
+                            <th>Cập nhật</th>
+                            <td>
+                                <span th:if="${product.updatedAt != null}"
+                                      th:text="${#temporals.format(product.updatedAt, 'dd/MM/yyyy HH:mm')}">—</span>
+                                <span th:unless="${product.updatedAt != null}">—</span>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <h3 style="margin:0 0 4px 0;font-size:14px;">Mô tả</h3>
+                <p style="margin:0 0 12px 0;color:#475569;white-space:pre-wrap;"
+                   th:text="${product.description != null ? product.description : '—'}">Mô tả</p>
+
+                <h3 style="margin:0 0 4px 0;font-size:14px;">Mô tả chi tiết</h3>
+                <p style="margin:0;color:#475569;white-space:pre-wrap;"
+                   th:text="${product.richDescription != null ? product.richDescription : '—'}">Mô tả chi tiết</p>
+            </div>
+        </div>
+
+        <div class="sd-card-body"
+             style="border-top:1px solid var(--border,#e2e8f0);display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end;">
+            <form th:if="${product.status.name() != 'HIDDEN'}"
+                  th:action="@{/admin/products/{id}/hide(id=${product.id}, page=${page}, size=${size}, q=${q}, status=${status})}"
+                  method="post"
+                  onsubmit="return confirm('Ẩn sản phẩm này?');">
+                <button type="submit" class="sd-btn sd-btn-warning">
+                    <i class="fas fa-eye-slash"></i> Ẩn sản phẩm
+                </button>
+            </form>
+            <form th:if="${product.status.name() == 'HIDDEN'}"
+                  th:action="@{/admin/products/{id}/unhide(id=${product.id}, page=${page}, size=${size}, q=${q}, status=${status})}"
+                  method="post">
+                <button type="submit" class="sd-btn sd-btn-primary">
+                    <i class="fas fa-eye"></i> Hiện sản phẩm
+                </button>
+            </form>
+            <form th:action="@{/admin/products/{id}/delete(id=${product.id}, page=${page}, size=${size}, q=${q}, status=${status})}"
+                  method="post"
+                  onsubmit="return confirm('Xóa sản phẩm vi phạm này? Hành động không thể hoàn tác.');">
+                <button type="submit" class="sd-btn sd-btn-danger">
+                    <i class="fas fa-trash"></i> Xóa sản phẩm vi phạm
+                </button>
+            </form>
+        </div>
+    </div>
+</main>
+
+<th:block th:fragment="page-scripts"></th:block>
+</body>
+</html>

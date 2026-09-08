@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org"
-      xmlns:sec="http://www.th3ymeleaf.org/extras/spring-security6"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security6"
       th:replace="~{layout/admin-layout :: layout(title='Admin Dashboard - CNJ70', content=~{::main-content}, scripts=~{::page-scripts})}">
 <head>
     <title>Admin Dashboard - CNJ70</title>
@@ -30,7 +30,7 @@
 
     <!-- Stats Grid -->
     <div class="dash-stats">
-        <div class="dash-stat-card dash-stat-primary">
+        <a th:href="@{/admin/users}" class="dash-stat-card dash-stat-primary dash-stat-link" aria-label="Xem quản lý người dùng">
             <div class="dash-stat-icon-wrap">
                 <div class="dash-stat-icon">
                     <i class="fas fa-users"></i>
@@ -47,9 +47,10 @@
                     <path d="M0,25 L15,20 L30,22 L45,15 L60,18 L75,10 L100,5" fill="none" stroke="rgba(255,255,255,0.4)" stroke-width="2"/>
                 </svg>
             </div>
-        </div>
+            <div class="dash-stat-link-indicator"><i class="fas fa-arrow-right"></i></div>
+        </a>
 
-        <div class="dash-stat-card dash-stat-success">
+        <a th:href="@{/admin/shops}" class="dash-stat-card dash-stat-success dash-stat-link" aria-label="Xem quản lý cửa hàng">
             <div class="dash-stat-icon-wrap">
                 <div class="dash-stat-icon">
                     <i class="fas fa-store"></i>
@@ -66,9 +67,10 @@
                     <path d="M0,20 L15,22 L30,18 L45,20 L60,15 L75,12 L100,8" fill="none" stroke="rgba(255,255,255,0.4)" stroke-width="2"/>
                 </svg>
             </div>
-        </div>
+            <div class="dash-stat-link-indicator"><i class="fas fa-arrow-right"></i></div>
+        </a>
 
-        <div class="dash-stat-card dash-stat-warning">
+        <a th:href="@{/admin/products}" class="dash-stat-card dash-stat-warning dash-stat-link" aria-label="Xem kiểm duyệt sản phẩm">
             <div class="dash-stat-icon-wrap">
                 <div class="dash-stat-icon">
                     <i class="fas fa-box-open"></i>
@@ -85,9 +87,10 @@
                     <path d="M0,25 L15,20 L30,22 L45,12 L60,15 L75,8 L100,3" fill="none" stroke="rgba(255,255,255,0.4)" stroke-width="2"/>
                 </svg>
             </div>
-        </div>
+            <div class="dash-stat-link-indicator"><i class="fas fa-arrow-right"></i></div>
+        </a>
 
-        <div class="dash-stat-card dash-stat-danger">
+        <a th:href="@{/admin/orders}" class="dash-stat-card dash-stat-danger dash-stat-link" aria-label="Xem quản lý đơn hàng">
             <div class="dash-stat-icon-wrap">
                 <div class="dash-stat-icon">
                     <i class="fas fa-shopping-bag"></i>
@@ -104,7 +107,8 @@
                     <path d="M0,22 L15,18 L30,20 L45,15 L60,12 L75,10 L100,5" fill="none" stroke="rgba(255,255,255,0.4)" stroke-width="2"/>
                 </svg>
             </div>
-        </div>
+            <div class="dash-stat-link-indicator"><i class="fas fa-arrow-right"></i></div>
+        </a>
     </div>
 
     <!-- Main Content Grid -->
@@ -116,11 +120,31 @@
                     <h3><i class="fas fa-chart-line"></i> Doanh thu nền tảng</h3>
                     <p>Tổng doanh thu từ các đơn đã giao thành công</p>
                 </div>
-                <div class="dash-card-badge">All-time</div>
+                <div class="dash-revenue-meta">
+                    <div class="dash-revenue-period-wrap">
+                        <label class="dash-period-label" for="dashPeriodSelect">Revenue</label>
+                        <select id="dashPeriodSelect" class="dash-period-select" data-current-period="${period ?: 'WEEK'}">
+                            <option value="DAY" th:selected="${period == 'DAY'}">Day</option>
+                            <option value="WEEK" th:selected="${period == 'WEEK' || period == null}">Week</option>
+                            <option value="MONTH" th:selected="${period == 'MONTH'}">Month</option>
+                            <option value="QUARTER" th:selected="${period == 'QUARTER'}">Quarter</option>
+                            <option value="YEAR" th:selected="${period == 'YEAR'}">Year</option>
+                            <option value="ALL" th:selected="${period == 'ALL'}">All-time</option>
+                        </select>
+                    </div>
+                </div>
             </div>
             <div class="dash-revenue-display">
                 <div class="dash-revenue-value" th:text="${@money.format(stats.totalPlatformRevenue)}">0đ</div>
-                <div class="dash-revenue-label">Tổng doanh thu</div>
+                <div class="dash-revenue-label" th:switch="${period ?: 'WEEK'}">
+                    <span th:case="'DAY'">Tổng doanh thu 14 ngày gần nhất</span>
+                    <span th:case="'WEEK'">Tổng doanh thu 8 tuần gần nhất</span>
+                    <span th:case="'MONTH'">Tổng doanh thu 12 tháng gần nhất</span>
+                    <span th:case="'QUARTER'">Tổng doanh thu 8 quý gần nhất</span>
+                    <span th:case="'YEAR'">Tổng doanh thu 6 năm gần nhất</span>
+                    <span th:case="'ALL'">Tổng doanh thu toàn thời gian</span>
+                    <span th:case="*">Tổng doanh thu 8 tuần gần nhất</span>
+                </div>
             </div>
             <div id="adminRevenueChart" class="dash-chart-container"></div>
         </div>
@@ -135,7 +159,9 @@
             </div>
             <div class="dash-card-body" th:if="${not #lists.isEmpty(stats.recentActivities)}">
                 <div class="dash-activity-list">
-                    <div class="dash-activity-item" th:each="act : ${stats.recentActivities}">
+                    <a th:each="act : ${stats.recentActivities}"
+                       th:href="@{/admin/orders/{id}(id=${act.orderId})}"
+                       class="dash-activity-item dash-activity-link">
                         <div class="dash-activity-icon-wrap" th:classappend="${act.type == 'ORDER' ? 'dash-icon-order' : 'dash-icon-info'}">
                             <i class="fas" th:classappend="${act.type == 'ORDER' ? 'fa-receipt' : 'fa-circle-info'}"></i>
                         </div>
@@ -146,7 +172,7 @@
                         <div class="dash-activity-arrow">
                             <i class="fas fa-chevron-right"></i>
                         </div>
-                    </div>
+                    </a>
                 </div>
             </div>
             <div class="dash-empty" th:if="${#lists.isEmpty(stats.recentActivities)}">
@@ -203,6 +229,18 @@
                         <i class="fas fa-arrow-right"></i>
                     </div>
                 </a>
+                <a th:href="@{/admin/shops}" class="dash-quick-card">
+                    <div class="dash-quick-icon dash-icon-shops">
+                        <i class="fas fa-store"></i>
+                    </div>
+                    <div class="dash-quick-content">
+                        <div class="dash-quick-title">Quản lý cửa hàng</div>
+                        <div class="dash-quick-sub">Phê duyệt và theo dõi shop</div>
+                    </div>
+                    <div class="dash-quick-arrow">
+                        <i class="fas fa-arrow-right"></i>
+                    </div>
+                </a>
                 <a th:href="@{/admin/orders}" class="dash-quick-card">
                     <div class="dash-quick-icon dash-icon-orders">
                         <i class="fas fa-cart-shopping"></i>
@@ -224,85 +262,113 @@
     <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
     <script th:inline="javascript">
         (function() {
-            var trend = /*[[${stats.revenueTrend}]]*/ [];
-            if (!trend || trend.length === 0) return;
-            var labels = trend.map(function(t){ return t.label; });
-            var revenue = trend.map(function(t){ return Number(t.revenue); });
-            var orders = trend.map(function(t){ return Number(t.orders); });
-            var options = {
-                chart: {
-                    type: 'area',
-                    height: 300,
-                    toolbar: { show: false },
-                    fontFamily: 'Inter, sans-serif',
-                    zoom: { enabled: false },
-                    background: 'transparent'
-                },
-                series: [
-                    { name: 'Doanh thu', data: revenue },
-                    { name: 'Đơn hàng', data: orders }
-                ],
-                colors: ['#6366f1', '#10b981'],
-                stroke: { curve: 'smooth', width: 3 },
-                fill: {
-                    type: 'gradient',
-                    gradient: {
-                        shadeIntensity: 1,
-                        opacityFrom: 0.4,
-                        opacityTo: 0.05,
-                        stops: [0, 90, 100]
-                    }
-                },
-                dataLabels: { enabled: false },
-                grid: { 
-                    borderColor: '#f1f5f9', 
-                    strokeDashArray: 4, 
-                    xaxis: { lines: { show: false } },
-                    yaxis: { lines: { show: true } },
-                    padding: { left: 10, right: 10 }
-                },
-                xaxis: {
-                    categories: labels,
-                    labels: { 
-                        style: { colors: '#94a3b8', fontSize: '12px', fontWeight: 500 },
-                        offsetY: 5
+            function renderDashboardCharts(trendData) {
+                var chartEl = document.querySelector('#adminRevenueChart');
+                if (!chartEl || !trendData || trendData.length === 0) return;
+                var labels = trendData.map(function(t){ return t.label; });
+                var revenue = trendData.map(function(t){ return Number(t.revenue); });
+                var orders = trendData.map(function(t){ return Number(t.orders); });
+                var options = {
+                    chart: {
+                        type: 'area',
+                        height: 300,
+                        toolbar: { show: false },
+                        fontFamily: 'Inter, sans-serif',
+                        zoom: { enabled: false },
+                        background: 'transparent'
                     },
-                    axisBorder: { show: false },
-                    axisTicks: { show: false }
-                },
-                yaxis: [
-                    {
-                        seriesName: 'Doanh thu',
-                        labels: {
-                            style: { colors: '#94a3b8', fontSize: '12px' },
-                            formatter: function(v){ return new Intl.NumberFormat('vi-VN').format(v) + ' đ'; }
+                    series: [
+                        { name: 'Doanh thu', data: revenue },
+                        { name: 'Đơn hàng', data: orders }
+                    ],
+                    colors: ['#6366f1', '#10b981'],
+                    stroke: { curve: 'smooth', width: 3 },
+                    fill: {
+                        type: 'gradient',
+                        gradient: {
+                            shadeIntensity: 1,
+                            opacityFrom: 0.4,
+                            opacityTo: 0.05,
+                            stops: [0, 90, 100]
                         }
                     },
-                    {
-                        seriesName: 'Đơn hàng',
-                        opposite: true,
+                    dataLabels: { enabled: false },
+                    grid: {
+                        borderColor: '#f1f5f9',
+                        strokeDashArray: 4,
+                        xaxis: { lines: { show: false } },
+                        yaxis: { lines: { show: true } },
+                        padding: { left: 10, right: 10 }
+                    },
+                    xaxis: {
+                        categories: labels,
                         labels: {
-                            style: { colors: '#94a3b8', fontSize: '12px' },
-                            formatter: function(v){ return new Intl.NumberFormat('vi-VN').format(v); }
+                            style: { colors: '#94a3b8', fontSize: '12px', fontWeight: 500 },
+                            offsetY: 5
+                        },
+                        axisBorder: { show: false },
+                        axisTicks: { show: false }
+                    },
+                    yaxis: [
+                        {
+                            seriesName: 'Doanh thu',
+                            labels: {
+                                style: { colors: '#94a3b8', fontSize: '12px' },
+                                formatter: function(v){ return new Intl.NumberFormat('vi-VN').format(v) + ' đ'; }
+                            }
+                        },
+                        {
+                            seriesName: 'Đơn hàng',
+                            opposite: true,
+                            labels: {
+                                style: { colors: '#94a3b8', fontSize: '12px' },
+                                formatter: function(v){ return new Intl.NumberFormat('vi-VN').format(v); }
+                            }
                         }
+                    ],
+                    legend: {
+                        show: true,
+                        position: 'top',
+                        horizontalAlign: 'left',
+                        fontSize: '13px',
+                        fontWeight: 500,
+                        labels: { colors: '#64748b' },
+                        markers: { width: 12, height: 12, radius: 6 }
+                    },
+                    tooltip: {
+                        theme: 'light',
+                        style: { fontSize: '13px', fontFamily: 'Inter, sans-serif' },
+                        y: { formatter: function(v){ return new Intl.NumberFormat('vi-VN').format(v); } }
                     }
-                ],
-                legend: { 
-                    show: true, 
-                    position: 'top', 
-                    horizontalAlign: 'left',
-                    fontSize: '13px',
-                    fontWeight: 500,
-                    labels: { colors: '#64748b' },
-                    markers: { width: 12, height: 12, radius: 6 }
-                },
-                tooltip: {
-                    theme: 'light',
-                    style: { fontSize: '13px', fontFamily: 'Inter, sans-serif' },
-                    y: { formatter: function(v){ return new Intl.NumberFormat('vi-VN').format(v); } }
+                };
+                if (window.__adminRevenueChartInstance) {
+                    window.__adminRevenueChartInstance.updateOptions({
+                        xaxis: { categories: labels },
+                        series: [
+                            { name: 'Doanh thu', data: revenue },
+                            { name: 'Đơn hàng', data: orders }
+                        ]
+                    });
+                } else {
+                    window.__adminRevenueChartInstance = new ApexCharts(chartEl, options);
+                    window.__adminRevenueChartInstance.render();
                 }
-            };
-            new ApexCharts(document.querySelector('#adminRevenueChart'), options).render();
+            }
+
+            var initialTrend = /*[[${stats.revenueTrend}]]*/ [];
+            renderDashboardCharts(initialTrend);
+
+            // Period dropdown → navigate with query string (server-side re-render).
+            var periodSelect = document.getElementById('dashPeriodSelect');
+            if (periodSelect) {
+                periodSelect.addEventListener('change', function(){
+                    var period = periodSelect.value;
+                    if (!period) return;
+                    var url = new URL(window.location.href);
+                    url.searchParams.set('period', period);
+                    window.location.href = url.toString();
+                });
+            }
         })();
     </script>
 </th:block>

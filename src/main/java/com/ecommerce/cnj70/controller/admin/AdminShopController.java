@@ -38,12 +38,16 @@ public class AdminShopController {
     public String shopList(@RequestParam(defaultValue = "0") int page,
                            @RequestParam(defaultValue = "5") int size,
                            @RequestParam(required = false) String q,
+                           @RequestParam(required = false) String status,
                            Model model) {
         int safeSize = (size <= 0) ? DEFAULT_PAGE_SIZE : Math.min(size, 50);
         int safePage = Math.max(page, 0);
         Pageable pageable = PageRequest.of(safePage, safeSize, Sort.by(Sort.Direction.ASC, "createdAt"));
 
-        Page<Shop> result = adminShopService.listShops(pageable, q);
+        // Phase 10: parse status (null/blank/ALL = no filter)
+        ShopStatus statusFilter = parseStatus(status);
+
+        Page<Shop> result = adminShopService.listShops(pageable, q, statusFilter);
 
         model.addAttribute("shops", result.getContent());
         model.addAttribute("page", result.getNumber());
@@ -51,6 +55,8 @@ public class AdminShopController {
         model.addAttribute("totalPages", result.getTotalPages());
         model.addAttribute("totalItems", result.getTotalElements());
         model.addAttribute("q", (q == null) ? "" : q);
+        model.addAttribute("status", statusFilter == null ? "" : statusFilter.name());
+        model.addAttribute("statuses", ShopStatus.values());
         model.addAttribute("hasNext", result.hasNext());
         model.addAttribute("hasPrev", result.hasPrevious());
         model.addAttribute("isFirst", result.isFirst());
@@ -64,6 +70,7 @@ public class AdminShopController {
                             @RequestParam(defaultValue = "0") int page,
                             @RequestParam(defaultValue = "5") int size,
                             @RequestParam(required = false) String q,
+                            @RequestParam(required = false) String status,
                             Model model) {
         Shop shop = adminShopService.getShopById(id);
 
@@ -77,6 +84,7 @@ public class AdminShopController {
         model.addAttribute("page", page);
         model.addAttribute("size", size);
         model.addAttribute("q", (q == null) ? "" : q);
+        model.addAttribute("status", (status == null) ? "" : status);
         return "admin/shop-detail";
     }
 
@@ -85,6 +93,7 @@ public class AdminShopController {
                               @RequestParam(defaultValue = "0") int page,
                               @RequestParam(defaultValue = "5") int size,
                               @RequestParam(required = false) String q,
+                              @RequestParam(required = false) String status,
                               RedirectAttributes redirectAttributes) {
         Shop shop;
         try {
@@ -110,6 +119,9 @@ public class AdminShopController {
         if (q != null && !q.isBlank()) {
             redirectUrl += "&q=" + q;
         }
+        if (status != null && !status.isBlank()) {
+            redirectUrl += "&status=" + status;
+        }
         return "redirect:" + redirectUrl;
     }
 
@@ -118,6 +130,7 @@ public class AdminShopController {
                                 @RequestParam(defaultValue = "0") int page,
                                 @RequestParam(defaultValue = "5") int size,
                                 @RequestParam(required = false) String q,
+                                @RequestParam(required = false) String status,
                                 RedirectAttributes redirectAttributes) {
         Shop shop;
         try {
@@ -138,6 +151,9 @@ public class AdminShopController {
         if (q != null && !q.isBlank()) {
             redirectUrl += "&q=" + q;
         }
+        if (status != null && !status.isBlank()) {
+            redirectUrl += "&status=" + status;
+        }
         return "redirect:" + redirectUrl;
     }
 
@@ -146,6 +162,7 @@ public class AdminShopController {
                                  @RequestParam(defaultValue = "0") int page,
                                  @RequestParam(defaultValue = "5") int size,
                                  @RequestParam(required = false) String q,
+                                 @RequestParam(required = false) String status,
                                  RedirectAttributes redirectAttributes) {
         Shop shop;
         try {
@@ -166,6 +183,9 @@ public class AdminShopController {
         if (q != null && !q.isBlank()) {
             redirectUrl += "&q=" + q;
         }
+        if (status != null && !status.isBlank()) {
+            redirectUrl += "&status=" + status;
+        }
         return "redirect:" + redirectUrl;
     }
 
@@ -174,6 +194,7 @@ public class AdminShopController {
                              @RequestParam(defaultValue = "0") int page,
                              @RequestParam(defaultValue = "5") int size,
                              @RequestParam(required = false) String q,
+                             @RequestParam(required = false) String status,
                              RedirectAttributes redirectAttributes) {
         Shop shop;
         try {
@@ -194,6 +215,9 @@ public class AdminShopController {
         if (q != null && !q.isBlank()) {
             redirectUrl += "&q=" + q;
         }
+        if (status != null && !status.isBlank()) {
+            redirectUrl += "&status=" + status;
+        }
         return "redirect:" + redirectUrl;
     }
 
@@ -204,5 +228,17 @@ public class AdminShopController {
         int end = Math.min(totalPages - 1, current + 2);
         for (int i = start; i <= end; i++) out.add(i);
         return out;
+    }
+
+    private static ShopStatus parseStatus(String raw) {
+        if (raw == null || raw.isBlank()) return null;
+        String norm = raw.trim().toUpperCase();
+        if ("ALL".equals(norm)) return null;
+        try {
+            return ShopStatus.valueOf(norm);
+        } catch (IllegalArgumentException ex) {
+            // Unknown status value -> no filter (safe fallback)
+            return null;
+        }
     }
 }

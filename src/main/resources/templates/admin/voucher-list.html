@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org"
-      xmlns:sec="http://www.thymeleaf.org/extras/springsecurity6"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security6"
       th:replace="~{layout/admin-layout :: layout(title='Quản lý Voucher WEB - CNJ70 Admin', content=~{::main-content}, scripts=~{::page-scripts})}">
 <head>
     <title>Quản lý Voucher WEB - CNJ70 Admin</title>
@@ -12,47 +12,96 @@
             <h1>Quản lý Voucher WEB</h1>
             <p>Tạo và quản lý voucher giảm giá toàn hệ thống.</p>
         </div>
-        <div class="sd-page-head-actions">
-            <a th:href="@{/vouchers}" class="sd-btn sd-btn-secondary sd-btn-sm" target="_blank">
-                <i class="fas fa-external-link-alt"></i>
-                <span>Xem trang công khai</span>
-            </a>
-            <a th:href="@{/admin/vouchers/create}" class="sd-btn sd-btn-primary sd-btn-sm">
-                <i class="fas fa-plus"></i>
-                <span>Tạo Voucher</span>
-            </a>
+        <div class="sd-page-head-right">
+            <div class="sd-page-head-meta">
+                <span class="sd-page-head-meta-label">Tổng voucher</span>
+                <span class="sd-page-head-meta-value" th:text="${totalItems}">0</span>
+            </div>
+            <div class="sd-page-head-actions">
+                <a th:href="@{/vouchers}" class="sd-btn sd-btn-secondary sd-btn-sm" target="_blank">
+                    <i class="fas fa-external-link-alt"></i>
+                    <span>Xem trang công khai</span>
+                </a>
+                <a th:href="@{/admin/vouchers/create}" class="sd-btn sd-btn-primary sd-btn-sm">
+                    <i class="fas fa-plus"></i>
+                    <span>Tạo Voucher</span>
+                </a>
+            </div>
         </div>
     </div>
 
-    <!-- Stats Cards -->
-    <div class="dash-stats" style="margin-bottom:20px;">
-        <div class="dash-stat-card" style="background:linear-gradient(135deg,#f59e0b 0%,#fbbf24 100%);color:white;border:none;">
-            <div class="dash-stat-icon-wrap">
-                <div class="dash-stat-icon"><i class="fas fa-ticket"></i></div>
-            </div>
-            <div class="dash-stat-value" th:text="${#lists.size(vouchers)}">0</div>
-            <div class="dash-stat-label">Tổng Voucher</div>
+    <!-- Flash messages -->
+    <div th:if="${success}" class="sd-alert sd-alert-success" style="margin-bottom:16px;">
+        <i class="fas fa-circle-check"></i>
+        <span th:text="${success}">Thành công</span>
+    </div>
+    <div th:if="${error}" class="sd-alert sd-alert-danger" style="margin-bottom:16px;">
+        <i class="fas fa-circle-exclamation"></i>
+        <span th:text="${error}">Lỗi</span>
+    </div>
+
+    <!-- Search + Filter bar -->
+    <div class="sd-card sd-toolbar" style="margin-bottom:20px;">
+        <div class="sd-card-body">
+            <form th:action="@{/admin/vouchers}" method="get" class="sd-toolbar-form">
+                <input type="hidden" name="size" th:value="${size}" />
+                <input type="text" name="q" th:value="${q}"
+                       placeholder="Tìm theo mã hoặc tên voucher..."
+                       class="sd-input sd-toolbar-search"
+                       style="padding:8px 10px;border:1px solid var(--border,#e2e8f0);border-radius:6px;" />
+                <select name="active" class="sd-select sd-toolbar-select"
+                        style="padding:8px 10px;border:1px solid var(--border,#e2e8f0);border-radius:6px;">
+                    <option value="">Tất cả trạng thái</option>
+                    <option value="true" th:selected="${active == 'true'}">Đang hoạt động</option>
+                    <option value="false" th:selected="${active == 'false'}">Đã tắt</option>
+                </select>
+                <button type="submit" class="sd-btn sd-btn-primary sd-btn-sm sd-toolbar-btn">
+                    <i class="fas fa-search"></i> Lọc
+                </button>
+                <a th:href="@{/admin/vouchers(page=0, size=${size})}"
+                   class="sd-btn sd-btn-secondary sd-btn-sm sd-toolbar-btn">
+                    <i class="fas fa-rotate-left"></i> Đặt lại
+                </a>
+            </form>
         </div>
-        <div class="dash-stat-card dash-stat-success">
-            <div class="dash-stat-icon-wrap">
-                <div class="dash-stat-icon"><i class="fas fa-circle-check"></i></div>
-            </div>
-            <div class="dash-stat-value" th:text="${activeVouchers ?: 0}">0</div>
-            <div class="dash-stat-label">Đang hoạt động</div>
+    </div>
+
+    <!-- Active filter display bar -->
+    <div class="sd-card" th:if="${(q != null and !#strings.isEmpty(q)) or (active != null and !#strings.isEmpty(active))}"
+         style="margin-bottom:16px;">
+        <div class="sd-card-body" style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+            <i class="fas fa-filter"></i>
+            <span>Đang lọc theo:</span>
+            <span th:if="${q != null and !#strings.isEmpty(q)}" class="sd-badge sd-badge-slate">
+                Từ khóa: <span th:text="${q}">keyword</span>
+            </span>
+            <span th:if="${active != null and !#strings.isEmpty(active)}" class="sd-badge sd-badge-blue">
+                Trạng thái:
+                <th:block th:if="${active == 'true'}">Đang hoạt động</th:block>
+                <th:block th:if="${active == 'false'}">Đã tắt</th:block>
+            </span>
+            <a th:href="@{/admin/vouchers(page=0, size=${size})}"
+               class="sd-btn sd-btn-secondary sd-btn-sm" style="margin-left:auto;">
+                <i class="fas fa-times"></i> Bỏ lọc
+            </a>
+            <span style="color:var(--text-muted);font-size:13px;">
+                <span th:text="${totalItems}">0</span> kết quả
+            </span>
         </div>
-        <div class="dash-stat-card dash-stat-primary">
-            <div class="dash-stat-icon-wrap">
-                <div class="dash-stat-icon"><i class="fas fa-ticket-simple"></i></div>
+    </div>
+
+    <!-- Count header -->
+    <div class="sd-card" style="margin-bottom:16px;">
+        <div class="sd-card-body" style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
+            <div style="display:flex;align-items:center;gap:8px;color:#6366f1;">
+                <i class="fas fa-ticket-alt" style="font-size:20px;"></i>
+                <span style="font-weight:600;" th:text="${totalItems}">0</span>
+                <span style="color:#64748b;">voucher WEB</span>
             </div>
-            <div class="dash-stat-value" th:text="${totalRemaining ?: 0}">0</div>
-            <div class="dash-stat-label">Lượt sử dụng còn lại</div>
-        </div>
-        <div class="dash-stat-card" style="background:linear-gradient(135deg,#64748b 0%,#94a3b8 100%);color:white;border:none;">
-            <div class="dash-stat-icon-wrap">
-                <div class="dash-stat-icon"><i class="fas fa-percent"></i></div>
+            <div style="margin-left:auto;font-size:13px;color:#64748b;">
+                <i class="fas fa-info-circle"></i>
+                Người dùng xem danh sách tại trang <a href="/vouchers" target="_blank" style="color:#6366f1;">/vouchers</a>
             </div>
-            <div class="dash-stat-value" th:text="${percentVouchers ?: 0}">0</div>
-            <div class="dash-stat-label">Voucher % giảm</div>
         </div>
     </div>
 
@@ -61,9 +110,12 @@
         <div class="sd-card-body">
             <div class="sd-empty">
                 <i class="fas fa-ticket-alt"></i>
-                <h3>Chưa có voucher nào</h3>
-                <p>Tạo voucher đầu tiên cho toàn hệ thống.</p>
-                <a th:href="@{/admin/vouchers/create}" class="sd-btn sd-btn-primary" style="margin-top: 16px;">
+                <h3 th:if="${(q != null and !#strings.isEmpty(q)) or (active != null and !#strings.isEmpty(active))}">Không tìm thấy voucher</h3>
+                <h3 th:unless="${(q != null and !#strings.isEmpty(q)) or (active != null and !#strings.isEmpty(active))}">Chưa có voucher nào</h3>
+                <p th:if="${(q != null and !#strings.isEmpty(q)) or (active != null and !#strings.isEmpty(active))}">Không có voucher nào khớp với bộ lọc hiện tại.</p>
+                <p th:unless="${(q != null and !#strings.isEmpty(q)) or (active != null and !#strings.isEmpty(active))}">Tạo voucher đầu tiên cho toàn hệ thống.</p>
+                <a th:if="${(q == null or #strings.isEmpty(q)) and (active == null or #strings.isEmpty(active))}"
+                   th:href="@{/admin/vouchers/create}" class="sd-btn sd-btn-primary" style="margin-top:16px;">
                     <i class="fas fa-plus"></i> Tạo Voucher WEB
                 </a>
             </div>
@@ -76,6 +128,7 @@
             <table class="sd-table">
                 <thead>
                     <tr>
+                        <th class="sd-col-stt">STT</th>
                         <th>Mã</th>
                         <th>Tên</th>
                         <th>Loại giảm</th>
@@ -87,7 +140,8 @@
                     </tr>
                 </thead>
                 <tbody>
-                    <tr th:each="v : ${vouchers}">
+                    <tr th:each="v, iter : ${vouchers}">
+                        <td class="sd-col-stt" th:text="${page * size + iter.count}">1</td>
                         <td>
                             <span class="sd-code" th:text="${v.code}">CODE123</span>
                         </td>
@@ -102,12 +156,15 @@
                             </span>
                         </td>
                         <td>
-                            <span th:text="${v.minOrderValue != null and v.minOrderValue.compareTo(T(java.math.BigDecimal).ZERO) > 0 ? #numbers.formatDecimal(v.minOrderValue, 0, 'DEFAULT', 0, 'DEFAULT') + 'đ' : '—'}">100.000đ</span>
+                            <span th:if="${v.minOrderValue != null and v.minOrderValue.compareTo(T(java.math.BigDecimal).ZERO) > 0}"
+                                  th:with="vMinFmt=${#numbers.formatDecimal(v.minOrderValue, 0, 'DEFAULT', 0, 'DEFAULT')}"
+                                  th:text="${vMinFmt + 'đ'}">100.000đ</span>
+                            <span th:unless="${v.minOrderValue != null and v.minOrderValue.compareTo(T(java.math.BigDecimal).ZERO) > 0}">—</span>
                         </td>
                         <td>
-                            <div style="display: flex; align-items: center; gap: 8px;">
+                            <div style="display:flex;align-items:center;gap:8px;">
                                 <span th:text="${v.used}">10</span>
-                                <span style="color: #cbd5e1;">/</span>
+                                <span style="color:#cbd5e1;">/</span>
                                 <span th:text="${v.quantity}">100</span>
                             </div>
                             <div class="sd-table-sub" th:text="${v.quantity - v.used} + ' còn'">90 còn</div>
@@ -121,8 +178,27 @@
                                   th:classappend="${v.active} ? 'sd-badge-green' : 'sd-badge-slate'"
                                   th:text="${v.active} ? 'Đang hoạt động' : 'Đã tắt'">Đang hoạt động</span>
                         </td>
-                        <td style="text-align: right; white-space: nowrap;">
-                            <form th:action="@{/admin/vouchers/delete/{id}(id=${v.id})}" method="post" style="display: inline;">
+                        <td style="text-align:right;white-space:nowrap;">
+                            <a th:href="@{/admin/vouchers/edit/{id}(id=${v.id}, page=${page}, size=${size}, q=${q}, active=${active})}"
+                               class="sd-btn sd-btn-secondary sd-btn-sm">
+                                <i class="fas fa-pen"></i> Sửa
+                            </a>
+                            <th:block th:if="${v.active}">
+                                <form th:action="@{/admin/vouchers/deactivate/{id}(id=${v.id}, page=${page}, size=${size}, q=${q}, active=${active})}" method="post" style="display:inline;">
+                                    <button type="submit" class="sd-btn sd-btn-warning sd-btn-sm"
+                                            onclick="return confirm('Tạm dừng voucher này?');">
+                                        <i class="fas fa-pause"></i> Tạm dừng
+                                    </button>
+                                </form>
+                            </th:block>
+                            <th:block th:unless="${v.active}">
+                                <form th:action="@{/admin/vouchers/activate/{id}(id=${v.id}, page=${page}, size=${size}, q=${q}, active=${active})}" method="post" style="display:inline;">
+                                    <button type="submit" class="sd-btn sd-btn-success sd-btn-sm">
+                                        <i class="fas fa-play"></i> Kích hoạt
+                                    </button>
+                                </form>
+                            </th:block>
+                            <form th:action="@{/admin/vouchers/delete/{id}(id=${v.id}, page=${page}, size=${size}, q=${q}, active=${active})}" method="post" style="display:inline;">
                                 <button type="submit" class="sd-btn sd-btn-danger sd-btn-sm"
                                         onclick="return confirm('Bạn có chắc muốn xóa voucher này?');">
                                     <i class="fas fa-trash"></i> Xóa
@@ -132,6 +208,34 @@
                     </tr>
                 </tbody>
             </table>
+        </div>
+
+        <!-- Pagination -->
+        <div class="sd-card-body" th:if="${totalPages > 0}"
+             style="display:flex;justify-content:center;border-top:1px solid var(--border,#e2e8f0);">
+            <nav class="sd-pagination" aria-label="Phân trang">
+                <a th:if="${hasPrev}"
+                   th:href="@{/admin/vouchers(page=${page - 1}, size=${size}, q=${q}, active=${active})}"
+                   class="sd-page-link">
+                    <i class="fas fa-chevron-left"></i> Trước
+                </a>
+                <span th:unless="${hasPrev}" class="sd-page-link sd-page-disabled">
+                    <i class="fas fa-chevron-left"></i> Trước
+                </span>
+
+                <th:block th:each="i : ${pageNumbers}" th:if="${i == page}">
+                    <span class="sd-page-link sd-page-active" th:text="${i + 1}">1</span>
+                </th:block>
+
+                <a th:if="${hasNext}"
+                   th:href="@{/admin/vouchers(page=${page + 1}, size=${size}, q=${q}, active=${active})}"
+                   class="sd-page-link">
+                    Sau <i class="fas fa-chevron-right"></i>
+                </a>
+                <span th:unless="${hasNext}" class="sd-page-link sd-page-disabled">
+                    Sau <i class="fas fa-chevron-right"></i>
+                </span>
+            </nav>
         </div>
     </div>
 </main>

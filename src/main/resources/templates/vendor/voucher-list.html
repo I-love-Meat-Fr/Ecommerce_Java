@@ -1,186 +1,113 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org"
-      xmlns:sec="http://www.thymeleaf.org/extras/springsecurity6">
+      xmlns:sec="http://www.thymeleaf.org/extras/springsecurity6"
+      th:replace="~{layout/vendor-layout :: layout(title='Quản lý Voucher - CNJ70 Vendor', content=~{::main-content}, scripts=~{::page-scripts})}">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Quản lý Voucher - CNJ70 Vendor</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Work+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" th:href="@{/css/dashboard.css}">
-    <link rel="stylesheet" th:href="@{/css/vendor-shared.css}">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body>
-    <div class="sd-app" id="appShell">
-        <aside class="sd-sidebar">
-            <div class="sd-sidebar-header">
-                <div class="sd-sidebar-logo"><i class="fas fa-bolt"></i></div>
-                <div class="sd-sidebar-brand">
-                    <span class="sd-sidebar-brand-name">CNJ70 Shop</span>
-                    <span class="sd-sidebar-brand-sub">Vendor Console</span>
-                </div>
+<main th:fragment="main-content">
+
+    <div class="vd-page-hero">
+        <div class="vd-page-hero-left">
+            <div class="vd-page-hero-icon"><i class="fas fa-ticket"></i></div>
+            <div class="vd-page-hero-info">
+                <h2>Quản lý Voucher</h2>
+                <p>Tạo và quản lý mã giảm giá cho cửa hàng của bạn.</p>
             </div>
-            <nav class="sd-sidebar-nav">
-                <div class="sd-sidebar-nav-section">
-                    <span class="sd-sidebar-nav-title">Tổng quan</span>
-                    <a th:href="@{/vendor/dashboard}" class="sd-nav-item"><i class="fas fa-house"></i><span class="sd-nav-label">Dashboard</span></a>
-                </div>
-                <div class="sd-sidebar-nav-section">
-                    <span class="sd-sidebar-nav-title">Quản lý</span>
-                    <a th:href="@{/vendor/shop}" class="sd-nav-item"><i class="fas fa-store"></i><span class="sd-nav-label">Cửa hàng</span></a>
-                    <a th:href="@{/vendor/products}" class="sd-nav-item"><i class="fas fa-box"></i><span class="sd-nav-label">Sản phẩm</span></a>
-                    <a th:href="@{/vendor/orders}" class="sd-nav-item"><i class="fas fa-cart-shopping"></i><span class="sd-nav-label">Đơn hàng</span></a>
-                    <a th:href="@{/vendor/vouchers}" class="sd-nav-item active"><i class="fas fa-ticket"></i><span class="sd-nav-label">Voucher</span></a>
-                </div>
-                <div class="sd-sidebar-nav-section">
-                    <span class="sd-sidebar-nav-title">Khác</span>
-                    <a th:href="@{/home}" class="sd-nav-item"><i class="fas fa-globe"></i><span class="sd-nav-label">Xem website</span></a>
-                    <form th:action="@{/auth/logout}" method="post" class="sd-logout-form">
-                        <button type="submit" class="sd-nav-item"><i class="fas fa-arrow-right-from-bracket"></i><span class="sd-nav-label">Đăng xuất</span></button>
-                    </form>
-                </div>
-            </nav>
-            <div class="sd-sidebar-footer">
-                <div class="sd-sidebar-user">
-                    <div class="sd-sidebar-avatar" sec:authentication="name">V</div>
-                    <div class="sd-sidebar-user-info">
-                        <div class="sd-sidebar-user-name" sec:authentication="name">Vendor</div>
-                        <div class="sd-sidebar-user-role">Vendor</div>
-                    </div>
-                </div>
-            </div>
-        </aside>
-
-        <div class="sd-main">
-            <div class="sd-topbar">
-                <button class="sd-topbar-toggle" type="button" id="sidebarToggle"><i class="fas fa-bars"></i></button>
-                <div class="sd-topbar-search">
-                    <i class="fas fa-magnifying-glass"></i>
-                    <input type="text" placeholder="Tìm voucher...">
-                </div>
-                <div class="sd-topbar-actions">
-                    <button class="sd-icon-btn" type="button"><i class="fas fa-bell"></i></button>
-                </div>
-            </div>
-
-            <main class="sd-content">
-
-                <div class="vd-page-hero">
-                    <div class="vd-page-hero-left">
-                        <div class="vd-page-hero-icon"><i class="fas fa-ticket"></i></div>
-                        <div class="vd-page-hero-info">
-                            <h2>Quản lý Voucher</h2>
-                            <p>Tạo và quản lý mã giảm giá cho cửa hàng của bạn.</p>
-                        </div>
-                    </div>
-                    <div class="vd-page-hero-actions">
-                        <a th:href="@{/vendor/vouchers/create}" class="sd-btn sd-btn-cta">
-                            <i class="fas fa-plus"></i> Tạo Voucher
-                        </a>
-                    </div>
-                </div>
-
-                <div th:if="${success}" class="sd-alert sd-alert-success"><i class="fas fa-circle-check"></i><span th:text="${success}"></span></div>
-                <div th:if="${error}" class="sd-alert sd-alert-danger"><i class="fas fa-triangle-exclamation"></i><span th:text="${error}"></span></div>
-
-                <!-- Stats -->
-                <div class="vd-stat-strip">
-                    <div class="vd-stat-strip-card">
-                        <div class="vd-stat-strip-label">Tổng voucher</div>
-                        <div class="vd-stat-strip-value" th:text="${#lists.size(vouchers)}">0</div>
-                    </div>
-                    <div class="vd-stat-strip-card highlight">
-                        <div class="vd-stat-strip-label">Đang hoạt động</div>
-                        <div class="vd-stat-strip-value" th:text="${vouchers.?[active == true].size()}">0</div>
-                    </div>
-                    <div class="vd-stat-strip-card success">
-                        <div class="vd-stat-strip-label">Đã sử dụng</div>
-                        <div class="vd-stat-strip-value" th:text="${vouchers.?[active == false].size()}">0</div>
-                    </div>
-                </div>
-
-                <!-- Empty state -->
-                <div th:if="${#lists.isEmpty(vouchers)}" class="sd-card">
-                    <div class="sd-card-body" style="text-align:center;padding:60px 24px;">
-                        <div style="width:96px;height:96px;border-radius:50%;background:linear-gradient(135deg,var(--primary-fade),#fff);display:inline-flex;align-items:center;justify-content:center;margin-bottom:18px;">
-                            <i class="fas fa-ticket-alt" style="font-size:40px;background:linear-gradient(135deg,var(--primary),var(--primary-hover));-webkit-background-clip:text;-webkit-text-fill-color:transparent;"></i>
-                        </div>
-                        <h3 style="font-size:16px;font-weight:700;color:var(--ink);margin-bottom:6px;">Chưa có voucher nào</h3>
-                        <p style="font-size:13px;color:var(--ink-soft);margin-bottom:22px;">Tạo voucher đầu tiên để thu hút khách hàng và tăng doanh số.</p>
-                        <a th:href="@{/vendor/vouchers/create}" class="sd-btn sd-btn-cta"><i class="fas fa-plus"></i> Tạo Voucher đầu tiên</a>
-                    </div>
-                </div>
-
-                <!-- Voucher list -->
-                <div th:unless="${#lists.isEmpty(vouchers)}">
-                    <div th:each="voucher : ${vouchers}" class="vd-voucher">
-                        <div class="vd-voucher-icon"
-                             th:classappend="${!voucher.active ? 'expired' : (voucher.used >= voucher.quantity ? 'used' : '')}">
-                            <i class="fas fa-percent" th:if="${voucher.discountType.name() == 'PERCENT'}"></i>
-                            <i class="fas fa-coins" th:if="${voucher.discountType.name() == 'AMOUNT' or voucher.discountType.name() == 'FIXED'}"></i>
-                        </div>
-                        <div class="vd-voucher-body">
-                            <div class="vd-voucher-name" th:text="${voucher.name}">Tên Voucher</div>
-                            <div style="margin-top:4px;">
-                                <span class="vd-voucher-code" th:text="${voucher.code}">CODE123</span>
-                                <span th:if="${voucher.discountType.name() == 'PERCENT'}" class="vd-voucher-pill percent">
-                                    Giảm <th:block th:text="${voucher.discountValue.intValue()}">10</th:block>%
-                                    <th:block th:if="${voucher.maxDiscountAmount != null}"> (tối đa <th:block th:text="${#numbers.formatDecimal(voucher.maxDiscountAmount, 0, 'DEFAULT', 0, 'DEFAULT')}">50.000</th:block>đ)</th:block>
-                                </span>
-                                <span th:if="${voucher.discountType.name() == 'AMOUNT' or voucher.discountType.name() == 'FIXED'}" class="vd-voucher-pill amount">
-                                    Giảm <th:block th:text="${#numbers.formatDecimal(voucher.discountValue, 0, 'DEFAULT', 0, 'DEFAULT')}">50.000</th:block>đ
-                                </span>
-                            </div>
-                            <div class="vd-voucher-meta">
-                                <span><i class="fas fa-box"></i> <th:block th:text="${voucher.quantity - voucher.used}">45</th:block>/<th:block th:text="${voucher.quantity}">100</th:block> lượt</span>
-                                <span th:if="${voucher.minOrderValue != null and voucher.minOrderValue > 0}"><i class="fas fa-shopping-cart"></i> Tối thiểu <th:block th:text="${#numbers.formatDecimal(voucher.minOrderValue, 0, 'DEFAULT', 0, 'DEFAULT')}">100.000</th:block>đ</span>
-                                <span th:if="${voucher.endDate != null}"><i class="fas fa-clock"></i> Hết hạn: <th:block th:text="${#temporals.format(voucher.endDate, 'dd/MM/yyyy')}">31/12/2024</th:block></span>
-                                <span style="font-weight:700;" th:styleappend="${voucher.active ? 'color:#047857' : 'color:var(--accent-red)'}">
-                                    <i class="fas" th:classappend="${voucher.active ? 'fa-circle-check' : 'fa-circle-xmark'}"></i>
-                                    <th:block th:if="${voucher.active}">Đang hoạt động</th:block>
-                                    <th:block th:unless="${voucher.active}">Đã tắt</th:block>
-                                </span>
-                            </div>
-                            <div class="vd-voucher-progress">
-                                <div class="vd-voucher-progress-fill"
-                                     th:style="'width: ' + (${voucher.quantity} > 0 ? (${voucher.used * 100 / voucher.quantity}) : 0) + '%'"></div>
-                            </div>
-                        </div>
-                        <div class="vd-voucher-actions">
-                            <a th:href="@{/vendor/vouchers/edit/{id}(id=${voucher.id})}" class="sd-btn sd-btn-secondary sd-btn-sm" title="Sửa">
-                                <i class="fas fa-pen"></i>
-                            </a>
-                            <form th:action="@{/vendor/vouchers/delete/{id}(id=${voucher.id})}" method="post" class="sd-logout-form">
-                                <button type="submit" class="sd-btn sd-btn-danger sd-btn-sm" onclick="return confirm('Bạn có chắc muốn xóa voucher này?')" title="Xóa">
-                                    <i class="fas fa-trash"></i>
-                                </button>
-                            </form>
-                        </div>
-                    </div>
-                </div>
-
-            </main>
+        </div>
+        <div class="vd-page-hero-actions">
+            <span class="vd-page-hero-stat">
+                <i class="fas fa-ticket"></i>
+                <span th:text="${#lists.size(vouchers)}">0</span> voucher
+            </span>
+            <a th:href="@{/vendor/vouchers/create}" class="sd-btn sd-btn-cta">
+                <i class="fas fa-plus"></i> Tạo Voucher
+            </a>
         </div>
     </div>
 
-    <script>
-        (function() {
-            const shell = document.getElementById('appShell');
-            const toggle = document.getElementById('sidebarToggle');
-            const KEY = 'cnj70-sidebar-expanded';
-            if (localStorage.getItem(KEY) === '1') shell.classList.add('sidebar-expanded');
-            toggle?.addEventListener('click', () => {
-                shell.classList.toggle('sidebar-expanded');
-                localStorage.setItem(KEY, shell.classList.contains('sidebar-expanded') ? '1' : '0');
-            });
-            document.querySelectorAll('.sd-sidebar-avatar, .sd-topbar-avatar').forEach(el => {
-                const name = (el.textContent || '').trim();
-                if (!name) return;
-                el.textContent = name.charAt(0).toUpperCase();
-            });
-        })();
-    </script>
+    <div th:if="${success}" class="sd-alert sd-alert-success"><i class="fas fa-circle-check"></i><span th:text="${success}"></span></div>
+    <div th:if="${error}" class="sd-alert sd-alert-danger"><i class="fas fa-triangle-exclamation"></i><span th:text="${error}"></span></div>
+
+    <!-- Stats -->
+    <div class="vd-stat-strip">
+        <div class="vd-stat-strip-card">
+            <div class="vd-stat-strip-label">Tổng voucher</div>
+            <div class="vd-stat-strip-value" th:text="${#lists.size(vouchers)}">0</div>
+        </div>
+        <div class="vd-stat-strip-card highlight">
+            <div class="vd-stat-strip-label">Đang hoạt động</div>
+            <div class="vd-stat-strip-value" th:text="${vouchers.?[active == true].size()}">0</div>
+        </div>
+        <div class="vd-stat-strip-card success">
+            <div class="vd-stat-strip-label">Đã sử dụng</div>
+            <div class="vd-stat-strip-value" th:text="${vouchers.?[active == false].size()}">0</div>
+        </div>
+    </div>
+
+    <!-- Empty state -->
+    <div th:if="${#lists.isEmpty(vouchers)}" class="sd-card">
+        <div class="sd-card-body" style="text-align:center;padding:60px 24px;">
+            <div style="width:96px;height:96px;border-radius:50%;background:linear-gradient(135deg,var(--primary-fade),#fff);display:inline-flex;align-items:center;justify-content:center;margin-bottom:18px;">
+                <i class="fas fa-ticket-alt" style="font-size:40px;background:linear-gradient(135deg,var(--primary),var(--primary-hover));-webkit-background-clip:text;-webkit-text-fill-color:transparent;"></i>
+            </div>
+            <h3 style="font-size:16px;font-weight:700;color:var(--ink);margin-bottom:6px;">Chưa có voucher nào</h3>
+            <p style="font-size:13px;color:var(--ink-soft);margin-bottom:22px;">Tạo voucher đầu tiên để thu hút khách hàng và tăng doanh số.</p>
+            <a th:href="@{/vendor/vouchers/create}" class="sd-btn sd-btn-cta"><i class="fas fa-plus"></i> Tạo Voucher đầu tiên</a>
+        </div>
+    </div>
+
+    <!-- Voucher list -->
+    <div th:unless="${#lists.isEmpty(vouchers)}">
+        <div th:each="voucher : ${vouchers}" class="vd-voucher">
+            <div class="vd-voucher-icon"
+                 th:classappend="${!voucher.active ? 'expired' : (voucher.used >= voucher.quantity ? 'used' : '')}">
+                <i class="fas fa-percent" th:if="${voucher.discountType.name() == 'PERCENT'}"></i>
+                <i class="fas fa-coins" th:if="${voucher.discountType.name() == 'AMOUNT' or voucher.discountType.name() == 'FIXED'}"></i>
+            </div>
+            <div class="vd-voucher-body">
+                <div class="vd-voucher-name" th:text="${voucher.name}">Tên Voucher</div>
+                <div style="margin-top:4px;">
+                    <span class="vd-voucher-code" th:text="${voucher.code}">CODE123</span>
+                    <span th:if="${voucher.discountType.name() == 'PERCENT'}" class="vd-voucher-pill percent">
+                        Giảm <th:block th:text="${voucher.discountValue.intValue()}">10</th:block>%
+                        <th:block th:if="${voucher.maxDiscountAmount != null}"> (tối đa <th:block th:text="${#numbers.formatDecimal(voucher.maxDiscountAmount, 0, 'DEFAULT', 0, 'DEFAULT')}">50.000</th:block>đ)</th:block>
+                    </span>
+                    <span th:if="${voucher.discountType.name() == 'AMOUNT' or voucher.discountType.name() == 'FIXED'}" class="vd-voucher-pill amount">
+                        Giảm <th:block th:text="${#numbers.formatDecimal(voucher.discountValue, 0, 'DEFAULT', 0, 'DEFAULT')}">50.000</th:block>đ
+                    </span>
+                </div>
+                <div class="vd-voucher-meta">
+                    <span><i class="fas fa-box"></i> <th:block th:text="${voucher.quantity - voucher.used}">45</th:block>/<th:block th:text="${voucher.quantity}">100</th:block> lượt</span>
+                    <span th:if="${voucher.minOrderValue != null and voucher.minOrderValue > 0}"><i class="fas fa-shopping-cart"></i> Tối thiểu <th:block th:text="${#numbers.formatDecimal(voucher.minOrderValue, 0, 'DEFAULT', 0, 'DEFAULT')}">100.000</th:block>đ</span>
+                    <span th:if="${voucher.endDate != null}"><i class="fas fa-clock"></i> Hết hạn: <th:block th:text="${#temporals.format(voucher.endDate, 'dd/MM/yyyy')}">31/12/2024</th:block></span>
+                    <span style="font-weight:700;" th:styleappend="${voucher.active ? 'color:#047857' : 'color:var(--accent-red)'}">
+                        <i class="fas" th:classappend="${voucher.active ? 'fa-circle-check' : 'fa-circle-xmark'}"></i>
+                        <th:block th:if="${voucher.active}">Đang hoạt động</th:block>
+                        <th:block th:unless="${voucher.active}">Đã tắt</th:block>
+                    </span>
+                </div>
+                <div class="vd-voucher-progress">
+                    <div class="vd-voucher-progress-fill"
+                         th:style="'width: ' + (${voucher.quantity} > 0 ? (${voucher.used * 100 / voucher.quantity}) : 0) + '%'"></div>
+                </div>
+            </div>
+            <div class="vd-voucher-actions">
+                <a th:href="@{/vendor/vouchers/edit/{id}(id=${voucher.id})}" class="sd-btn sd-btn-secondary sd-btn-sm" title="Sửa">
+                    <i class="fas fa-pen"></i>
+                </a>
+                <form th:action="@{/vendor/vouchers/delete/{id}(id=${voucher.id})}" method="post" class="sd-logout-form">
+                    <button type="submit" class="sd-btn sd-btn-danger sd-btn-sm" onclick="return confirm('Bạn có chắc muốn xóa voucher này?')" title="Xóa">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+</main>
+
+<th:block th:fragment="page-scripts"></th:block>
 </body>
 </html>

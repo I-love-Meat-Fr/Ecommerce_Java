@@ -16,10 +16,10 @@
     --dash-surface-elevated: #ffffff;
     
     /* Brand Colors */
-    --dash-primary: #6366f1;
-    --dash-primary-light: #818cf8;
-    --dash-primary-dark: #4f46e5;
-    --dash-primary-soft: rgba(99, 102, 241, 0.1);
+    --dash-primary: #0fb5b0;
+    --dash-primary-light: #33c7c3;
+    --dash-primary-dark: #0a8a87;
+    --dash-primary-soft: rgba(15, 181, 176, 0.1);
     
     /* Status Colors */
     --dash-success: #10b981;
@@ -75,7 +75,7 @@
     padding: 32px 32px 28px;
     margin-bottom: 24px;
     border-radius: var(--dash-radius-xl);
-    background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 50%, #a855f7 100%);
+    background: linear-gradient(135deg, #0fb5b0 0%, #0a8a87 100%);
     overflow: hidden;
     color: white;
 }
@@ -211,31 +211,108 @@
     transform: translateY(-4px);
     box-shadow: var(--dash-shadow-lg);
     border-color: transparent;
+    cursor: pointer;
+}
+
+a.dash-stat-card,
+.dash-stat-link {
+    display: block;
+    text-decoration: none;
+    color: inherit;
+}
+
+a.dash-stat-card:focus-visible,
+.dash-stat-link:focus-visible {
+    outline: 3px solid rgba(99, 102, 241, 0.6);
+    outline-offset: 3px;
+}
+
+.dash-stat-link-indicator {
+    position: absolute;
+    top: 16px;
+    right: 16px;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.2);
+    color: #ffffff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    opacity: 0;
+    transform: translateX(-6px);
+    transition: opacity 200ms ease, transform 200ms ease;
+    pointer-events: none;
+}
+
+a.dash-stat-card:hover .dash-stat-link-indicator,
+.dash-stat-link:hover .dash-stat-link-indicator {
+    opacity: 1;
+    transform: translateX(0);
+}
+
+a.dash-stat-card:focus-visible .dash-stat-link-indicator,
+.dash-stat-link:focus-visible .dash-stat-link-indicator {
+    opacity: 1;
+    transform: translateX(0);
 }
 
 .dash-stat-primary {
-    background: linear-gradient(135deg, #6366f1 0%, #818cf8 100%);
-    color: white;
+    background: linear-gradient(135deg, #0fb5b0 0%, #0a8a87 100%);
     border: none;
 }
+.dash-stat-primary .dash-stat-value,
+.dash-stat-primary .dash-stat-trend,
+.dash-stat-primary .dash-stat-link-indicator,
+.dash-stat-primary .dash-stat-icon {
+    color: #ffffff;
+}
+.dash-stat-primary .dash-stat-icon { background: rgba(255, 255, 255, 0.22); }
+.dash-stat-primary .dash-stat-label { color: rgba(255, 255, 255, 0.92); }
+.dash-stat-primary svg path { stroke: rgba(255, 255, 255, 0.45) !important; }
 
 .dash-stat-success {
     background: linear-gradient(135deg, #10b981 0%, #34d399 100%);
-    color: white;
     border: none;
 }
+.dash-stat-success .dash-stat-value,
+.dash-stat-success .dash-stat-trend,
+.dash-stat-success .dash-stat-link-indicator,
+.dash-stat-success .dash-stat-icon {
+    color: #ffffff;
+}
+.dash-stat-success .dash-stat-icon { background: rgba(255, 255, 255, 0.22); }
+.dash-stat-success .dash-stat-label { color: rgba(255, 255, 255, 0.92); }
+.dash-stat-success svg path { stroke: rgba(255, 255, 255, 0.45) !important; }
 
 .dash-stat-warning {
     background: linear-gradient(135deg, #f59e0b 0%, #fbbf24 100%);
-    color: white;
     border: none;
 }
+.dash-stat-warning .dash-stat-value,
+.dash-stat-warning .dash-stat-trend,
+.dash-stat-warning .dash-stat-link-indicator,
+.dash-stat-warning .dash-stat-icon {
+    color: #ffffff;
+}
+.dash-stat-warning .dash-stat-icon { background: rgba(255, 255, 255, 0.22); }
+.dash-stat-warning .dash-stat-label { color: rgba(255, 255, 255, 0.92); }
+.dash-stat-warning svg path { stroke: rgba(255, 255, 255, 0.45) !important; }
 
 .dash-stat-danger {
     background: linear-gradient(135deg, #ef4444 0%, #f87171 100%);
-    color: white;
     border: none;
 }
+.dash-stat-danger .dash-stat-value,
+.dash-stat-danger .dash-stat-trend,
+.dash-stat-danger .dash-stat-link-indicator,
+.dash-stat-danger .dash-stat-icon {
+    color: #ffffff;
+}
+.dash-stat-danger .dash-stat-icon { background: rgba(255, 255, 255, 0.22); }
+.dash-stat-danger .dash-stat-label { color: rgba(255, 255, 255, 0.92); }
+.dash-stat-danger svg path { stroke: rgba(255, 255, 255, 0.45) !important; }
 
 .dash-stat-icon-wrap {
     display: flex;
@@ -558,7 +635,7 @@
 }
 
 .dash-icon-users {
-    background: linear-gradient(135deg, #6366f1 0%, #818cf8 100%);
+    background: linear-gradient(135deg, #0fb5b0 0%, #33c7c3 100%);
     color: white;
 }
 
@@ -725,4 +802,176 @@
 
 .dash-activity-list::-webkit-scrollbar-thumb:hover {
     background: var(--dash-text-muted);
+}
+
+/* ============================================================================
+ * FIX PHASE — Revenue Period Selector + Activity Link
+ * ============================================================================ */
+.dash-revenue-meta {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.dash-revenue-period-wrap {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.dash-period-label {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--dash-text);
+    letter-spacing: -0.01em;
+    white-space: nowrap;
+}
+
+.dash-period-select {
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    background-color: var(--dash-surface);
+    background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%2364748b'%3e%3cpath d='M7 10l5 5 5-5z'/%3e%3c/svg%3e");
+    background-repeat: no-repeat;
+    background-position: right 10px center;
+    background-size: 16px;
+    border: 1px solid var(--dash-border);
+    border-radius: var(--dash-radius);
+    padding: 8px 32px 8px 12px;
+    font-family: inherit;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--dash-text);
+    cursor: pointer;
+    transition: var(--dash-transition);
+    min-width: 120px;
+    height: 36px;
+    line-height: 1.2;
+}
+
+.dash-period-select:hover {
+    border-color: var(--dash-primary);
+}
+
+.dash-period-select:focus {
+    outline: none;
+    border-color: var(--dash-primary);
+    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15);
+}
+
+.dash-revenue-period {
+    display: inline-flex;
+    gap: 4px;
+    padding: 4px;
+    background: var(--dash-surface-alt, #f1f5f9);
+    border-radius: 8px;
+    flex-wrap: wrap;
+}
+
+.dash-period-btn {
+    border: none;
+    background: transparent;
+    color: var(--dash-text-muted, #475569);
+    padding: 6px 14px;
+    border-radius: 6px;
+    font-size: 12.5px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color 160ms ease, color 160ms ease, box-shadow 160ms ease;
+    font-family: inherit;
+}
+
+.dash-period-btn:hover {
+    background: rgba(99, 102, 241, 0.1);
+    color: var(--dash-text, #0f172a);
+}
+
+.dash-period-btn.active {
+    background: #ffffff;
+    color: var(--dash-primary, #0fb5b0);
+    box-shadow: 0 1px 3px rgba(15, 23, 42, 0.12);
+}
+
+.dash-period-btn:focus-visible {
+    outline: 2px solid #0fb5b0;
+    outline-offset: 2px;
+}
+
+@media (max-width: 640px) {
+    .dash-revenue-meta { align-items: stretch; }
+    .dash-revenue-period { width: 100%; justify-content: space-between; }
+    .dash-period-btn { padding: 6px 8px; font-size: 11.5px; flex: 1; }
+}
+
+/* Activity items that are links (recent orders clickable) */
+a.dash-activity-item,
+.dash-activity-link {
+    text-decoration: none;
+    color: inherit;
+    cursor: pointer;
+    transition: background-color 180ms ease, transform 180ms ease;
+}
+
+a.dash-activity-item:hover,
+.dash-activity-link:hover {
+    background: var(--dash-primary-soft, rgba(99, 102, 241, 0.06));
+    transform: translateX(2px);
+}
+
+a.dash-activity-item:focus-visible,
+.dash-activity-link:focus-visible {
+    outline: 2px solid var(--dash-primary, #0fb5b0);
+    outline-offset: -2px;
+}
+
+/* ============================================================================
+ * UI PHASE 5 — Skip link for /dashboard route (dashboard-layout.html)
+ * ----------------------------------------------------------------------------
+ * dashboard-layout.html không load admin-ui.css → cần skip-link ở đây.
+ * Pattern WCAG 2.4.1 Bypass Blocks.
+ * ============================================================================ */
+.sd-app .sd-skip-link,
+.sd-skip-link {
+    position: absolute;
+    top: -100px;
+    left: 16px;
+    z-index: 100000;
+    padding: 10px 16px;
+    background: var(--dash-surface, #ffffff);
+    color: var(--dash-text, #0f172a);
+    border: 2px solid var(--dash-accent, #0fb5b0);
+    border-radius: 6px;
+    font-family: inherit;
+    font-size: 14px;
+    font-weight: 600;
+    text-decoration: none;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    transition: top 180ms ease;
+}
+
+.sd-app .sd-skip-link:focus,
+.sd-skip-link:focus,
+.sd-app .sd-skip-link:focus-visible,
+.sd-skip-link:focus-visible {
+    top: 16px;
+    outline: 2px solid var(--dash-accent, #0fb5b0);
+    outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .sd-app .sd-skip-link,
+    .sd-skip-link {
+        transition: none;
+    }
+}
+
+@media (forced-colors: active) {
+    .sd-app .sd-skip-link,
+    .sd-skip-link {
+        border: 2px solid CanvasText;
+        background: Canvas;
+        color: CanvasText;
+        forced-color-adjust: none;
+    }
 }

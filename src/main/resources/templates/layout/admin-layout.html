@@ -13,9 +13,12 @@
 
     <link rel="stylesheet" th:href="@{/css/dashboard.css}">
     <link rel="stylesheet" th:href="@{/css/admin-dashboard.css}">
+    <link rel="stylesheet" th:href="@{/css/foundation/index.css}">
+    <link rel="stylesheet" th:href="@{/css/admin-ui.css}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body>
+    <a class="sd-skip-link" href="#mainContent">Bỏ qua tới nội dung chính</a>
     <div class="sd-app sd-app-admin" id="appShell">
         <aside th:replace="~{fragments/admin-sidebar :: sidebar}"></aside>
 
@@ -69,7 +72,7 @@
                 </div>
             </div>
 
-            <main class="sd-content" th:replace="${content}"></main>
+            <main class="sd-content" id="mainContent" th:replace="${content}"></main>
         </div>
     </div>
 
@@ -116,40 +119,6 @@
                     closeBtn?.addEventListener('click', () => clearTimeout(timer));
                 });
             }
-
-            // Wire the Admin global search to the matching module list when on a supported page.
-            // /admin/users  -> search users (email / fullName)
-            // /admin/categories -> search categories (name)
-            // /admin/shops -> search shops (name)
-            // /admin/orders -> search orders (customer name / customer id)
-            // Other modules keep the plain input (no form submit, no parameter leakage).
-            (function wireAdminSearch() {
-                const searchInput = document.getElementById('adminGlobalSearch');
-                if (!searchInput) return;
-                const isUserPage = path === '/admin/users' || path.startsWith('/admin/users/');
-                const isCategoryPage = path === '/admin/categories' || path.startsWith('/admin/categories/');
-                const isShopPage = path === '/admin/shops' || path.startsWith('/admin/shops/');
-                const isOrderPage = path === '/admin/orders' || path.startsWith('/admin/orders/');
-                if (!isUserPage && !isCategoryPage && !isShopPage && !isOrderPage) return;
-                const url = new URL(window.location.href);
-                const currentQ = url.searchParams.get('q') || '';
-                searchInput.placeholder = isCategoryPage
-                    ? 'Tim danh muc theo ten...'
-                    : isShopPage
-                    ? 'Tim shop theo ten...'
-                    : isOrderPage
-                    ? 'Tim don hang theo ten hoac ID khach hang...'
-                    : 'Tim email hoac ho ten...';
-                searchInput.value = currentQ;
-                const basePath = isCategoryPage ? '/admin/categories' : isShopPage ? '/admin/shops' : isOrderPage ? '/admin/orders' : '/admin/users';
-                searchInput.addEventListener('keydown', function (e) {
-                    if (e.key === 'Enter') {
-                        e.preventDefault();
-                        const q = encodeURIComponent(searchInput.value.trim());
-                        window.location.href = q ? basePath + '?q=' + q : basePath;
-                    }
-                });
-            })();
         })();
     </script>
     <th:block th:replace="${scripts} ?: ~{}"></th:block>
