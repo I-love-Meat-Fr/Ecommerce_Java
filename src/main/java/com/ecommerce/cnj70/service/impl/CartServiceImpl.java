@@ -46,10 +46,11 @@ public class CartServiceImpl implements CartService {
             item.setQuantity(newQty);
             item.setSubtotal(item.getPrice().multiply(BigDecimal.valueOf(newQty)));
         } else {
+            String imageUrl = normalizeImageUrl(product.getThumbnailUrl());
             Cart.CartItem newItem = Cart.CartItem.builder()
                     .productId(productId)
                     .productName(product.getName())
-                    .imageUrl(product.getThumbnailUrl())
+                    .imageUrl(imageUrl)
                     .price(product.getPrice())
                     .quantity(quantity)
                     .subtotal(product.getPrice().multiply(BigDecimal.valueOf(quantity)))
@@ -126,5 +127,21 @@ public class CartServiceImpl implements CartService {
                 .updatedAt(LocalDateTime.now())
                 .build();
         return cartRepository.save(cart);
+    }
+
+    /**
+     * Normalizes an image URL to ensure it has the correct path prefix.
+     * Handles null, empty, bare filenames, and full URLs uniformly.
+     */
+    private String normalizeImageUrl(String imageUrl) {
+        if (imageUrl == null || imageUrl.isBlank()) {
+            return null;
+        }
+        String trimmed = imageUrl.trim();
+        if (trimmed.startsWith("http://") || trimmed.startsWith("https://") || trimmed.startsWith("/")) {
+            return trimmed;
+        }
+        // Bare filename — prepend /uploads/
+        return "/uploads/" + trimmed;
     }
 }

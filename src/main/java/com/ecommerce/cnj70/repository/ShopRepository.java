@@ -1,6 +1,7 @@
 package com.ecommerce.cnj70.repository;
 
 import com.ecommerce.cnj70.document.Shop;
+import com.ecommerce.cnj70.enums.ShopStatus;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.mongodb.repository.MongoRepository;
@@ -27,4 +28,10 @@ public interface ShopRepository extends MongoRepository<Shop, String> {
     Page<Shop> findByShopNameContainingIgnoreCase(String shopName, Pageable pageable);
 
     Page<Shop> findByVerifiedAndShopNameContainingIgnoreCase(boolean verified, String shopName, Pageable pageable);
+
+    // === Phase 10: Shop Status Filter (Admin) ===
+    Page<Shop> findByStatus(ShopStatus status, Pageable pageable);
+
+    Page<Shop> findByStatusAndShopNameContainingIgnoreCase(
+            ShopStatus status, String shopName, Pageable pageable);
 }

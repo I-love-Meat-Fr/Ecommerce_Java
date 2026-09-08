@@ -34,12 +34,14 @@ public class AdminCategoryController {
     public String categoryList(@RequestParam(defaultValue = "0") int page,
                                @RequestParam(defaultValue = "5") int size,
                                @RequestParam(required = false) String q,
+                               @RequestParam(required = false) String active,
                                Model model) {
         int safeSize = size <= 0 ? DEFAULT_PAGE_SIZE : Math.min(size, 50);
         int safePage = Math.max(page, 0);
         Pageable pageable = PageRequest.of(safePage, safeSize, Sort.by(Sort.Direction.ASC, "name"));
 
-        Page<Category> result = adminCategoryService.listCategories(pageable, q);
+        Boolean activeFilter = parseActive(active);
+        Page<Category> result = adminCategoryService.listCategories(pageable, q, activeFilter);
 
         model.addAttribute("categories", result.getContent());
         model.addAttribute("page", result.getNumber());
@@ -47,6 +49,7 @@ public class AdminCategoryController {
         model.addAttribute("totalPages", result.getTotalPages());
         model.addAttribute("totalItems", result.getTotalElements());
         model.addAttribute("q", q == null ? "" : q);
+        model.addAttribute("active", activeFilter == null ? "" : (activeFilter ? "true" : "false"));
         model.addAttribute("hasNext", result.hasNext());
         model.addAttribute("hasPrev", result.hasPrevious());
         model.addAttribute("isFirst", result.isFirst());
@@ -61,6 +64,7 @@ public class AdminCategoryController {
                                  @RequestParam(defaultValue = "0") int page,
                                  @RequestParam(defaultValue = "5") int size,
                                  @RequestParam(required = false) String q,
+                                 @RequestParam(required = false) String active,
                                  RedirectAttributes redirectAttributes) {
         try {
             Category created = adminCategoryService.createCategory(name, description);
@@ -72,6 +76,7 @@ public class AdminCategoryController {
         redirectAttributes.addAttribute("page", page);
         redirectAttributes.addAttribute("size", size);
         if (q != null) redirectAttributes.addAttribute("q", q);
+        if (active != null) redirectAttributes.addAttribute("active", active);
         return "redirect:/admin/categories";
     }
 
@@ -80,6 +85,7 @@ public class AdminCategoryController {
                                    @RequestParam(defaultValue = "0") int page,
                                    @RequestParam(defaultValue = "5") int size,
                                    @RequestParam(required = false) String q,
+                                   @RequestParam(required = false) String active,
                                    Model model,
                                    RedirectAttributes redirectAttributes) {
         try {
@@ -90,7 +96,8 @@ public class AdminCategoryController {
             int safeSize = size <= 0 ? DEFAULT_PAGE_SIZE : Math.min(size, 50);
             int safePage = Math.max(page, 0);
             Pageable pageable = PageRequest.of(safePage, safeSize, Sort.by(Sort.Direction.ASC, "name"));
-            Page<Category> result = adminCategoryService.listCategories(pageable, q);
+            Boolean activeFilter = parseActive(active);
+            Page<Category> result = adminCategoryService.listCategories(pageable, q, activeFilter);
 
             model.addAttribute("categories", result.getContent());
             model.addAttribute("page", result.getNumber());
@@ -98,6 +105,7 @@ public class AdminCategoryController {
             model.addAttribute("totalPages", result.getTotalPages());
             model.addAttribute("totalItems", result.getTotalElements());
             model.addAttribute("q", q == null ? "" : q);
+            model.addAttribute("active", activeFilter == null ? "" : (activeFilter ? "true" : "false"));
             model.addAttribute("hasNext", result.hasNext());
             model.addAttribute("hasPrev", result.hasPrevious());
             model.addAttribute("isFirst", result.isFirst());
@@ -109,6 +117,7 @@ public class AdminCategoryController {
             redirectAttributes.addAttribute("page", page);
             redirectAttributes.addAttribute("size", size);
             if (q != null) redirectAttributes.addAttribute("q", q);
+            if (active != null) redirectAttributes.addAttribute("active", active);
             return "redirect:/admin/categories";
         }
     }
@@ -120,6 +129,7 @@ public class AdminCategoryController {
                                  @RequestParam(defaultValue = "0") int page,
                                  @RequestParam(defaultValue = "5") int size,
                                  @RequestParam(required = false) String q,
+                                 @RequestParam(required = false) String active,
                                  RedirectAttributes redirectAttributes) {
         try {
             Category updated = adminCategoryService.updateCategory(id, name, description);
@@ -131,6 +141,7 @@ public class AdminCategoryController {
         redirectAttributes.addAttribute("page", page);
         redirectAttributes.addAttribute("size", size);
         if (q != null) redirectAttributes.addAttribute("q", q);
+        if (active != null) redirectAttributes.addAttribute("active", active);
         return "redirect:/admin/categories";
     }
 
@@ -139,6 +150,7 @@ public class AdminCategoryController {
                                  @RequestParam(defaultValue = "0") int page,
                                  @RequestParam(defaultValue = "5") int size,
                                  @RequestParam(required = false) String q,
+                                 @RequestParam(required = false) String active,
                                  RedirectAttributes redirectAttributes) {
         try {
             Category category = adminCategoryService.getCategoryById(id);
@@ -152,6 +164,7 @@ public class AdminCategoryController {
         redirectAttributes.addAttribute("page", page);
         redirectAttributes.addAttribute("size", size);
         if (q != null) redirectAttributes.addAttribute("q", q);
+        if (active != null) redirectAttributes.addAttribute("active", active);
         return "redirect:/admin/categories";
     }
 
@@ -162,5 +175,14 @@ public class AdminCategoryController {
         int end = Math.min(totalPages - 1, current + 2);
         for (int i = start; i <= end; i++) out.add(i);
         return out;
+    }
+
+    private static Boolean parseActive(String raw) {
+        if (raw == null || raw.isBlank()) return null;
+        String norm = raw.trim().toLowerCase();
+        if ("all".equals(norm)) return null;
+        if ("true".equals(norm) || "1".equals(norm) || "active".equals(norm)) return Boolean.TRUE;
+        if ("false".equals(norm) || "0".equals(norm) || "inactive".equals(norm)) return Boolean.FALSE;
+        return null;
     }
 }

@@ -9,11 +9,18 @@ import com.ecommerce.cnj70.exception.ResourceNotFoundException;
 import com.ecommerce.cnj70.repository.VoucherRepository;
 import com.ecommerce.cnj70.service.VoucherService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.mongodb.core.MongoTemplate;
+import org.springframework.data.mongodb.core.query.Criteria;
+import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 /**
@@ -22,8 +29,9 @@ import java.util.stream.Collectors;
 @Service
 @RequiredArgsConstructor
 public class VoucherServiceImpl implements VoucherService {
-    
+
     private final VoucherRepository voucherRepository;
+    private final MongoTemplate mongoTemplate;
     
     @Override
     public Voucher createVoucher(VoucherFormReq request, String shopId, String shopName, String createdBy) {
@@ -31,20 +39,20 @@ public class VoucherServiceImpl implements VoucherService {
         if (voucherRepository.existsByCode(request.getCode())) {
             throw new BadRequestException("Mã voucher đã tồn tại");
         }
-        
+
         // Validate discount value
         if (request.getDiscountType() == DiscountType.PERCENT) {
             if (request.getDiscountValue().doubleValue() > 100) {
                 throw new BadRequestException("Phần trăm giảm không được vượt quá 100%");
             }
         }
-        
+
         // Validate ngày
-        if (request.getEndDate() != null && request.getStartDate() != null 
+        if (request.getEndDate() != null && request.getStartDate() != null
             && request.getEndDate().isBefore(request.getStartDate())) {
             throw new BadRequestException("Ngày kết thúc phải sau ngày bắt đầu");
         }
-        
+
         Voucher voucher = Voucher.builder()
                 .code(request.getCode().toUpperCase())
                 .name(request.getName())
@@ -72,17 +80,25 @@ public class VoucherServiceImpl implements VoucherService {
         if (voucherRepository.existsByCode(request.getCode())) {
             throw new BadRequestException("Mã voucher đã tồn tại");
         }
-        
+
         if (request.getDiscountType() == DiscountType.PERCENT) {
             if (request.getDiscountValue().doubleValue() > 100) {
                 throw new BadRequestException("Phần trăm giảm không được vượt quá 100%");
             }
         }
-        
+
+        // Phase 11 — Bổ sung validation endDate >= startDate (thiếu trong source cũ)
+        if (request.getEndDate() != null && request.getStartDate() != null
+            && request.getEndDate().isBefore(request.getStartDate())) {
+            throw new BadRequestException("Ngày kết thúc phải sau ngày bắt đầu");
+        }
+
         Voucher voucher = Voucher.builder()
                 .code(request.getCode().toUpperCase())
                 .name(request.getName())
                 .type(VoucherType.WEB)
+                .shopId(null)
+                .shopName(null)
                 .productIds(request.getProductIds() != null ? request.getProductIds() : new ArrayList<>())
                 .discountType(request.getDiscountType())
                 .discountValue(request.getDiscountValue())
@@ -95,7 +111,7 @@ public class VoucherServiceImpl implements VoucherService {
                 .active(true)
                 .createdBy(createdBy)
                 .build();
-        
+
         return voucherRepository.save(voucher);
     }
     
@@ -160,6 +176,110 @@ public class VoucherServiceImpl implements VoucherService {
         voucher.setActive(false);
         voucherRepository.save(voucher);
     }
+
+    // ============================================================
+    // Phase 11 — Admin WEB Voucher operations
+    // ============================================================
+
+    /**
+     * Phase 11 — Helper kiểm tra voucher thuộc loại WEB.
+     * Ném BadRequestException nếu là SHOP Voucher.
+     */
+    private void requireWebVoucher(Voucher voucher) {
+        if (voucher == null || voucher.getType() != VoucherType.WEB) {
+            throw new BadRequestException("Voucher này không phải Voucher WEB. Admin không được thao tác Voucher SHOP.");
+        }
+    }
+
+    @Override
+    public Voucher activateWebVoucher(String voucherId) {
+        Voucher voucher = getVoucherById(voucherId);
+        requireWebVoucher(voucher);
+        voucher.setActive(true);
+        return voucherRepository.save(voucher);
+    }
+
+    @Override
+    public Voucher deactivateWebVoucher(String voucherId) {
+        Voucher voucher = getVoucherById(voucherId);
+        requireWebVoucher(voucher);
+        voucher.setActive(false);
+        return voucherRepository.save(voucher);
+    }
+
+    @Override
+    public Voucher updateWebVoucher(String voucherId, VoucherFormReq request) {
+        Voucher voucher = getVoucherById(voucherId);
+        requireWebVoucher(voucher);
+
+        // Phase 11 — Validate code (nếu đổi)
+        if (request.getCode() != null && !request.getCode().equalsIgnoreCase(voucher.getCode())) {
+            if (voucherRepository.existsByCode(request.getCode())) {
+                throw new BadRequestException("Mã voucher đã tồn tại");
+            }
+            voucher.setCode(request.getCode().toUpperCase());
+        }
+
+        if (request.getName() != null) {
+            voucher.setName(request.getName());
+        }
+
+        if (request.getDiscountType() != null) {
+            voucher.setDiscountType(request.getDiscountType());
+        }
+
+        if (request.getDiscountValue() != null) {
+            voucher.setDiscountValue(request.getDiscountValue());
+        }
+
+        if (request.getMaxDiscountAmount() != null) {
+            voucher.setMaxDiscountAmount(request.getMaxDiscountAmount());
+        }
+
+        if (request.getMinOrderValue() != null) {
+            voucher.setMinOrderValue(request.getMinOrderValue());
+        }
+
+        if (request.getQuantity() != null) {
+            if (request.getQuantity() < voucher.getUsed()) {
+                throw new BadRequestException("Số lượng không được nhỏ hơn số đã sử dụng");
+            }
+            voucher.setQuantity(request.getQuantity());
+        }
+
+        if (request.getStartDate() != null) {
+            voucher.setStartDate(request.getStartDate());
+        }
+
+        if (request.getEndDate() != null) {
+            voucher.setEndDate(request.getEndDate());
+        }
+
+        if (request.getProductIds() != null) {
+            voucher.setProductIds(request.getProductIds());
+        }
+
+        // Phase 11 — Bổ sung validation endDate >= startDate sau khi áp dụng giá trị mới
+        if (voucher.getEndDate() != null && voucher.getStartDate() != null
+            && voucher.getEndDate().isBefore(voucher.getStartDate())) {
+            throw new BadRequestException("Ngày kết thúc phải sau ngày bắt đầu");
+        }
+
+        // Phase 11 — Đảm bảo WEB Voucher giữ shopId=null và type=WEB
+        voucher.setType(VoucherType.WEB);
+        voucher.setShopId(null);
+        voucher.setShopName(null);
+
+        return voucherRepository.save(voucher);
+    }
+
+    @Override
+    public void deleteWebVoucher(String voucherId) {
+        Voucher voucher = getVoucherById(voucherId);
+        requireWebVoucher(voucher);
+        voucher.setActive(false);
+        voucherRepository.save(voucher);
+    }
     
     @Override
     public Voucher getVoucherById(String id) {
@@ -182,13 +302,81 @@ public class VoucherServiceImpl implements VoucherService {
     public List<Voucher> getWebVouchers() {
         return voucherRepository.findByType(VoucherType.WEB);
     }
+
+    @Override
+    public org.springframework.data.domain.Page<Voucher> getWebVouchers(
+            Pageable pageable, String q, Boolean active) {
+        boolean hasQ = StringUtils.hasText(q);
+        boolean hasActive = (active != null);
+
+        if (!hasQ && !hasActive) {
+            return voucherRepository.findByType(VoucherType.WEB, pageable);
+        }
+
+        if (hasQ && !hasActive) {
+            return searchWebVouchers(q.trim(), null, pageable);
+        }
+
+        if (!hasQ && hasActive) {
+            return voucherRepository.findByTypeAndActive(VoucherType.WEB, active, pageable);
+        }
+
+        // search + filter
+        return searchWebVouchers(q.trim(), active, pageable);
+    }
+
+    /**
+     * Tìm WEB Voucher theo keyword (code/name) kết hợp optional active.
+     * Dùng MongoTemplate vì cần AND logic giữa type=WEB + search criteria.
+     */
+    private org.springframework.data.domain.Page<Voucher> searchWebVouchers(
+            String q, Boolean active, Pageable pageable) {
+        Pattern codePattern = Pattern.compile(Pattern.quote(q), Pattern.CASE_INSENSITIVE);
+        Pattern namePattern = Pattern.compile(Pattern.quote(q), Pattern.CASE_INSENSITIVE);
+
+        Criteria searchOr = new Criteria().orOperator(
+                Criteria.where("code").regex(codePattern),
+                Criteria.where("name").regex(namePattern)
+        );
+
+        Criteria baseCriteria = new Criteria().andOperator(
+                Criteria.where("type").is("WEB"),
+                searchOr
+        );
+
+        Criteria countCriteria;
+        if (active != null) {
+            countCriteria = new Criteria().andOperator(
+                    baseCriteria,
+                    Criteria.where("active").is(active)
+            );
+        } else {
+            countCriteria = baseCriteria;
+        }
+
+        Query query = Query.query(countCriteria).with(pageable);
+        long total = mongoTemplate.count(Query.query(countCriteria), Voucher.class);
+        List<Voucher> content = mongoTemplate.find(query, Voucher.class);
+
+        return new PageImpl<>(content, pageable, total);
+    }
     
     @Override
     public List<Voucher> getAvailableVouchers() {
         List<Voucher> all = voucherRepository.findAll();
         LocalDateTime now = LocalDateTime.now();
-        
+
         return all.stream()
+                .filter(Voucher::isAvailable)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public List<Voucher> getAvailableWebVouchersForCustomer() {
+        // Phase 12: Chỉ trả WEB Voucher khả dụng cho Customer website.
+        // Lọc: type=WEB, active=true, còn hạn, còn lượt.
+        // SHOP Voucher KHÔNG hiển thị trên website công khai.
+        return voucherRepository.findByTypeAndActiveTrue(VoucherType.WEB).stream()
                 .filter(Voucher::isAvailable)
                 .collect(Collectors.toList());
     }

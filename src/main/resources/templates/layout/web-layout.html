@@ -1,21 +1,62 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org"
-      xmlns:sec="http://www.thymeleaf.org/extras/springsecurity6">
+      xmlns:sec="http://www.thymeleaf.org/extras/springsecurity6"
+      th:fragment="layout(title, content, scripts, pageStyles)">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title th:text="${title}">CNJ70 Ecommerce</title>
+    <meta name="description" content="CNJ70 Shop - Sàn thương mại điện tử đa nhà bán hàng hàng đầu Việt Nam.">
+    <title th:text="${title} ?: 'CNJ70 Shop'">CNJ70 Shop</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Work+Sans:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+
+    <!-- ============================================================
+         UI PHASE 4 — Customer / Web UI Revolution
+         Customer-specific layout. KHÔNG đụng admin-layout / vendor-layout.
+         Load order quan trọng:
+           1. style.css               : global tokens + base
+           2. home.css                : shared Customer component styles
+           3. PAGE-SPECIFIC CSS       : injected via {pageStyles} slot
+           4. foundation/index.css    : Design System foundation (Phase 1)
+           5. web-ui.css              : Customer UI polish + a11y + responsive
+         Tailwind CDN giữ nguyên (đã có sẵn — KHÔNG thêm dependency mới).
+         ============================================================ -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            blockContainer: true,
+            corePlugins: {
+                preflight: false,
+                container: false
+            },
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Work Sans', 'Inter', 'system-ui', 'sans-serif']
+                    }
+                }
+            }
+        }
+    </script>
     <link rel="stylesheet" th:href="@{/css/style.css}">
+    <link rel="stylesheet" th:href="@{/css/home.css}">
+    <th:block th:replace="${pageStyles} ?: ~{}"></th:block>
+    <link rel="stylesheet" th:href="@{/css/foundation/index.css}">
+    <link rel="stylesheet" th:href="@{/css/web-ui.css}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <th:block th:replace="${content}"></th:block>
 </head>
 <body>
-    <div th:replace="fragments/web-header"></div>
-    
-    <main th:replace="${content}"></main>
-    
-    <div th:replace="fragments/web-footer"></div>
-    
+    <a class="wb-skip-link" href="#main-content">Bỏ qua tới nội dung chính</a>
+
+    <div th:replace="~{fragments/web-header}"></div>
+
+    <main id="main-content" class="main-content" th:replace="${content}"></main>
+
+    <div th:replace="~{fragments/web-footer}"></div>
+
     <script th:src="@{/js/main.js}"></script>
+    <th:block th:replace="${scripts} ?: ~{}"></th:block>
 </body>
 </html>

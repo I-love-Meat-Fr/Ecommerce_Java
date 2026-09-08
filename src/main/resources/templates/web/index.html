@@ -39,20 +39,19 @@
         <!-- 1. Top Marquee Bar -->
         <div class="marquee-bar">
             <div class="marquee-track">
-                <div class="marquee-content">
-                    <span><i class="fas fa-truck"></i> 247 đơn vừa được đặt trong 10 phút qua</span>
-                    <span class="marquee-sep">|</span>
-                    <span><i class="fas fa-star" style="color:#ffd166"></i> Shop TechZone vừa lên 4.9 sao</span>
-                    <span class="marquee-sep">|</span>
-                    <span><i class="fas fa-fire" style="color:#ef4444"></i> Flash Sale 50% off - Chỉ hôm nay!</span>
-                    <span class="marquee-sep">|</span>
-                    <span><i class="fas fa-truck"></i> Miễn phí vận chuyển đơn từ 200K</span>
-                    <span class="marquee-sep">|</span>
-                    <span><i class="fas fa-gift" style="color:#0fb5b0"></i> Mã SUMMER24 - Giảm ngay 15%</span>
-                    <span class="marquee-sep">|</span>
-                    <span><i class="fas fa-shield-alt" style="color:#0fb5b0"></i> Hàng chính hãng 100%</span>
-                </div>
-                <div class="marquee-content" aria-hidden="true">
+             <span><i class="fas fa-truck"></i> 247 đơn vừa đặt trong 10 phút qua</span>
+              <span class="marquee-sep">|</span>
+              <span><i class="fas fa-star" style="color:#ffd166"></i> Shop TechZone vừa lên 4.9 sao</span>
+              <span class="marquee-sep">|</span>
+              <span><i class="fas fa-fire" style="color:#ef4444"></i> Flash Sale 50% off - Chỉ hôm nay!</span>
+              <span class="marquee-sep">|</span>
+              <span><i class="fas fa-truck"></i> Miễn phí vận chuyển đơn từ 200K</span>
+              <span class="marquee-sep">|</span>
+              <span><i class="fas fa-gift" style="color:#0fb5b0"></i> Mã SUMMER24 - Giảm ngay 15%</span>
+              <span class="marquee-sep">|</span>
+              <span><i class="fas fa-shield-alt" style="color:#0fb5b0"></i> Hàng chính hãng 100%</span>
+        </div>
+        <div class="marquee-content" aria-hidden="true">
                     <span><i class="fas fa-truck"></i> 247 đơn vừa được đặt trong 10 phút qua</span>
                     <span class="marquee-sep">|</span>
                     <span><i class="fas fa-star" style="color:#ffd166"></i> Shop TechZone vừa lên 4.9 sao</span>
@@ -80,89 +79,65 @@
                         <i class="fas fa-search"></i> Tìm nhanh
                     </button>
                 </form>
-                <div class="quick-filters">
-                    <button class="filter-chip active">Tất cả</button>
-                    <button class="filter-chip">Thời trang</button>
-                    <button class="filter-chip">Công nghệ</button>
-                    <button class="filter-chip">Nhà cửa</button>
-                    <button class="filter-chip">Sức khoẻ</button>
-                    <button class="filter-chip">Sách</button>
-                    <button class="filter-chip">Thể thao</button>
-                    <button class="filter-chip">Làm đẹp</button>
+                <div class="quick-filters" th:if="${not #lists.isEmpty(categories)}">
+                    <a th:href="@{/products}"
+                       class="filter-chip active">
+                        <i class="fas fa-th"></i> Tất cả
+                    </a>
+                    <a th:each="cat : ${categories}"
+                       th:href="@{/products(category=${cat.id})}"
+                       class="filter-chip">
+                        <i th:class="'fas ' + ${@categoryIcon.iconFor(cat.name)}"></i>
+                        <span th:text="${cat.name}">Danh mục</span>
+                    </a>
                 </div>
             </div>
         </div>
 
-        <!-- 3. Hero Section -->
-        <section class="hero-section">
+        <!-- 3. Hero Banner Slider -->
+        <section class="hero-banner-section">
             <div class="container">
-                <div class="hero-inner">
-                    <div class="hero-left">
-                        <div class="hero-tag">
-                            <i class="fas fa-bolt"></i> Mua sắm thông minh
+                <div class="banner-slider">
+                    <div class="banner-track" id="bannerTrack">
+                        <!-- Slide 1 -->
+                        <div class="banner-slide banner-slide-1">
+                            <div class="banner-content">
+                                <div class="banner-tag"><i class="fas fa-bolt"></i> MEGA SALE</div>
+                                <h2 class="banner-title">Giảm đến <span class="banner-highlight">50%</span><br>tất cả sản phẩm</h2>
+                                <p class="banner-desc">Cơ hội duy nhất trong năm - săn deal khủng từ hàng trăm nhà bán uy tín trên toàn quốc.</p>
+                                <a th:href="@{/products}" class="banner-cta"><i class="fas fa-shopping-bag"></i> Mua sắm ngay</a>
+                            </div>
+                            <div class="banner-decor banner-decor-1"></div>
                         </div>
-                        <h1>Khám phá hàng ngàn<br><span class="teal-word">sản phẩm chất lượng</span></h1>
-                        <p>Nền tảng thương mại điện tử đa nhà bán hàng với hàng triệu sản phẩm từ các shop uy tín trên toàn quốc. Mua sắm an toàn, giao hàng nhanh chóng.</p>
-                        <div class="hero-actions">
-                            <a th:href="@{/products}" class="btn-teal" id="shop-now-btn">
-                                <i class="fas fa-shopping-bag"></i> Mua sắm ngay
-                            </a>
-                            <a th:href="@{/auth/register}" class="btn-outline-teal" sec:authorize="!isAuthenticated()" id="become-vendor-btn">
-                                <i class="fas fa-store"></i> Trở thành người bán
-                            </a>
+                        <!-- Slide 2 -->
+                        <div class="banner-slide banner-slide-2">
+                            <div class="banner-content">
+                                <div class="banner-tag"><i class="fas fa-store"></i> DÀNH CHO NGƯỜI BÁN</div>
+                                <h2 class="banner-title">Mở shop <span class="banner-highlight">miễn phí</span><br>kinh doanh ngay hôm nay</h2>
+                                <p class="banner-desc">Tiếp cận hàng triệu khách hàng, quản lý đơn hàng dễ dàng, không lo vận chuyển.</p>
+                                <a th:href="@{/auth/register}" class="banner-cta"><i class="fas fa-rocket"></i> Đăng ký ngay</a>
+                            </div>
+                            <div class="banner-decor banner-decor-2"></div>
                         </div>
-                    </div>
-                    <div class="hero-right">
-                        <div class="quick-view-panel">
-                            <div class="panel-title">
-                                <i class="fas fa-chart-line"></i> Live Stats
+                        <!-- Slide 3 -->
+                        <div class="banner-slide banner-slide-3">
+                            <div class="banner-content">
+                                <div class="banner-tag"><i class="fas fa-truck"></i> FREESHIP 100%</div>
+                                <h2 class="banner-title">Miễn phí vận chuyển<br>cho <span class="banner-highlight">đơn từ 99K</span></h2>
+                                <p class="banner-desc">Áp dụng toàn quốc - không giới hạn số lần - tận hưởng mua sắm không lo phí ship.</p>
+                                <a th:href="@{/products}" class="banner-cta"><i class="fas fa-tag"></i> Xem ưu đãi</a>
                             </div>
-                            <div class="qv-stat-row">
-                                <span class="qv-stat-label"><i class="fas fa-signal"></i> Đang online</span>
-                                <span class="qv-stat-value"><span class="mini-dot"></span> <strong>1.234</strong></span>
-                            </div>
-                            <div class="qv-stat-row">
-                                <span class="qv-stat-label"><i class="fas fa-shopping-bag"></i> Đơn hôm nay</span>
-                                <span class="qv-stat-value"><strong>567</strong></span>
-                            </div>
-                            <div class="qv-stat-row">
-                                <span class="qv-stat-label"><i class="fas fa-box"></i> Sản phẩm</span>
-                                <span class="qv-stat-value"><strong>10.000+</strong></span>
-                            </div>
-                            <div class="qv-stat-row">
-                                <span class="qv-stat-label"><i class="fas fa-store"></i> Nhà bán</span>
-                                <span class="qv-stat-value"><strong>500+</strong></span>
-                            </div>
+                            <div class="banner-decor banner-decor-3"></div>
                         </div>
                     </div>
-                </div>
-            </div>
-        </section>
-
-        <!-- 4. Stat Strip -->
-        <section class="stat-strip reveal">
-            <div class="container">
-                <div class="stat-grid-4">
-                    <div class="stat-item">
-                        <div class="stat-icon-wrap"><i class="fas fa-box-open"></i></div>
-                        <div class="stat-number" data-count="10000" data-suffix="+">0+</div>
-                        <div class="stat-label">Sản phẩm</div>
+                    <button class="banner-arrow banner-arrow-prev" id="bannerPrev" aria-label="Slide trước"><i class="fas fa-chevron-left"></i></button>
+                    <button class="banner-arrow banner-arrow-next" id="bannerNext" aria-label="Slide sau"><i class="fas fa-chevron-right"></i></button>
+                    <div class="banner-indicators" id="bannerIndicators">
+                        <button class="banner-dot active" data-index="0" aria-label="Slide 1"></button>
+                        <button class="banner-dot" data-index="1" aria-label="Slide 2"></button>
+                        <button class="banner-dot" data-index="2" aria-label="Slide 3"></button>
                     </div>
-                    <div class="stat-item">
-                        <div class="stat-icon-wrap"><i class="fas fa-store"></i></div>
-                        <div class="stat-number" data-count="500" data-suffix="+">0+</div>
-                        <div class="stat-label">Nhà bán hàng</div>
-                    </div>
-                    <div class="stat-item">
-                        <div class="stat-icon-wrap"><i class="fas fa-users"></i></div>
-                        <div class="stat-number" data-count="50000" data-suffix="+">0+</div>
-                        <div class="stat-label">Khách hàng</div>
-                    </div>
-                    <div class="stat-item">
-                        <div class="stat-icon-wrap"><i class="fas fa-map-marker-alt"></i></div>
-                        <div class="stat-number" data-count="63" data-suffix="">0</div>
-                        <div class="stat-label">Tỉnh thành</div>
-                    </div>
+                    <div class="banner-progress"><span id="bannerProgressBar"></span></div>
                 </div>
             </div>
         </section>
@@ -170,16 +145,23 @@
         <!-- 5. Categories -->
         <section class="categories-section reveal" th:if="${not #lists.isEmpty(categories)}">
             <div class="container">
-                <div class="section-label">
+                <div class="cat-header">
                     <h2>Danh mục sản phẩm</h2>
-                    <div class="sl-line"></div>
-                    <a th:href="@{/products}" class="sl-link">Xem tất cả <i class="fas fa-arrow-right"></i></a>
+                    <p>Khám phá các bộ sưu tập theo nhu cầu của bạn</p>
+                    <div class="cat-header-line"></div>
                 </div>
                 <div class="cat-grid">
-                    <a th:each="cat, iter : ${categories}" th:href="@{/products(category=${cat.id})}" class="cat-card" th:if="${iter.index < 16}">
-                        <div class="cat-icon"><i class="fas fa-folder"></i>
+                    <a th:each="cat, iter : ${categories}"
+                       th:href="@{/products(category=${cat.id})}"
+                       class="cat-card"
+                       th:if="${iter.index < 16}"
+                       th:attr="data-theme=${@categoryIcon.softFor(cat.name)}">
+                        <div class="cat-icon"
+                             th:style="'background:' + ${@categoryIcon.gradientFor(cat.name)} + ';border-color:transparent;'">
+                            <i th:class="'fas ' + ${@categoryIcon.iconFor(cat.name)}"></i>
                         </div>
                         <div class="cat-name" th:text="${cat.name}">Danh mục</div>
+                        <div class="cat-count">Xem ngay <i class="fas fa-arrow-right"></i></div>
                     </a>
                 </div>
             </div>
@@ -187,43 +169,48 @@
 
         <!-- 6. Flash Deal Strip -->
         <section class="flash-deal-section reveal">
-            <div class="flash-deal-bar">
-                <div class="flash-deal-title">
-                    <i class="fas fa-bolt" style="color:#ffd166"></i>
-                    <span>FLASH DEAL</span>
-                </div>
-                <div class="flash-countdown">
-                    <div class="cd-unit"><span class="cd-number">03</span><span class="cd-label">Giờ</span></div>
-                    <span class="cd-sep">:</span>
-                    <div class="cd-unit"><span class="cd-number">00</span><span class="cd-label">Phút</span></div>
-                    <span class="cd-sep">:</span>
-                    <div class="cd-unit"><span class="cd-number">00</span><span class="cd-label">Giây</span></div>
-                </div>
-                <div class="flash-live">
-                    <span class="live-dot">Live</span>
-                </div>
-                <div class="flash-scroll">
-                    <div class="flash-products" th:if="${not #lists.isEmpty(featuredProducts)}">
-                        <th:block th:each="product, iter : ${featuredProducts}">
-                            <a th:href="@{/products/{id}(id=${product.id})}" class="flash-card">
-                                <img th:src="${product.thumbnailUrl ?: 'https://placehold.co/300x300/f1f5f9/94a3b8?text=No+Img'}" th:alt="${product.name}" class="flash-card-img">
-                                <div class="flash-card-body">
-                                    <div class="flash-card-price" th:text="${@money.format(product.price)}">0đ</div>
-                                    <div class="flash-card-discount">-30%</div>
-                                    <div class="flash-card-sold">Đã bán 128</div>
-                                </div>
-                            </a>
-                        </th:block>
-                        <th:block th:each="product, iter : ${featuredProducts}">
-                            <a th:href="@{/products/{id}(id=${product.id})}" class="flash-card" aria-hidden="true">
-                                <img th:src="${product.thumbnailUrl ?: 'https://placehold.co/300x300/f1f5f9/94a3b8?text=No+Img'}" th:alt="${product.name}" class="flash-card-img">
-                                <div class="flash-card-body">
-                                    <div class="flash-card-price" th:text="${@money.format(product.price)}">0đ</div>
-                                    <div class="flash-card-discount">-30%</div>
-                                    <div class="flash-card-sold">Đã bán 128</div>
-                                </div>
-                            </a>
-                        </th:block>
+            <div class="container">
+                <div class="flash-deal-wrapper">
+                    <div class="flash-deal-header">
+                        <div class="flash-header-left">
+                            <i class="fas fa-bolt flash-bolt-icon"></i>
+                            <span class="flash-title-text">FLASH SALE KHUNG GIỜ VÀNG</span>
+                            <div class="flash-countdown-box">
+                                <span class="cd-box cd-number">02</span>
+                                <span class="cd-colon">:</span>
+                                <span class="cd-box cd-number">15</span>
+                                <span class="cd-colon">:</span>
+                                <span class="cd-box cd-number">48</span>
+                            </div>
+                        </div>
+                        <a th:href="@{/products}" class="flash-see-all">Xem tất cả &gt;</a>
+                    </div>
+                    <div class="flash-scroll-container">
+                        <div class="flash-products-track" th:if="${not #lists.isEmpty(flashSaleStats)}">
+                            <th:block th:each="stat, iter : ${flashSaleStats}">
+                                <a th:href="@{/products/{id}(id=${stat.product.id})}" class="flash-card-item">
+                                    <div class="flash-card-thumb">
+                                        <span class="flash-badge" th:if="${stat.hasDiscount}" th:text="'-' + ${stat.discountPercent} + '%'">-30%</span>
+                                        <span class="flash-badge flash-badge-soft" th:unless="${stat.hasDiscount}">HOT</span>
+                                        <img th:src="${stat.product.thumbnailUrl ?: 'https://placehold.co/300x300/f1f5f9/94a3b8?text=No+Img'}" th:alt="${stat.product.name}" class="flash-card-img">
+                                    </div>
+                                    <div class="flash-card-content">
+                                        <h3 class="flash-card-title" th:text="${stat.product.name}">Tên sản phẩm Flash Sale</h3>
+                                        <div class="flash-card-price" th:text="${@money.format(stat.product.price)}">249.000đ</div>
+                                        <div class="flash-progress-track">
+                                            <div class="flash-progress-fill" th:style="'width:' + ${stat.progressPercent} + '%'">.</div>
+                                        </div>
+                                        <span class="flash-sold-text">ĐÃ BÁN <th:block th:text="${@money.formatSold(stat.soldCount)}">0</th:block></span>
+                                    </div>
+                                </a>
+                            </th:block>
+                            <!-- The track is intentionally rendered with only the real
+                                 products. The marquee logic in home.js (initFlashMarquee)
+                                 moves cards that drift off the left edge back to the end
+                                 of the track. This keeps the original CSS-only "duplicate
+                                 the strip" trick from ever showing two copies of the same
+                                 product on screen, even when the DB has just 1-2 items. -->
+                        </div>
                     </div>
                 </div>
             </div>
@@ -256,16 +243,30 @@
                                 <a th:href="@{/products/{id}(id=${product.id})}" class="product-card-link">
                                     <div class="product-card-img-wrap">
                                         <img th:src="${product.thumbnailUrl ?: 'https://placehold.co/300x300/f1f5f9/94a3b8?text=No+Img'}" th:alt="${product.name}" class="product-card-img">
-                                        <span class="product-card-badge"><i class="fas fa-fire"></i> Hot</span>
+                                        <span class="product-card-badge"><i class="fas fa-fire"></i> HOT</span>
                                     </div>
                                     <div class="product-card-body">
                                         <h3 class="product-card-name" th:text="${product.name}">Tên sản phẩm</h3>
-                                        <div class="product-card-price" th:text="${@money.format(product.price)}">0đ</div>
+                                        <div class="product-card-price" th:text="${@money.format(product.price)}">0 đ</div>
                                         <div class="product-card-meta">
                                             <span class="product-card-rating" th:if="${product.rating > 0}">
-                                                <i class="fas fa-star"></i> <span th:text="${#numbers.formatDecimal(product.rating, 1, 1)}">0.0</span>
+                                                <span class="product-card-stars">
+                                                    <i class="fas fa-star" th:classappend="${product.rating >= 1} ? ' filled'"></i>
+                                                    <i class="fas fa-star" th:classappend="${product.rating >= 2} ? ' filled'"></i>
+                                                    <i class="fas fa-star" th:classappend="${product.rating >= 3} ? ' filled'"></i>
+                                                    <i class="fas fa-star" th:classappend="${product.rating >= 4} ? ' filled'"></i>
+                                                    <i class="fas fa-star" th:classappend="${product.rating >= 5} ? ' filled'"></i>
+                                                </span>
+                                                <span class="product-card-rating-value" th:text="${#numbers.formatDecimal(product.rating, 1, 1)}">0.0</span>
                                             </span>
-                                            <span class="product-card-shop" th:text="${product.shopName}">Shop</span>
+                                            <span class="product-card-sold"
+                                                  th:classappend="${product.rating <= 0} ? ' no-sep'"
+                                                  th:if="${product.sold > 0}">
+                                                Đã bán <th:block th:text="${@money.formatSold(product.sold)}">0</th:block>
+                                            </span>
+                                        </div>
+                                        <div class="product-card-shop" th:if="${product.shopName}">
+                                            <i class="fas fa-shield-alt"></i> Cung cấp bởi: <span th:text="${product.shopName}">Shop</span>
                                         </div>
                                     </div>
                                 </a>
@@ -300,12 +301,26 @@
                                     </div>
                                     <div class="product-card-body">
                                         <h3 class="product-card-name" th:text="${product.name}">Tên sản phẩm</h3>
-                                        <div class="product-card-price" th:text="${@money.format(product.price)}">0đ</div>
+                                        <div class="product-card-price" th:text="${@money.format(product.price)}">0 đ</div>
                                         <div class="product-card-meta">
                                             <span class="product-card-rating" th:if="${product.rating > 0}">
-                                                <i class="fas fa-star"></i> <span th:text="${#numbers.formatDecimal(product.rating, 1, 1)}">0.0</span>
+                                                <span class="product-card-stars">
+                                                    <i class="fas fa-star" th:classappend="${product.rating >= 1} ? ' filled'"></i>
+                                                    <i class="fas fa-star" th:classappend="${product.rating >= 2} ? ' filled'"></i>
+                                                    <i class="fas fa-star" th:classappend="${product.rating >= 3} ? ' filled'"></i>
+                                                    <i class="fas fa-star" th:classappend="${product.rating >= 4} ? ' filled'"></i>
+                                                    <i class="fas fa-star" th:classappend="${product.rating >= 5} ? ' filled'"></i>
+                                                </span>
+                                                <span class="product-card-rating-value" th:text="${#numbers.formatDecimal(product.rating, 1, 1)}">0.0</span>
                                             </span>
-                                            <span class="product-card-shop" th:text="${product.shopName}">Shop</span>
+                                            <span class="product-card-sold"
+                                                  th:classappend="${product.rating <= 0} ? ' no-sep'"
+                                                  th:if="${product.sold > 0}">
+                                                Đã bán <th:block th:text="${@money.formatSold(product.sold)}">0</th:block>
+                                            </span>
+                                        </div>
+                                        <div class="product-card-shop">
+                                            <i class="fas fa-shield-alt"></i> Cung cấp bởi: <span th:text="${product.shopName}">Shop</span>
                                         </div>
                                     </div>
                                 </a>
@@ -339,12 +354,26 @@
                                     </div>
                                     <div class="product-card-body">
                                         <h3 class="product-card-name" th:text="${product.name}">Tên sản phẩm</h3>
-                                        <div class="product-card-price" th:text="${@money.format(product.price)}">0đ</div>
+                                        <div class="product-card-price" th:text="${@money.format(product.price)}">0 đ</div>
                                         <div class="product-card-meta">
                                             <span class="product-card-rating" th:if="${product.rating > 0}">
-                                                <i class="fas fa-star"></i> <span th:text="${#numbers.formatDecimal(product.rating, 1, 1)}">0.0</span>
+                                                <span class="product-card-stars">
+                                                    <i class="fas fa-star" th:classappend="${product.rating >= 1} ? ' filled'"></i>
+                                                    <i class="fas fa-star" th:classappend="${product.rating >= 2} ? ' filled'"></i>
+                                                    <i class="fas fa-star" th:classappend="${product.rating >= 3} ? ' filled'"></i>
+                                                    <i class="fas fa-star" th:classappend="${product.rating >= 4} ? ' filled'"></i>
+                                                    <i class="fas fa-star" th:classappend="${product.rating >= 5} ? ' filled'"></i>
+                                                </span>
+                                                <span class="product-card-rating-value" th:text="${#numbers.formatDecimal(product.rating, 1, 1)}">0.0</span>
                                             </span>
-                                            <span class="product-card-shop" th:text="${product.shopName}">Shop</span>
+                                            <span class="product-card-sold"
+                                                  th:classappend="${product.rating <= 0} ? ' no-sep'"
+                                                  th:if="${product.sold > 0}">
+                                                Đã bán <th:block th:text="${@money.formatSold(product.sold)}">0</th:block>
+                                            </span>
+                                        </div>
+                                        <div class="product-card-shop">
+                                            <i class="fas fa-shield-alt"></i> Cung cấp bởi: <span th:text="${product.shopName}">Shop</span>
                                         </div>
                                     </div>
                                 </a>
@@ -400,10 +429,10 @@
         <!-- 9. Vouchers -->
         <section class="home-voucher-section reveal">
             <div class="container">
-                <div class="section-label">
-                    <h2><i class="fas fa-ticket-alt" style="color:#ee4d2d;margin-right:8px"></i>Voucher giảm giá</h2>
-                    <div class="sl-line"></div>
-                    <a th:href="@{/vouchers}" class="sl-link">Xem tất cả <i class="fas fa-arrow-right"></i></a>
+                <div class="voucher-header">
+                    <h2><i class="fas fa-ticket-alt"></i>Voucher giảm giá</h2>
+                    <p>Săn mã giảm giá để tiết kiệm hơn khi mua sắm</p>
+                    <div class="voucher-header-line"></div>
                 </div>
 
                 <!-- Có voucher khả dụng -->

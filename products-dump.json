@@ -1,0 +1,37 @@
+{
+  "total": 1,
+  "products": [
+    {
+      "_id": "6a86e99da672993ccc5261fa",
+      "shopId": "6a86ac30add146680e49cf64",
+      "shopName": "Test Vendor Shop",
+      "name": "Laptop Lenovo Legion Y7000X 2026 | Core 7 245HX, 16GB, 512GB, RTX 5060 8GB, 15.3 icnh WQXGA OLED 165Hz, Win 11",
+      "brand": "Sam sung",
+      "warrantyMonths": 12,
+      "manufacturer": "sam sung",
+      "manufacturerAddress": "hanoi",
+      "price": "24000000",
+      "stock": 8,
+      "categoryId": "6a8fe365f3767c30080d2ceb",
+      "categoryName": "Laptop",
+      "imageUrls": [
+        "/uploads/2274ba30aba246ff993d561147a400bc.jpg"
+      ],
+      "thumbnailUrl": "/uploads/2274ba30aba246ff993d561147a400bc.jpg",
+      "specifications": [
+        {
+          "name": "Card",
+          "value": "RTX 5060 8GB",
+          "unit": ""
+        }
+      ],
+      "variants": [],
+      "status": "ACTIVE",
+      "rating": 4,
+      "reviewCount": 1,
+      "sold": 553,
+      "createdAt": "2026-08-20T11:48:45.285Z",
+      "updatedAt": "2026-09-06T16:04:19.414Z"
+    }
+  ]
+}

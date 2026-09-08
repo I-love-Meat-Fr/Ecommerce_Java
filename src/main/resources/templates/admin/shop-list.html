@@ -10,32 +10,68 @@
     <div class="sd-page-head">
         <div class="sd-page-head-title">
             <h1>Quản lý cửa hàng</h1>
-            <p>Danh sách shop cho phép Admin quản lý trạng thái và duyệt.</p>
+            <p>Phê duyệt và quản lý cửa hàng trên nền tảng.</p>
         </div>
-        <div class="sd-page-head-actions">
-            <span class="sd-badge sd-badge-slate">
-                <i class="fas fa-store"></i>
-                <span th:text="${totalItems}">0</span> shop
-            </span>
+        <div class="sd-page-head-meta">
+            <span class="sd-page-head-meta-label">Tổng cửa hàng</span>
+            <span class="sd-page-head-meta-value" th:text="${totalItems}">0</span>
         </div>
     </div>
 
-    <div th:if="${q != null and !#strings.isEmpty(q)}" class="sd-card" style="margin-bottom:16px;">
-        <div class="sd-card-body" style="display:flex;align-items:center;gap:10px;">
+    <div class="sd-card sd-toolbar" style="margin-bottom:20px;">
+        <div class="sd-card-body">
+            <form th:action="@{/admin/shops}" method="get" class="sd-toolbar-form">
+                <input type="hidden" name="size" th:value="${size}" />
+                <input type="text" name="q" th:value="${q}"
+                       placeholder="Tìm theo tên shop..."
+                       class="sd-input sd-toolbar-search"
+                       style="padding:8px 10px;border:1px solid var(--border,#e2e8f0);border-radius:6px;" />
+                <select name="status" class="sd-select sd-toolbar-select"
+                        style="padding:8px 10px;border:1px solid var(--border,#e2e8f0);border-radius:6px;">
+                    <option value="">Tất cả trạng thái</option>
+                    <option th:each="s : ${statuses}"
+                            th:value="${s.name()}"
+                            th:text="${s.name() == 'PENDING' ? 'Chờ duyệt' : (s.name() == 'APPROVED' ? 'Đã duyệt' : (s.name() == 'REJECTED' ? 'Từ chối' : s.name()))}"
+                            th:selected="${status == s.name()}">PENDING</option>
+                </select>
+                <button type="submit" class="sd-btn sd-btn-primary sd-btn-sm sd-toolbar-btn">
+                    <i class="fas fa-search"></i> Lọc
+                </button>
+                <a th:href="@{/admin/shops(page=0, size=${size})}"
+                   class="sd-btn sd-btn-secondary sd-btn-sm sd-toolbar-btn">
+                    <i class="fas fa-rotate-left"></i> Đặt lại
+                </a>
+            </form>
+        </div>
+    </div>
+
+    <div class="sd-card" th:if="${(q != null and !#strings.isEmpty(q)) or (status != null and !#strings.isEmpty(status))}"
+         style="margin-bottom:16px;">
+        <div class="sd-card-body" style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
             <i class="fas fa-filter"></i>
-            <span>Lọc theo:</span>
-            <span class="sd-badge sd-badge-slate" th:text="${q}">keyword</span>
-            <a th:href="@{/admin/shops(page=0, size=${size})}" class="sd-btn sd-btn-secondary sd-btn-sm" style="margin-left:auto;">
+            <span>Bộ lọc:</span>
+            <span th:if="${q != null and !#strings.isEmpty(q)}" class="sd-badge sd-badge-slate">
+                Từ khóa: <span th:text="${q}">keyword</span>
+            </span>
+            <span th:if="${status != null and !#strings.isEmpty(status)}" class="sd-badge sd-badge-blue">
+                Trạng thái:
+                <th:block th:if="${status == 'PENDING'}">Chờ duyệt</th:block>
+                <th:block th:if="${status == 'APPROVED'}">Đã duyệt</th:block>
+                <th:block th:if="${status == 'REJECTED'}">Từ chối</th:block>
+            </span>
+            <a th:href="@{/admin/shops(page=0, size=${size})}"
+               class="sd-btn sd-btn-secondary sd-btn-sm" style="margin-left:auto;">
                 <i class="fas fa-times"></i> Bỏ lọc
             </a>
         </div>
     </div>
 
-    <div class="sd-card">
+    <div class="dash-card">
         <div class="sd-card-body sd-card-body-flush">
             <table class="sd-table">
                 <thead>
                     <tr>
+                        <th class="sd-col-stt">STT</th>
                         <th>Tên shop</th>
                         <th>Chủ shop</th>
                         <th>Trạng thái</th>
@@ -44,17 +80,26 @@
                 </thead>
                 <tbody>
                     <tr th:if="${#lists.isEmpty(shops)}">
-                        <td colspan="4">
+                        <td colspan="5">
                             <div class="sd-empty">
                                 <i class="fas fa-store-slash"></i>
-                                <h3 th:if="${q != null and !#strings.isEmpty(q)}">Không tìm thấy shop</h3>
-                                <h3 th:unless="${q != null and !#strings.isEmpty(q)}">Chưa có shop chờ duyệt</h3>
-                                <p th:if="${q != null and !#strings.isEmpty(q)}">Không có shop nào khớp với từ khóa.</p>
-                                <p th:unless="${q != null and !#strings.isEmpty(q)}">Hiện chưa có shop nào cần duyệt.</p>
+                                <h3 th:if="${(q != null and !#strings.isEmpty(q)) or (status != null and !#strings.isEmpty(status))}">
+                                    Không tìm thấy shop
+                                </h3>
+                                <h3 th:unless="${(q != null and !#strings.isEmpty(q)) or (status != null and !#strings.isEmpty(status))}">
+                                    Chưa có shop nào
+                                </h3>
+                                <p th:if="${(q != null and !#strings.isEmpty(q)) or (status != null and !#strings.isEmpty(status))}">
+                                    Không có shop nào khớp với bộ lọc hiện tại.
+                                </p>
+                                <p th:unless="${(q != null and !#strings.isEmpty(q)) or (status != null and !#strings.isEmpty(status))}">
+                                    Hiện chưa có shop nào trong hệ thống.
+                                </p>
                             </div>
                         </td>
                     </tr>
-                    <tr th:each="shop : ${shops}">
+                    <tr th:each="shop, iter : ${shops}">
+                        <td class="sd-col-stt" th:text="${page * size + iter.count}">1</td>
                         <td>
                             <div class="sd-table-title" th:text="${shop.shopName}">Shop name</div>
                             <div class="sd-table-sub sd-mono" th:text="${shop.id}">id</div>
@@ -78,12 +123,12 @@
                             </div>
                         </td>
                         <td style="text-align:right; white-space:nowrap;">
-                            <a th:href="@{/admin/shops/{id}(id=${shop.id}, page=${page}, size=${size}, q=${q})}"
+                            <a th:href="@{/admin/shops/{id}(id=${shop.id}, page=${page}, size=${size}, q=${q}, status=${status})}"
                                class="sd-btn sd-btn-secondary sd-btn-sm">
                                 <i class="fas fa-eye"></i> Xem
                             </a>
                             <th:block th:if="${shop.status.name() != 'APPROVED'}">
-                                <form th:action="@{/admin/shops/{id}/approve(id=${shop.id}, page=${page}, size=${size}, q=${q})}"
+                                <form th:action="@{/admin/shops/{id}/approve(id=${shop.id}, page=${page}, size=${size}, q=${q}, status=${status})}"
                                       method="post" style="display:inline;">
                                     <button type="submit" class="sd-btn sd-btn-primary sd-btn-sm">
                                         <i class="fas fa-check"></i> Duyệt
@@ -91,7 +136,7 @@
                                 </form>
                             </th:block>
                             <th:block th:if="${shop.status.name() == 'APPROVED'}">
-                                <form th:action="@{/admin/shops/{id}/reject(id=${shop.id}, page=${page}, size=${size}, q=${q})}"
+                                <form th:action="@{/admin/shops/{id}/reject(id=${shop.id}, page=${page}, size=${size}, q=${q}, status=${status})}"
                                       method="post" style="display:inline;"
                                       onsubmit="return confirm('Bạn có chắc muốn từ chối shop này?');">
                                     <button type="submit" class="sd-btn sd-btn-danger sd-btn-sm">
@@ -109,7 +154,7 @@
              style="display:flex;justify-content:center;border-top:1px solid var(--border,#e2e8f0);">
             <nav class="sd-pagination" aria-label="Phân trang">
                 <a th:if="${hasPrev}"
-                   th:href="@{/admin/shops(page=${page - 1}, size=${size}, q=${q})}"
+                   th:href="@{/admin/shops(page=${page - 1}, size=${size}, q=${q}, status=${status})}"
                    class="sd-page-link">
                     <i class="fas fa-chevron-left"></i> Trước
                 </a>
@@ -122,7 +167,7 @@
                 </th:block>
 
                 <a th:if="${hasNext}"
-                   th:href="@{/admin/shops(page=${page + 1}, size=${size}, q=${q})}"
+                   th:href="@{/admin/shops(page=${page + 1}, size=${size}, q=${q}, status=${status})}"
                    class="sd-page-link">
                     Sau <i class="fas fa-chevron-right"></i>
                 </a>
@@ -134,26 +179,6 @@
     </div>
 </main>
 
-<th:block th:fragment="page-scripts">
-<script>
-(function() {
-    var searchInput = document.getElementById('adminGlobalSearch');
-    if (!searchInput) return;
-    var isShopPage = (window.location.pathname === '/admin/shops');
-    if (!isShopPage) return;
-    var url = new URL(window.location.href);
-    var currentQ = url.searchParams.get('q') || '';
-    searchInput.placeholder = 'Tim shop theo ten...';
-    searchInput.value = currentQ;
-    searchInput.addEventListener('keydown', function(e) {
-        if (e.key === 'Enter') {
-            e.preventDefault();
-            var q = encodeURIComponent(searchInput.value.trim());
-            window.location.href = q ? '/admin/shops?q=' + q : '/admin/shops';
-        }
-    });
-})();
-</script>
-</th:block>
+<th:block th:fragment="page-scripts"></th:block>
 </body>
 </html>

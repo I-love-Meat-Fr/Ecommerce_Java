@@ -22,10 +22,23 @@ public class AdminShopServiceImpl implements AdminShopService {
 
     @Override
     public Page<Shop> listShops(Pageable pageable, String q) {
-        if (!StringUtils.hasText(q)) {
-            return shopRepository.findAll(pageable);
+        return listShops(pageable, q, null);
+    }
+
+    @Override
+    public Page<Shop> listShops(Pageable pageable, String q, ShopStatus status) {
+        boolean hasQ = StringUtils.hasText(q);
+        // Phase 10: Status filter (null/ALL means no status filter applied)
+        if (status == null) {
+            if (!hasQ) {
+                return shopRepository.findAll(pageable);
+            }
+            return shopRepository.findByShopNameContainingIgnoreCase(q.trim(), pageable);
         }
-        return shopRepository.findByShopNameContainingIgnoreCase(q.trim(), pageable);
+        if (!hasQ) {
+            return shopRepository.findByStatus(status, pageable);
+        }
+        return shopRepository.findByStatusAndShopNameContainingIgnoreCase(status, q.trim(), pageable);
     }
 
     @Override

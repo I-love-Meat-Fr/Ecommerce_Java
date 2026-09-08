@@ -1,0 +1,112 @@
+/* ============================================================================
+ * UI PHASE 1 — ACCESSIBILITY FOUNDATION
+ * ----------------------------------------------------------------------------
+ * Chuẩn hóa visual foundation cho:
+ *   - focus-visible (keyboard navigation)
+ *   - sr-only (screen reader only)
+ *   - prefers-reduced-motion
+ *   - contrast / disabled state
+ *   - prefers-color-scheme (light hook — sẵn sàng cho Phase 5 dark mode)
+ *
+ * Phase 1 chỉ EXPOSE foundation. KHÔNG sửa business behavior.
+ * KHÔNG phá JS / Thymeleaf / form contract.
+ * ============================================================================ */
+
+/* ---------- Keyboard focus ring (universal) ---------- */
+:focus-visible {
+  outline: none;
+  box-shadow: var(--ds-shadow-focus);
+  border-radius: var(--ds-radius-sm);
+}
+
+/* Skip-links: hide visually but keep accessible */
+.ds-skip-link {
+  position: absolute;
+  top: -40px;
+  left: var(--ds-space-2);
+  padding: var(--ds-space-2) var(--ds-space-3);
+  background-color: var(--ds-color-primary);
+  color: var(--ds-color-primary-on);
+  border-radius: var(--ds-radius-md);
+  text-decoration: none;
+  font-weight: var(--ds-font-weight-medium);
+  z-index: var(--ds-z-toast);
+  transition: top var(--ds-transition-fast);
+}
+.ds-skip-link:focus {
+  top: var(--ds-space-2);
+  outline: none;
+  box-shadow: var(--ds-shadow-focus);
+  color: var(--ds-color-primary-on);
+  text-decoration: none;
+}
+
+/* ---------- Visually hidden (replaces .ds-visually-hidden from base.css) ---------- */
+.ds-sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* ---------- Disabled state (semantic) ---------- */
+.ds-is-disabled,
+[aria-disabled="true"] {
+  cursor: not-allowed;
+  opacity: 0.6;
+  pointer-events: none;
+}
+
+/* ---------- Required form field indicator ---------- */
+.ds-required-mark {
+  color: var(--ds-color-danger);
+  margin-left: var(--ds-space-1);
+}
+
+/* ---------- Error state ---------- */
+.ds-has-error .ds-form-control,
+.ds-form-control[aria-invalid="true"] {
+  border-color: var(--ds-color-danger);
+}
+.ds-form-control[aria-invalid="true"]:focus {
+  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.25);
+}
+
+/* ---------- Reduced motion ---------- */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* ---------- Forced colors (Windows High Contrast) ---------- */
+@media (forced-colors: active) {
+  :focus-visible {
+    outline: 2px solid CanvasText;
+    outline-offset: 2px;
+  }
+  .ds-btn,
+  .ds-card,
+  .ds-alert,
+  .ds-badge {
+    border: 1px solid CanvasText;
+  }
+}
+
+/* ---------- High contrast support hook ---------- */
+@media (prefers-contrast: more) {
+  :root {
+    --ds-color-border: #94a3b8;
+    --ds-color-border-strong: #475569;
+  }
+}
