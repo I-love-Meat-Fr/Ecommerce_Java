@@ -638,10 +638,60 @@
         function buyNow() {
             const form = document.getElementById('add-to-cart-form');
             if (!form) return;
-            const quantity = document.getElementById('quantity-input').value;
-            hiddenQuantity.value = quantity;
-            form.action = '/checkout';
-            form.submit();
+            const quantity = parseInt(document.getElementById('quantity-input').value) || 1;
+            const productId = form.querySelector('input[name="productId"]').value;
+            const buyBtn = form.querySelector('.pdp-btn-buy-now');
+            const originalText = buyBtn ? buyBtn.innerHTML : '';
+
+            if (buyBtn) {
+                buyBtn.disabled = true;
+                buyBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Đang xử lý...';
+            }
+
+            // First add the item to the cart via the existing API,
+            // then navigate to the existing /checkout page so the user
+            // can complete the purchase using the same flow as the cart page.
+            const formData = new FormData();
+            formData.append('productId', productId);
+            formData.append('quantity', String(quantity));
+
+            fetch('/api/cart/add', {
+                method: 'POST',
+                body: formData,
+                headers: { 'X-Requested-With': 'XMLHttpRequest' }
+            })
+            .then(function(response) {
+                if (response.status === 401) {
+                    // Not authenticated: send the user to the login page
+                    // and remember where they wanted to go.
+                    window.location.href = '/auth/login';
+                    return null;
+                }
+                return response.json();
+            })
+            .then(function(data) {
+                if (!data) return;
+                if (data.success) {
+                    if (typeof updateCartBadge === 'function' && typeof data.itemCount !== 'undefined') {
+                        updateCartBadge(data.itemCount);
+                    }
+                    window.location.href = '/checkout';
+                } else {
+                    showToast(data.message || 'Có lỗi xảy ra');
+                    if (buyBtn) {
+                        buyBtn.disabled = false;
+                        buyBtn.innerHTML = originalText;
+                    }
+                }
+            })
+            .catch(function(error) {
+                console.error('Error:', error);
+                showToast('Có lỗi xảy ra');
+                if (buyBtn) {
+                    buyBtn.disabled = false;
+                    buyBtn.innerHTML = originalText;
+                }
+            });
         }
 
         // Toast notification

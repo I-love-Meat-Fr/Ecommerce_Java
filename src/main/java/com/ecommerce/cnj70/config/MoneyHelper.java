@@ -94,4 +94,29 @@ public class MoneyHelper {
                 .divide(BigDecimal.valueOf(100), 0, RoundingMode.HALF_UP);
         return VND.format(original) + " ₫";
     }
+
+    /**
+     * Convenience overload for Thymeleaf: format a BigDecimal directly.
+     */
+    public String format(BigDecimal value) {
+        return format((Object) value);
+    }
+
+    /**
+     * Format cartTotal + shipping fee (15,000 VND) as the order total.
+     * Used by the checkout page where SpEL cannot reference java.math.BigDecimal
+     * directly inside Thymeleaf expressions.
+     */
+    public String formatTotalWithShipping(Object cartTotal) {
+        BigDecimal cart;
+        if (cartTotal instanceof BigDecimal bd) {
+            cart = bd;
+        } else if (cartTotal instanceof Number n) {
+            cart = BigDecimal.valueOf(n.doubleValue());
+        } else {
+            cart = BigDecimal.ZERO;
+        }
+        BigDecimal shipping = BigDecimal.valueOf(15000);
+        return format(cart.add(shipping));
+    }
 }

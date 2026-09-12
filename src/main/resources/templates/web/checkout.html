@@ -242,7 +242,7 @@
 
                         <div class="summary-total-row">
                             <span class="summary-total-label">Tổng cộng</span>
-                            <span class="summary-total-value" th:text="${@money.format(cartTotal.add(java.math.BigDecimal.valueOf(15000)))}">0đ</span>
+                            <span class="summary-total-value" th:text="${@money.formatTotalWithShipping(cartTotal)}">0đ</span>
                         </div>
                     </div>
 
