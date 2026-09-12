@@ -97,6 +97,30 @@
         </div>
     </div>
 
+    <!-- Active Filters -->
+    <div class="pl-active-filters" th:if="${search != null or selectedCategory != null}">
+        <div class="container">
+            <div class="pl-active-inner">
+                <span class="pl-active-label"><i class="fas fa-filter"></i> Bộ lọc:</span>
+                <div class="pl-active-tags">
+                    <span class="pl-active-tag" th:if="${search != null}">
+                        "<span th:text="${search}">Từ khóa</span>"
+                        <a th:href="@{/products(category=${selectedCategory}, sort=${sort})}" class="pl-active-remove">
+                            <i class="fas fa-times"></i>
+                        </a>
+                    </span>
+                    <span class="pl-active-tag" th:if="${selectedCategory != null}">
+                        <span th:text="${selectedCategoryName}">Danh mục</span>
+                        <a th:href="@{/products(search=${search}, sort=${sort})}" class="pl-active-remove">
+                            <i class="fas fa-times"></i>
+                        </a>
+                    </span>
+                </div>
+                <a th:href="@{/products}" class="pl-clear-all">Xóa tất cả</a>
+            </div>
+        </div>
+    </div>
+
     <!-- Product Grid -->
     <section class="pl-products-section">
         <div class="container">
