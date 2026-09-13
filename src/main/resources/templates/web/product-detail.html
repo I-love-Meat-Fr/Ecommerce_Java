@@ -31,10 +31,8 @@
         </div>
     </div>
 
-    <main class="main-content">
-        <!-- Breadcrumb -->
-
     <main th:fragment="main-content" class="main-content">
+        <!-- Breadcrumb -->
         <div class="pdp-breadcrumb-bar">
             <div class="container">
                 <nav class="pdp-breadcrumb">
@@ -494,188 +492,116 @@
                 </div>
             </div>
         </section>
-    </main>
-    
-    <div th:replace="fragments/web-footer"></div>
 
-    <!-- Toast Notification -->
+    <!-- Toast Notification (kept inside main-content fragment so layout replacement includes it) -->
     <div class="pdp-toast" id="pdp-toast">
         <i class="fas fa-check-circle"></i>
         <span id="toast-message">Đã thêm vào giỏ hàng!</span>
     </div>
-
-    <script th:src="@{/js/main.js}"></script>
-    <script th:src="@{/js/home.js}" defer></script>
-    <!-- #region DEBUG: Hidden debug log capture textarea -->
-    <textarea id="dbg-log-capture" style="position:fixed;bottom:0;left:0;width:1px;height:1px;overflow:hidden;z-index:-1;" readonly></textarea>
-    <!-- #endregion -->
     </main>
 
-    <script>
-        // Lightweight debug logger - writes to hidden textarea (capturable from DevTools)
-        var _dbg = [];
-        function _log(msg, data) {
-            var entry = JSON.stringify({ts: Date.now(), msg: msg, data: data});
-            _dbg.push(entry);
-            var ta = document.getElementById('dbg-log-capture');
-            if (ta) ta.value = _dbg.join('\n');
-            console.log('[PDP-DEBUG] ' + msg, data);
-        }
+<script th:src="@{/js/main.js}"></script>
+    <script th:src="@{/js/home.js}" defer></script>
 
-        // Helper: send log to backend endpoint via sendBeacon (no CORS issues)
-        function _send(payload) {
-            try {
-                var url = '/debug/log';
-                var blob = new Blob([JSON.stringify(payload)], {type: 'application/json'});
-                if (navigator.sendBeacon) {
-                    navigator.sendBeacon(url, blob);
-                } else {
-                    fetch(url, {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(payload)});
-                }
-            } catch(e) { console.error('[PDP-DEBUG] send failed', e); }
-        }
+    <!-- The Product Detail JavaScript is hoisted into the page-scripts fragment below. -->
 
-        // #region DEBUG: Hypothesis A - script execution starts
-        try {
-            _log('PDP_script_start', {url: window.location.href, ua: navigator.userAgent.substring(0, 80)});
-            _send({sessionId:'04f262', runId:'initial', hypothesisId:'A', location:'product-detail.html:start', message:'script executed', data:{url:window.location.href}, timestamp:Date.now()});
-        } catch(e) { _log('PDP_script_start_ERR', {err: e.message}); }
-        // #endregion
+<th:block th:fragment="page-scripts">
+    <script th:inline="none">
+        /* All Product Detail JavaScript consolidated here so it is included
+         * by the layout's page-scripts slot. The previous inline script at
+         * the bottom of the file was outside any th:fragment, so its
+         * handlers (buyNow, increaseQty, decreaseQty, add-to-cart submit,
+         * tab switching, review validation) were NOT being executed.
+         *
+         * Debug-only #region blocks (Hypothesis A/B/C/D), _log() / _send()
+         * sendBeacon calls, and the hidden debug textarea were removed
+         * because they are not needed for production behavior.
+         */
 
-        // Populate thumbnails from Thymeleaf data
-        (function() {
-            const thumbsContainer = document.getElementById('pdp-thumbs');
-            if (!thumbsContainer) return;
-
-            // Get image URLs from Thymeleaf (rendered server-side)
-            const imageUrls = /*[[${product.imageUrls}]]*/ [];
-            const thumbnailUrl = /*[[${product.thumbnailUrl}]]*/ '';
-
-            let allImages = [];
-
-            // Add thumbnail as first image
-            if (thumbnailUrl) {
-                allImages.push(thumbnailUrl);
-            }
-
-            // Add other images (up to 6 total)
-            if (imageUrls && Array.isArray(imageUrls)) {
-                imageUrls.forEach(function(img) {
-                    if (allImages.length < 6 && img !== thumbnailUrl) {
-                        allImages.push(img);
-                    }
-                });
-            }
-
-            const mainImage = document.getElementById('main-image');
-            const mainSrc = mainImage ? mainImage.src : '';
-
-            // Build thumbnail buttons
-            allImages.forEach(function(src, index) {
-                const btn = document.createElement('button');
-                btn.className = 'pdp-thumb-v' + (index === 0 ? ' active' : '');
-                btn.onclick = function() { changeImage(this, src); };
-
-                const img = document.createElement('img');
-                img.src = src;
-                img.alt = 'Thumbnail';
-                btn.appendChild(img);
-
-                thumbsContainer.appendChild(btn);
-            });
-        })();
-
-        // Quantity controls
+        // -------- Quantity controls --------
         const quantityInput = document.getElementById('quantity-input');
         const hiddenQuantity = document.getElementById('hidden-quantity');
-        const maxStock = parseInt(quantityInput ? quantityInput.max : 0) || 0;
+        // Read max from the rendered input's max attribute (set via th:max="${product.stock}")
+        // If not set (e.g. stock==0) fall back to 0 so increase/decrease disable cleanly.
+        const maxStock = parseInt((quantityInput && quantityInput.getAttribute('max')) || '0', 10) || 0;
 
-        function updateQuantity(value) {
+        function updateQuantity(delta) {
             if (!quantityInput) return;
-            let newQty = parseInt(quantityInput.value) + value;
-            if (newQty < 1) newQty = 1;
-            if (newQty > maxStock) newQty = maxStock;
-            quantityInput.value = newQty;
-            hiddenQuantity.value = newQty;
+            let current = parseInt(quantityInput.value, 10);
+            if (isNaN(current)) current = 1;
+            let next = current + delta;
+            if (next < 1) next = 1;
+            if (next > maxStock) next = maxStock;
+            quantityInput.value = String(next);
+            if (hiddenQuantity) hiddenQuantity.value = String(next);
         }
-
         function decreaseQty() { updateQuantity(-1); }
         function increaseQty() { updateQuantity(1); }
 
         if (quantityInput) {
+            quantityInput.addEventListener('input', function() {
+                let val = parseInt(this.value, 10);
+                if (isNaN(val) || val < 1) val = 1;
+                if (maxStock > 0 && val > maxStock) val = maxStock;
+                this.value = String(val);
+                if (hiddenQuantity) hiddenQuantity.value = String(val);
+            });
             quantityInput.addEventListener('change', function() {
-                let val = parseInt(this.value);
-                if (val < 1) val = 1;
-                if (val > maxStock) val = maxStock;
-                this.value = val;
-                hiddenQuantity.value = val;
+                let val = parseInt(this.value, 10);
+                if (isNaN(val) || val < 1) val = 1;
+                if (maxStock > 0 && val > maxStock) val = maxStock;
+                this.value = String(val);
+                if (hiddenQuantity) hiddenQuantity.value = String(val);
             });
         }
 
-        // Gallery image change
-        function changeImage(btn, src) {
-            const mainImage = document.getElementById('main-image');
-            const thumbs = document.querySelectorAll('.pdp-thumb-v');
-            thumbs.forEach(t => t.classList.remove('active'));
-            btn.classList.add('active');
-            mainImage.style.opacity = '0.5';
-            mainImage.src = src;
-            mainImage.onload = function() { mainImage.style.opacity = '1'; };
-        }
-
-        // Share product
-        function shareProduct() {
-            const url = window.location.href;
-            if (navigator.share) {
-                navigator.share({ title: document.title, url: url });
-            } else {
-                navigator.clipboard.writeText(url);
-                showToast('Đã sao chép link!');
-            }
-        }
-
-        // Buy now
-        function buyNow() {
-            const form = document.getElementById('add-to-cart-form');
-            if (!form) return;
-            const quantity = document.getElementById('quantity-input').value;
-            hiddenQuantity.value = quantity;
-            form.action = '/checkout';
-            form.submit();
-        }
-
-        // Toast notification
+        // -------- Toast --------
         function showToast(message) {
             const toast = document.getElementById('pdp-toast');
+            if (!toast) return;
             const toastMessage = document.getElementById('toast-message');
-            toastMessage.textContent = message;
+            if (toastMessage) toastMessage.textContent = message;
             toast.classList.add('show');
             setTimeout(() => { toast.classList.remove('show'); }, 3000);
         }
 
-        // Add to cart - AJAX API
+        // -------- Add to Cart (AJAX) --------
         const cartForm = document.getElementById('add-to-cart-form');
         if (cartForm) {
             cartForm.addEventListener('submit', function(e) {
                 e.preventDefault();
                 const submitBtn = cartForm.querySelector('button[type="submit"]');
-                const originalText = submitBtn.innerHTML;
-                submitBtn.disabled = true;
-                submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Đang thêm...';
-                
-                const quantity = document.getElementById('quantity-input').value;
-                document.getElementById('hidden-quantity').value = quantity;
+                const originalText = submitBtn ? submitBtn.innerHTML : '';
+                if (submitBtn) {
+                    submitBtn.disabled = true;
+                    submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Đang thêm...';
+                }
+
+                // Make sure hidden-quantity reflects the current #quantity-input value
+                // so the backend receives the user-selected quantity, not the default.
+                const qtyField = document.getElementById('quantity-input');
+                const hiddenQtyField = document.getElementById('hidden-quantity');
+                if (qtyField && hiddenQtyField) {
+                    hiddenQtyField.value = qtyField.value;
+                }
+
                 const formData = new FormData(cartForm);
-                
                 fetch('/api/cart/add', {
                     method: 'POST',
                     body: formData,
                     headers: { 'X-Requested-With': 'XMLHttpRequest' }
                 })
-                .then(response => response.json())
-                .then(data => {
+                .then(function(response) {
+                    if (response.status === 401) {
+                        window.location.href = '/auth/login';
+                        return null;
+                    }
+                    return response.json();
+                })
+                .then(function(data) {
+                    if (!data) return;
                     if (data.success) {
-                        showToast(data.message || 'Đã thêm vào giỏ hàng!');
+                        showToast(data.message || 'Đã thêm sản phẩm vào giỏ hàng');
                         if (typeof updateCartBadge === 'function' && typeof data.itemCount !== 'undefined') {
                             updateCartBadge(data.itemCount);
                         }
@@ -683,369 +609,151 @@
                         showToast(data.message || 'Có lỗi xảy ra');
                     }
                 })
-                .catch(error => { 
-                    console.error('Error:', error); 
+                .catch(function(error) {
+                    console.error('Add to cart error:', error);
                     showToast('Có lỗi xảy ra');
                 })
-                .finally(() => {
-                    submitBtn.disabled = false;
-                    submitBtn.innerHTML = originalText;
+                .finally(function() {
+                    if (submitBtn) {
+                        submitBtn.disabled = false;
+                        submitBtn.innerHTML = originalText;
+                    }
                 });
             });
         }
 
-        // Sticky tabs header
-        const tabsNav = document.getElementById('pdp-tabs-nav');
-        const stickyHeader = document.getElementById('pdp-sticky-header');
-        const tabsSection = document.querySelector('.pdp-tabs-section');
+        // -------- Buy Now (uses Add-to-Cart API then redirects to /checkout) --------
+        function buyNow() {
+            const form = document.getElementById('add-to-cart-form');
+            if (!form) return;
 
-        // #region DEBUG: Hypothesis B - sticky header overlap check
-        let lastScrollY = 0;
-        // #endregion
+            const qtyField = document.getElementById('quantity-input');
+            const quantity = parseInt(qtyField ? qtyField.value : '1', 10) || 1;
+            const productId = (form.querySelector('input[name="productId"]') || {}).value;
+            const buyBtn = form.querySelector('.pdp-btn-buy-now');
+            const originalText = buyBtn ? buyBtn.innerHTML : '';
 
-        function handleScroll() {
-            if (!tabsSection) return;
-            const rect = tabsSection.getBoundingClientRect();
-            const inView = rect.top <= 120;
+            if (buyBtn) {
+                buyBtn.disabled = true;
+                buyBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Đang xử lý...';
+            }
 
-            if (tabsNav) {
-                if (rect.top <= 70 && rect.bottom > 200) {
-                    tabsNav.classList.add('sticky');
+            const formData = new FormData();
+            formData.append('productId', productId);
+            formData.append('quantity', String(quantity));
+
+            fetch('/api/cart/add', {
+                method: 'POST',
+                body: formData,
+                headers: { 'X-Requested-With': 'XMLHttpRequest' }
+            })
+            .then(function(response) {
+                if (response.status === 401) {
+                    window.location.href = '/auth/login';
+                    return null;
+                }
+                return response.json();
+            })
+            .then(function(data) {
+                if (!data) return;
+                if (data.success) {
+                    if (typeof updateCartBadge === 'function' && typeof data.itemCount !== 'undefined') {
+                        updateCartBadge(data.itemCount);
+                    }
+                    window.location.href = '/checkout';
                 } else {
-                    tabsNav.classList.remove('sticky');
-                }
-            }
-
-            if (inView && stickyHeader) {
-                stickyHeader.style.display = '';
-            } else if (stickyHeader) {
-                stickyHeader.style.display = 'none';
-            }
-        }
-
-        window.addEventListener('scroll', handleScroll);
-        handleScroll();
-
-        // #region DEBUG: Hypothesis B/C/D - inspect tab nav state before binding
-        (function inspectTabsNav() {
-            try {
-                const tabsNav = document.getElementById('pdp-tabs-nav');
-                const allTabs = document.querySelectorAll('.pdp-tab');
-                const computedNav = tabsNav ? window.getComputedStyle(tabsNav) : null;
-                const logs = {
-                    tabsNavExists: !!tabsNav,
-                    tabsNavPointerEvents: computedNav ? computedNav.pointerEvents : 'N/A',
-                    tabsNavPosition: computedNav ? computedNav.position : 'N/A',
-                    tabsNavZIndex: computedNav ? computedNav.zIndex : 'N/A',
-                    tabsNavOverflow: computedNav ? computedNav.overflow : 'N/A',
-                    tabsNavIsSticky: computedNav ? (computedNav.position === 'sticky' || computedNav.position === '-webkit-sticky') : false,
-                    tabsNavRect: tabsNav ? JSON.stringify(tabsNav.getBoundingClientRect()) : 'N/A',
-                    totalTabCount: allTabs.length,
-                    tabDetails: Array.from(allTabs).map(function(t){
-                        var comp = window.getComputedStyle(t);
-                        return {
-                            text: t.textContent.trim().substring(0, 30),
-                            className: t.className,
-                            pointerEvents: comp.pointerEvents,
-                            visibility: comp.visibility,
-                            opacity: comp.opacity,
-                            display: comp.display,
-                            disabled: t.disabled
-                        };
-                    })
-                };
-                _log('tabs_nav_inspection', logs);
-                _send({sessionId:'04f262', runId:'initial', hypothesisId:'B', location:'product-detail.html:inspect', message:'Tabs nav inspection', data:logs, timestamp:Date.now()});
-
-                // Also check if there's any element covering the tabs nav
-                var elBelow = null;
-                if (tabsNav) {
-                    var rect = tabsNav.getBoundingClientRect();
-                    var centerX = rect.left + rect.width / 2;
-                    var centerY = rect.top + 10;
-                    elBelow = document.elementFromPoint(centerX, centerY);
-                }
-                var elAtCenter = {tag: elBelow ? elBelow.tagName : null, id: elBelow ? elBelow.id : null, className: elBelow ? elBelow.className.substring(0, 60) : null, isTabsNav: elBelow === tabsNav || (tabsNav && tabsNav.contains(elBelow))};
-                _log('element_at_tab_nav', elAtCenter);
-                _send({sessionId:'04f262', runId:'initial', hypothesisId:'D', location:'product-detail.html:elementAtPoint', message:'Element at tab nav coordinates', data:elAtCenter, timestamp:Date.now()});
-
-            } catch(e) {
-                _log('inspect_error', {err: e.message});
-            }
-        })();
-        // #endregion
-
-        // #region DEBUG: Global click listener - what element receives clicks on tab area?
-        document.addEventListener('click', function(e) {
-            var target = e.target;
-            if (!target) return;
-            var rect = target.getBoundingClientRect ? target.getBoundingClientRect() : null;
-            // Only log clicks near the tab nav area (within viewport range where tabs exist)
-            if (rect && rect.top >= 60 && rect.top <= 300) {
-                var entry = {
-                    targetTag: target.tagName,
-                    targetId: target.id,
-                    targetClass: target.className.substring(0, 80),
-                    targetRect: JSON.stringify({top: Math.round(rect.top), left: Math.round(rect.left), width: Math.round(rect.width), height: Math.round(rect.height)}),
-                    activeTabs: document.querySelectorAll('.pdp-tab.active').length,
-                    activePanels: document.querySelectorAll('.pdp-tab-panel.active').length,
-                    descPanelDisplay: document.querySelector('#tab-description') ? window.getComputedStyle(document.querySelector('#tab-description')).display : 'N/A',
-                    specsPanelDisplay: document.querySelector('#tab-specs') ? window.getComputedStyle(document.querySelector('#tab-specs')).display : 'N/A',
-                    reviewsPanelDisplay: document.querySelector('#tab-reviews') ? window.getComputedStyle(document.querySelector('#tab-reviews')).display : 'N/A'
-                };
-                _log('click_in_tab_area', entry);
-                _send({sessionId:'04f262', runId:'initial', hypothesisId:'C', location:'product-detail.html:click', message:'Click near tab area', data:entry, timestamp:Date.now()});
-            }
-        });
-        // #endregion
-
-        // Tabs switching
-        document.querySelectorAll('.pdp-tab').forEach(tab => {
-            tab.addEventListener('click', () => {
-                const tabId = tab.dataset.tab;
-                document.querySelectorAll('.pdp-tab').forEach(t => t.classList.remove('active'));
-                tab.classList.add('active');
-                document.querySelectorAll('.pdp-tab-panel').forEach(p => p.classList.remove('active'));
-                const panel = document.getElementById('tab-' + tabId);
-                if (panel) panel.classList.add('active');
-                // #region DEBUG: Hypothesis A - tab click fired
-                try {
-                    _log('tab_click', {tabId: tabId, panelFound: !!panel, activePanels: document.querySelectorAll('.pdp-tab-panel.active').length});
-                    _send({sessionId:'04f262', runId:'initial', hypothesisId:'A', location:'product-detail.html:tab_click', message:'Tab clicked', data:{tabId:tabId, panelFound:!!panel, activePanels:document.querySelectorAll('.pdp-tab-panel.active').length}, timestamp:Date.now()});
-                } catch(e) {}
-                // #endregion
-                // #region DEBUG: recheck submit button after panel activation
-                try {
-                    const panelCs = window.getComputedStyle(panel);
-                    const panelR = panel.getBoundingClientRect();
-
-                    // Check button INSIDE reviews panel specifically
-                    const reviewPanel = document.querySelector('#tab-reviews');
-                    const btnInReviews = reviewPanel ? reviewPanel.querySelector('.pdp-btn-submit-review') : null;
-                    const formInReviews = reviewPanel ? reviewPanel.querySelector('.pdp-review-form') : null;
-                    const footerInReviews = reviewPanel ? reviewPanel.querySelector('.pdp-review-form-footer') : null;
-                    const writeSection = reviewPanel ? reviewPanel.querySelector('.pdp-write-review-section') : null;
-                    const loginSection = reviewPanel ? reviewPanel.querySelector('.pdp-login-to-review') : null;
-                    const alreadyReviewed = reviewPanel ? reviewPanel.querySelector('.pdp-already-reviewed') : null;
-                    const authCheck = reviewPanel ? reviewPanel.querySelector('[sec\\:authorize]') : null;
-
-                    // Any .pdp-btn-submit-review in DOM
-                    const btnAny = document.querySelector('.pdp-btn-submit-review');
-                    const btnIsInReviews = btnAny && reviewPanel && reviewPanel.contains(btnAny);
-                    const btnIsInModal = btnAny && !btnIsInReviews;
-
-                    let btnFullStyles = null;
-                    let btnFullRect = null;
-                    if (btnInReviews) {
-                        const cs = window.getComputedStyle(btnInReviews);
-                        const r = btnInReviews.getBoundingClientRect();
-                        btnFullStyles = {
-                            display: cs.display,
-                            visibility: cs.visibility,
-                            opacity: cs.opacity,
-                            width: cs.width, height: cs.height,
-                            position: cs.position,
-                            overflow: cs.overflow,
-                            lineHeight: cs.lineHeight,
-                            fontSize: cs.fontSize,
-                            padding: cs.padding,
-                            margin: cs.margin,
-                            background: cs.background,
-                            color: cs.color,
-                            border: cs.border,
-                            borderRadius: cs.borderRadius,
-                            minWidth: cs.minWidth, minHeight: cs.minHeight,
-                            maxWidth: cs.maxWidth, maxHeight: cs.maxHeight,
-                            verticalAlign: cs.verticalAlign,
-                            textAlign: cs.textAlign,
-                            whiteSpace: cs.whiteSpace,
-                            boxSizing: cs.boxSizing,
-                            pointerEvents: cs.pointerEvents
-                        };
-                        btnFullRect = {w: Math.round(r.width), h: Math.round(r.height), top: Math.round(r.top), left: Math.round(r.left), bottom: Math.round(r.bottom), right: Math.round(r.right)};
+                    showToast(data.message || 'Có lỗi xảy ra');
+                    if (buyBtn) {
+                        buyBtn.disabled = false;
+                        buyBtn.innerHTML = originalText;
                     }
-
-                    // Parent chain styles for button
-                    let parentChain = [];
-                    let parent = btnInReviews ? btnInReviews.parentElement : null;
-                    for (let i = 0; i < 8 && parent; i++) {
-                        const pcs = window.getComputedStyle(parent);
-                        const pr = parent.getBoundingClientRect();
-                        parentChain.push({
-                            tag: parent.tagName,
-                            cls: parent.className.substring(0, 50),
-                            display: pcs.display,
-                            visibility: pcs.visibility,
-                            opacity: pcs.opacity,
-                            overflow: pcs.overflow,
-                            overflowX: pcs.overflowX,
-                            overflowY: pcs.overflowY,
-                            width: pcs.width, height: pcs.height,
-                            position: pcs.position,
-                            rect: {w: Math.round(pr.width), h: Math.round(pr.height), top: Math.round(pr.top), left: Math.round(pr.left)}
-                        });
-                        parent = parent.parentElement;
-                    }
-
-                    const report = {
-                        tabId: tabId,
-                        panelActive: panel.classList.contains('active'),
-                        panelDisplay: panelCs.display,
-                        panelRect: {w: Math.round(panelR.width), h: Math.round(panelR.height), top: Math.round(panelR.top)},
-                        // Sections in reviews panel
-                        writeSectionExists: !!writeSection,
-                        loginSectionExists: !!loginSection,
-                        alreadyReviewedExists: !!alreadyReviewed,
-                        // Form elements in reviews panel
-                        formInReviewsExists: !!formInReviews,
-                        footerInReviewsExists: !!footerInReviews,
-                        btnInReviewsExists: !!btnInReviews,
-                        btnInReviewsStyles: btnFullStyles,
-                        btnInReviewsRect: btnFullRect,
-                        // Any button in DOM
-                        btnAnyExists: !!btnAny,
-                        btnIsInReviews: btnIsInReviews,
-                        btnIsInModal: btnIsInModal,
-                        // Viewport
-                        viewport: {w: window.innerWidth, h: window.innerHeight},
-                        scrollY: window.scrollY
-                    };
-
-                    _log('after_tab_show_FULL', report);
-                    _send({sessionId:'04f262', runId:'initial', hypothesisId:'PANEL_SHOW', location:'product-detail.html:after_tab_show', message:'Full button visibility check', data:report, timestamp:Date.now()});
-
-                    // Auto-scroll button into view if in reviews tab
-                    if (tabId === 'reviews' && btnInReviews) {
-                        btnInReviews.scrollIntoView({behavior: 'smooth', block: 'nearest'});
-                        _log('btn_scrolled_into_view', {tabId: tabId, btnRect: btnInReviews.getBoundingClientRect()});
-                    }
-                } catch(e) { _log('after_tab_show_ERR', {err: e.message, stack: e.stack}); }
-                // #endregion
-            });
-        });
-
-        // #region DEBUG: Hypothesis A - confirm tab binding complete
-        try {
-            var bindInfo = {
-                tabCount: document.querySelectorAll('.pdp-tab').length,
-                panelCount: document.querySelectorAll('.pdp-tab-panel').length,
-                descActive: document.querySelector('#tab-description') ? document.querySelector('#tab-description').classList.contains('active') : false,
-                specsActive: document.querySelector('#tab-specs') ? document.querySelector('#tab-specs').classList.contains('active') : false,
-                reviewsActive: document.querySelector('#tab-reviews') ? document.querySelector('#tab-reviews').classList.contains('active') : false
-            };
-            _log('tab_bind_complete', bindInfo);
-            _send({sessionId:'04f262', runId:'initial', hypothesisId:'A', location:'product-detail.html:tab_bind_complete', message:'Tab binding complete', data:bindInfo, timestamp:Date.now()});
-        } catch(e) { _log('tab_bind_complete_ERR', {err: e.message}); }
-        // #endregion
-
-        // #region DEBUG: check submit button
-        try {
-            const btn = document.querySelector('.pdp-btn-submit-review');
-            const btnFooter = document.querySelector('.pdp-review-form-footer');
-            const btnExists = !!btn;
-            let btnStyles = {};
-            let footerStyles = {};
-            let parentChain = [];
-            if (btn) {
-                const cs = window.getComputedStyle(btn);
-                const r = btn.getBoundingClientRect();
-                btnStyles = {
-                    display: cs.display,
-                    visibility: cs.visibility,
-                    opacity: cs.opacity,
-                    width: cs.width,
-                    height: cs.height,
-                    minWidth: cs.minWidth,
-                    minHeight: cs.minHeight,
-                    position: cs.position,
-                    overflow: cs.overflow,
-                    lineHeight: cs.lineHeight,
-                    fontSize: cs.fontSize,
-                    rect: {w: Math.round(r.width), h: Math.round(r.height)},
-                    offset: {w: btn.offsetWidth, h: btn.offsetHeight},
-                    textContent: btn.textContent.trim().substring(0, 30)
-                };
-            }
-            if (btnFooter) {
-                const cs = window.getComputedStyle(btnFooter);
-                const r = btnFooter.getBoundingClientRect();
-                footerStyles = {
-                    display: cs.display,
-                    width: cs.width,
-                    height: cs.height,
-                    overflow: cs.overflow,
-                    rect: {w: Math.round(r.width), h: Math.round(r.height)},
-                    offset: {w: btnFooter.offsetWidth, h: btnFooter.offsetHeight}
-                };
-            }
-            // Walk up parent chain to find any container with zero height
-            let p = btn ? btn.parentElement : null;
-            let depth = 0;
-            while (p && depth < 10) {
-                const cs = window.getComputedStyle(p);
-                const r = p.getBoundingClientRect();
-                parentChain.push({
-                    tag: p.tagName,
-                    cls: p.className,
-                    id: p.id,
-                    display: cs.display,
-                    width: Math.round(r.width),
-                    height: Math.round(r.height),
-                    offsetH: p.offsetHeight,
-                    offsetW: p.offsetWidth,
-                    overflow: cs.overflow,
-                    position: cs.position
-                });
-                p = p.parentElement;
-                depth++;
-            }
-            // Also check current sheet rules matching the button
-            let matchingRules = [];
-            try {
-                for (const sheet of document.styleSheets) {
-                    try {
-                        for (const rule of sheet.cssRules || []) {
-                            if (rule.selectorText && (
-                                rule.selectorText.includes('pdp-btn-submit-review') ||
-                                rule.selectorText.includes('pdp-review-form-footer') ||
-                                rule.selectorText.includes('pdp-review-form')
-                            )) {
-                                matchingRules.push({selector: rule.selectorText, cssText: rule.style.cssText});
-                            }
-                        }
-                    } catch(e) { /* cross-origin */ }
                 }
-            } catch(e) {}
-            _log('submit_btn_check', {btnExists, btnStyles, footerStyles, parentChain: parentChain.slice(0, 5), matchingRules});
-            _send({sessionId:'04f262', runId:'initial', hypothesisId:'SUBMIT_BTN', location:'product-detail.html:submit_btn_check', message:'Submit button check', data:{btnExists, btnStyles, footerStyles, parentChain, matchingRules, btnIsInReviews: btn && document.querySelector('#tab-reviews') && document.querySelector('#tab-reviews').contains(btn), btnIsInModal: btn && document.querySelector('.pdp-review-edit-modal') && document.querySelector('.pdp-review-edit-modal').contains(btn)}, timestamp:Date.now()});
-        } catch(e) { _log('submit_btn_check_ERR', {err: e.message, stack: e.stack}); }
-        // #endregion
-
-        // Image zoom
-        const mainImage = document.getElementById('main-image');
-        const imageDim = document.getElementById('image-dim');
-        if (mainImage) {
-            mainImage.addEventListener('mouseenter', () => {
-                if (imageDim) imageDim.style.display = 'block';
-            });
-            mainImage.addEventListener('mouseleave', () => {
-                if (imageDim) imageDim.style.display = 'none';
+            })
+            .catch(function(error) {
+                console.error('Buy now error:', error);
+                showToast('Có lỗi xảy ra');
+                if (buyBtn) {
+                    buyBtn.disabled = false;
+                    buyBtn.innerHTML = originalText;
+                }
             });
         }
 
-        // Wire up review edit buttons (using data-attributes to avoid template injection issues)
-        document.querySelectorAll('.pdp-review-edit-btn').forEach(btn => {
-            btn.addEventListener('click', function() {
-                const id = this.getAttribute('data-review-id');
-                const rating = parseInt(this.getAttribute('data-review-rating') || '0', 10);
-                const comment = this.getAttribute('data-review-comment') || '';
-                editReview(id, rating, comment);
+        // -------- Tabs (Description / Specs / Reviews) --------
+        function activateTab(tabId) {
+            const tabs = document.querySelectorAll('.pdp-tab');
+            tabs.forEach(function(t) {
+                if (t.dataset && t.dataset.tab === tabId) {
+                    t.classList.add('active');
+                } else {
+                    t.classList.remove('active');
+                }
+            });
+            document.querySelectorAll('.pdp-tab-panel').forEach(function(p) {
+                p.classList.remove('active');
+            });
+            const panel = document.getElementById('tab-' + tabId);
+            if (panel) {
+                panel.classList.add('active');
+                if (tabId === 'reviews') {
+                    const btnInReviews = panel.querySelector('.pdp-btn-submit-review');
+                    if (btnInReviews && typeof btnInReviews.scrollIntoView === 'function') {
+                        try { btnInReviews.scrollIntoView({behavior: 'smooth', block: 'nearest'}); } catch (e) {}
+                    }
+                }
+            }
+        }
+
+        document.querySelectorAll('.pdp-tab').forEach(function(tab) {
+            tab.addEventListener('click', function(e) {
+                e.preventDefault();
+                const tabId = tab.dataset ? tab.dataset.tab : null;
+                if (tabId) activateTab(tabId);
             });
         });
 
-        // Review Edit/Delete functionality
+        // Filter chips inside reviews tab are visual only; keep click from reloading
+        document.querySelectorAll('.pdp-filter-chip').forEach(function(chip) {
+            chip.addEventListener('click', function(e) {
+                e.preventDefault();
+                document.querySelectorAll('.pdp-filter-chip').forEach(function(c) { c.classList.remove('active'); });
+                chip.classList.add('active');
+            });
+        });
+
+        // -------- Review submit validation (rating + comment required) --------
+        const reviewForm = document.getElementById('pdp-review-form');
+        if (reviewForm) {
+            reviewForm.addEventListener('submit', function(e) {
+                const ratingInput = reviewForm.querySelector('input[name="rating"]:checked');
+                const commentInput = reviewForm.querySelector('textarea[name="comment"]');
+                if (!ratingInput) {
+                    e.preventDefault();
+                    alert('Vui lòng chọn số sao đánh giá trước khi gửi.');
+                    return false;
+                }
+                if (!commentInput || !commentInput.value.trim()) {
+                    e.preventDefault();
+                    alert('Vui lòng nhập nhận xét của bạn.');
+                    return false;
+                }
+            });
+        }
+
+        // -------- Review Edit / Delete --------
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text == null ? '' : String(text);
+            return div.innerHTML;
+        }
+        function closeEditModal() {
+            const modal = document.querySelector('.pdp-review-edit-modal');
+            if (modal) {
+                modal.classList.remove('show');
+                setTimeout(function() { if (modal.parentNode) modal.parentNode.removeChild(modal); }, 300);
+            }
+        }
         function editReview(reviewId, currentRating, currentComment) {
-            // Create edit form modal
             const modal = document.createElement('div');
             modal.className = 'pdp-review-edit-modal';
             modal.innerHTML = `
@@ -1075,7 +783,7 @@
                         </div>
                         <div class="pdp-review-form-group">
                             <label for="edit-comment" class="pdp-review-form-label">Nhận xét của bạn <span class="required">*</span></label>
-                            <textarea id="edit-comment" name="comment" rows="4" class="pdp-review-textarea" 
+                            <textarea id="edit-comment" name="comment" rows="4" class="pdp-review-textarea"
                                       placeholder="Chia sẻ trải nghiệm của bạn về sản phẩm này..." required>${escapeHtml(currentComment)}</textarea>
                         </div>
                         <div class="pdp-review-edit-actions">
@@ -1087,83 +795,126 @@
                             </button>
                         </div>
                     </form>
-                </div>
-            `;
+                </div>`;
             document.body.appendChild(modal);
-            setTimeout(() => modal.classList.add('show'), 10);
+            setTimeout(function() { modal.classList.add('show'); }, 10);
         }
-
-        function closeEditModal() {
-            const modal = document.querySelector('.pdp-review-edit-modal');
-            if (modal) {
-                modal.classList.remove('show');
-                setTimeout(() => modal.remove(), 300);
-            }
-        }
-
-        function escapeHtml(text) {
-            const div = document.createElement('div');
-            div.textContent = text;
-            return div.innerHTML;
-        }
-
-        // Close modal on Escape key
+        document.querySelectorAll('.pdp-review-edit-btn').forEach(function(btn) {
+            btn.addEventListener('click', function() {
+                const id = btn.getAttribute('data-review-id');
+                const rating = parseInt(btn.getAttribute('data-review-rating') || '0', 10);
+                const comment = btn.getAttribute('data-review-comment') || '';
+                editReview(id, rating, comment);
+            });
+        });
         document.addEventListener('keydown', function(e) {
-            if (e.key === 'Escape') {
-                closeEditModal();
-            }
+            if (e.key === 'Escape') closeEditModal();
         });
 
-        // Validate rating on submit (HTML5 can't focus hidden radios)
-        const reviewForm = document.getElementById('pdp-review-form');
-        if (reviewForm) {
-            reviewForm.addEventListener('submit', function(e) {
-                const ratingInput = reviewForm.querySelector('input[name="rating"]:checked');
-                const commentInput = reviewForm.querySelector('textarea[name="comment"]');
-                // #region DEBUG: log submit attempts
-                try {
-                    _log('submit_attempt', {hasRating: !!ratingInput, rating: ratingInput ? ratingInput.value : null, commentLen: commentInput ? commentInput.value.trim().length : 0});
-                    _send({sessionId:'04f262', runId:'initial', hypothesisId:'SUBMIT_VALIDATION', location:'product-detail.html:submit_attempt', message:'Form submit attempt', data:{hasRating:!!ratingInput, rating: ratingInput ? ratingInput.value : null, commentLen: commentInput ? commentInput.value.trim().length : 0}, timestamp:Date.now()});
-                } catch(err) {}
-                // #endregion
-                if (!ratingInput) {
-                    e.preventDefault();
-                    alert('Vui lòng chọn số sao đánh giá trước khi gửi.');
-                    return false;
-                }
-                if (!commentInput || !commentInput.value.trim()) {
-                    e.preventDefault();
-                    alert('Vui lòng nhập nhận xét của bạn.');
-                    return false;
-                }
-            });
-        }
-    </script>
+        // -------- Gallery thumbnails --------
+        (function() {
+            const thumbsContainer = document.getElementById('pdp-thumbs');
+            if (!thumbsContainer) return;
 
-<th:block th:fragment="page-scripts">
-    <script th:inline="none">
-        // PDP Scroll reveal
-        const pdpReveal = () => {
-            document.querySelectorAll('.pdp-section.reveal').forEach(el => {
+            const imageUrls = /*[[${product.imageUrls}]]*/ [];
+            const thumbnailUrl = /*[[${product.thumbnailUrl}]]*/ '';
+            let allImages = [];
+            if (thumbnailUrl) allImages.push(thumbnailUrl);
+            if (imageUrls && Array.isArray(imageUrls)) {
+                imageUrls.forEach(function(img) {
+                    if (allImages.length < 6 && img !== thumbnailUrl) allImages.push(img);
+                });
+            }
+
+            function changeImage(clickedBtn, src) {
+                const mainImage = document.getElementById('main-image');
+                if (!mainImage) return;
+                document.querySelectorAll('.pdp-thumb-v').forEach(function(t) { t.classList.remove('active'); });
+                if (clickedBtn) clickedBtn.classList.add('active');
+                mainImage.style.opacity = '0.5';
+                mainImage.src = src;
+                mainImage.onload = function() { mainImage.style.opacity = '1'; };
+            }
+
+            allImages.forEach(function(src, index) {
+                const btn = document.createElement('button');
+                btn.className = 'pdp-thumb-v' + (index === 0 ? ' active' : '');
+                btn.type = 'button';
+                btn.addEventListener('click', (function(b, s){ return function(){ changeImage(b, s); }; })(btn, src));
+                const img = document.createElement('img');
+                img.src = src;
+                img.alt = 'Thumbnail';
+                btn.appendChild(img);
+                thumbsContainer.appendChild(btn);
+            });
+            // Expose for backward compatibility
+            window.changeImage = changeImage;
+        })();
+
+        // -------- Share --------
+        function shareProduct() {
+            const url = window.location.href;
+            if (navigator.share) {
+                navigator.share({ title: document.title, url: url });
+            } else if (navigator.clipboard) {
+                navigator.clipboard.writeText(url).then(function() {
+                    showToast('Đã sao chép link!');
+                }, function() {
+                    showToast('Không thể sao chép link');
+                });
+            } else {
+                showToast('Trình duyệt không hỗ trợ chia sẻ');
+            }
+        }
+
+        // -------- Image zoom (hover dim layer) --------
+        const mainImage = document.getElementById('main-image');
+        const imageDim = document.getElementById('image-dim');
+        if (mainImage && imageDim) {
+            mainImage.addEventListener('mouseenter', function() { imageDim.style.display = 'block'; });
+            mainImage.addEventListener('mouseleave', function() { imageDim.style.display = 'none'; });
+        }
+
+        // -------- Sticky tabs nav (when scrolling past tabs section) --------
+        const tabsNav = document.getElementById('pdp-tabs-nav');
+        const stickyHeader = document.getElementById('pdp-sticky-header');
+        const tabsSection = document.querySelector('.pdp-tabs-section');
+
+        function handleScroll() {
+            if (!tabsSection) return;
+            const rect = tabsSection.getBoundingClientRect();
+            const inView = rect.top <= 120;
+            if (tabsNav) {
+                if (rect.top <= 70 && rect.bottom > 200) {
+                    tabsNav.classList.add('sticky');
+                } else {
+                    tabsNav.classList.remove('sticky');
+                }
+            }
+            if (inView && stickyHeader) {
+                stickyHeader.style.display = '';
+            } else if (stickyHeader) {
+                stickyHeader.style.display = 'none';
+            }
+        }
+        window.addEventListener('scroll', handleScroll, { passive: true });
+        handleScroll();
+
+        // -------- Scroll reveal --------
+        const pdpReveal = function() {
+            document.querySelectorAll('.pdp-section.reveal').forEach(function(el) {
                 if (el.getBoundingClientRect().top < window.innerHeight - 60) el.classList.add('visible');
             });
         };
-        window.addEventListener('scroll', pdpReveal);
+        window.addEventListener('scroll', pdpReveal, { passive: true });
         pdpReveal();
 
-        // Sticky header
-        const pdpSticky = document.getElementById('pdp-sticky-header');
-        if (pdpSticky) {
-            window.addEventListener('scroll', () => {
-                pdpSticky.style.display = window.scrollY > 300 ? 'block' : 'none';
-            });
-        }
-
-        // Breadcrumb active
-        document.querySelectorAll('.pdp-breadcrumb a').forEach(a => {
+        // -------- Breadcrumb active --------
+        document.querySelectorAll('.pdp-breadcrumb a').forEach(function(a) {
             if (a.href === window.location.href) a.classList.add('active');
         });
     </script>
 </th:block>
+
 </body>
 </html>
