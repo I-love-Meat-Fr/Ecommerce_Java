@@ -32,21 +32,32 @@ public class AdminCategoryServiceImpl implements AdminCategoryService {
 
     @Override
     public Page<Category> listCategories(Pageable pageable, String q) {
-        if (!StringUtils.hasText(q)) {
+        return listCategories(pageable, q, null);
+    }
+
+    @Override
+    public Page<Category> listCategories(Pageable pageable, String q, Boolean active) {
+        boolean hasQ = StringUtils.hasText(q);
+        boolean hasActive = (active != null);
+
+        // Phase 12: Category Search+Filter
+        if (!hasQ && !hasActive) {
             Query empty = new Query().with(pageable);
             long total = mongoTemplate.count(new Query(), Category.class);
             List<Category> all = mongoTemplate.find(empty, Category.class);
             return new PageImpl<>(all, pageable, total);
         }
 
-        String safe = Pattern.quote(q.trim());
-        Pattern namePattern = Pattern.compile(safe, Pattern.CASE_INSENSITIVE);
-        Criteria criteria = Criteria.where("name").regex(namePattern);
+        if (hasQ && !hasActive) {
+            return categoryRepository.findByNameContainingIgnoreCase(q.trim(), pageable);
+        }
 
-        Query query = Query.query(criteria).with(pageable);
-        long total = mongoTemplate.count(Query.query(criteria), Category.class);
-        List<Category> content = mongoTemplate.find(query, Category.class);
-        return new PageImpl<>(content, pageable, total);
+        if (!hasQ && hasActive) {
+            return categoryRepository.findByActive(active, pageable);
+        }
+
+        // search + filter
+        return categoryRepository.findByNameContainingIgnoreCaseAndActive(q.trim(), active, pageable);
     }
 
     @Override

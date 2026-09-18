@@ -11,6 +11,10 @@ import com.ecommerce.cnj70.service.VendorService;
 import com.ecommerce.cnj70.service.VoucherService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Controller;
@@ -43,11 +47,12 @@ public class VoucherController {
     // ==================== TRANG CÔNG KHAI ====================
     
     /**
-     * Trang công khai - hiển thị tất cả voucher khả dụng
+     * Trang công khai - hiển thị WEB Voucher khả dụng.
+     * Chỉ hiển thị type=WEB (voucher toàn hệ thống), không hiển thị SHOP Voucher.
      */
     @GetMapping("/vouchers")
     public String vouchersPage(Model model) {
-        List<Voucher> availableVouchers = voucherService.getAvailableVouchers();
+        List<Voucher> availableVouchers = voucherService.getAvailableWebVouchersForCustomer();
         model.addAttribute("vouchers", availableVouchers);
         return "vouchers/list";
     }
@@ -218,17 +223,58 @@ public class VoucherController {
     }
     
     // ==================== ADMIN VOUCHER ====================
-    
+
     /**
-     * Danh sách voucher WEB (của admin)
+     * Phase 12: Danh sách voucher WEB (của admin) — Search + Filter + Pagination 5/trang.
+     * Chỉ hiển thị WEB Voucher (type=WEB, shopId=null); SHOP Voucher không xuất hiện.
      */
     @GetMapping("/admin/vouchers")
-    public String adminVoucherList(Model model) {
-        List<Voucher> webVouchers = voucherService.getWebVouchers();
-        model.addAttribute("vouchers", webVouchers);
+    public String adminVoucherList(@RequestParam(defaultValue = "0") int page,
+                                   @RequestParam(defaultValue = "5") int size,
+                                   @RequestParam(required = false) String q,
+                                   @RequestParam(required = false) String active,
+                                   Model model) {
+        int safeSize = (size <= 0) ? 5 : Math.min(size, 50);
+        int safePage = Math.max(page, 0);
+        Pageable pageable = PageRequest.of(safePage, safeSize,
+                Sort.by(Sort.Direction.DESC, "createdAt"));
+
+        Boolean activeFilter = parseVoucherActive(active);
+        Page<Voucher> result = voucherService.getWebVouchers(pageable, q, activeFilter);
+
+        model.addAttribute("vouchers", result.getContent());
+        model.addAttribute("page", result.getNumber());
+        model.addAttribute("size", result.getSize());
+        model.addAttribute("totalPages", result.getTotalPages());
+        model.addAttribute("totalItems", result.getTotalElements());
+        model.addAttribute("q", q == null ? "" : q);
+        model.addAttribute("active", activeFilter == null ? "" : (activeFilter ? "true" : "false"));
+        model.addAttribute("hasNext", result.hasNext());
+        model.addAttribute("hasPrev", result.hasPrevious());
+        model.addAttribute("isFirst", result.isFirst());
+        model.addAttribute("isLast", result.isLast());
+        model.addAttribute("pageNumbers", computePageRange(result.getNumber(), result.getTotalPages()));
         return "admin/voucher-list";
     }
-    
+
+    private static java.util.List<Integer> computePageRange(int current, int totalPages) {
+        java.util.List<Integer> out = new java.util.ArrayList<>();
+        if (totalPages <= 0) return out;
+        int start = Math.max(0, current - 2);
+        int end = Math.min(totalPages - 1, current + 2);
+        for (int i = start; i <= end; i++) out.add(i);
+        return out;
+    }
+
+    private static Boolean parseVoucherActive(String raw) {
+        if (raw == null || raw.isBlank()) return null;
+        String norm = raw.trim().toLowerCase();
+        if ("all".equals(norm)) return null;
+        if ("true".equals(norm) || "1".equals(norm)) return Boolean.TRUE;
+        if ("false".equals(norm) || "0".equals(norm)) return Boolean.FALSE;
+        return null;
+    }
+
     /**
      * Form tạo voucher WEB cho admin
      */
@@ -239,7 +285,7 @@ public class VoucherController {
         }
         return "admin/voucher-create";
     }
-    
+
     /**
      * Xử lý tạo voucher WEB cho admin
      */
@@ -251,7 +297,7 @@ public class VoucherController {
         try {
             User admin = vendorService.getCurrentVendor(user);
             voucherService.createWebVoucher(form, admin.getId());
-            
+
             redirectAttributes.addFlashAttribute("success", "Tạo voucher thành công!");
             return "redirect:/admin/vouchers";
         } catch (BadRequestException e) {
@@ -260,18 +306,147 @@ public class VoucherController {
             return "redirect:/admin/vouchers/create";
         }
     }
-    
+
+    // -------- Phase 11: Admin Edit --------
+
     /**
-     * Xóa voucher WEB (admin)
+     * Phase 11 — Form edit voucher WEB cho admin.
+     */
+    @GetMapping("/admin/vouchers/edit/{id}")
+    public String editAdminVoucherForm(@PathVariable String id,
+                                      @RequestParam(defaultValue = "0") int page,
+                                      @RequestParam(defaultValue = "5") int size,
+                                      @RequestParam(required = false) String q,
+                                      @RequestParam(required = false) String active,
+                                      Model model,
+                                      RedirectAttributes redirectAttributes) {
+        try {
+            Voucher voucher = voucherService.getVoucherById(id);
+
+            // Guard: chỉ cho phép edit WEB Voucher
+            if (voucher.getType() != com.ecommerce.cnj70.enums.VoucherType.WEB) {
+                redirectAttributes.addFlashAttribute("error",
+                        "Admin không được phép chỉnh sửa Voucher SHOP. Voucher này thuộc về Vendor.");
+                return "redirect:/admin/vouchers";
+            }
+
+            if (!model.containsAttribute("voucherForm")) {
+                model.addAttribute("voucherForm", VoucherFormReq.builder()
+                        .code(voucher.getCode())
+                        .name(voucher.getName())
+                        .discountType(voucher.getDiscountType())
+                        .discountValue(voucher.getDiscountValue())
+                        .maxDiscountAmount(voucher.getMaxDiscountAmount())
+                        .minOrderValue(voucher.getMinOrderValue())
+                        .quantity(voucher.getQuantity())
+                        .startDate(voucher.getStartDate())
+                        .endDate(voucher.getEndDate())
+                        .build());
+            }
+            model.addAttribute("voucher", voucher);
+            model.addAttribute("page", page);
+            model.addAttribute("size", size);
+            model.addAttribute("q", q == null ? "" : q);
+            model.addAttribute("active", active == null ? "" : active);
+            return "admin/voucher-edit";
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("error", e.getMessage());
+            return "redirect:/admin/vouchers";
+        }
+    }
+
+    @PostMapping("/admin/vouchers/edit/{id}")
+    public String editAdminVoucher(@PathVariable String id,
+                                   @Valid @ModelAttribute("voucherForm") VoucherFormReq form,
+                                   BindingResult result,
+                                   @RequestParam(defaultValue = "0") int page,
+                                   @RequestParam(defaultValue = "5") int size,
+                                   @RequestParam(required = false) String q,
+                                   @RequestParam(required = false) String active,
+                                   RedirectAttributes redirectAttributes) {
+        try {
+            voucherService.updateWebVoucher(id, form);
+            redirectAttributes.addFlashAttribute("success", "Cập nhật voucher thành công!");
+            return "redirect:/admin/vouchers?page=" + page + "&size=" + size
+                    + (q != null && !q.isBlank() ? "&q=" + q : "")
+                    + (active != null && !active.isBlank() ? "&active=" + active : "");
+        } catch (BadRequestException e) {
+            redirectAttributes.addFlashAttribute("error", e.getMessage());
+            redirectAttributes.addFlashAttribute("voucherForm", form);
+            return "redirect:/admin/vouchers/edit/" + id + "?page=" + page + "&size=" + size
+                    + (q != null && !q.isBlank() ? "&q=" + q : "")
+                    + (active != null && !active.isBlank() ? "&active=" + active : "");
+        }
+    }
+
+    // -------- Phase 11: Admin Delete / Deactivate --------
+
+    /**
+     * Phase 11 — Soft delete voucher WEB (admin).
+     * Nếu là SHOP Voucher → từ chối, không xóa.
      */
     @PostMapping("/admin/vouchers/delete/{id}")
     public String deleteAdminVoucher(@PathVariable String id,
+                                    @RequestParam(defaultValue = "0") int page,
+                                    @RequestParam(defaultValue = "5") int size,
+                                    @RequestParam(required = false) String q,
+                                    @RequestParam(required = false) String active,
                                     RedirectAttributes redirectAttributes) {
         try {
-            voucherService.deleteVoucher(id);
-            redirectAttributes.addFlashAttribute("success", "Xóa voucher thành công!");
+            voucherService.deleteWebVoucher(id);
+            redirectAttributes.addFlashAttribute("success", "Đã xóa (tạm dừng) voucher thành công!");
+            return "redirect:/admin/vouchers?page=" + page + "&size=" + size
+                    + (q != null && !q.isBlank() ? "&q=" + q : "")
+                    + (active != null && !active.isBlank() ? "&active=" + active : "");
+        } catch (BadRequestException e) {
+            redirectAttributes.addFlashAttribute("error", e.getMessage());
             return "redirect:/admin/vouchers";
-        } catch (Exception e) {
+        }
+    }
+
+    // -------- Phase 11: Admin Activate --------
+
+    /**
+     * Phase 11 — Activate voucher WEB (admin).
+     * Set active = true. Từ chối nếu là SHOP Voucher.
+     */
+    @PostMapping("/admin/vouchers/activate/{id}")
+    public String activateAdminVoucher(@PathVariable String id,
+                                       @RequestParam(defaultValue = "0") int page,
+                                       @RequestParam(defaultValue = "5") int size,
+                                       @RequestParam(required = false) String q,
+                                       @RequestParam(required = false) String active,
+                                       RedirectAttributes redirectAttributes) {
+        try {
+            voucherService.activateWebVoucher(id);
+            redirectAttributes.addFlashAttribute("success", "Đã kích hoạt voucher!");
+            return "redirect:/admin/vouchers?page=" + page + "&size=" + size
+                    + (q != null && !q.isBlank() ? "&q=" + q : "")
+                    + (active != null && !active.isBlank() ? "&active=" + active : "");
+        } catch (BadRequestException e) {
+            redirectAttributes.addFlashAttribute("error", e.getMessage());
+            return "redirect:/admin/vouchers";
+        }
+    }
+
+    /**
+     * Phase 11 — Deactivate voucher WEB (admin).
+     * Set active = false. Từ chối nếu là SHOP Voucher.
+     */
+    @PostMapping("/admin/vouchers/deactivate/{id}")
+    public String deactivateAdminVoucher(@PathVariable String id,
+                                         @RequestParam(defaultValue = "0") int page,
+                                         @RequestParam(defaultValue = "5") int size,
+                                         @RequestParam(required = false) String q,
+                                         @RequestParam(required = false) String active,
+                                         RedirectAttributes redirectAttributes) {
+        try {
+            voucherService.deactivateWebVoucher(id);
+            redirectAttributes.addFlashAttribute("success", "Đã tạm dừng voucher!");
+            return "redirect:/admin/vouchers?page=" + page + "&size=" + size
+                    + (q != null && !q.isBlank() ? "&q=" + q : "")
+                    + (active != null && !active.isBlank() ? "&active=" + active : "");
+        } catch (BadRequestException e) {
             redirectAttributes.addFlashAttribute("error", e.getMessage());
             return "redirect:/admin/vouchers";
         }

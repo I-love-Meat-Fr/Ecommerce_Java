@@ -1,0 +1,26 @@
+/* ============================================================================
+ * UI PHASE 1 — FOUNDATION INDEX
+ * ----------------------------------------------------------------------------
+ * Single include cho toàn bộ Design System + CSS Foundation.
+ *
+ * Thứ tự load:
+ *   1. tokens.css       (biến CSS — phải load trước)
+ *   2. base.css         (reset + base element)
+ *   3. components.css   (ds-btn, ds-card, ds-alert, ds-form-*, ds-table, ...)
+ *   4. layout.css       (ds-container, ds-section, ds-page-header, ds-stack, ...)
+ *   5. responsive.css   (breakpoint utilities)
+ *   6. accessibility.css (focus, sr-only, reduced-motion)
+ *
+ * Phase 1 chỉ EXPOSE foundation. KHÔNG auto-include trong templates hiện có.
+ * Phase 2/3/4/5 sẽ include từng phần khi migrate.
+ *
+ * Ví dụ include:
+ *   <link rel="stylesheet" th:href="@{/css/foundation/index.css}">
+ * ============================================================================ */
+
+@import url("./tokens.css");
+@import url("./base.css");
+@import url("./components.css");
+@import url("./layout.css");
+@import url("./responsive.css");
+@import url("./accessibility.css");

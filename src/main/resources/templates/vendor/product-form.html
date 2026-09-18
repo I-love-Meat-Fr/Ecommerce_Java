@@ -1,278 +1,186 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org"
-      xmlns:sec="http://www.thymeleaf.org/extras/springsecurity6">
+      xmlns:sec="http://www.thymeleaf.org/extras/springsecurity6"
+      th:replace="~{layout/vendor-layout :: layout(title='Sản phẩm - CNJ70 Vendor', content=~{::main-content}, scripts=~{::page-scripts})}">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title th:text="${product != null ? 'Sửa sản phẩm' : 'Thêm sản phẩm mới'}">Sản phẩm - CNJ70</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Work+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" th:href="@{/css/dashboard.css}">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.tiny.cloud/1/pevoj4inszwh7t2eibogd5qazcdackbwsoqug4zmrdbchu1h/tinymce/6/tinymce.min.js" referrerpolicy="origin"></script>
-    <style>
-        .form-row { display:grid; grid-template-columns:1fr 1fr; gap:14px; }
-        .preview-img { margin-top:10px; max-width:240px; border-radius:var(--radius); border:1px solid var(--border); }
-        .file-hint { display:block; font-size:11.5px; color:var(--text-faint); margin-top:4px; }
-        .sd-form-error { color:var(--danger); font-size:12px; margin-top:4px; }
-        @media (max-width:768px) { .form-row { grid-template-columns:1fr; } }
-
-        .spec-section { border:1px solid var(--border); border-radius:var(--radius); padding:16px; margin-bottom:18px; background:var(--bg-muted); }
-        .spec-section-head { display:flex; align-items:center; justify-content:space-between; margin-bottom:14px; }
-        .spec-section-head h3 { margin:0; font-size:14.5px; font-weight:600; color:var(--text); display:flex; align-items:center; gap:8px; }
-        .spec-section-head h3 i { color:var(--primary); }
-        .spec-section-head p { margin:2px 0 0; font-size:12px; color:var(--text-muted); }
-
-        .spec-table { width:100%; border-collapse:collapse; background:#fff; border-radius:var(--radius); overflow:hidden; }
-        .spec-table th, .spec-table td { padding:10px 12px; border-bottom:1px solid var(--border); font-size:13px; text-align:left; vertical-align:middle; }
-        .spec-table th { background:var(--bg-soft); color:var(--text-muted); font-weight:600; font-size:11.5px; text-transform:uppercase; letter-spacing:0.04em; }
-        .spec-table tbody tr:last-child td { border-bottom:none; }
-        .spec-table input, .spec-table select { width:100%; padding:7px 10px; border:1px solid var(--border); border-radius:6px; font-size:13px; background:#fff; color:var(--text); }
-        .spec-table input:focus, .spec-table select:focus { outline:none; border-color:var(--primary); box-shadow:0 0 0 2px rgba(99,102,241,0.15); }
-        .spec-empty { padding:20px; text-align:center; color:var(--text-faint); font-size:13px; }
-        .btn-icon-danger { width:30px; height:30px; border-radius:6px; border:1px solid transparent; background:var(--danger-soft); color:var(--danger); display:inline-flex; align-items:center; justify-content:center; cursor:pointer; transition:background 150ms ease; }
-        .btn-icon-danger:hover { background:var(--danger); color:#fff; }
-
-        .add-spec-btn { margin-top:12px; padding:8px 14px; border:1px dashed var(--primary); border-radius:8px; background:rgba(99,102,241,0.05); color:var(--primary); font-weight:600; font-size:13px; cursor:pointer; display:inline-flex; align-items:center; gap:6px; transition:background 150ms ease, color 150ms ease; }
-        .add-spec-btn:hover { background:var(--primary); color:#fff; }
-
-        .variant-card { border:1px solid var(--border); border-radius:var(--radius); padding:14px; margin-bottom:12px; background:#fff; }
-        .variant-head { display:flex; align-items:center; justify-content:space-between; margin-bottom:12px; padding-bottom:10px; border-bottom:1px dashed var(--border); }
-        .variant-head-title { font-weight:600; color:var(--text); font-size:13.5px; display:flex; align-items:center; gap:8px; }
-        .variant-head-title .variant-num { width:22px; height:22px; background:var(--primary); color:#fff; border-radius:50%; display:inline-flex; align-items:center; justify-content:center; font-size:11px; font-weight:700; }
-        .variant-empty { padding:24px; text-align:center; color:var(--text-faint); font-size:13px; border:1px dashed var(--border); border-radius:var(--radius); background:var(--bg-soft); }
-
-        .tox-tinymce { border-radius:8px !important; border-color:var(--border) !important; }
-    </style>
 </head>
 <body>
-    <div class="sd-app" id="appShell">
-        <aside class="sd-sidebar">
-            <div class="sd-sidebar-header">
-                <div class="sd-sidebar-logo"><i class="fas fa-bolt"></i></div>
-                <div class="sd-sidebar-brand">
-                    <span class="sd-sidebar-brand-name">CNJ70 Shop</span>
-                    <span class="sd-sidebar-brand-sub">Vendor Console</span>
-                </div>
+<main th:fragment="main-content">
+
+    <div class="vd-page-hero">
+        <div class="vd-page-hero-left">
+            <div class="vd-page-hero-icon"><i class="fas fa-box"></i></div>
+            <div class="vd-page-hero-info">
+                <h2 th:text="${product != null ? 'Sửa sản phẩm' : 'Thêm sản phẩm mới'}">Sản phẩm</h2>
+                <p th:text="${product != null ? 'Cập nhật thông tin sản phẩm.' : 'Điền thông tin để đăng bán sản phẩm mới.'}">Mô tả</p>
             </div>
-            <nav class="sd-sidebar-nav">
-                <div class="sd-sidebar-nav-section">
-                    <span class="sd-sidebar-nav-title">Tổng quan</span>
-                    <a th:href="@{/vendor/dashboard}" class="sd-nav-item"><i class="fas fa-house"></i><span class="sd-nav-label">Dashboard</span></a>
-                </div>
-                <div class="sd-sidebar-nav-section">
-                    <span class="sd-sidebar-nav-title">Quản lý</span>
-                    <a th:href="@{/vendor/shop}" class="sd-nav-item"><i class="fas fa-store"></i><span class="sd-nav-label">Cửa hàng</span></a>
-                    <a th:href="@{/vendor/products}" class="sd-nav-item active"><i class="fas fa-box"></i><span class="sd-nav-label">Sản phẩm</span></a>
-                    <a th:href="@{/vendor/orders}" class="sd-nav-item"><i class="fas fa-cart-shopping"></i><span class="sd-nav-label">Đơn hàng</span></a>
-                    <a th:href="@{/vendor/vouchers}" class="sd-nav-item"><i class="fas fa-ticket"></i><span class="sd-nav-label">Voucher</span></a>
-                </div>
-                <div class="sd-sidebar-nav-section">
-                    <span class="sd-sidebar-nav-title">Khác</span>
-                    <a th:href="@{/home}" class="sd-nav-item"><i class="fas fa-globe"></i><span class="sd-nav-label">Xem website</span></a>
-                    <form th:action="@{/auth/logout}" method="post" style="margin:0;">
-                        <button type="submit" class="sd-nav-item"><i class="fas fa-arrow-right-from-bracket"></i><span class="sd-nav-label">Đăng xuất</span></button>
-                    </form>
-                </div>
-            </nav>
-            <div class="sd-sidebar-footer">
-                <div class="sd-sidebar-user">
-                    <div class="sd-sidebar-avatar" sec:authentication="name">V</div>
-                    <div class="sd-sidebar-user-info">
-                        <div class="sd-sidebar-user-name" sec:authentication="name">Vendor</div>
-                        <div class="sd-sidebar-user-role">Vendor</div>
-                    </div>
-                </div>
-            </div>
-        </aside>
-
-        <div class="sd-main">
-            <div class="sd-topbar">
-                <button class="sd-topbar-toggle" type="button" id="sidebarToggle"><i class="fas fa-bars"></i></button>
-                <div class="sd-topbar-search">
-                    <i class="fas fa-magnifying-glass"></i>
-                    <input type="text" placeholder="Tìm kiếm...">
-                </div>
-                <div class="sd-topbar-actions">
-                    <button class="sd-icon-btn" type="button"><i class="fas fa-bell"></i><span class="sd-icon-btn-dot"></span></button>
-                    <div class="sd-topbar-divider"></div>
-                    <div class="sd-topbar-profile">
-                        <div class="sd-topbar-avatar" sec:authentication="name">V</div>
-                        <span class="sd-topbar-profile-name" sec:authentication="name">Vendor</span>
-                    </div>
-                </div>
-            </div>
-
-            <main class="sd-content">
-                <div class="sd-page-head">
-                    <div class="sd-page-head-title">
-                        <h1 th:text="${product != null ? 'Sửa sản phẩm' : 'Thêm sản phẩm mới'}">Sản phẩm</h1>
-                        <p th:text="${product != null ? 'Cập nhật thông tin sản phẩm.' : 'Điền thông tin để đăng bán sản phẩm mới.'}">Mô tả</p>
-                    </div>
-                    <div class="sd-page-head-actions">
-                        <a th:href="@{/vendor/products}" class="sd-btn sd-btn-secondary sd-btn-sm"><i class="fas fa-arrow-left"></i> Quay lại</a>
-                    </div>
-                </div>
-
-                <div th:if="${error}" class="sd-alert sd-alert-warning" style="background:var(--danger-soft);color:var(--danger);border:1px solid transparent;padding:12px 16px;border-radius:var(--radius);margin-bottom:16px;display:flex; align-items:center;gap:10px;font-size:13.5px;">
-                    <i class="fas fa-triangle-exclamation"></i><span th:text="${error}"></span>
-                </div>
-
-                <form id="productForm" th:action="${product != null ? '/vendor/products/edit/' + product.id : '/vendor/products/create'}"
-                      th:object="${productFormReq}" method="post" enctype="multipart/form-data">
-                    <div class="sd-card" style="max-width:880px;">
-                        <div class="sd-card-head">
-                            <div>
-                                <h3>Thông tin cơ bản</h3>
-                                <p>Tên, giá, tồn kho và hình ảnh sản phẩm.</p>
-                            </div>
-                        </div>
-                        <div class="sd-card-body">
-                            <div class="sd-form-group">
-                                <label>Tên sản phẩm *</label>
-                                <input type="text" class="sd-form-control" th:field="*{name}" required minlength="1" maxlength="200" placeholder="Nhập tên sản phẩm">
-                                <div th:if="${#fields.hasErrors('name')}" class="sd-form-error" th:errors="*{name}"></div>
-                            </div>
-
-                            <div class="form-row">
-                                <div class="sd-form-group">
-                                    <label>Giá (VNĐ) *</label>
-                                    <input type="number" class="sd-form-control" th:field="*{price}" required placeholder="0">
-                                    <div th:if="${#fields.hasErrors('price')}" class="sd-form-error" th:errors="*{price}"></div>
-                                </div>
-                                <div class="sd-form-group">
-                                    <label>Số lượng tồn kho *</label>
-                                    <input type="number" class="sd-form-control" th:field="*{stock}" required placeholder="0">
-                                    <div th:if="${#fields.hasErrors('stock')}" class="sd-form-error" th:errors="*{stock}"></div>
-                                </div>
-                            </div>
-
-                            <div class="sd-form-group">
-                                <label>Danh mục</label>
-                                <select class="sd-form-control" th:field="*{categoryId}">
-                                    <option value="">-- Chọn danh mục --</option>
-                                    <option th:each="cat : ${categories}" th:value="${cat.id}" th:text="${cat.name}">Danh mục</option>
-                                </select>
-                            </div>
-
-                            <div class="sd-form-group">
-                                <label>Hình ảnh sản phẩm</label>
-                                <input type="file" id="imageFile" name="imageFile" accept="image/png,image/jpeg,image/jpg,image/webp,image/gif">
-                                <small class="file-hint">JPG, PNG, WEBP, GIF. Tối đa 5MB.</small>
-                                <img id="imagePreview" class="preview-img" style="display:none;">
-                                <div th:if="${product != null and product.imageUrls != null and !product.imageUrls.isEmpty()}" style="margin-top:10px;">
-                                    <small class="file-hint">Ảnh hiện tại:</small>
-                                    <img th:src="${product.imageUrls[0]}" class="preview-img" style="margin-top:6px;">
-                                </div>
-                            </div>
-
-                            <div class="sd-form-group" th:if="${product != null}">
-                                <label>Trạng thái</label>
-                                <select class="sd-form-control" th:field="*{status}">
-                                    <option value="ACTIVE">Đang bán</option>
-                                    <option value="DRAFT">Bản nháp</option>
-                                    <option value="INACTIVE">Ngừng bán</option>
-                                </select>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="sd-card" style="max-width:880px; margin-top:18px;">
-                        <div class="sd-card-body">
-                            <div class="spec-section-head">
-                                <div>
-                                    <h3><i class="fas fa-clipboard-list"></i> Thông số kỹ thuật (Có cấu trúc)</h3>
-                                    <p>Các thông tin bắt buộc của nhà sản xuất.</p>
-                                </div>
-                            </div>
-                            <div class="form-row">
-                                <div class="sd-form-group">
-                                    <label>Hãng sản phẩm</label>
-                                    <input type="text" class="sd-form-control" th:field="*{brand}" placeholder="VD: Samsung, Apple, Dell...">
-                                </div>
-                                <div class="sd-form-group">
-                                    <label>Bảo hành (tháng)</label>
-                                    <input type="number" class="sd-form-control" th:field="*{warrantyMonths}" min="0" placeholder="VD: 12">
-                                </div>
-                            </div>
-                            <div class="form-row">
-                                <div class="sd-form-group">
-                                    <label>Nhà sản xuất</label>
-                                    <input type="text" class="sd-form-control" th:field="*{manufacturer}" placeholder="Tên nhà sản xuất">
-                                </div>
-                                <div class="sd-form-group">
-                                    <label>Địa chỉ nhà sản xuất</label>
-                                    <input type="text" class="sd-form-control" th:field="*{manufacturerAddress}" placeholder="Địa chỉ trụ sở / nhà máy">
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="sd-card" style="max-width:880px; margin-top:18px;">
-                        <div class="sd-card-body">
-                            <div class="spec-section-head">
-                                <div>
-                                    <h3><i class="fas fa-sliders"></i> Thông số tuỳ chỉnh</h3>
-                                    <p>Vendor tự thêm các thông số mô tả riêng cho sản phẩm.</p>
-                                </div>
-                            </div>
-                            <table class="spec-table" id="customSpecTable">
-                                <thead>
-                                    <tr>
-                                        <th style="width:42%;">Tên thông số</th>
-                                        <th>Mô tả</th>
-                                        <th style="width:60px; text-align:center;"></th>
-                                    </tr>
-                                </thead>
-                                <tbody id="customSpecBody">
-                                    <!-- Rows injected by JS -->
-                                </tbody>
-                            </table>
-                            <button type="button" class="add-spec-btn" id="addCustomSpecBtn">
-                                <i class="fas fa-plus"></i> Thêm thông số
-                            </button>
-                        </div>
-                    </div>
-
-                    <div class="sd-card" style="max-width:880px; margin-top:18px;">
-                        <div class="sd-card-body">
-                            <div class="spec-section-head">
-                                <div>
-                                    <h3><i class="fas fa-list-ul"></i> Biến thể sản phẩm</h3>
-                                    <p>Mỗi biến thể có giá riêng, có thể thêm các thông số phân biệt (VD: Màu sắc, Kích thước...).</p>
-                                </div>
-                            </div>
-                            <div id="variantList">
-                                <!-- Variants injected by JS -->
-                            </div>
-                            <button type="button" class="add-spec-btn" id="addVariantBtn">
-                                <i class="fas fa-plus"></i> Thêm biến thể
-                            </button>
-                        </div>
-                    </div>
-
-                    <div class="sd-card" style="max-width:880px; margin-top:18px;">
-                        <div class="sd-card-body">
-                            <div class="spec-section-head">
-                                <div>
-                                    <h3><i class="fas fa-align-left"></i> Mô tả sản phẩm</h3>
-                                    <p>Vendor tự do trình bày mô tả chi tiết sản phẩm.</p>
-                                </div>
-                            </div>
-                            <textarea id="richDescriptionEditor" name="richDescription" th:text="${productFormReq.richDescription}"></textarea>
-                        </div>
-                    </div>
-
-                    <div style="display:flex;gap:8px;justify-content:flex-end;max-width:880px;margin:18px 0 32px;">
-                        <a th:href="@{/vendor/products}" class="sd-btn sd-btn-secondary"><i class="fas fa-xmark"></i> Hủy</a>
-                        <button type="submit" class="sd-btn sd-btn-primary"><i class="fas fa-save"></i> Lưu sản phẩm</button>
-                    </div>
-                </form>
-            </main>
+        </div>
+        <div class="vd-page-hero-actions">
+            <a th:href="@{/vendor/products}" class="sd-btn sd-btn-secondary"><i class="fas fa-arrow-left"></i> Quay lại</a>
         </div>
     </div>
 
+    <div th:if="${error}" class="sd-alert sd-alert-danger"><i class="fas fa-triangle-exclamation"></i><span th:text="${error}"></span></div>
+
+    <form id="productForm"
+          th:action="${product != null ? '/vendor/products/edit/' + product.id : '/vendor/products/create'}"
+          th:object="${productFormReq}" method="post" enctype="multipart/form-data">
+
+        <div class="sd-card" style="max-width:880px;">
+            <div class="sd-card-head">
+                <div class="vd-section-head" style="margin:0;padding:0;border:none;">
+                    <h3><i class="fas fa-circle-info"></i> Thông tin cơ bản</h3>
+                    <p>Tên, giá, tồn kho và hình ảnh sản phẩm.</p>
+                </div>
+            </div>
+            <div class="sd-card-body">
+                <div class="sd-form-group">
+                    <label>Tên sản phẩm *</label>
+                    <input type="text" class="sd-form-control" th:field="*{name}" required minlength="1" maxlength="200" placeholder="Nhập tên sản phẩm">
+                    <div th:if="${#fields.hasErrors('name')}" class="sd-form-error" th:errors="*{name}"></div>
+                </div>
+
+                <div class="vd-form-row">
+                    <div class="sd-form-group">
+                        <label>Giá (VNĐ) *</label>
+                        <input type="number" class="sd-form-control" th:field="*{price}" required placeholder="0">
+                        <div th:if="${#fields.hasErrors('price')}" class="sd-form-error" th:errors="*{price}"></div>
+                    </div>
+                    <div class="sd-form-group">
+                        <label>Số lượng tồn kho *</label>
+                        <input type="number" class="sd-form-control" th:field="*{stock}" required placeholder="0">
+                        <div th:if="${#fields.hasErrors('stock')}" class="sd-form-error" th:errors="*{stock}"></div>
+                    </div>
+                </div>
+
+                <div class="sd-form-group">
+                    <label>Danh mục</label>
+                    <select class="sd-form-control" th:field="*{categoryId}">
+                        <option value="">-- Chọn danh mục --</option>
+                        <option th:each="cat : ${categories}" th:value="${cat.id}" th:text="${cat.name}">Danh mục</option>
+                    </select>
+                </div>
+
+                <div class="sd-form-group">
+                    <label>Hình ảnh sản phẩm</label>
+                    <div class="vd-upload" onclick="document.getElementById('imageFile').click()">
+                        <i class="fas fa-cloud-arrow-up"></i>
+                        <p>Nhấn để chọn hình ảnh (JPG, PNG, WEBP, GIF. Tối đa 5MB)</p>
+                    </div>
+                    <input type="file" id="imageFile" name="imageFile" accept="image/png,image/jpeg,image/jpg,image/webp,image/gif" style="display:none;">
+                    <img id="imagePreview" class="vd-preview-img" alt="" style="display:none;">
+                    <div th:if="${product != null and product.imageUrls != null and !product.imageUrls.isEmpty()}" style="margin-top:10px;">
+                        <div class="sd-form-hint">Ảnh hiện tại:</div>
+                        <img th:src="${product.imageUrls[0]}" class="vd-preview-img" alt="" style="margin-top:6px;">
+                    </div>
+                </div>
+
+                <div class="sd-form-group" th:if="${product != null}">
+                    <label>Trạng thái</label>
+                    <select class="sd-form-control" th:field="*{status}">
+                        <option value="ACTIVE">Đang bán</option>
+                        <option value="DRAFT">Bản nháp</option>
+                        <option value="INACTIVE">Ngừng bán</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <div class="sd-card" style="max-width:880px; margin-top:18px;">
+            <div class="sd-card-body">
+                <div class="vd-section-head">
+                    <div>
+                        <h3><i class="fas fa-clipboard-list"></i> Thông số kỹ thuật (Có cấu trúc)</h3>
+                        <p>Các thông tin bắt buộc của nhà sản xuất.</p>
+                    </div>
+                </div>
+                <div class="vd-form-row">
+                    <div class="sd-form-group">
+                        <label>Hãng sản phẩm</label>
+                        <input type="text" class="sd-form-control" th:field="*{brand}" placeholder="VD: Samsung, Apple, Dell...">
+                    </div>
+                    <div class="sd-form-group">
+                        <label>Bảo hành (tháng)</label>
+                        <input type="number" class="sd-form-control" th:field="*{warrantyMonths}" min="0" placeholder="VD: 12">
+                    </div>
+                </div>
+                <div class="vd-form-row">
+                    <div class="sd-form-group">
+                        <label>Nhà sản xuất</label>
+                        <input type="text" class="sd-form-control" th:field="*{manufacturer}" placeholder="Tên nhà sản xuất">
+                    </div>
+                    <div class="sd-form-group">
+                        <label>Địa chỉ nhà sản xuất</label>
+                        <input type="text" class="sd-form-control" th:field="*{manufacturerAddress}" placeholder="Địa chỉ trụ sở / nhà máy">
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="sd-card" style="max-width:880px; margin-top:18px;">
+            <div class="sd-card-body">
+                <div class="vd-section-head">
+                    <div>
+                        <h3><i class="fas fa-sliders"></i> Thông số tuỳ chỉnh</h3>
+                        <p>Vendor tự thêm các thông số mô tả riêng cho sản phẩm.</p>
+                    </div>
+                </div>
+                <table class="vd-spec-table" id="customSpecTable">
+                    <thead>
+                        <tr>
+                            <th style="width:42%;">Tên thông số</th>
+                            <th>Mô tả</th>
+                            <th style="width:60px; text-align:center;"></th>
+                        </tr>
+                    </thead>
+                    <tbody id="customSpecBody">
+                        <!-- Rows injected by JS -->
+                    </tbody>
+                </table>
+                <button type="button" class="vd-add-btn" id="addCustomSpecBtn">
+                    <i class="fas fa-plus"></i> Thêm thông số
+                </button>
+            </div>
+        </div>
+
+        <div class="sd-card" style="max-width:880px; margin-top:18px;">
+            <div class="sd-card-body">
+                <div class="vd-section-head">
+                    <div>
+                        <h3><i class="fas fa-list-ul"></i> Biến thể sản phẩm</h3>
+                        <p>Mỗi biến thể có giá riêng, có thể thêm các thông số phân biệt (VD: Màu sắc, Kích thước...).</p>
+                    </div>
+                </div>
+                <div id="variantList"></div>
+                <button type="button" class="vd-add-btn" id="addVariantBtn">
+                    <i class="fas fa-plus"></i> Thêm biến thể
+                </button>
+            </div>
+        </div>
+
+        <div class="sd-card" style="max-width:880px; margin-top:18px;">
+            <div class="sd-card-body">
+                <div class="vd-section-head">
+                    <div>
+                        <h3><i class="fas fa-align-left"></i> Mô tả sản phẩm</h3>
+                        <p>Vendor tự do trình bày mô tả chi tiết sản phẩm.</p>
+                    </div>
+                </div>
+                <textarea id="richDescriptionEditor" name="richDescription" th:text="${productFormReq.richDescription}"></textarea>
+            </div>
+        </div>
+
+        <div style="display:flex;gap:8px;justify-content:flex-end;max-width:880px;margin:18px 0 32px;">
+            <a th:href="@{/vendor/products}" class="sd-btn sd-btn-secondary"><i class="fas fa-xmark"></i> Hủy</a>
+            <button type="submit" class="sd-btn sd-btn-cta"><i class="fas fa-save"></i> Lưu sản phẩm</button>
+        </div>
+    </form>
+
+</main>
+
+<th:block th:fragment="page-scripts">
     <script th:inline="javascript">
         /*<![CDATA[*/
         window.__INITIAL_PRODUCT__ = {
@@ -285,19 +193,6 @@
     </script>
     <script th:inline="none">
         (function() {
-            const shell = document.getElementById('appShell');
-            const toggle = document.getElementById('sidebarToggle');
-            const KEY = 'cnj70-sidebar-expanded';
-            if (localStorage.getItem(KEY) === '1') shell.classList.add('sidebar-expanded');
-            toggle?.addEventListener('click', () => {
-                shell.classList.toggle('sidebar-expanded');
-                localStorage.setItem(KEY, shell.classList.contains('sidebar-expanded') ? '1' : '0');
-            });
-            document.querySelectorAll('.sd-sidebar-avatar, .sd-topbar-avatar').forEach(el => {
-                const name = (el.textContent || '').trim();
-                if (!name) return;
-                el.textContent = name.charAt(0).toUpperCase();
-            });
             document.getElementById('imageFile')?.addEventListener('change', function(e) {
                 const file = e.target.files[0]; if (!file) return;
                 const preview = document.getElementById('imagePreview');
@@ -305,7 +200,6 @@
             });
         })();
 
-        /* ===== Custom Specifications (Tên thông số + Mô tả) ===== */
         (function() {
             const body = document.getElementById('customSpecBody');
             const addBtn = document.getElementById('addCustomSpecBtn');
@@ -315,11 +209,8 @@
 
             function escapeHtml(str) {
                 return String(str ?? '')
-                    .replace(/&/g, '&amp;')
-                    .replace(/</g, '&lt;')
-                    .replace(/>/g, '&gt;')
-                    .replace(/"/g, '&quot;')
-                    .replace(/'/g, '&#39;');
+                    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+                    .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
             }
 
             function addCustomSpecRow(name = '', value = '') {
@@ -330,12 +221,12 @@
                     <td><input type="text" name="specifications[${idx}].name" placeholder="VD: Bluetooth, Dung lượng pin..." value="${escapeHtml(name)}"></td>
                     <td><input type="text" name="specifications[${idx}].value" placeholder="VD: 5.3, 30 giờ..." value="${escapeHtml(value)}"></td>
                     <td style="text-align:center;">
-                        <button type="button" class="btn-icon-danger" title="Xóa">
+                        <button type="button" class="vd-icon-danger" title="Xóa">
                             <i class="fas fa-trash"></i>
                         </button>
                     </td>
                 `;
-                tr.querySelector('.btn-icon-danger').addEventListener('click', () => tr.remove());
+                tr.querySelector('.vd-icon-danger').addEventListener('click', () => tr.remove());
                 body.appendChild(tr);
             }
 
@@ -348,7 +239,6 @@
             }
         })();
 
-        /* ===== Variants (giá + danh sách thông số phân biệt) ===== */
         (function() {
             const list = document.getElementById('variantList');
             const addBtn = document.getElementById('addVariantBtn');
@@ -357,11 +247,8 @@
 
             function escapeHtml(str) {
                 return String(str ?? '')
-                    .replace(/&/g, '&amp;')
-                    .replace(/</g, '&lt;')
-                    .replace(/>/g, '&gt;')
-                    .replace(/"/g, '&quot;')
-                    .replace(/'/g, '&#39;');
+                    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+                    .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
             }
 
             function addVariantSpecRow(variantCard, name = '', value = '') {
@@ -374,31 +261,31 @@
                     <td><input type="text" name="variants[${variantCard.dataset.variantIdx}].specifications[${idx}].name" placeholder="VD: Màu sắc, Kích thước..." value="${escapeHtml(name)}"></td>
                     <td><input type="text" name="variants[${variantCard.dataset.variantIdx}].specifications[${idx}].value" placeholder="VD: Đỏ, 256GB..." value="${escapeHtml(value)}"></td>
                     <td style="text-align:center;">
-                        <button type="button" class="btn-icon-danger" title="Xóa">
+                        <button type="button" class="vd-icon-danger" title="Xóa">
                             <i class="fas fa-trash"></i>
                         </button>
                     </td>
                 `;
-                tr.querySelector('.btn-icon-danger').addEventListener('click', () => tr.remove());
+                tr.querySelector('.vd-icon-danger').addEventListener('click', () => tr.remove());
                 tbody.appendChild(tr);
             }
 
             function addVariant(variantData) {
                 const idx = variantIndex++;
                 const card = document.createElement('div');
-                card.className = 'variant-card';
+                card.className = 'vd-variant-card';
                 card.dataset.variantIdx = idx;
                 card.dataset.nextSpecIdx = '0';
 
                 const data = variantData || { price: '', specifications: [] };
 
                 card.innerHTML = `
-                    <div class="variant-head">
-                        <div class="variant-head-title">
-                            <span class="variant-num">${idx + 1}</span>
+                    <div class="vd-variant-head">
+                        <div class="vd-variant-title">
+                            <span class="vd-variant-num">${idx + 1}</span>
                             <span>Biến thể #${idx + 1}</span>
                         </div>
-                        <button type="button" class="btn-icon-danger" data-action="remove-variant" title="Xóa biến thể">
+                        <button type="button" class="vd-icon-danger" data-action="remove-variant" title="Xóa biến thể">
                             <i class="fas fa-trash"></i>
                         </button>
                     </div>
@@ -406,7 +293,7 @@
                         <label>Giá biến thể (VNĐ) *</label>
                         <input type="number" min="0" step="1000" name="variants[${idx}].price" placeholder="Nhập giá cho biến thể này" value="${escapeHtml(data.price)}">
                     </div>
-                    <table class="spec-table" style="margin-top:6px;">
+                    <table class="vd-spec-table" style="margin-top:6px;">
                         <thead>
                             <tr>
                                 <th style="width:42%;">Tên thông số</th>
@@ -416,7 +303,7 @@
                         </thead>
                         <tbody class="variant-spec-body"></tbody>
                     </table>
-                    <button type="button" class="add-spec-btn" data-action="add-variant-spec" style="margin-top:10px;">
+                    <button type="button" class="vd-add-btn" data-action="add-variant-spec" style="margin-top:10px;">
                         <i class="fas fa-plus"></i> Thêm thông số
                     </button>
                 `;
@@ -438,8 +325,8 @@
             function reindexVariantTitles() {
                 Array.from(list.children).forEach((card, i) => {
                     card.dataset.variantIdx = i;
-                    card.querySelector('.variant-num').textContent = i + 1;
-                    card.querySelector('.variant-head-title span:last-child').textContent = `Biến thể #${i + 1}`;
+                    card.querySelector('.vd-variant-num').textContent = i + 1;
+                    card.querySelector('.vd-variant-title span:last-child').textContent = `Biến thể #${i + 1}`;
                     const inputs = card.querySelectorAll('input[name^="variants["]');
                     inputs.forEach(input => {
                         input.name = input.name.replace(/^variants\[\d+\]/, `variants[${i}]`);
@@ -452,13 +339,9 @@
 
             if (initialVariants.length > 0) {
                 initialVariants.forEach(v => addVariant(v));
-            } else {
-                // No pre-populated variants - start empty as user requested
-                // Optionally show empty state placeholder
             }
         })();
 
-        /* ===== TinyMCE ===== */
         (function() {
             if (typeof tinymce === 'undefined') return;
             tinymce.init({
@@ -480,5 +363,6 @@
             });
         })();
     </script>
+</th:block>
 </body>
 </html>

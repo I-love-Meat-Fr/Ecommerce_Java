@@ -10,9 +10,18 @@ import com.ecommerce.cnj70.service.AdminUserService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.mongodb.core.MongoTemplate;
+import org.springframework.data.mongodb.core.query.Criteria;
+import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
+
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.regex.Pattern;
 
 @Slf4j
 @Service
@@ -20,13 +29,83 @@ import org.springframework.util.StringUtils;
 public class AdminUserServiceImpl implements AdminUserService {
 
     private final UserRepository userRepository;
+    private final MongoTemplate mongoTemplate;
 
     @Override
     public Page<User> listUsers(Pageable pageable, String q) {
-        if (StringUtils.hasText(q)) {
-            return userRepository.searchByKeyword(q.trim(), pageable);
+        return listUsers(pageable, q, null, null);
+    }
+
+    @Override
+    public Page<User> listUsers(Pageable pageable, String q, UserRole role, AccountStatus status) {
+        boolean hasQ = StringUtils.hasText(q);
+        boolean hasRole = (role != null);
+        boolean hasStatus = (status != null);
+
+        // Phase 12: User Search+Filter — chỉ search (không filter)
+        if (!hasRole && !hasStatus) {
+            if (hasQ) {
+                return userRepository.searchByKeyword(q.trim(), pageable);
+            }
+            return userRepository.findAll(pageable);
         }
-        return userRepository.findAll(pageable);
+
+        // Không search — chỉ filter
+        if (!hasQ) {
+            if (hasRole && hasStatus) {
+                return userRepository.findByRoleAndStatus(role, status, pageable);
+            }
+            if (hasRole) {
+                return userRepository.findByRole(role, pageable);
+            }
+            return userRepository.findByStatus(status, pageable);
+        }
+
+        // Search + filter: search trên email/fullName + kết hợp role/status
+        return searchUsersWithFilter(q.trim(), role, status, pageable);
+    }
+
+    /**
+     * Tìm User theo keyword kết hợp role/status bằng MongoTemplate.
+     */
+    private Page<User> searchUsersWithFilter(String q, UserRole role, AccountStatus status, Pageable pageable) {
+        Pattern emailPattern = Pattern.compile(Pattern.quote(q), Pattern.CASE_INSENSITIVE);
+        Pattern namePattern = Pattern.compile(Pattern.quote(q), Pattern.CASE_INSENSITIVE);
+
+        Criteria searchCriteria = new Criteria().orOperator(
+                Criteria.where("email").regex(emailPattern),
+                Criteria.where("fullName").regex(namePattern)
+        );
+
+        long total = 0;
+        Map<String, User> merged = new LinkedHashMap<>();
+
+        if (role != null && status != null) {
+            Criteria c = new Criteria().andOperator(searchCriteria,
+                    Criteria.where("role").is(role.name()),
+                    Criteria.where("status").is(status.name()));
+            Query q1 = Query.query(c).with(pageable);
+            long t1 = mongoTemplate.count(Query.query(c), User.class);
+            total += t1;
+            for (User u : mongoTemplate.find(q1, User.class)) merged.putIfAbsent(u.getId(), u);
+        } else if (role != null) {
+            Criteria c = new Criteria().andOperator(searchCriteria,
+                    Criteria.where("role").is(role.name()));
+            Query q1 = Query.query(c).with(pageable);
+            long t1 = mongoTemplate.count(Query.query(c), User.class);
+            total += t1;
+            for (User u : mongoTemplate.find(q1, User.class)) merged.putIfAbsent(u.getId(), u);
+        } else if (status != null) {
+            Criteria c = new Criteria().andOperator(searchCriteria,
+                    Criteria.where("status").is(status.name()));
+            Query q1 = Query.query(c).with(pageable);
+            long t1 = mongoTemplate.count(Query.query(c), User.class);
+            total += t1;
+            for (User u : mongoTemplate.find(q1, User.class)) merged.putIfAbsent(u.getId(), u);
+        }
+
+        List<User> content = List.copyOf(merged.values());
+        return new PageImpl<>(content, pageable, Math.max(total, content.size()));
     }
 
     @Override

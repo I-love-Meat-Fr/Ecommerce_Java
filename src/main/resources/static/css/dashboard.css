@@ -244,9 +244,9 @@
     --text-faint: #94a3b8;
 
     /* Brand */
-    --primary: #6366f1;
-    --primary-hover: #4f46e5;
-    --primary-soft: #eef2ff;
+    --primary: #0fb5b0;
+    --primary-hover: #0a8a87;
+    --primary-soft: #e6f8f7;
     --primary-foreground: #ffffff;
 
     /* Status */
@@ -503,7 +503,7 @@
     width: 32px;
     height: 32px;
     border-radius: 50%;
-    background: linear-gradient(135deg, var(--primary), #818cf8);
+    background: linear-gradient(135deg, var(--primary), #0fb5b0);
     color: #fff;
     display: flex;
     align-items: center;
@@ -681,7 +681,7 @@
     width: 32px;
     height: 32px;
     border-radius: 50%;
-    background: linear-gradient(135deg, var(--primary), #818cf8);
+    background: linear-gradient(135deg, var(--primary), #0fb5b0);
     color: #fff;
     display: flex;
     align-items: center;
@@ -954,7 +954,7 @@
     width: 36px;
     height: 36px;
     border-radius: 50%;
-    background: linear-gradient(135deg, var(--primary), #818cf8);
+    background: linear-gradient(135deg, var(--primary), #0fb5b0);
     color: #fff;
     display: inline-flex;
     align-items: center;

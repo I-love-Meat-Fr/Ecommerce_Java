@@ -11,14 +11,143 @@
         initCountUp();
         initTabs();
         initFlashCountdown();
+        initFlashMarquee();
         initActivityFeed();
         initFAQ();
         initMarqueePause();
         initLoadMore();
         initQuickView();
+        initProductCardFav();
         initNewsletter();
         initNavbar();
+        initBannerSlider();
     });
+
+    /* ---------- Banner Slider (Hero) ---------- */
+    function initBannerSlider() {
+        const track = document.getElementById('bannerTrack');
+        if (!track) return;
+
+        const slides = track.querySelectorAll('.banner-slide');
+        const dots = document.querySelectorAll('#bannerIndicators .banner-dot');
+        const prevBtn = document.getElementById('bannerPrev');
+        const nextBtn = document.getElementById('bannerNext');
+        const progressBar = document.getElementById('bannerProgressBar');
+        const total = slides.length;
+        if (!total) return;
+
+        let current = 0;
+        const AUTO_MS = 5000;
+        let timer = null;
+        let progressStart = 0;
+        let progressRAF = null;
+
+        function goTo(index) {
+            current = (index + total) % total;
+            track.style.transform = 'translateX(-' + (current * 100) + '%)';
+            dots.forEach(function(d, i) {
+                if (i === current) {
+                    d.classList.add('active');
+                } else {
+                    d.classList.remove('active');
+                }
+            });
+            resetProgress();
+        }
+
+        function next() { goTo(current + 1); }
+        function prev() { goTo(current - 1); }
+
+        function resetProgress() {
+            if (!progressBar) return;
+            progressBar.style.transition = 'none';
+            progressBar.style.width = '0%';
+            progressStart = performance.now();
+            if (progressRAF) cancelAnimationFrame(progressRAF);
+
+            function step(now) {
+                const elapsed = now - progressStart;
+                const pct = Math.min(elapsed / AUTO_MS, 1);
+                progressBar.style.width = (pct * 100) + '%';
+                if (pct < 1) {
+                    progressRAF = requestAnimationFrame(step);
+                }
+            }
+            progressRAF = requestAnimationFrame(step);
+        }
+
+        function startAuto() {
+            stopAuto();
+            timer = setInterval(next, AUTO_MS);
+            resetProgress();
+        }
+
+        function stopAuto() {
+            if (timer) { clearInterval(timer); timer = null; }
+            if (progressRAF) { cancelAnimationFrame(progressRAF); progressRAF = null; }
+            if (progressBar) {
+                progressBar.style.transition = 'none';
+                progressBar.style.width = '0%';
+            }
+        }
+
+        if (prevBtn) {
+            prevBtn.addEventListener('click', function() {
+                prev();
+                startAuto();
+            });
+        }
+
+        if (nextBtn) {
+            nextBtn.addEventListener('click', function() {
+                next();
+                startAuto();
+            });
+        }
+
+        dots.forEach(function(dot) {
+            dot.addEventListener('click', function() {
+                const idx = parseInt(this.getAttribute('data-index'), 10);
+                if (!isNaN(idx)) {
+                    goTo(idx);
+                    startAuto();
+                }
+            });
+        });
+
+        // Pause on hover
+        const slider = track.closest('.banner-slider');
+        if (slider) {
+            slider.addEventListener('mouseenter', function() {
+                if (timer) {
+                    clearInterval(timer);
+                    timer = null;
+                }
+                if (progressRAF) { cancelAnimationFrame(progressRAF); progressRAF = null; }
+            });
+            slider.addEventListener('mouseleave', function() {
+                startAuto();
+            });
+        }
+
+        // Touch swipe
+        let touchStartX = 0;
+        let touchEndX = 0;
+        track.addEventListener('touchstart', function(e) {
+            touchStartX = e.changedTouches[0].screenX;
+        }, { passive: true });
+        track.addEventListener('touchend', function(e) {
+            touchEndX = e.changedTouches[0].screenX;
+            const diff = touchStartX - touchEndX;
+            if (Math.abs(diff) > 50) {
+                if (diff > 0) next();
+                else prev();
+                startAuto();
+            }
+        }, { passive: true });
+
+        startAuto();
+    }
 
     /* ---------- Navbar: Scroll effect + Dropdown + Mobile Menu ---------- */
     function initNavbar() {
@@ -356,6 +485,79 @@
         }
     }
 
+    /* ---------- Flash-sale marquee: recycle, don't duplicate ----------
+     * The HTML renders each flash-sale product exactly once. JS moves the
+     * track left at a steady speed, and whenever the first card drifts fully
+     * off the left edge it is appended to the end of the track and the
+     * translation is compensated by its own width + gap. Result: the strip
+     * scrolls right-to-left forever, and the viewport never shows two copies
+     * of the same product - which is what broke the pure-CSS approach when
+     * the DB only had 1-2 items.
+     */
+    function initFlashMarquee() {
+        const container = document.querySelector('.flash-scroll-container');
+        const track = document.querySelector('.flash-products-track');
+        if (!container || !track) return;
+
+        const cards = Array.from(track.children);
+        if (cards.length === 0) return;
+
+        const GAP = 16;            // px, must match `.flash-products-track { gap: 16px }`
+        const BASE_SPEED = 0.55;   // px per frame (~33 px/sec at 60fps)
+        let pos = 0;
+        let paused = false;
+        let rafId = null;
+        let lastTs = null;
+        let warmed = false;
+
+        function tick(ts) {
+            if (lastTs == null) lastTs = ts;
+            const dt = Math.min(ts - lastTs, 50); // clamp big tab-switch deltas
+            lastTs = ts;
+
+            if (!paused && warmed) {
+                const pxThisFrame = BASE_SPEED * (dt / 16.6667);
+                pos -= pxThisFrame;
+
+                // Recycle any card that has scrolled fully past the left edge.
+                // Using firstElementChild.offsetWidth is fine because all cards
+                // share the same width per the CSS rule on `.flash-card-item`.
+                let first = track.firstElementChild;
+                while (first && first.offsetLeft + first.offsetWidth + pos < 0) {
+                    pos += first.offsetWidth + GAP;
+                    track.appendChild(first);
+                    first = track.firstElementChild;
+                }
+
+                track.style.transform = 'translate3d(' + pos.toFixed(2) + 'px, 0, 0)';
+            }
+
+            rafId = requestAnimationFrame(tick);
+        }
+
+        // Pause on hover so the user can actually click a card.
+        container.addEventListener('mouseenter', function() { paused = true; });
+        container.addEventListener('mouseleave', function() { paused = false; });
+        // Pause when the tab is hidden so the loop does not fast-forward.
+        document.addEventListener('visibilitychange', function() {
+            lastTs = null;
+        });
+
+        // Warm up: measure widths after fonts/images are ready so the very
+        // first frame already has the correct card geometry.
+        function warmUp() {
+            warmed = true;
+            lastTs = null;
+            rafId = requestAnimationFrame(tick);
+        }
+
+        if (document.readyState === 'complete') {
+            warmUp();
+        } else {
+            window.addEventListener('load', warmUp, { once: true });
+        }
+    }
+
     /* ---------- Load More ---------- */
     function initLoadMore() {
         const loadBtns = document.querySelectorAll('.load-more-btn');
@@ -372,6 +574,8 @@
                     if (count < 6) {
                         card.style.display = 'block';
                         card.setAttribute('data-hidden', 'false');
+                        // Inject fav button into newly revealed cards
+                        injectFavButton(card);
                         count++;
                     }
                 });
@@ -383,6 +587,37 @@
                 }
             });
         });
+    }
+
+    /* ---------- Product Card: Inject heart (Shopee style) ---------- */
+    function initProductCardFav() {
+        document.querySelectorAll('.product-card').forEach(injectFavButton);
+    }
+
+    function injectFavButton(card) {
+        if (!card || card.querySelector('.pc-fav')) return;
+        const wrap = card.querySelector('.product-card-img-wrap');
+        if (!wrap) return;
+
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'pc-fav';
+        btn.setAttribute('aria-label', 'Yêu thích');
+        btn.innerHTML = '<i class="far fa-heart"></i>';
+
+        btn.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            this.classList.toggle('is-active');
+            const icon = this.querySelector('i');
+            if (this.classList.contains('is-active')) {
+                icon.className = 'fas fa-heart';
+            } else {
+                icon.className = 'far fa-heart';
+            }
+        });
+
+        wrap.appendChild(btn);
     }
 
     /* ---------- Quick View Modal ---------- */

@@ -1,0 +1,126 @@
+/* ============================================================================
+ * UI PHASE 1 — RESPONSIVE FOUNDATION
+ * ----------------------------------------------------------------------------
+ * Breakpoint system thống nhất. KHÔNG hard-code breakpoint ngẫu nhiên ở các
+ * page-level CSS — phải dùng --ds-bp-* token và các utility class dưới đây.
+ *
+ * Breakpoints (mobile-first):
+ *   - < 480px   : mobile (default)
+ *   - 480px+    : large mobile (ds-mobile-up)
+ *   - 768px+    : tablet  (ds-tablet-up)
+ *   - 1024px+   : desktop (ds-desktop-up)
+ *   - 1280px+   : wide    (ds-wide-up)
+ *
+ * Phase 1 chỉ EXPOSE foundation. Phase 5 sẽ polish responsive từng page.
+ * ============================================================================ */
+
+/* ---------- Mobile (default) ---------- */
+.ds-show-mobile { display: initial; }
+.ds-hide-mobile { display: none; }
+.ds-show-tablet,
+.ds-show-desktop,
+.ds-show-wide { display: none; }
+
+/* ---------- Large mobile (480px+) ---------- */
+@media (min-width: 480px) {
+  .ds-show-mobile { display: none; }
+  .ds-hide-mobile { display: initial; }
+  .ds-show-tablet,
+  .ds-show-desktop,
+  .ds-show-wide { display: none; }
+}
+
+/* ---------- Tablet (768px+) ---------- */
+@media (min-width: 768px) {
+  .ds-hide-tablet { display: none; }
+  .ds-show-tablet { display: initial; }
+  .ds-show-mobile { display: none; }
+  .ds-show-desktop,
+  .ds-show-wide { display: none; }
+}
+
+/* ---------- Desktop (1024px+) ---------- */
+@media (min-width: 1024px) {
+  .ds-hide-desktop { display: none; }
+  .ds-show-desktop { display: initial; }
+  .ds-show-mobile,
+  .ds-show-tablet { display: none; }
+}
+
+/* ---------- Wide (1280px+) ---------- */
+@media (min-width: 1280px) {
+  .ds-hide-wide { display: none; }
+  .ds-show-wide { display: initial; }
+  .ds-show-mobile,
+  .ds-show-tablet,
+  .ds-show-desktop { display: none; }
+}
+
+/* ---------- Grid responsive collapse ---------- */
+.ds-grid--2,
+.ds-grid--3,
+.ds-grid--4 {
+  grid-template-columns: 1fr;
+}
+
+@media (min-width: 480px) {
+  .ds-grid--2 {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 768px) {
+  .ds-grid--3 {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 1024px) {
+  .ds-grid--4 {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
+/* ---------- Container padding responsive ---------- */
+.ds-container {
+  padding-left: var(--ds-space-4);
+  padding-right: var(--ds-space-4);
+}
+@media (min-width: 768px) {
+  .ds-container {
+    padding-left: var(--ds-space-6);
+    padding-right: var(--ds-space-6);
+  }
+}
+@media (min-width: 1024px) {
+  .ds-container {
+    padding-left: var(--ds-space-8);
+    padding-right: var(--ds-space-8);
+  }
+}
+
+/* ---------- Table responsive scroll hint ---------- */
+.ds-table-wrap {
+  -webkit-overflow-scrolling: touch;
+}
+
+/* ---------- Typography scale up on larger screens ---------- */
+@media (min-width: 1024px) {
+  .ds-page-header__title {
+    font-size: var(--ds-font-size-3xl);
+  }
+}
+
+/* ---------- Print friendly ---------- */
+@media print {
+  .ds-no-print {
+    display: none !important;
+  }
+  body {
+    background: #ffffff;
+    color: #000000;
+  }
+  a {
+    text-decoration: underline;
+  }
+}

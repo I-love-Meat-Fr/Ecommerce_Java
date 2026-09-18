@@ -1,0 +1,130 @@
+/* ============================================================================
+ * UI PHASE 1 — LAYOUT FOUNDATION
+ * ----------------------------------------------------------------------------
+ * Reusable layout primitives dùng chung cho cả 3 modules:
+ *   - WEB/CUSTOMER
+ *   - ADMIN
+ *   - VENDOR
+ *
+ * Components: container, section, page header, stack, grid, sidebar layout.
+ * Tất cả class có prefix "ds-". KHÔNG đụng vào sd-*, vn-* hiện có.
+ *
+ * Các module Admin (sd-*) và Vendor (vn-*) vẫn chạy độc lập vì đã có layout riêng
+ * trong dashboard.css. Phase 2/3/4 sẽ migrate dần sang ds-* nếu cần.
+ * ============================================================================ */
+
+/* ================================ Container =============================== */
+.ds-container {
+  width: 100%;
+  max-width: var(--ds-container-max);
+  margin-left: auto;
+  margin-right: auto;
+  padding-left: var(--ds-container-px);
+  padding-right: var(--ds-container-px);
+}
+.ds-container--narrow {
+  max-width: 720px;
+}
+.ds-container--wide {
+  max-width: 1440px;
+}
+
+/* ================================ Section ================================= */
+.ds-section {
+  padding-top: var(--ds-space-8);
+  padding-bottom: var(--ds-space-8);
+}
+.ds-section--tight {
+  padding-top: var(--ds-space-4);
+  padding-bottom: var(--ds-space-4);
+}
+
+/* ================================ Page Header ============================= */
+.ds-page-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: var(--ds-space-3);
+  margin-bottom: var(--ds-space-6);
+  padding-bottom: var(--ds-space-4);
+  border-bottom: var(--ds-border);
+}
+.ds-page-header__title {
+  margin: 0;
+  font-size: var(--ds-font-size-2xl);
+  font-weight: var(--ds-font-weight-semibold);
+  color: var(--ds-color-text);
+}
+.ds-page-header__subtitle {
+  margin: var(--ds-space-1) 0 0 0;
+  font-size: var(--ds-font-size-sm);
+  color: var(--ds-color-text-muted);
+}
+.ds-page-header__actions {
+  display: flex;
+  align-items: center;
+  gap: var(--ds-space-2);
+}
+
+/* ================================ Stack (vertical rhythm) ================= */
+.ds-stack > * + * {
+  margin-top: var(--ds-stack-gap, var(--ds-space-4));
+}
+.ds-stack--tight {
+  --ds-stack-gap: var(--ds-space-2);
+}
+.ds-stack--loose {
+  --ds-stack-gap: var(--ds-space-6);
+}
+
+/* ================================ Grid ==================================== */
+.ds-grid {
+  display: grid;
+  gap: var(--ds-grid-gap, var(--ds-space-4));
+}
+.ds-grid--2 {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+.ds-grid--3 {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+.ds-grid--4 {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+/* ================================ Cluster (horizontal flex) =============== */
+.ds-cluster {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--ds-cluster-gap, var(--ds-space-3));
+}
+
+/* ================================ App Shell (foundation reference) ======== */
+/* App shell skeleton — Admin/Vendor dùng sd-* riêng; Web dùng inline hiện tại.
+   Foundation này chỉ EXPOSE pattern cho phase 2+ nếu cần. */
+.ds-app-shell {
+  display: grid;
+  grid-template-rows: auto 1fr auto;
+  min-height: 100vh;
+}
+.ds-app-shell__header {
+  position: sticky;
+  top: 0;
+  z-index: var(--ds-z-sticky);
+  background-color: var(--ds-color-surface);
+  border-bottom: var(--ds-border);
+}
+.ds-app-shell__main {
+  padding: var(--ds-space-6) 0;
+  background-color: var(--ds-color-background);
+}
+.ds-app-shell__footer {
+  padding: var(--ds-space-4) 0;
+  background-color: var(--ds-color-surface-alt);
+  border-top: var(--ds-border);
+  color: var(--ds-color-text-muted);
+  font-size: var(--ds-font-size-sm);
+  text-align: center;
+}

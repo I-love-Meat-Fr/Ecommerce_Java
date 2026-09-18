@@ -32,13 +32,25 @@
                 <i class="fas fa-ticket"></i>
                 <span class="sd-nav-label">Voucher WEB</span>
             </a>
-            <span class="sd-nav-item sd-nav-item-disabled" aria-disabled="true" title="Sẽ có trong Phase 5">
+            <a th:href="@{/admin/shops}" class="sd-nav-item" data-match="/admin/shops">
                 <i class="fas fa-store"></i>
                 <span class="sd-nav-label">Cửa hàng</span>
             </a>
             <a th:href="@{/admin/orders}" class="sd-nav-item" data-match="/admin/orders">
                 <i class="fas fa-cart-shopping"></i>
                 <span class="sd-nav-label">Đơn hàng</span>
+            </a>
+            <a th:href="@{/admin/products}" class="sd-nav-item" data-match="/admin/products">
+                <i class="fas fa-box"></i>
+                <span class="sd-nav-label">Kiểm duyệt SP</span>
+            </a>
+            <a th:href="@{/admin/reviews}" class="sd-nav-item" data-match="/admin/reviews">
+                <i class="fas fa-comment-dots"></i>
+                <span class="sd-nav-label">Kiểm duyệt Review</span>
+            </a>
+            <a th:href="@{/admin/banners}" class="sd-nav-item" data-match="/admin/banners">
+                <i class="fas fa-images"></i>
+                <span class="sd-nav-label">Banner / PR</span>
             </a>
         </div>
 

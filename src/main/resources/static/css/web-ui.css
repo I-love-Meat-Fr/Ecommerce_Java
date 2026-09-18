@@ -1,0 +1,429 @@
+/* ============================================================================
+ * UI PHASE 4 — CUSTOMER / WEB UI ENHANCEMENT
+ * ----------------------------------------------------------------------------
+ * Phase 4 — Customer / Web UI Revolution. Bổ sung CSS utility + form controls
+ * + responsive + accessibility cho Customer / Web pages (`.home-page`,
+ * `.pl-page`, `.cart-page`, `.checkout-page`, `.pdp-page`, `.oh-page`,
+ * `.shop-page`).
+ *
+ * Quy tắc Phase 4:
+ *   1. KHÔNG override class hiện có (.home-*, .pl-*, .cart-*, .checkout-*,
+ *      .pdp-*, .oh-*, .shop-* đã được định nghĩa bởi style.css + page CSS).
+ *   2. CHỈ thêm class mới (prefix wb- cho web utilities) hoặc polish.
+ *   3. KHÔNG tạo Design System thứ hai — dùng --ds-* tokens từ Phase 1
+ *      foundation/tokens.css.
+ *   4. KHÔNG đổi cascade của style.css / home.css / page-specific CSS.
+ *   5. CSS file này được load SAU các page-specific CSS trong web-layout.html.
+ *
+ * Phase 4 cover các thành phần:
+ *   - Web Form polish (.wb-input, .wb-select, .wb-textarea)
+ *   - Web Pagination polish
+ *   - Web Empty state polish
+ *   - Web Skeleton helper (CSS-only)
+ *   - Web utility (.wb-row, .wb-stack, .wb-cluster, .wb-between)
+ *   - Customer accessibility (.wb-sr-only, .wb-skip-link, focus-visible)
+ *   - Customer responsive (1024/768/480px, header collapse)
+ *   - Customer print, reduced motion, forced colors
+ * ============================================================================ */
+
+/* ============================== Form Controls ============================= */
+/* Opt-in class cho Customer forms. KHÔNG phá form contract hiện có.
+   Web forms hiện dùng raw <input>/<select> với inline style hoặc page-specific
+   class. Class .wb-input/.wb-select/.wb-textarea là opt-in nếu sau này cần
+   polish đồng nhất với admin-ui/vendor-ui. */
+.wb-input,
+.wb-select,
+.wb-textarea {
+    display: inline-block;
+    width: 100%;
+    max-width: 100%;
+    padding: 10px 14px;
+    font-family: var(--font, 'Work Sans', sans-serif);
+    font-size: 14px;
+    line-height: 1.5;
+    color: var(--ink, #0f172a);
+    background-color: var(--surface, #ffffff);
+    border: 1px solid var(--line, #e2e8f0);
+    border-radius: var(--radius-sm, 8px);
+    transition: border-color 160ms ease,
+                box-shadow 160ms ease,
+                background-color 160ms ease;
+    appearance: none;
+    -webkit-appearance: none;
+    box-sizing: border-box;
+}
+
+.wb-input:hover,
+.wb-select:hover,
+.wb-textarea:hover {
+    border-color: var(--line-strong, #94a3b8);
+}
+
+.wb-input:focus,
+.wb-select:focus,
+.wb-textarea:focus {
+    outline: none;
+    border-color: var(--red, #e11d48);
+    box-shadow: 0 0 0 3px rgba(225, 29, 72, 0.12);
+    background-color: var(--surface, #ffffff);
+}
+
+.wb-input::placeholder,
+.wb-textarea::placeholder {
+    color: var(--muted, #64748b);
+}
+
+.wb-input:disabled,
+.wb-select:disabled,
+.wb-textarea:disabled {
+    background-color: var(--surface-warm, #f1f5f9);
+    color: var(--muted, #64748b);
+    cursor: not-allowed;
+    opacity: 0.7;
+}
+
+.wb-textarea {
+    resize: vertical;
+    min-height: 100px;
+}
+
+/* Select arrow */
+.wb-select {
+    background-image: linear-gradient(45deg, transparent 50%, var(--muted, #64748b) 50%),
+                      linear-gradient(135deg, var(--muted, #64748b) 50%, transparent 50%);
+    background-position: calc(100% - 16px) 50%, calc(100% - 11px) 50%;
+    background-size: 5px 5px, 5px 5px;
+    background-repeat: no-repeat;
+    padding-right: 32px;
+    cursor: pointer;
+}
+
+/* ============================== Form Group ================================ */
+.wb-form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    margin-bottom: 14px;
+}
+
+.wb-form-label {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--ink-soft, #334155);
+}
+
+.wb-form-label-required::after {
+    content: " *";
+    color: var(--red, #e11d48);
+}
+
+.wb-form-help {
+    font-size: 12px;
+    color: var(--muted, #64748b);
+}
+
+.wb-form-error {
+    font-size: 12px;
+    color: var(--red, #e11d48);
+    font-weight: 500;
+}
+
+/* ============================== Empty State Polish ======================== */
+.wb-empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    padding: 64px 20px;
+    text-align: center;
+}
+
+.wb-empty-icon {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    background: var(--gradient-hero, linear-gradient(135deg, #fdf2f8 0%, #eff6ff 100%));
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 32px;
+    color: var(--red, #e11d48);
+    margin-bottom: 8px;
+}
+
+.wb-empty h2,
+.wb-empty h3 {
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--ink, #0f172a);
+    margin: 0;
+}
+
+.wb-empty p {
+    font-size: 14px;
+    color: var(--ink-soft, #334155);
+    margin: 0;
+    max-width: 420px;
+    line-height: 1.5;
+}
+
+.wb-empty .wb-empty-cta {
+    margin-top: 12px;
+}
+
+/* ============================== Pagination Polish ========================= */
+.wb-pagination {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    padding: 24px 0 8px;
+    flex-wrap: wrap;
+}
+
+.wb-page-link {
+    min-width: 38px;
+    height: 38px;
+    padding: 0 12px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    border: 1px solid var(--line, #e2e8f0);
+    background-color: var(--surface, #ffffff);
+    color: var(--ink, #0f172a);
+    border-radius: var(--radius-sm, 8px);
+    text-decoration: none;
+    font-size: 14px;
+    font-weight: 500;
+    transition: background-color 160ms ease,
+                color 160ms ease,
+                border-color 160ms ease;
+}
+
+.wb-page-link:hover {
+    background-color: var(--surface-warm, #f1f5f9);
+    color: var(--ink, #0f172a);
+    text-decoration: none;
+    border-color: var(--line-strong, #94a3b8);
+}
+
+.wb-page-active {
+    background: var(--gradient-primary, linear-gradient(135deg, #e11d48 0%, #f43f5e 100%));
+    border-color: transparent;
+    color: #ffffff;
+    box-shadow: var(--shadow-sm, 0 1px 2px rgba(0,0,0,0.05));
+}
+
+.wb-page-active:hover {
+    background: var(--gradient-primary, linear-gradient(135deg, #e11d48 0%, #f43f5e 100%));
+    color: #ffffff;
+}
+
+.wb-page-disabled {
+    color: var(--muted, #64748b);
+    cursor: not-allowed;
+    opacity: 0.55;
+    pointer-events: none;
+}
+
+.wb-page-info {
+    font-size: 13px;
+    color: var(--muted, #64748b);
+    margin-right: auto;
+}
+
+/* ============================== Skeleton (CSS-only) ======================= */
+.wb-skeleton {
+    background: linear-gradient(90deg,
+        var(--surface-warm, #f1f5f9) 0%,
+        var(--surface-alt, #f8fafc) 50%,
+        var(--surface-warm, #f1f5f9) 100%);
+    background-size: 200% 100%;
+    animation: wb-skeleton-pulse 1.4s ease-in-out infinite;
+    border-radius: var(--radius-sm, 8px);
+    color: transparent;
+    user-select: none;
+    pointer-events: none;
+}
+
+.wb-skeleton-line { height: 14px; margin-bottom: 8px; }
+.wb-skeleton-line:last-child { margin-bottom: 0; }
+.wb-skeleton-block { height: 80px; }
+.wb-skeleton-circle { width: 48px; height: 48px; border-radius: 50%; }
+
+@keyframes wb-skeleton-pulse {
+    0% { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+}
+
+/* ============================== Utility Helpers =========================== */
+/* Atomic utility classes — KHÔNG phá HTML structure, chỉ expose utility hooks. */
+.wb-row { display: flex; align-items: center; }
+.wb-row-gap-2 { gap: 8px; }
+.wb-row-gap-3 { gap: 12px; }
+.wb-row-gap-4 { gap: 16px; }
+.wb-row-wrap { flex-wrap: wrap; }
+.wb-row-between { justify-content: space-between; }
+.wb-row-end { justify-content: flex-end; }
+.wb-row-center { justify-content: center; }
+
+.wb-stack { display: flex; flex-direction: column; }
+.wb-stack-gap-2 { gap: 8px; }
+.wb-stack-gap-3 { gap: 12px; }
+.wb-stack-gap-4 { gap: 16px; }
+
+.wb-text-end { text-align: right; }
+.wb-text-center { text-align: center; }
+.wb-text-nowrap { white-space: nowrap; }
+.wb-text-muted { color: var(--muted, #64748b); }
+
+.wb-grow { flex: 1 1 auto; min-width: 0; }
+.wb-shrink-0 { flex-shrink: 0; }
+
+.wb-mt-1 { margin-top: 4px; }
+.wb-mt-2 { margin-top: 8px; }
+.wb-mt-3 { margin-top: 12px; }
+.wb-mt-4 { margin-top: 16px; }
+.wb-mt-5 { margin-top: 24px; }
+.wb-mb-1 { margin-bottom: 4px; }
+.wb-mb-2 { margin-bottom: 8px; }
+.wb-mb-3 { margin-bottom: 12px; }
+.wb-mb-4 { margin-bottom: 16px; }
+.wb-mb-5 { margin-bottom: 24px; }
+.wb-ml-auto { margin-left: auto; }
+
+.wb-p-3 { padding: 12px; }
+.wb-p-4 { padding: 16px; }
+.wb-p-5 { padding: 20px; }
+
+/* ============================== Accessibility ============================ */
+.wb-sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+}
+
+.wb-skip-link {
+    position: absolute;
+    top: -100px;
+    left: 12px;
+    padding: 10px 16px;
+    background-color: var(--red, #e11d48);
+    color: #fff;
+    border-radius: var(--radius-sm, 8px);
+    text-decoration: none;
+    font-weight: 600;
+    z-index: 9999;
+    transition: top 160ms ease;
+}
+
+.wb-skip-link:focus {
+    top: 12px;
+    color: #fff;
+    text-decoration: none;
+    outline: 2px solid #fff;
+    outline-offset: 2px;
+}
+
+/* Universal focus-visible for Customer pages — phục vụ WCAG AA.
+   Scope: KHÔNG override component focus hiện có; chỉ add fallback. */
+.home-page :focus-visible,
+.pl-page :focus-visible,
+.cart-page :focus-visible,
+.checkout-page :focus-visible,
+.pdp-page :focus-visible,
+.oh-page :focus-visible,
+.shop-page :focus-visible {
+    outline: 2px solid var(--red, #e11d48);
+    outline-offset: 2px;
+    border-radius: var(--radius-sm, 8px);
+}
+
+/* ============================== Responsive =============================== */
+@media (max-width: 1024px) {
+    .wb-hide-md { display: none !important; }
+}
+
+@media (max-width: 768px) {
+    .wb-hide-sm { display: none !important; }
+
+    /* Mobile container padding helper */
+    .home-page .container,
+    .pl-page .container,
+    .cart-page .container,
+    .checkout-page .container,
+    .pdp-page .container,
+    .oh-page .container,
+    .shop-page .container {
+        padding-left: 14px;
+        padding-right: 14px;
+    }
+
+    /* Page hero text smaller */
+    .pl-hero-text h1,
+    .cart-hero-text h1,
+    .checkout-hero-text h1,
+    .oh-hero-text h1,
+    .shop-hero-text h1 {
+        font-size: 22px !important;
+    }
+}
+
+@media (max-width: 480px) {
+    .wb-hide-xs { display: none !important; }
+}
+
+/* ============================== Print ===================================== */
+@media print {
+    .home-header,
+    .footer,
+    .home-nav,
+    .wb-pagination,
+    .pdp-sticky-header {
+        display: none !important;
+    }
+    body {
+        background: #fff !important;
+        color: #000 !important;
+    }
+}
+
+/* ============================== Reduced Motion =========================== */
+@media (prefers-reduced-motion: reduce) {
+    .wb-skeleton {
+        animation: none !important;
+        background: var(--surface-warm, #f1f5f9) !important;
+    }
+    .home-page *,
+    .pl-page *,
+    .cart-page *,
+    .checkout-page *,
+    .pdp-page *,
+    .oh-page *,
+    .shop-page * {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+    }
+}
+
+/* ============================== High Contrast ============================ */
+@media (forced-colors: active) {
+    .home-header,
+    .footer,
+    .pl-filter-bar,
+    .wb-page-link,
+    .wb-input,
+    .wb-select,
+    .wb-textarea {
+        border: 1px solid CanvasText;
+    }
+}
