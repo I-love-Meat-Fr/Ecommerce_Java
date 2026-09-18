@@ -8,6 +8,7 @@ import com.ecommerce.cnj70.exception.ResourceNotFoundException;
 import com.ecommerce.cnj70.repository.ProductRepository;
 import com.ecommerce.cnj70.repository.ReviewRepository;
 import com.ecommerce.cnj70.repository.UserRepository;
+import com.ecommerce.cnj70.service.OrderService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -39,6 +40,12 @@ class ReviewServiceImplTest {
 
     @Mock
     private ProductRepository productRepository;
+
+    /**
+     * TASK #21 — ReviewServiceImpl giờ phụ thuộc OrderService để xác thực mua hàng.
+     */
+    @Mock
+    private OrderService orderService;
 
     @InjectMocks
     private ReviewServiceImpl reviewService;
@@ -84,6 +91,7 @@ class ReviewServiceImplTest {
     void createReview_validInput_savesAndReturnsReview() {
         when(userRepository.findById("user-001")).thenReturn(Optional.of(testUser));
         when(productRepository.findById("prod-001")).thenReturn(Optional.of(testProduct));
+        when(orderService.hasUserPurchasedProduct("user-001", "prod-001")).thenReturn(true);
         when(reviewRepository.findByProductIdAndUserId("prod-001", "user-001")).thenReturn(Optional.empty());
         when(reviewRepository.save(any(Review.class))).thenAnswer(inv -> {
             Review r = inv.getArgument(0);
@@ -102,6 +110,9 @@ class ReviewServiceImplTest {
         assertEquals("Nguyễn Văn A", result.getUserName());
         assertEquals(5, result.getRating());
         assertEquals("Sản phẩm rất tốt!", result.getComment());
+
+        // Verify TASK #21 purchase check was invoked
+        verify(orderService).hasUserPurchasedProduct("user-001", "prod-001");
 
         // Verify snapshots were taken from User at creation time
         ArgumentCaptor<Review> captor = ArgumentCaptor.forClass(Review.class);
@@ -236,6 +247,7 @@ class ReviewServiceImplTest {
     void createReview_duplicateReview_throwsException() {
         when(userRepository.findById("user-001")).thenReturn(Optional.of(testUser));
         when(productRepository.findById("prod-001")).thenReturn(Optional.of(testProduct));
+        when(orderService.hasUserPurchasedProduct("user-001", "prod-001")).thenReturn(true);
         when(reviewRepository.findByProductIdAndUserId("prod-001", "user-001"))
                 .thenReturn(Optional.of(testReview));
 
@@ -245,6 +257,26 @@ class ReviewServiceImplTest {
         );
 
         assertEquals("Bạn đã đánh giá sản phẩm này rồi", ex.getMessage());
+        verify(reviewRepository, never()).save(any());
+    }
+
+    // =========================================================================
+    // TC25 — TASK #21: User chưa mua Product → Review bị từ chối
+    // =========================================================================
+    @Test
+    @DisplayName("TC25: User has NOT purchased product → BadRequestException")
+    void createReview_userHasNotPurchased_throwsException() {
+        when(userRepository.findById("user-001")).thenReturn(Optional.of(testUser));
+        when(productRepository.findById("prod-001")).thenReturn(Optional.of(testProduct));
+        when(orderService.hasUserPurchasedProduct("user-001", "prod-001")).thenReturn(false);
+
+        BadRequestException ex = assertThrows(
+                BadRequestException.class,
+                () -> reviewService.createReview("user-001", "prod-001", 5, "Trying to review")
+        );
+
+        assertTrue(ex.getMessage().contains("đã mua"), "Message should mention purchase requirement");
+        verify(orderService).hasUserPurchasedProduct("user-001", "prod-001");
         verify(reviewRepository, never()).save(any());
     }
 
@@ -575,6 +607,7 @@ class ReviewServiceImplTest {
     void createReview_updatesProductRatingAndCount() {
         when(userRepository.findById("user-001")).thenReturn(Optional.of(testUser));
         when(productRepository.findById("prod-001")).thenReturn(Optional.of(testProduct));
+        when(orderService.hasUserPurchasedProduct("user-001", "prod-001")).thenReturn(true);
         when(reviewRepository.findByProductIdAndUserId("prod-001", "user-001")).thenReturn(Optional.empty());
         when(reviewRepository.save(any(Review.class))).thenAnswer(inv -> {
             Review r = inv.getArgument(0);
@@ -682,16 +715,15 @@ class ReviewServiceImplTest {
     }
 
     // =========================================================================
-    // TC26 — Purchase verification: Current system allows review without purchase
+    // TC26 — TASK #21: Hệ thống BẮT BUỘC xác thực đã mua trước khi cho review
     // =========================================================================
     @Test
-    @DisplayName("TC26: System does not enforce purchase verification (current behavior)")
-    void createReview_noPurchaseCheckPerformed() {
-        // This test documents that the current implementation does NOT check
-        // whether the user has purchased the product before allowing a review.
-        // This is intentional (task #21 says "if the system requires it").
+    @DisplayName("TC26: System enforces purchase verification (TASK #21)")
+    void createReview_purchaseCheckIsEnforced() {
+        // Khi user đã mua sản phẩm -> orderService.hasUserPurchasedProduct trả true -> review thành công
         when(userRepository.findById("user-001")).thenReturn(Optional.of(testUser));
         when(productRepository.findById("prod-001")).thenReturn(Optional.of(testProduct));
+        when(orderService.hasUserPurchasedProduct("user-001", "prod-001")).thenReturn(true);
         when(reviewRepository.findByProductIdAndUserId("prod-001", "user-001")).thenReturn(Optional.empty());
         when(reviewRepository.save(any(Review.class))).thenAnswer(inv -> {
             Review r = inv.getArgument(0);
@@ -701,11 +733,40 @@ class ReviewServiceImplTest {
         when(reviewRepository.findByProductId("prod-001")).thenReturn(List.of(testReview));
         when(reviewRepository.countByProductId("prod-001")).thenReturn(1);
 
-        // No OrderService call is made — purchase verification is not enforced
-        Review result = reviewService.createReview("user-001", "prod-001", 5, "No purchase required!");
+        Review result = reviewService.createReview("user-001", "prod-001", 5, "Purchased review");
 
         assertNotNull(result);
-        // If purchase verification is added later, this test will need updating
+        // TASK #21 — đã gọi orderService.hasUserPurchasedProduct
+        verify(orderService, times(1)).hasUserPurchasedProduct("user-001", "prod-001");
         verify(reviewRepository).save(any(Review.class));
+    }
+
+    // =========================================================================
+    // canUserReviewProduct — combined check (purchase + not yet reviewed)
+    // =========================================================================
+    @Test
+    @DisplayName("canUserReviewProduct: purchased + not reviewed → true")
+    void canUserReviewProduct_purchasedNotReviewed_returnsTrue() {
+        when(orderService.hasUserPurchasedProduct("user-001", "prod-001")).thenReturn(true);
+        when(reviewRepository.findByProductIdAndUserId("prod-001", "user-001")).thenReturn(Optional.empty());
+
+        assertTrue(reviewService.canUserReviewProduct("user-001", "prod-001"));
+    }
+
+    @Test
+    @DisplayName("canUserReviewProduct: purchased + already reviewed → false")
+    void canUserReviewProduct_purchasedAlreadyReviewed_returnsFalse() {
+        when(orderService.hasUserPurchasedProduct("user-001", "prod-001")).thenReturn(true);
+        when(reviewRepository.findByProductIdAndUserId("prod-001", "user-001")).thenReturn(Optional.of(testReview));
+
+        assertFalse(reviewService.canUserReviewProduct("user-001", "prod-001"));
+    }
+
+    @Test
+    @DisplayName("canUserReviewProduct: NOT purchased → false")
+    void canUserReviewProduct_notPurchased_returnsFalse() {
+        when(orderService.hasUserPurchasedProduct("user-001", "prod-001")).thenReturn(false);
+
+        assertFalse(reviewService.canUserReviewProduct("user-001", "prod-001"));
     }
 }

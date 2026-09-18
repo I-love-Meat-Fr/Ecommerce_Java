@@ -115,6 +115,9 @@
                         </header>
                         <div class="checkout-form-body">
                             <form th:action="@{/checkout}" th:object="${checkoutReq}" method="post" id="checkout-form" novalidate>
+                                <!-- Hidden fields carrying voucher info from Cart session -->
+                                <input type="hidden" th:field="*{voucherCode}" id="hidden-voucher-code">
+                                <input type="hidden" th:field="*{discount}" id="hidden-voucher-discount">
 
                                 <!-- Contact info -->
                                 <div class="form-section-title">
@@ -233,16 +236,24 @@
                         </div>
                         <div class="summary-row">
                             <span>Phí vận chuyển</span>
-                            <span class="summary-value">15.000đ</span>
+                            <span class="summary-value" th:text="${@money.format(shippingFee)}">15.000đ</span>
                         </div>
-                        <div class="summary-row discount" style="display: none;">
-                            <span>Giảm giá</span>
-                            <span class="summary-value">-0đ</span>
+                        <div class="summary-row summary-row-discount" id="discount-row"
+                             th:style="${appliedVoucher != null ? 'display:flex' : 'display:none'}">
+                            <span>
+                                <i class="fas fa-tag"></i>
+                                Giảm giá
+                                <small th:if="${appliedVoucher != null}"
+                                       th:text="'(' + ${appliedVoucher.code} + ')'">(CODE)</small>
+                            </span>
+                            <span class="summary-value summary-discount"
+                                  th:text="'-' + ${@money.format(discount != null ? discount : 0)}">-0đ</span>
                         </div>
 
                         <div class="summary-total-row">
                             <span class="summary-total-label">Tổng cộng</span>
-                            <span class="summary-total-value" th:text="${@money.formatTotalWithShipping(cartTotal)}">0đ</span>
+                            <span class="summary-total-value"
+                                  th:text="${@money.format(finalTotal != null ? finalTotal : (cartTotal + shippingFee))}">0đ</span>
                         </div>
                     </div>
 

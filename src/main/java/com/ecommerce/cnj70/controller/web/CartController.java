@@ -7,6 +7,7 @@ import com.ecommerce.cnj70.exception.BadRequestException;
 import com.ecommerce.cnj70.security.CustomUserDetails;
 import com.ecommerce.cnj70.service.CartService;
 import com.ecommerce.cnj70.service.VoucherService;
+import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -29,14 +30,18 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class CartController {
 
-    private final CartService cartService;
-    private final VoucherService voucherService;
-
     /** Cộng dồn phí vận chuyển cố định theo quy tắc dự án hiện hữu (15.000đ). */
     private static final BigDecimal SHIPPING_FEE = new BigDecimal("15000");
 
+    /** Session key lưu Voucher đang áp dụng cho Cart. */
+    public static final String SESSION_APPLIED_VOUCHER = "appliedVoucher";
+
+    private final CartService cartService;
+    private final VoucherService voucherService;
+
     @GetMapping("/cart")
-    public String cartPage(@AuthenticationPrincipal CustomUserDetails user, Model model) {
+    public String cartPage(@AuthenticationPrincipal CustomUserDetails user, Model model,
+                           HttpSession session) {
         if (user == null) {
             return "redirect:/auth/login";
         }
@@ -51,10 +56,36 @@ public class CartController {
                         LinkedHashMap::new,
                         Collectors.toList()));
 
+        // Apply persisted voucher (nếu có) để hiển thị đúng summary
+        AppliedVoucher applied = readAppliedVoucher(session);
+        BigDecimal discount = BigDecimal.ZERO;
+        BigDecimal finalTotal = cartTotal.add(SHIPPING_FEE);
+        if (applied != null) {
+            try {
+                Voucher fresh = voucherService.getVoucherByCode(applied.code);
+                discount = computeDiscount(fresh, cartTotal.add(SHIPPING_FEE));
+                finalTotal = cartTotal.add(SHIPPING_FEE).subtract(discount);
+                if (finalTotal.compareTo(BigDecimal.ZERO) < 0) {
+                    finalTotal = BigDecimal.ZERO;
+                }
+                // Cập nhật session với voucher mới nhất (tên/used/etc có thể đã đổi)
+                applied = new AppliedVoucher(fresh.getCode(), fresh.getId(), fresh.getName(), discount, finalTotal);
+                session.setAttribute(SESSION_APPLIED_VOUCHER, applied);
+            } catch (Exception e) {
+                // Voucher đã bị xóa/hết hạn -> clear session
+                session.removeAttribute(SESSION_APPLIED_VOUCHER);
+                applied = null;
+            }
+        }
+
         model.addAttribute("cart", cart);
         model.addAttribute("cartTotal", cartTotal);
         model.addAttribute("totalQuantity", totalQuantity);
         model.addAttribute("itemsByShop", itemsByShop);
+        model.addAttribute("shippingFee", SHIPPING_FEE);
+        model.addAttribute("appliedVoucher", applied);
+        model.addAttribute("discount", discount);
+        model.addAttribute("finalTotal", finalTotal);
 
         return "web/cart";
     }
@@ -63,7 +94,8 @@ public class CartController {
     @ResponseBody
     public ResponseEntity<Map<String, Object>> addToCartApi(@AuthenticationPrincipal CustomUserDetails user,
                                                            @RequestParam String productId,
-                                                           @RequestParam(defaultValue = "1") int quantity) {
+                                                           @RequestParam(defaultValue = "1") int quantity,
+                                                           HttpSession session) {
         Map<String, Object> response = new HashMap<>();
 
         if (user == null) {
@@ -75,6 +107,8 @@ public class CartController {
         try {
             Cart cart = cartService.addToCart(user.getId(), productId, quantity);
             int itemCount = cart.getItems().stream().mapToInt(Cart.CartItem::getQuantity).sum();
+            // Sau khi thêm item, subtotal có thể đã đổi -> re-evaluate voucher discount
+            reEvaluateVoucher(session, user.getId());
             response.put("success", true);
             response.put("message", "Đã thêm sản phẩm vào giỏ hàng");
             response.put("itemCount", itemCount);
@@ -105,7 +139,8 @@ public class CartController {
     @PostMapping("/cart/update")
     public String updateCart(@AuthenticationPrincipal CustomUserDetails user,
                             @RequestParam String productId,
-                            @RequestParam int quantity) {
+                            @RequestParam int quantity,
+                            HttpSession session) {
         if (user == null) {
             return "redirect:/auth/login";
         }
@@ -113,16 +148,19 @@ public class CartController {
             return "redirect:/cart";
         }
         cartService.updateCartItem(user.getId(), productId, quantity);
+        reEvaluateVoucher(session, user.getId());
         return "redirect:/cart";
     }
 
     @PostMapping("/cart/remove")
     public String removeFromCart(@AuthenticationPrincipal CustomUserDetails user,
-                                @RequestParam String productId) {
+                                @RequestParam String productId,
+                                HttpSession session) {
         if (user == null) {
             return "redirect:/auth/login";
         }
         cartService.removeFromCart(user.getId(), productId);
+        reEvaluateVoucher(session, user.getId());
         return "redirect:/cart";
     }
 
@@ -138,11 +176,13 @@ public class CartController {
      *     → VoucherService.validateForCheckout()  (Voucher module validate)
      *     → server: compute discount + final total
      *     → client: discount + finalTotal
+     *     → server: lưu vào HttpSession để Checkout/Order dùng tiếp
      */
     @PostMapping("/api/cart/apply-voucher")
     @ResponseBody
     public ResponseEntity<Map<String, Object>> applyVoucher(@AuthenticationPrincipal CustomUserDetails user,
-                                                           @RequestParam String code) {
+                                                           @RequestParam String code,
+                                                           HttpSession session) {
         Map<String, Object> response = new HashMap<>();
 
         if (user == null) {
@@ -169,11 +209,15 @@ public class CartController {
         try {
             Voucher voucher = voucherService.validateForCheckout(code.trim(), null, null);
 
-            BigDecimal discount = computeDiscount(voucher, cartSubtotal);
+            BigDecimal discount = computeDiscount(voucher, cartSubtotal.add(SHIPPING_FEE));
             BigDecimal finalTotal = cartSubtotal.add(SHIPPING_FEE).subtract(discount);
             if (finalTotal.compareTo(BigDecimal.ZERO) < 0) {
                 finalTotal = BigDecimal.ZERO;
             }
+
+            // Lưu vào session để Checkout/Order dùng tiếp (TASK #13)
+            session.setAttribute(SESSION_APPLIED_VOUCHER,
+                    new AppliedVoucher(voucher.getCode(), voucher.getId(), voucher.getName(), discount, finalTotal));
 
             response.put("success", true);
             response.put("message", "Áp dụng voucher thành công");
@@ -205,11 +249,12 @@ public class CartController {
 
     /**
      * Trả cart về trạng thái không voucher.
-     * Không lưu state voucher ở Cart; client chỉ cần reset hiển thị.
+     * Xóa voucher khỏi session luôn.
      */
     @PostMapping("/api/cart/remove-voucher")
     @ResponseBody
-    public ResponseEntity<Map<String, Object>> removeVoucher(@AuthenticationPrincipal CustomUserDetails user) {
+    public ResponseEntity<Map<String, Object>> removeVoucher(@AuthenticationPrincipal CustomUserDetails user,
+                                                            HttpSession session) {
         Map<String, Object> response = new HashMap<>();
 
         if (user == null) {
@@ -217,6 +262,8 @@ public class CartController {
             response.put("message", "Vui lòng đăng nhập");
             return ResponseEntity.status(401).body(response);
         }
+
+        session.removeAttribute(SESSION_APPLIED_VOUCHER);
 
         Cart cart = cartService.getCartByUserId(user.getId());
         BigDecimal cartSubtotal = cartService.calculateTotal(cart);
@@ -232,8 +279,8 @@ public class CartController {
     }
 
     /**
-     * Tính discount từ voucher + subtotal. Logic khớp với VoucherController.calculateDiscount().
-     * Chỉ dùng để hiển thị Cart; quyết định cuối cùng vẫn do Voucher module xác nhận.
+     * Tính discount từ voucher + subtotal. Logic khớp với VoucherController.calculateDiscount()
+     * và OrderServiceImpl.computeDiscount().
      */
     private BigDecimal computeDiscount(Voucher voucher, BigDecimal orderTotal) {
         BigDecimal discount = BigDecimal.ZERO;
@@ -255,5 +302,76 @@ public class CartController {
             discount = orderTotal;
         }
         return discount.setScale(2, RoundingMode.HALF_UP);
+    }
+
+    /**
+     * Đọc AppliedVoucher từ session.
+     */
+    @SuppressWarnings("unchecked")
+    private AppliedVoucher readAppliedVoucher(HttpSession session) {
+        if (session == null) return null;
+        Object attr = session.getAttribute(SESSION_APPLIED_VOUCHER);
+        return (attr instanceof AppliedVoucher av) ? av : null;
+    }
+
+    /**
+     * Sau khi thay đổi Cart (add/update/remove), tính lại discount nếu đang có voucher.
+     * Nếu subtotal đổi làm voucher không còn hợp lệ (vd: < minOrderValue), clear session.
+     */
+    private void reEvaluateVoucher(HttpSession session, String userId) {
+        AppliedVoucher applied = readAppliedVoucher(session);
+        if (applied == null) return;
+        try {
+            Voucher fresh = voucherService.getVoucherByCode(applied.code);
+            Cart cart = cartService.getCartByUserId(userId);
+            BigDecimal subtotal = cartService.calculateTotal(cart).add(SHIPPING_FEE);
+            if (subtotal.signum() <= 0) {
+                session.removeAttribute(SESSION_APPLIED_VOUCHER);
+                return;
+            }
+            BigDecimal discount = computeDiscount(fresh, subtotal);
+            if (discount.signum() <= 0) {
+                // không đủ điều kiện nữa (vd: subtotal < minOrderValue) -> clear
+                session.removeAttribute(SESSION_APPLIED_VOUCHER);
+                return;
+            }
+            BigDecimal finalTotal = subtotal.subtract(discount);
+            if (finalTotal.compareTo(BigDecimal.ZERO) < 0) {
+                finalTotal = BigDecimal.ZERO;
+            }
+            session.setAttribute(SESSION_APPLIED_VOUCHER,
+                    new AppliedVoucher(fresh.getCode(), fresh.getId(), fresh.getName(), discount, finalTotal));
+        } catch (Exception e) {
+            // Voucher không còn khả dụng -> clear
+            session.removeAttribute(SESSION_APPLIED_VOUCHER);
+        }
+    }
+
+    /**
+     * DTO session-scope lưu thông tin voucher đang áp dụng.
+     * Implements Serializable để Spring Session có thể persist nếu cần.
+     */
+    public static class AppliedVoucher implements java.io.Serializable {
+        private static final long serialVersionUID = 1L;
+        private final String code;
+        private final String voucherId;
+        private final String voucherName;
+        private final BigDecimal discount;
+        private final BigDecimal finalTotal;
+
+        public AppliedVoucher(String code, String voucherId, String voucherName,
+                              BigDecimal discount, BigDecimal finalTotal) {
+            this.code = code;
+            this.voucherId = voucherId;
+            this.voucherName = voucherName;
+            this.discount = discount;
+            this.finalTotal = finalTotal;
+        }
+
+        public String getCode() { return code; }
+        public String getVoucherId() { return voucherId; }
+        public String getVoucherName() { return voucherName; }
+        public BigDecimal getDiscount() { return discount; }
+        public BigDecimal getFinalTotal() { return finalTotal; }
     }
 }

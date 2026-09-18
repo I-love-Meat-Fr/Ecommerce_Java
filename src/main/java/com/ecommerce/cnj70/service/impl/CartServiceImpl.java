@@ -11,6 +11,7 @@ import org.springframework.stereotype.Service;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Optional;
 
 @Service
@@ -118,6 +119,23 @@ public class CartServiceImpl implements CartService {
         cart.setItems(new ArrayList<>());
         cart.setUpdatedAt(LocalDateTime.now());
         cartRepository.save(cart);
+    }
+
+    /**
+     * TASK #14 — Partial checkout cleanup.
+     * Xóa chỉ những CartItem có productId nằm trong {@code productIds}, giữ nguyên các item còn lại.
+     * - productIds null hoặc rỗng → không xóa gì, trả Cart hiện tại.
+     * - Tự save và cập nhật updatedAt.
+     */
+    @Override
+    public Cart removeItems(String userId, Collection<String> productIds) {
+        if (productIds == null || productIds.isEmpty()) {
+            return getCartByUserId(userId);
+        }
+        Cart cart = getCartByUserId(userId);
+        cart.getItems().removeIf(item -> productIds.contains(item.getProductId()));
+        cart.setUpdatedAt(LocalDateTime.now());
+        return cartRepository.save(cart);
     }
     
     private Cart createEmptyCart(String userId) {

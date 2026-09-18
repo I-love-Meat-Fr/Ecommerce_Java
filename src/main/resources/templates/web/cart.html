@@ -152,19 +152,30 @@
                             <label for="coupon-input" class="summary-coupon-label">
                                 <i class="fas fa-tag"></i> Mã giảm giá
                             </label>
-                            <div class="summary-coupon-form">
+                            <div class="summary-coupon-form" th:if="${appliedVoucher == null}">
                                 <input type="text" id="coupon-input" name="voucherCode" placeholder="Nhập mã giảm giá" maxlength="50">
-                                <button type="button" class="btn-coupon" onclick="applyVoucher()">Áp dụng</button>
+                                <button type="button" class="btn-coupon" id="btn-apply-voucher">Áp dụng</button>
                             </div>
-                            <small class="summary-coupon-note">
-                                <i class="fas fa-info-circle"></i>
-                                Chức năng áp dụng mã sẽ được kích hoạt sau khi hoàn thiện hệ thống voucher
-                            </small>
+                            <!-- Applied voucher info -->
+                            <div class="voucher-applied-info" id="voucher-applied-info" th:if="${appliedVoucher != null}" th:style="'display:flex'">
+                                <span class="voucher-applied-icon"><i class="fas fa-check-circle"></i></span>
+                                <span id="voucher-applied-name" th:text="${appliedVoucher.voucherName != null ? appliedVoucher.voucherName : appliedVoucher.code}">Voucher</span>
+                                <a href="javascript:void(0)" id="btn-remove-voucher" class="voucher-remove-btn" aria-label="Hủy voucher">
+                                    <i class="fas fa-times"></i>
+                                </a>
+                            </div>
+                            <!-- Voucher error message -->
+                            <div id="voucher-error" class="voucher-error" style="display:none;"></div>
+                        </div>
+                        <!-- Discount row -->
+                        <div id="discount-row" class="summary-row summary-row-discount" th:style="${appliedVoucher != null ? 'display:flex' : 'display:none'}">
+                            <span>Giảm giá</span>
+                            <span id="discount-amount" class="summary-discount" th:text="'-' + ${@money.format(discount != null ? discount : 0)}">-0đ</span>
                         </div>
                         <div class="summary-divider"></div>
                         <div class="summary-row summary-total">
                             <span>Tổng cộng</span>
-                            <span class="summary-total-amount" th:text="${@money.format(cartTotal)}">0đ</span>
+                            <span id="final-total-amount" class="summary-total-amount" th:text="${@money.format(finalTotal != null ? finalTotal : cartTotal)}">0đ</span>
                         </div>
                     </div>
                     <a th:href="@{/checkout}" class="btn-checkout">
@@ -204,33 +215,132 @@
 
 <th:block th:fragment="page-scripts">
     <script th:inline="none">
-        // Voucher input handling (UI only - no business logic)
-        function applyVoucher() {
+        // ============================================================
+        // Cart Voucher Integration
+        // Cart chỉ gửi voucherCode; subtotal/discount/finalTotal đều do server tính.
+        // ============================================================
+
+        function formatMoney(amount) {
+            if (amount == null || isNaN(amount)) return '0₫';
+            return new Intl.NumberFormat('vi-VN').format(amount) + '₫';
+        }
+
+        function showToast(type, message) {
+            // Best-effort: dùng global showToast nếu có, fallback alert
+            if (typeof window.showToast === 'function') {
+                window.showToast(type, message);
+            } else {
+                console[type === 'error' ? 'error' : 'log']('Toast:', message);
+            }
+        }
+
+        async function applyVoucher() {
             const input = document.getElementById('coupon-input');
-            const code = input.value.trim();
+            const btn = document.getElementById('btn-apply-voucher');
+            const code = input ? input.value.trim() : '';
 
             if (!code) {
-                alert('Vui lòng nhập mã giảm giá');
+                showToast('error', 'Vui lòng nhập mã giảm giá');
                 return;
             }
 
-            // Display the entered code (UI only)
-            console.log('Mã voucher đã nhập:', code);
+            if (btn) {
+                btn.disabled = true;
+                btn.textContent = 'Đang xử lý...';
+            }
 
-            // Show informational message
-            alert('Mã voucher "' + code + '" đã được ghi nhận.\n\nChức năng áp dụng voucher sẽ được kích hoạt sau khi hệ thống voucher hoàn thiện.');
-        }
+            try {
+                const formData = new FormData();
+                formData.append('code', code);
 
-        // Allow Enter key to apply voucher
-        const couponInput = document.getElementById('coupon-input');
-        if (couponInput) {
-            couponInput.addEventListener('keypress', function(e) {
-                if (e.key === 'Enter') {
-                    e.preventDefault();
-                    applyVoucher();
+                const response = await fetch('/api/cart/apply-voucher', {
+                    method: 'POST',
+                    body: formData,
+                    headers: { 'X-Requested-With': 'XMLHttpRequest' }
+                });
+
+                if (response.status === 401) {
+                    window.location.href = '/auth/login';
+                    return;
                 }
-            });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    showToast('success', data.message || 'Áp dụng voucher thành công');
+                    // Reload page để render lại từ session + server
+                    setTimeout(() => window.location.reload(), 300);
+                } else {
+                    showVoucherError(data.message || 'Voucher không hợp lệ');
+                    showToast('error', data.message || 'Voucher không hợp lệ');
+                }
+            } catch (err) {
+                console.error('Voucher error:', err);
+                showVoucherError('Có lỗi xảy ra, vui lòng thử lại');
+                showToast('error', 'Có lỗi xảy ra');
+            } finally {
+                if (btn) {
+                    btn.disabled = false;
+                    btn.textContent = 'Áp dụng';
+                }
+            }
         }
+
+        function showVoucherError(message) {
+            const errorEl = document.getElementById('voucher-error');
+            if (errorEl) {
+                errorEl.textContent = message;
+                errorEl.style.display = 'block';
+            }
+        }
+
+        async function removeVoucher() {
+            const btn = document.getElementById('btn-remove-voucher');
+            if (btn) btn.disabled = true;
+
+            try {
+                const response = await fetch('/api/cart/remove-voucher', {
+                    method: 'POST',
+                    headers: { 'X-Requested-With': 'XMLHttpRequest' }
+                });
+
+                if (response.status === 401) {
+                    window.location.href = '/auth/login';
+                    return;
+                }
+
+                const data = await response.json();
+                if (data.success) {
+                    showToast('success', 'Đã hủy voucher');
+                    setTimeout(() => window.location.reload(), 200);
+                }
+            } catch (err) {
+                console.error('Remove voucher error:', err);
+                showToast('error', 'Có lỗi xảy ra');
+            } finally {
+                if (btn) btn.disabled = false;
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            const applyBtn = document.getElementById('btn-apply-voucher');
+            if (applyBtn) {
+                applyBtn.addEventListener('click', applyVoucher);
+            }
+            const removeBtn = document.getElementById('btn-remove-voucher');
+            if (removeBtn) {
+                removeBtn.addEventListener('click', removeVoucher);
+            }
+            const couponInput = document.getElementById('coupon-input');
+            if (couponInput) {
+                couponInput.addEventListener('keypress', function(e) {
+                    if (e.key === 'Enter') {
+                        e.preventDefault();
+                        applyVoucher();
+                    }
+                });
+            }
+        });
     </script>
 </th:block>
 </body>

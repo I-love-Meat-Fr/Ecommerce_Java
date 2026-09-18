@@ -118,6 +118,20 @@ public class ReviewController {
         boolean hasReviewed = reviewService.hasUserReviewedProduct(user.getId(), productId);
         return ResponseEntity.ok(hasReviewed);
     }
+
+    /**
+     * TASK #21 — Check user có quyền review Product không (đã mua thành công).
+     * Frontend dùng để hiển thị form review hoặc message "Bạn cần mua sản phẩm trước".
+     */
+    @GetMapping("/api/reviews/can-review")
+    @ResponseBody
+    public ResponseEntity<Boolean> checkCanReview(@AuthenticationPrincipal CustomUserDetails user,
+                                                  @RequestParam String productId) {
+        if (user == null) {
+            return ResponseEntity.ok(false);
+        }
+        return ResponseEntity.ok(reviewService.canUserReviewProduct(user.getId(), productId));
+    }
     
     private ReviewRes toReviewRes(Review review) {
         return ReviewRes.builder()
