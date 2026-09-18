@@ -150,7 +150,7 @@
                             </div>
                             <div class="summary-row">
                                 <span>Phí vận chuyển</span>
-                                <span class="summary-shipping">Tính ở bước sau</span>
+                                <span class="summary-shipping-fee">15.000đ</span>
                             </div>
                             <div class="summary-row summary-row-coupon">
                                 <label for="coupon-input" class="summary-coupon-label">
@@ -158,17 +158,28 @@
                                 </label>
                                 <div class="summary-coupon-form">
                                     <input type="text" id="coupon-input" name="voucherCode" placeholder="Nhập mã giảm giá" maxlength="50">
-                                    <button type="button" class="btn-coupon" onclick="applyVoucher()">Áp dụng</button>
+                                    <button type="button" class="btn-coupon" id="btn-apply-voucher" onclick="applyVoucher()">Áp dụng</button>
                                 </div>
-                                <small class="summary-coupon-note">
-                                    <i class="fas fa-info-circle"></i> 
-                                    Chức năng áp dụng mã sẽ được kích hoạt sau khi hoàn thiện hệ thống voucher
-                                </small>
+                                <!-- Applied voucher info (hidden by default) -->
+                                <div id="voucher-applied-info" class="voucher-applied-info" style="display:none;">
+                                    <span class="voucher-applied-icon"><i class="fas fa-check-circle"></i></span>
+                                    <span id="voucher-applied-name"></span>
+                                    <a href="javascript:void(0)" id="btn-remove-voucher" class="voucher-remove-btn" onclick="removeVoucher()">
+                                        <i class="fas fa-times"></i>
+                                    </a>
+                                </div>
+                                <!-- Voucher error message -->
+                                <div id="voucher-error" class="voucher-error" style="display:none;"></div>
+                            </div>
+                            <!-- Discount row (hidden by default) -->
+                            <div id="discount-row" class="summary-row summary-row-discount" style="display:none;">
+                                <span>Giảm giá</span>
+                                <span id="discount-amount" class="summary-discount">-0đ</span>
                             </div>
                             <div class="summary-divider"></div>
                             <div class="summary-row summary-total">
                                 <span>Tổng cộng</span>
-                                <span class="summary-total-amount" th:text="${@money.format(cartTotal)}">0đ</span>
+                                <span id="final-total-amount" class="summary-total-amount">0đ</span>
                             </div>
                         </div>
                         <a th:href="@{/checkout}" class="btn-checkout">
@@ -208,25 +219,192 @@
     <div th:replace="fragments/web-footer"></div>
     <script th:src="@{/js/main.js}"></script>
     <script>
-        // Voucher input handling (UI only - no business logic)
+        // ============================================================
+        // Cart Voucher Integration
+        // Cart only handles input/display; voucher logic belongs to Voucher module.
+        // ============================================================
+
+        // Server-side cart totals (rendered by Thymeleaf, used as defaults until JS loads)
+        var cartSubtotal = /*[[${cartTotal}]]*/ 0;
+        var shippingFee = 15000;
+        var appliedDiscount = 0;
+        var appliedVoucherCode = '';
+
+        function formatMoney(amount) {
+            if (amount == null) return '0đ';
+            return new Intl.NumberFormat('vi-VN').format(amount) + 'đ';
+        }
+
+        function updateSummaryTotals(subtotal, shipping, discount, finalTotal) {
+            // Update final total display
+            var finalEl = document.getElementById('final-total-amount');
+            if (finalEl) finalEl.textContent = formatMoney(finalTotal);
+        }
+
+        function showVoucherSuccess(voucherName, voucherCode, discount, finalTotal) {
+            appliedDiscount = discount;
+            appliedVoucherCode = voucherCode;
+
+            // Show applied voucher info
+            var infoEl = document.getElementById('voucher-applied-info');
+            var nameEl = document.getElementById('voucher-applied-name');
+            if (infoEl && nameEl) {
+                nameEl.textContent = (voucherName || voucherCode);
+                infoEl.style.display = 'flex';
+            }
+
+            // Hide error
+            var errorEl = document.getElementById('voucher-error');
+            if (errorEl) errorEl.style.display = 'none';
+
+            // Show discount row
+            var discountRow = document.getElementById('discount-row');
+            var discountAmt = document.getElementById('discount-amount');
+            if (discountRow && discountAmt) {
+                discountAmt.textContent = '-' + formatMoney(discount);
+                discountRow.style.display = 'flex';
+            }
+
+            // Update final total
+            var finalTotal = cartSubtotal + shippingFee - discount;
+            updateSummaryTotals(cartSubtotal, shippingFee, discount, finalTotal);
+        }
+
+        function showVoucherError(message, subtotal) {
+            // Hide applied info
+            var infoEl = document.getElementById('voucher-applied-info');
+            if (infoEl) infoEl.style.display = 'none';
+
+            // Show error
+            var errorEl = document.getElementById('voucher-error');
+            if (errorEl) {
+                errorEl.textContent = message;
+                errorEl.style.display = 'block';
+            }
+
+            // Hide discount row
+            var discountRow = document.getElementById('discount-row');
+            if (discountRow) discountRow.style.display = 'none';
+
+            appliedDiscount = 0;
+            appliedVoucherCode = '';
+            updateSummaryTotals(subtotal || cartSubtotal, shippingFee, 0, (subtotal || cartSubtotal) + shippingFee);
+        }
+
         function applyVoucher() {
-            const input = document.getElementById('coupon-input');
-            const code = input.value.trim();
-            
+            var input = document.getElementById('coupon-input');
+            var btn = document.getElementById('btn-apply-voucher');
+            var code = input ? input.value.trim() : '';
+
             if (!code) {
-                alert('Vui lòng nhập mã giảm giá');
+                showToast && showToast('error', 'Vui lòng nhập mã giảm giá');
                 return;
             }
-            
-            // Display the entered code (UI only)
-            console.log('Mã voucher đã nhập:', code);
-            
-            // Show informational message
-            alert('Mã voucher "' + code + '" đã được ghi nhận.\n\nChức năng áp dụng voucher sẽ được kích hoạt sau khi hệ thống voucher hoàn thiện.');
+
+            // Disable button while loading
+            if (btn) {
+                btn.disabled = true;
+                btn.textContent = 'Đang xử lý...';
+            }
+
+            var formData = new FormData();
+            formData.append('code', code);
+
+            fetch('/api/cart/apply-voucher', {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            })
+            .then(function(response) {
+                if (response.status === 401) {
+                    window.location.href = '/auth/login';
+                    return null;
+                }
+                return response.json();
+            })
+            .then(function(data) {
+                if (!data) return;
+
+                if (data.success) {
+                    showVoucherSuccess(data.voucherName, data.voucherCode, data.discount, data.finalTotal);
+                    showToast && showToast('success', data.message || 'Áp dụng voucher thành công');
+                } else {
+                    showVoucherError(data.message || 'Voucher không hợp lệ', data.cartSubtotal);
+                    showToast && showToast('error', data.message || 'Voucher không hợp lệ');
+                }
+            })
+            .catch(function(error) {
+                console.error('Voucher error:', error);
+                showVoucherError('Có lỗi xảy ra, vui lòng thử lại', null);
+                showToast && showToast('error', 'Có lỗi xảy ra');
+            })
+            .finally(function() {
+                if (btn) {
+                    btn.disabled = false;
+                    btn.textContent = 'Áp dụng';
+                }
+            });
         }
-        
-        // Allow Enter key to apply voucher
-        const couponInput = document.getElementById('coupon-input');
+
+        function removeVoucher() {
+            var btn = document.getElementById('btn-remove-voucher');
+
+            if (btn) {
+                btn.disabled = true;
+                btn.textContent = '...';
+            }
+
+            fetch('/api/cart/remove-voucher', {
+                method: 'POST',
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            })
+            .then(function(response) {
+                if (response.status === 401) {
+                    window.location.href = '/auth/login';
+                    return null;
+                }
+                return response.json();
+            })
+            .then(function(data) {
+                if (!data) return;
+
+                // Reset voucher UI
+                var infoEl = document.getElementById('voucher-applied-info');
+                if (infoEl) infoEl.style.display = 'none';
+
+                var errorEl = document.getElementById('voucher-error');
+                if (errorEl) errorEl.style.display = 'none';
+
+                var discountRow = document.getElementById('discount-row');
+                if (discountRow) discountRow.style.display = 'none';
+
+                var input = document.getElementById('coupon-input');
+                if (input) input.value = '';
+
+                appliedDiscount = 0;
+                appliedVoucherCode = '';
+
+                updateSummaryTotals(data.cartSubtotal, data.shippingFee, 0, data.finalTotal);
+                showToast && showToast('success', 'Đã hủy voucher');
+            })
+            .catch(function(error) {
+                console.error('Remove voucher error:', error);
+                showToast && showToast('error', 'Có lỗi xảy ra');
+            })
+            .finally(function() {
+                if (btn) {
+                    btn.disabled = false;
+                    btn.innerHTML = '<i class="fas fa-times"></i>';
+                }
+            });
+        }
+
+        // Enter key triggers apply
+        var couponInput = document.getElementById('coupon-input');
         if (couponInput) {
             couponInput.addEventListener('keypress', function(e) {
                 if (e.key === 'Enter') {
@@ -235,6 +413,14 @@
                 }
             });
         }
+
+        // Initial render of final total with shipping
+        document.addEventListener('DOMContentLoaded', function() {
+            var finalEl = document.getElementById('final-total-amount');
+            if (finalEl) {
+                finalEl.textContent = formatMoney(cartSubtotal + shippingFee);
+            }
+        });
     </script>
 </body>
 </html>
