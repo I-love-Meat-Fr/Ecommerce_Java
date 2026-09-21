@@ -83,6 +83,7 @@ public class SecurityConfig {
                 .requestMatchers("/vouchers").permitAll()  // Trang công khai xem voucher
                 .requestMatchers("/checkout/apply-voucher").permitAll()  // Áp dụng voucher
                 .requestMatchers("/admin/**").hasRole("ADMIN")
+                .requestMatchers("/moderator/**").hasRole("MODERATOR")
                 .requestMatchers("/vendor/**").hasRole("VENDOR")
                 .requestMatchers("/api/**").authenticated()
                 .anyRequest().permitAll()
