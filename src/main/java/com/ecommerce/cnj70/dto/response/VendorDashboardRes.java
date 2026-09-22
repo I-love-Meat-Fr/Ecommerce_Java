@@ -39,6 +39,8 @@ public class VendorDashboardRes {
         private boolean verified;
         private boolean active;
         private LocalDateTime createdAt;
+        /** Số khách hàng duy nhất đã mua từ shop này */
+        private long uniqueCustomers;
     }
     
     @Data

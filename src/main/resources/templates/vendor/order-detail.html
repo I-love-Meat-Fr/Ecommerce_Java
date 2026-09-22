@@ -68,7 +68,7 @@
             </div>
         </div>
 
-        <!-- Side: info + status + customer -->
+        <!-- Side: info + status + customer + shipping -->
         <div style="display:flex;flex-direction:column;gap:16px;">
             <div class="sd-card">
                 <div class="sd-card-head"><h3>Thông tin đơn</h3></div>
@@ -83,7 +83,7 @@
                             <div class="vd-info-value" th:text="${#temporals.format(order.createdAt, 'dd/MM/yyyy HH:mm')}">Ngày</div>
                         </div>
                         <div class="vd-info-item">
-                            <div class="vd-info-label">Trạng thái</div>
+                            <div class="vd-info-label">Trạng thái đơn</div>
                             <div class="vd-info-value">
                                 <span class="sd-badge"
                                       th:classappend="${order.status.name() == 'PENDING' ? 'sd-badge-amber' :
@@ -107,6 +107,52 @@
                     </div>
                 </div>
             </div>
+
+            <!-- Shipping status card -->
+            <th:block th:if="${order.items != null and not #lists.isEmpty(order.items)}">
+                <th:block th:with="item=${order.items[0]}">
+                    <th:block th:if="${item.shippingStatus != null}">
+                        <div class="sd-card">
+                            <div class="sd-card-head"><h3>Vận chuyển (SubOrder)</h3></div>
+                            <div class="sd-card-body">
+                                <div class="vd-info-grid">
+                                    <div class="vd-info-item">
+                                        <div class="vd-info-label">Trạng thái giao hàng</div>
+                                        <div class="vd-info-value">
+                                            <span class="sd-badge"
+                                                  style="font-size:13px;"
+                                                  th:classappend="${item.shippingStatus.status.name() == 'PENDING' ? 'sd-badge-slate' :
+                                                                  (item.shippingStatus.status.name() == 'PACKED' ? 'sd-badge-indigo' :
+                                                                  (item.shippingStatus.status.name() == 'PICKED_UP' ? 'sd-badge-sky' :
+                                                                  (item.shippingStatus.status.name() == 'IN_TRANSIT' ? 'sd-badge-blue' :
+                                                                  (item.shippingStatus.status.name() == 'DELIVERED' ? 'sd-badge-green' :
+                                                                  (item.shippingStatus.status.name() == 'FAILED' ? 'sd-badge-red' :
+                                                                  (item.shippingStatus.status.name() == 'RETURNED' ? 'sd-badge-orange' : 'sd-badge-slate'))))))}"
+                                                  th:text="${item.shippingStatus.status.name()}">SHIP</span>
+                                        </div>
+                                    </div>
+                                    <div class="vd-info-item" th:if="${item.shippingStatus.trackingNumber != null}">
+                                        <div class="vd-info-label">Mã vận đơn</div>
+                                        <div class="vd-info-value" style="font-family:ui-monospace;" th:text="${item.shippingStatus.trackingNumber}">-</div>
+                                    </div>
+                                    <div class="vd-info-item" th:if="${item.shippingStatus.carrier != null}">
+                                        <div class="vd-info-label">Đơn vị vận chuyển</div>
+                                        <div class="vd-info-value" th:text="${item.shippingStatus.carrier}">-</div>
+                                    </div>
+                                    <div class="vd-info-item" th:if="${item.shippingStatus.shippedAt != null}">
+                                        <div class="vd-info-label">Thời gian gửi</div>
+                                        <div class="vd-info-value" th:text="${#temporals.format(item.shippingStatus.shippedAt, 'dd/MM/yyyy HH:mm')}">-</div>
+                                    </div>
+                                    <div class="vd-info-item" th:if="${item.shippingStatus.deliveredAt != null}">
+                                        <div class="vd-info-label">Thời gian giao</div>
+                                        <div class="vd-info-value" th:text="${#temporals.format(item.shippingStatus.deliveredAt, 'dd/MM/yyyy HH:mm')}">-</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </th:block>
+                </th:block>
+            </th:block>
 
             <div class="sd-card">
                 <div class="sd-card-head"><h3>Khách hàng</h3></div>
@@ -132,8 +178,56 @@
                 </div>
             </div>
 
+            <!-- Update shipping form -->
+            <th:block th:if="${order.items != null and not #lists.isEmpty(order.items)}">
+                <th:block th:with="item=${order.items[0]}">
+                    <div class="sd-card">
+                        <div class="sd-card-head"><h3>Cập nhật vận chuyển</h3></div>
+                        <div class="sd-card-body">
+                            <form th:action="@{/vendor/orders/{id}/shipping(id=${order.orderId})}" method="post">
+                                <div class="sd-form-group">
+                                    <label>Trạng thái giao hàng</label>
+                                    <select name="status" class="sd-form-control" required>
+                                        <option th:each="s : ${shippingStatuses}"
+                                                th:value="${s.name()}"
+                                                th:selected="${item.shippingStatus != null and s.name() == item.shippingStatus.status.name()}"
+                                                th:text="${s.name() == 'PENDING' ? 'PENDING - Chờ xử lý' :
+                                                        (s.name() == 'PACKED' ? 'PACKED - Đã đóng gói' :
+                                                        (s.name() == 'PICKED_UP' ? 'PICKED_UP - Đã lấy hàng' :
+                                                        (s.name() == 'IN_TRANSIT' ? 'IN_TRANSIT - Đang vận chuyển' :
+                                                        (s.name() == 'DELIVERED' ? 'DELIVERED - Đã giao' :
+                                                        (s.name() == 'FAILED' ? 'FAILED - Giao thất bại' :
+                                                        (s.name() == 'RETURNED' ? 'RETURNED - Hoàn hàng' :
+                                                         s.name())))))}">STATUS</option>
+                                    </select>
+                                </div>
+                                <div class="sd-form-group">
+                                    <label>Mã vận đơn</label>
+                                    <input type="text" name="trackingNumber" class="sd-form-control"
+                                           th:value="${item.shippingStatus?.trackingNumber}"
+                                           placeholder="Nhập mã vận đơn (nếu có)">
+                                </div>
+                                <div class="sd-form-group">
+                                    <label>Đơn vị vận chuyển</label>
+                                    <input type="text" name="carrier" class="sd-form-control"
+                                           th:value="${item.shippingStatus?.carrier}"
+                                           placeholder="VD: GHTK, GHN, VNPost...">
+                                </div>
+                                <div class="sd-form-group">
+                                    <label>Ghi chú</label>
+                                    <input type="text" name="note" class="sd-form-control" placeholder="Ghi chú thêm (nếu có)">
+                                </div>
+                                <button type="submit" class="sd-btn sd-btn-cta" style="width:100%;justify-content:center;">
+                                    <i class="fas fa-truck"></i> Cập nhật vận chuyển
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </th:block>
+            </th:block>
+
             <div class="sd-card">
-                <div class="sd-card-head"><h3>Cập nhật trạng thái</h3></div>
+                <div class="sd-card-head"><h3>Cập nhật trạng thái đơn</h3></div>
                 <div class="sd-card-body">
                     <form th:action="@{/vendor/orders/{id}/status(id=${order.orderId})}" method="post">
                         <div class="sd-form-group">
@@ -149,8 +243,7 @@
                                                  (s.name() == 'CANCELLED' ? 'Hủy' : s.name()))))}">STATUS</option>
                             </select>
                         </div>
-                        <button type="submit" class="sd-btn sd-btn-cta" style="width:100%;justify-content:center;"><i class="fas fa-save"></i> Cập nhật</button>
-                        <div class="sd-form-hint" style="margin-top:8px;"><i class="fas fa-circle-info"></i> Chỉ có thể chuyển trạng thái theo thứ tự hợp lệ.</div>
+                        <button type="submit" class="sd-btn sd-btn-primary" style="width:100%;justify-content:center;"><i class="fas fa-save"></i> Cập nhật đơn hàng</button>
                     </form>
                 </div>
             </div>

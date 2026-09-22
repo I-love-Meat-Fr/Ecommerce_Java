@@ -7,11 +7,13 @@ import com.ecommerce.cnj70.exception.BusinessException;
 import com.ecommerce.cnj70.exception.ResourceNotFoundException;
 import com.ecommerce.cnj70.repository.UserRepository;
 import com.ecommerce.cnj70.service.AdminShopService;
+import com.ecommerce.cnj70.security.CustomUserDetails;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -163,6 +165,8 @@ public class AdminShopController {
                                  @RequestParam(defaultValue = "5") int size,
                                  @RequestParam(required = false) String q,
                                  @RequestParam(required = false) String status,
+                                 @RequestParam(required = false) String reason,
+                                 @AuthenticationPrincipal CustomUserDetails admin,
                                  RedirectAttributes redirectAttributes) {
         Shop shop;
         try {
@@ -173,7 +177,8 @@ public class AdminShopController {
         }
 
         try {
-            adminShopService.deactivateShop(id);
+            String adminUsername = admin != null ? admin.getUsername() : "system";
+            adminShopService.deactivateShop(id, reason, adminUsername);
             redirectAttributes.addFlashAttribute("flashSuccess",
                     "Đã ngừng hoạt động shop \"" + shop.getShopName() + "\"");
         } catch (BusinessException ex) {
@@ -195,6 +200,8 @@ public class AdminShopController {
                              @RequestParam(defaultValue = "5") int size,
                              @RequestParam(required = false) String q,
                              @RequestParam(required = false) String status,
+                             @RequestParam(required = false) String reason,
+                             @AuthenticationPrincipal CustomUserDetails admin,
                              RedirectAttributes redirectAttributes) {
         Shop shop;
         try {
@@ -205,7 +212,8 @@ public class AdminShopController {
         }
 
         try {
-            adminShopService.rejectShop(id);
+            String adminUsername = admin != null ? admin.getUsername() : "system";
+            adminShopService.rejectShop(id, reason, adminUsername);
             redirectAttributes.addFlashAttribute("flashSuccess",
                     "Đã từ chối shop \"" + shop.getShopName() + "\"");
         } catch (BusinessException ex) {

@@ -36,16 +36,29 @@ public class VendorProductController {
     private final StorageService storageService;
 
     @GetMapping
-    public String productList(@AuthenticationPrincipal CustomUserDetails user, Model model) {
-        String shopId = vendorService.getShopIdFromUser(user);
-        List<Product> products = productService.getProductsByShop(shopId);
-        model.addAttribute("products", products);
-        return "vendor/product-list";
+    public String productList(@AuthenticationPrincipal CustomUserDetails user, Model model,
+                               RedirectAttributes redirectAttributes) {
+        try {
+            String shopId = vendorService.getShopIdFromUser(user);
+            List<Product> products = productService.getProductsByShop(shopId);
+            model.addAttribute("products", products);
+            return "vendor/product-list";
+        } catch (BadRequestException e) {
+            // Chưa có shop → đưa về trang shop để tạo
+            redirectAttributes.addFlashAttribute("error", e.getMessage());
+            return "redirect:/vendor/shop";
+        }
     }
 
     @GetMapping("/create")
-    public String createProductForm(@AuthenticationPrincipal CustomUserDetails user, Model model) {
-        vendorService.getShopIdFromUser(user);
+    public String createProductForm(@AuthenticationPrincipal CustomUserDetails user, Model model,
+                                    RedirectAttributes redirectAttributes) {
+        try {
+            vendorService.getShopIdFromUser(user);
+        } catch (BadRequestException e) {
+            redirectAttributes.addFlashAttribute("error", e.getMessage());
+            return "redirect:/vendor/shop";
+        }
 
         List<Category> categories = categoryRepository.findByActiveTrueOrderBySortOrderAsc();
         model.addAttribute("categories", categories);
@@ -71,6 +84,16 @@ public class VendorProductController {
             redirectAttributes.addFlashAttribute("success", "Tạo sản phẩm thành công!");
             return "redirect:/vendor/products";
         } catch (BadRequestException e) {
+            // Lỗi KYC → redirect sang trang KYC
+            if (e.getMessage() != null && e.getMessage().contains("KYC")) {
+                redirectAttributes.addFlashAttribute("error", e.getMessage());
+                return "redirect:/vendor/kyc";
+            }
+            // Lỗi chưa có shop → đưa về trang shop để tạo
+            if (e.getMessage() != null && e.getMessage().toLowerCase().contains("shop")) {
+                redirectAttributes.addFlashAttribute("error", e.getMessage());
+                return "redirect:/vendor/shop";
+            }
             List<Category> categories = categoryRepository.findByActiveTrueOrderBySortOrderAsc();
             model.addAttribute("categories", categories);
             model.addAttribute("error", e.getMessage());

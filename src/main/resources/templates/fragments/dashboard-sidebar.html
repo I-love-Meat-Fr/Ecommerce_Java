@@ -24,6 +24,13 @@
                 <i class="fas fa-store"></i>
                 <span class="sd-nav-label">Cửa hàng</span>
             </a>
+            <a th:href="@{/vendor/kyc}" class="sd-nav-item" data-match="/vendor/kyc">
+                <i class="fas fa-shield-halved"></i>
+                <span class="sd-nav-label">Xác minh KYC</span>
+                <span class="sd-nav-badge sd-nav-badge-warn" th:if="${kycStatus == 'PENDING_THIRD_PARTY' or kycStatus == 'PENDING_ADMIN'}">!</span>
+                <span class="sd-nav-badge sd-nav-badge-danger" th:if="${kycStatus == 'THIRD_PARTY_REJECTED' or kycStatus == 'ADMIN_REJECTED'}">!</span>
+                <span class="sd-nav-badge sd-nav-badge-green" th:if="${kycStatus == 'APPROVED'}">✓</span>
+            </a>
             <a th:href="@{/vendor/products}" class="sd-nav-item" data-match="/vendor/products">
                 <i class="fas fa-box"></i>
                 <span class="sd-nav-label">Sản phẩm</span>
@@ -32,6 +39,11 @@
                 <i class="fas fa-cart-shopping"></i>
                 <span class="sd-nav-label">Đơn hàng</span>
                 <span class="sd-nav-badge" th:if="${pendingOrders != null and pendingOrders > 0}" th:text="${pendingOrders}">0</span>
+            </a>
+            <a th:if="${hasShop}" th:href="@{/vendor/violations}" class="sd-nav-item" data-match="/vendor/violations">
+                <i class="fas fa-triangle-exclamation"></i>
+                <span class="sd-nav-label">Cảnh báo</span>
+                <span class="sd-nav-badge sd-nav-badge-warn" th:if="${activeViolations != null and activeViolations > 0}" th:text="${activeViolations}">0</span>
             </a>
             <!-- Menu Voucher chỉ hiện khi vendor đã có shop -->
             <a th:if="${hasShop}" th:href="@{/vendor/vouchers}" class="sd-nav-item" data-match="/vendor/vouchers">

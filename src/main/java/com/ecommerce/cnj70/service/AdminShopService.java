@@ -17,7 +17,7 @@ public interface AdminShopService {
 
     void activateShop(String id);
 
-    void deactivateShop(String id);
+    void deactivateShop(String id, String reason, String adminUsername);
 
-    void rejectShop(String id);
+    void rejectShop(String id, String reason, String adminUsername);
 }

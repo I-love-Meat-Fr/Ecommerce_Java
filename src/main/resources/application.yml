@@ -33,7 +33,9 @@ spring.web.resources:
   add-mappings: true
   cache:
     cachecontrol:
-      max-age: 3600
+      # Tắt cache để F5/CSS reload tức thì khi dev; prod nên đặt lại 3600
+      max-age: 0
+      no-store: true
   static-locations: classpath:/static/
 
 # Server Configuration
@@ -54,3 +56,15 @@ logging:
     com.ecommerce.cnj70: DEBUG
     org.springframework.security: DEBUG
     org.springframework.data.mongodb: DEBUG
+
+# KYC 3rd-party Provider Configuration
+kyc:
+  provider:
+    url: ${KYC_PROVIDER_URL:https://kyc-provider.example.com/api/verify}
+    api-key: ${KYC_PROVIDER_API_KEY:}
+    timeout-connect: 10      # seconds
+    timeout-read: 30         # seconds
+  fallback:
+    # PENDING_THIRD_PARTY: giữ nguyên chờ 3rd-party (an toàn, admin duyệt tay nếu fail)
+    # APPROVE: tự động coi như 3rd-party OK → chờ admin duyệt (dev/demo)
+    on-error: APPROVE
