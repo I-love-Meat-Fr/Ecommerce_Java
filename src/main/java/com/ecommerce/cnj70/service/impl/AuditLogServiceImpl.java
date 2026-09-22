@@ -60,6 +60,14 @@ public class AuditLogServiceImpl implements AuditLogService {
     }
 
     @Override
+    public AuditLog logInfo(AuditAction action, String resourceType, String resourceId,
+                            String actorId, String actorUsername, String actorRole,
+                            String reason, Map<String, Object> metadata) {
+        return log(action, resourceType, resourceId, actorId, actorUsername, actorRole,
+                AuditSeverity.INFO, reason, metadata);
+    }
+
+    @Override
     public AuditLog logWarning(AuditAction action, String resourceType, String resourceId,
                                String actorId, String actorUsername, String actorRole,
                                String reason) {
@@ -68,11 +76,27 @@ public class AuditLogServiceImpl implements AuditLogService {
     }
 
     @Override
+    public AuditLog logWarning(AuditAction action, String resourceType, String resourceId,
+                               String actorId, String actorUsername, String actorRole,
+                               String reason, Map<String, Object> metadata) {
+        return log(action, resourceType, resourceId, actorId, actorUsername, actorRole,
+                AuditSeverity.WARNING, reason, metadata);
+    }
+
+    @Override
     public AuditLog logCritical(AuditAction action, String resourceType, String resourceId,
                                 String actorId, String actorUsername, String actorRole,
                                 String reason) {
         return log(action, resourceType, resourceId, actorId, actorUsername, actorRole,
                 AuditSeverity.CRITICAL, reason, Map.of());
+    }
+
+    @Override
+    public AuditLog logCritical(AuditAction action, String resourceType, String resourceId,
+                                String actorId, String actorUsername, String actorRole,
+                                String reason, Map<String, Object> metadata) {
+        return log(action, resourceType, resourceId, actorId, actorUsername, actorRole,
+                AuditSeverity.CRITICAL, reason, metadata);
     }
 
     @Override

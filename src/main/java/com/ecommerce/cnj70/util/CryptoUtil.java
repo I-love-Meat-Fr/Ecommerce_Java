@@ -116,6 +116,19 @@ public class CryptoUtil {
     }
 
     /**
+     * Static method để decrypt cho hiển thị trong Thymeleaf templates.
+     * Cần Spring context để inject CryptoUtil bean.
+     *
+     * NOTE: Trong template, gọi qua Spring Bean thay vì static method này
+     * vì Thymeleaf không hỗ trợ gọi instance methods dễ dàng.
+     * Thay vào đó, hãy inject CryptoUtil vào controller/model và thêm vào model.
+     */
+    public static String decryptForDisplay(String encryptedText) {
+        // Placeholder - sẽ được resolve bằng Spring EL
+        return "***";
+    }
+
+    /**
      * Load AES-256 key từ environment variable.
      * Key phải là Base64-encoded 32-byte key.
      */

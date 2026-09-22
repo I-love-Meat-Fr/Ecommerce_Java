@@ -3,7 +3,9 @@ package com.ecommerce.cnj70.service.impl;
 import com.ecommerce.cnj70.document.Product;
 import com.ecommerce.cnj70.document.Review;
 import com.ecommerce.cnj70.document.User;
+import com.ecommerce.cnj70.dto.request.ReportCaseCreateReq;
 import com.ecommerce.cnj70.enums.AuditAction;
+import com.ecommerce.cnj70.enums.ReportTargetType;
 import com.ecommerce.cnj70.enums.ReviewModerationStatus;
 import com.ecommerce.cnj70.exception.BadRequestException;
 import com.ecommerce.cnj70.exception.ResourceNotFoundException;
@@ -12,13 +14,16 @@ import com.ecommerce.cnj70.repository.ReviewRepository;
 import com.ecommerce.cnj70.repository.UserRepository;
 import com.ecommerce.cnj70.service.AuditLogService;
 import com.ecommerce.cnj70.service.OrderService;
+import com.ecommerce.cnj70.service.ReportCaseService;
 import com.ecommerce.cnj70.service.ReviewService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.util.List;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class ReviewServiceImpl implements ReviewService {
@@ -30,6 +35,7 @@ public class ReviewServiceImpl implements ReviewService {
     private final ProductRepository productRepository;
     private final OrderService orderService;
     private final AuditLogService auditLogService;
+    private final ReportCaseService reportCaseService;
 
     @Override
     public Review createReview(String userId, String productId, int rating, String comment) {
@@ -232,6 +238,28 @@ public class ReviewServiceImpl implements ReviewService {
                 "Customer report review. Lý do: " + reason +
                         ". Tổng report: " + review.getReportCount()
         );
+
+        // ===== TASK #26: Tạo ReportCase cho Moderator Queue =====
+        try {
+            String reporterUsername = userRepository.findById(reporterId)
+                    .map(User::getFullName)
+                    .orElse(reporterId);
+
+            ReportCaseCreateReq createReq = ReportCaseCreateReq.builder()
+                    .targetType(ReportTargetType.REVIEW)
+                    .targetId(reviewId)
+                    .reason(reason)
+                    .description("Customer report review. Tổng report: " + review.getReportCount())
+                    .source("USER")
+                    .priority(review.getReportCount() >= AUTO_REPORT_THRESHOLD ? 10 : 0)
+                    .build();
+
+            reportCaseService.createCase(createReq, reporterId, reporterUsername);
+            log.info("[Review] Created ReportCase for review {}", reviewId);
+        } catch (Exception ex) {
+            // Không fail cả flow nếu tạo ReportCase lỗi (idempotent: đã có case PENDING thì ignore)
+            log.warn("[Review] Failed to create ReportCase for review {}: {}", reviewId, ex.getMessage());
+        }
     }
 
     @Override

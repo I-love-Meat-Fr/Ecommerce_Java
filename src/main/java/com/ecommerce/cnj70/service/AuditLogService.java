@@ -27,15 +27,30 @@ public interface AuditLogService {
                      String actorId, String actorUsername, String actorRole,
                      String reason);
 
+    /** Convenience: log INFO action with metadata */
+    AuditLog logInfo(AuditAction action, String resourceType, String resourceId,
+                     String actorId, String actorUsername, String actorRole,
+                     String reason, Map<String, Object> metadata);
+
     /** Convenience: log WARNING action */
     AuditLog logWarning(AuditAction action, String resourceType, String resourceId,
                         String actorId, String actorUsername, String actorRole,
                         String reason);
 
+    /** Convenience: log WARNING action with metadata */
+    AuditLog logWarning(AuditAction action, String resourceType, String resourceId,
+                        String actorId, String actorUsername, String actorRole,
+                        String reason, Map<String, Object> metadata);
+
     /** Convenience: log CRITICAL action */
     AuditLog logCritical(AuditAction action, String resourceType, String resourceId,
                          String actorId, String actorUsername, String actorRole,
                          String reason);
+
+    /** Convenience: log CRITICAL action with metadata */
+    AuditLog logCritical(AuditAction action, String resourceType, String resourceId,
+                         String actorId, String actorUsername, String actorRole,
+                         String reason, Map<String, Object> metadata);
 
     /** Truy vết lịch sử action của một resource */
     Page<AuditLog> findByResource(String resourceType, String resourceId, Pageable pageable);

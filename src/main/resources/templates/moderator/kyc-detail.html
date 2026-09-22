@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security6"
+      th:replace="~{layout/moderator-layout :: layout(title='KYC Detail - Moderator', content=~{::main-content}, scripts=~{::page-scripts})}">
+<head>
+    <title>KYC Detail - Moderator CNJ70</title>
+</head>
+<body>
+<main th:fragment="main-content">
+    <!-- Breadcrumb -->
+    <div style="margin-bottom:16px;">
+        <a th:href="@{/moderator/kyc(page=${page}, size=${size}, status=${status})}"
+           class="sd-btn sd-btn-secondary sd-btn-sm">
+            <i class="fas fa-arrow-left"></i> Quay lại Queue
+        </a>
+    </div>
+
+    <div style="display:grid;grid-template-columns:1fr 360px;gap:24px;" class="kyc-detail-grid">
+        <!-- Main Content -->
+        <div>
+            <!-- Shop Info Card -->
+            <div class="sd-card">
+                <div class="sd-card-header">
+                    <h2 class="sd-card-title">
+                        <i class="fas fa-store"></i>
+                        Thông tin Shop
+                    </h2>
+                    <span th:if="${shop.kycStatus.name() == 'PENDING_PROVIDER'}" class="sd-badge sd-badge-warning">
+                        <i class="fas fa-clock"></i> Đang xử lý
+                    </span>
+                    <span th:if="${shop.kycStatus.name() == 'KYC_REJECTED'}" class="sd-badge sd-badge-danger">
+                        <i class="fas fa-xmark"></i> Bị từ chối
+                    </span>
+                    <span th:if="${shop.kycStatus.name() == 'APPROVED'}" class="sd-badge sd-badge-success">
+                        <i class="fas fa-check"></i> Đã duyệt
+                    </span>
+                </div>
+                <div class="sd-card-body">
+                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;">
+                        <div>
+                            <label class="sd-form-label">Shop ID</label>
+                            <code style="font-size:12px;" th:text="${shop.id}">id</code>
+                        </div>
+                        <div>
+                            <label class="sd-form-label">Tên Shop</label>
+                            <span th:text="${shop.shopName}">Shop Name</span>
+                        </div>
+                        <div>
+                            <label class="sd-form-label">Owner ID</label>
+                            <span th:text="${shop.ownerId}">ownerId</span>
+                        </div>
+                        <div>
+                            <label class="sd-form-label">Trạng thái Shop</label>
+                            <span th:text="${shop.status}">status</span>
+                        </div>
+                        <div>
+                            <label class="sd-form-label">Email</label>
+                            <span th:text="${shop.email}">email</span>
+                        </div>
+                        <div>
+                            <label class="sd-form-label">Số điện thoại</label>
+                            <span th:text="${shop.phone}">phone</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- KYC Info Card -->
+            <div class="sd-card" style="margin-top:24px;">
+                <div class="sd-card-header">
+                    <h2 class="sd-card-title">
+                        <i class="fas fa-user-check"></i>
+                        Thông tin KYC
+                    </h2>
+                </div>
+                <div class="sd-card-body">
+                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;">
+                        <div>
+                            <label class="sd-form-label">KYC Reference ID</label>
+                            <code style="font-size:12px;" th:text="${shop.kycReferenceId}">refId</code>
+                        </div>
+                        <div>
+                            <label class="sd-form-label">Trạng thái</label>
+                            <span th:text="${shop.kycStatus}">status</span>
+                        </div>
+                        <div>
+                            <label class="sd-form-label">Ngày nộp</label>
+                            <span th:if="${shop.kycSubmittedAt != null}"
+                                  th:text="${#temporals.format(shop.kycSubmittedAt, 'dd/MM/yyyy HH:mm:ss')}">—</span>
+                            <span th:unless="${shop.kycSubmittedAt != null}">—</span>
+                        </div>
+                        <div>
+                            <label class="sd-form-label">Ngày duyệt</label>
+                            <span th:if="${shop.kycApprovedAt != null}"
+                                  th:text="${#temporals.format(shop.kycApprovedAt, 'dd/MM/yyyy HH:mm:ss')}">—</span>
+                            <span th:unless="${shop.kycApprovedAt != null}">—</span>
+                        </div>
+                    </div>
+
+                    <!-- PII Info (Decrypted) -->
+                    <div style="margin-top:24px;padding:16px;background:#f8fafc;border-radius:8px;border:1px solid var(--border,#e2e8f0);">
+                        <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;">
+                            <i class="fas fa-lock" style="color:#6366f1;"></i>
+                            <strong>Thông tin PII (đã mã hóa - chỉ Moderator/Admin được xem)</strong>
+                        </div>
+                        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+                            <div>
+                                <label class="sd-form-label">CCCD/CMND</label>
+                                <div th:if="${shop.encryptedCitizenId != null}"
+                                     style="background:#fff;border:1px solid #e2e8f0;padding:6px 10px;border-radius:4px;">
+                                    <span th:text="${decryptedCitizenId}">***</span>
+                                </div>
+                                <span th:unless="${shop.encryptedCitizenId != null}">—</span>
+                            </div>
+                            <div>
+                                <label class="sd-form-label">Mã số thuế</label>
+                                <div th:if="${shop.encryptedTaxCode != null}"
+                                     style="background:#fff;border:1px solid #e2e8f0;padding:6px 10px;border-radius:4px;">
+                                    <span th:text="${decryptedTaxCode}">***</span>
+                                </div>
+                                <span th:unless="${shop.encryptedTaxCode != null}">—</span>
+                            </div>
+                            <div>
+                                <label class="sd-form-label">Số tài khoản</label>
+                                <div th:if="${shop.encryptedBankAccount != null}"
+                                     style="background:#fff;border:1px solid #e2e8f0;padding:6px 10px;border-radius:4px;">
+                                    <span th:text="${decryptedBankAccount}">***</span>
+                                </div>
+                                <span th:unless="${shop.encryptedBankAccount != null}">—</span>
+                            </div>
+                            <div>
+                                <label class="sd-form-label">Ngân hàng</label>
+                                <span th:text="${shop.bankName}">—</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Rejection Reason -->
+                    <div th:if="${shop.kycRejectionReason != null}"
+                         style="margin-top:24px;padding:16px;background:#fef2f2;border-radius:8px;border:1px solid #fecaca;">
+                        <label class="sd-form-label" style="color:#dc2626;">Lý do từ chối</label>
+                        <p th:text="${shop.kycRejectionReason}" style="margin:8px 0 0 0;color:#991b1b;">reason</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Sidebar - Audit Log -->
+        <div>
+            <div class="sd-card">
+                <div class="sd-card-header">
+                    <h3 class="sd-card-title">
+                        <i class="fas fa-history"></i>
+                        Lịch sử KYC
+                    </h3>
+                </div>
+                <div class="sd-card-body">
+                    <div style="border-left:2px solid #e2e8f0;padding-left:16px;">
+                        <div style="margin-bottom:16px;position:relative;">
+                            <div style="position:absolute;left:-22px;top:4px;width:10px;height:10px;border-radius:50%;background:#6366f1;"></div>
+                            <div style="font-size:12px;color:#64748b;" th:text="${shop.kycSubmittedAt != null ? #temporals.format(shop.kycSubmittedAt, 'dd/MM/yyyy HH:mm') : '—'}">—</div>
+                            <div>Vendor nộp KYC</div>
+                        </div>
+                        <div style="margin-bottom:16px;position:relative;" th:if="${shop.kycStatus.name() == 'PENDING_PROVIDER'}">
+                            <div style="position:absolute;left:-22px;top:4px;width:10px;height:10px;border-radius:50%;background:#f59e0b;"></div>
+                            <div style="font-size:12px;color:#64748b;">Đang xử lý</div>
+                            <div>Đang chờ provider xác minh</div>
+                        </div>
+                        <div style="margin-bottom:16px;position:relative;" th:if="${shop.kycStatus.name() == 'APPROVED'}">
+                            <div style="position:absolute;left:-22px;top:4px;width:10px;height:10px;border-radius:50%;background:#10b981;"></div>
+                            <div style="font-size:12px;color:#64748b;" th:text="${shop.kycApprovedAt != null ? #temporals.format(shop.kycApprovedAt, 'dd/MM/yyyy HH:mm') : '—'}">—</div>
+                            <div>KYC được duyệt</div>
+                        </div>
+                        <div style="margin-bottom:16px;position:relative;" th:if="${shop.kycStatus.name() == 'KYC_REJECTED'}">
+                            <div style="position:absolute;left:-22px;top:4px;width:10px;height:10px;border-radius:50%;background:#ef4444;"></div>
+                            <div style="font-size:12px;color:#64748b;">Bị từ chối</div>
+                            <div th:text="${shop.kycRejectionReason}">Lý do</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Notes -->
+            <div class="sd-card" style="margin-top:24px;">
+                <div class="sd-card-header">
+                    <h3 class="sd-card-title">
+                        <i class="fas fa-sticky-note"></i>
+                        Ghi chú
+                    </h3>
+                </div>
+                <div class="sd-card-body">
+                    <p style="color:#64748b;font-size:13px;">
+                        KYC được xử lý tự động bởi provider (VNPT/FPT/MOCK).
+                        Moderator có thể xem chi tiết KYC và các bản ghi audit.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <style>
+        @media (max-width: 900px) {
+            .kyc-detail-grid {
+                grid-template-columns: 1fr !important;
+            }
+        }
+    </style>
+</main>
+
+<th:block th:fragment="page-scripts"></th:block>
+</body>
+</html>

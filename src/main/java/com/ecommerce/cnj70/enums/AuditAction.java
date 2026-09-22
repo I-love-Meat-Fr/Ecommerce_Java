@@ -44,6 +44,13 @@ public enum AuditAction {
     COMPLAINT_RESOLVED,
     COMPLAANT_OVERDUE,
 
+    // ReportCase Moderation (TASK #26)
+    REPORT_CASE_CREATED,
+    REPORT_CASE_ASSIGNED,
+    REPORT_CASE_APPROVED,
+    REPORT_CASE_REJECTED,
+    REPORT_CASE_ESCALATED,
+
     // Violation
     VIOLATION_WARNED,
     VIOLATION_SUSPENDED,
@@ -57,6 +64,9 @@ public enum AuditAction {
     LEGAL_DOCUMENT_UPDATED,
     LEGAL_TERMS_ACCEPTED,
     LEGAL_PRIVACY_ACCEPTED,
+
+    // PII Security (TASK #19)
+    PII_ACCESSED,
 
     // Other
     LOGIN_SUCCESS,

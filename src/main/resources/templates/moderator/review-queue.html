@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security6"
+      th:replace="~{layout/moderator-layout :: layout(title='Review Queue - Moderator', content=~{::main-content}, scripts=~{::page-scripts})}">
+<head>
+    <title>Review Queue - Moderator CNJ70</title>
+</head>
+<body>
+<main th:fragment="main-content">
+    <div class="sd-page-head">
+        <div class="sd-page-head-title">
+            <h1>Review Queue</h1>
+            <p>Danh sách review cần kiểm duyệt</p>
+        </div>
+        <div class="sd-page-head-meta">
+            <span class="sd-page-head-meta-label">Tổng</span>
+            <span class="sd-page-head-meta-value" th:text="${totalItems}">0</span>
+        </div>
+    </div>
+
+    <!-- Filter bar -->
+    <div class="sd-card sd-toolbar" style="margin-bottom:20px;">
+        <div class="sd-card-body">
+            <form th:action="@{/moderator/reviews}" method="get" class="sd-toolbar-form">
+                <input type="hidden" name="size" th:value="${size}" />
+                <select name="status" class="sd-select sd-toolbar-select"
+                        style="padding:8px 10px;border:1px solid var(--border,#e2e8f0);border-radius:6px;">
+                    <option value="">Tất cả (REPORTED + HIDDEN)</option>
+                    <option value="REPORTED" th:selected="${status == 'REPORTED'}">Reported</option>
+                    <option value="HIDDEN" th:selected="${status == 'HIDDEN'}">Hidden</option>
+                </select>
+                <button type="submit" class="sd-btn sd-btn-primary sd-btn-sm sd-toolbar-btn">
+                    <i class="fas fa-filter"></i> Lọc
+                </button>
+                <a th:href="@{/moderator/reviews(page=0, size=${size})}"
+                   class="sd-btn sd-btn-secondary sd-btn-sm sd-toolbar-btn">
+                    <i class="fas fa-rotate-left"></i> Đặt lại
+                </a>
+            </form>
+        </div>
+    </div>
+
+    <div class="sd-card">
+        <div class="sd-card-body sd-card-body-flush">
+            <table class="sd-table">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Sản phẩm</th>
+                        <th>Khách hàng</th>
+                        <th>Nội dung</th>
+                        <th>Rating</th>
+                        <th>Trạng thái</th>
+                        <th>Ngày tạo</th>
+                        <th style="text-align:right;">Thao tác</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr th:if="${#lists.isEmpty(reviews)}">
+                        <td colspan="8">
+                            <div class="sd-empty">
+                                <i class="fas fa-check-circle" style="font-size:40px;color:#10b981;"></i>
+                                <h3>Không có review nào</h3>
+                                <p>Không có review nào cần kiểm duyệt ở trạng thái này.</p>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr th:each="review : ${reviews}">
+                        <td>
+                            <code style="font-size:11px;" th:text="${#strings.substring(review.id, 0, 8)}">id</code>
+                        </td>
+                        <td>
+                            <div th:text="${review.productId}">productId</div>
+                        </td>
+                        <td>
+                            <div class="sd-table-title" th:text="${review.userName != null ? review.userName : 'Ẩn danh'}">User</div>
+                        </td>
+                        <td>
+                            <div style="max-width:350px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"
+                                 th:text="${review.comment}">Comment</div>
+                        </td>
+                        <td>
+                            <span class="sd-badge sd-badge-warning">
+                                <span th:text="${review.rating}">5</span> <i class="fas fa-star"></i>
+                            </span>
+                        </td>
+                        <td>
+                            <span th:if="${review.moderationStatus.name() == 'REPORTED'}" class="sd-badge sd-badge-danger">
+                                <i class="fas fa-flag"></i> Reported
+                            </span>
+                            <span th:if="${review.moderationStatus.name() == 'HIDDEN'}" class="sd-badge sd-badge-slate">
+                                <i class="fas fa-eye-slash"></i> Hidden
+                            </span>
+                        </td>
+                        <td>
+                            <span th:if="${review.createdAt != null}"
+                                  th:text="${#temporals.format(review.createdAt, 'dd/MM/yyyy')}">—</span>
+                        </td>
+                        <td style="text-align:right; white-space:nowrap;">
+                            <a th:href="@{/moderator/reviews/{id}(id=${review.id}, page=${page}, size=${size}, status=${status}, q=${q})}"
+                               class="sd-btn sd-btn-secondary sd-btn-sm">
+                                <i class="fas fa-eye"></i> Chi tiết
+                            </a>
+                            <form th:if="${review.moderationStatus.name() == 'REPORTED'}"
+                                  th:action="@{/moderator/reviews/{id}/hide(id=${review.id}, page=${page}, size=${size}, status=${status}, q=${q})}"
+                                  method="post" style="display:inline;"
+                                  onsubmit="return confirm('Ẩn review này?');">
+                                <button type="submit" class="sd-btn sd-btn-warning sd-btn-sm">
+                                    <i class="fas fa-eye-slash"></i> Ẩn
+                                </button>
+                            </form>
+                            <form th:if="${review.moderationStatus.name() == 'HIDDEN'}"
+                                  th:action="@{/moderator/reviews/{id}/restore(id=${review.id}, page=${page}, size=${size}, status=${status}, q=${q})}"
+                                  method="post" style="display:inline;"
+                                  onsubmit="return confirm('Khôi phục review này?');">
+                                <button type="submit" class="sd-btn sd-btn-success sd-btn-sm">
+                                    <i class="fas fa-eye"></i> Khôi phục
+                                </button>
+                            </form>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Pagination -->
+        <div class="sd-card-body" th:if="${totalPages > 0}"
+             style="display:flex;justify-content:center;border-top:1px solid var(--border,#e2e8f0);">
+            <nav class="sd-pagination" aria-label="Phân trang">
+                <a th:if="${hasPrev}"
+                   th:href="@{/moderator/reviews(page=${page - 1}, size=${size}, status=${status}, q=${q})}"
+                   class="sd-page-link">
+                    <i class="fas fa-chevron-left"></i> Trước
+                </a>
+                <span th:unless="${hasPrev}" class="sd-page-link sd-page-disabled">
+                    <i class="fas fa-chevron-left"></i> Trước
+                </span>
+
+                <th:block th:each="i : ${#numbers.sequence(0, totalPages - 1)}" th:if="${i == page}">
+                    <span class="sd-page-link sd-page-active" th:text="${i + 1}">1</span>
+                </th:block>
+
+                <a th:if="${hasNext}"
+                   th:href="@{/moderator/reviews(page=${page + 1}, size=${size}, status=${status}, q=${q})}"
+                   class="sd-page-link">
+                    Sau <i class="fas fa-chevron-right"></i>
+                </a>
+                <span th:unless="${hasNext}" class="sd-page-link sd-page-disabled">
+                    Sau <i class="fas fa-chevron-right"></i>
+                </span>
+            </nav>
+        </div>
+    </div>
+</main>
+
+<th:block th:fragment="page-scripts"></th:block>
+</body>
+</html>

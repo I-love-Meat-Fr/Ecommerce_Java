@@ -1,0 +1,57 @@
+<aside class="sd-sidebar" th:fragment="sidebar" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security6">
+    <div class="sd-sidebar-header">
+        <div class="sd-sidebar-logo">
+            <i class="fas fa-user-shield"></i>
+        </div>
+        <div class="sd-sidebar-brand">
+            <span class="sd-sidebar-brand-name">Moderator</span>
+            <span class="sd-sidebar-brand-sub">CNJ70</span>
+        </div>
+    </div>
+
+    <nav class="sd-sidebar-nav">
+        <div class="sd-sidebar-nav-section">
+            <span class="sd-sidebar-nav-title">Tổng quan</span>
+            <a th:href="@{/moderator/dashboard}" class="sd-nav-item" data-match="/moderator/dashboard">
+                <i class="fas fa-house"></i>
+                <span class="sd-nav-label">Dashboard</span>
+            </a>
+        </div>
+
+        <div class="sd-sidebar-nav-section">
+            <span class="sd-sidebar-nav-title">Kiểm duyệt</span>
+            <a th:href="@{/moderator/reviews}" class="sd-nav-item" data-match="/moderator/reviews">
+                <i class="fas fa-comment-dots"></i>
+                <span class="sd-nav-label">Review Queue</span>
+            </a>
+            <a th:href="@{/moderator/kyc}" class="sd-nav-item" data-match="/moderator/kyc">
+                <i class="fas fa-user-check"></i>
+                <span class="sd-nav-label">KYC Queue</span>
+            </a>
+        </div>
+
+        <div class="sd-sidebar-nav-section">
+            <span class="sd-sidebar-nav-title">Khác</span>
+            <a th:href="@{/home}" class="sd-nav-item">
+                <i class="fas fa-globe"></i>
+                <span class="sd-nav-label">Xem website</span>
+            </a>
+            <form th:action="@{/auth/logout}" method="post" style="margin:0;">
+                <button type="submit" class="sd-nav-item">
+                    <i class="fas fa-arrow-right-from-bracket"></i>
+                    <span class="sd-nav-label">Đăng xuất</span>
+                </button>
+            </form>
+        </div>
+    </nav>
+
+    <div class="sd-sidebar-footer">
+        <div class="sd-sidebar-user">
+            <div class="sd-sidebar-avatar" sec:authentication="name">M</div>
+            <div class="sd-sidebar-user-info">
+                <div class="sd-sidebar-user-name" sec:authentication="name">Moderator</div>
+                <div class="sd-sidebar-user-role">Moderator</div>
+            </div>
+        </div>
+    </div>
+</aside>
