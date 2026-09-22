@@ -1,6 +1,7 @@
 package com.ecommerce.cnj70.controller.web;
 
 import com.ecommerce.cnj70.document.Review;
+import com.ecommerce.cnj70.dto.request.ReportReviewReq;
 import com.ecommerce.cnj70.dto.request.ReviewReq;
 import com.ecommerce.cnj70.dto.response.ReviewRes;
 import com.ecommerce.cnj70.security.CustomUserDetails;
@@ -131,6 +132,29 @@ public class ReviewController {
             return ResponseEntity.ok(false);
         }
         return ResponseEntity.ok(reviewService.canUserReviewProduct(user.getId(), productId));
+    }
+
+    /**
+     * TASK #15 — Customer report một Review.
+     * POST /api/reviews/{reviewId}/report
+     */
+    @PostMapping("/api/reviews/{reviewId}/report")
+    @ResponseBody
+    public ResponseEntity<String> reportReview(
+            @PathVariable String reviewId,
+            @RequestBody @Valid ReportReviewReq request,
+            @AuthenticationPrincipal CustomUserDetails user
+    ) {
+        if (user == null) {
+            return ResponseEntity.status(401).body("Vui lòng đăng nhập để report");
+        }
+
+        try {
+            reviewService.reportReview(reviewId, user.getId(), request.getReason());
+            return ResponseEntity.ok("Đã gửi report thành công. Cảm ơn bạn đã phản ánh!");
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
     }
     
     private ReviewRes toReviewRes(Review review) {

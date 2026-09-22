@@ -1,6 +1,7 @@
 package com.ecommerce.cnj70.repository;
 
 import com.ecommerce.cnj70.document.Review;
+import com.ecommerce.cnj70.enums.ReviewModerationStatus;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.mongodb.repository.MongoRepository;
 import org.springframework.stereotype.Repository;
@@ -24,4 +25,9 @@ public interface ReviewRepository extends MongoRepository<Review, String> {
     List<Review> findByProductIdInOrderByCreatedAtDesc(List<String> productIds);
 
     List<Review> findByProductIdIn(List<String> productIds, Pageable pageable);
+
+    // ===== TASK #15: Review Moderation =====
+    List<Review> findByModerationStatus(ReviewModerationStatus status);
+
+    List<Review> findByModerationStatusOrderByReportCountDesc(ReviewModerationStatus status);
 }

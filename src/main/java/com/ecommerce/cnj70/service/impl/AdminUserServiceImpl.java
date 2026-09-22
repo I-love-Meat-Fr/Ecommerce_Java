@@ -2,11 +2,13 @@ package com.ecommerce.cnj70.service.impl;
 
 import com.ecommerce.cnj70.document.User;
 import com.ecommerce.cnj70.enums.AccountStatus;
+import com.ecommerce.cnj70.enums.AuditAction;
 import com.ecommerce.cnj70.enums.UserRole;
 import com.ecommerce.cnj70.exception.BusinessException;
 import com.ecommerce.cnj70.exception.ResourceNotFoundException;
 import com.ecommerce.cnj70.repository.UserRepository;
 import com.ecommerce.cnj70.service.AdminUserService;
+import com.ecommerce.cnj70.service.AuditLogService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -30,6 +32,7 @@ public class AdminUserServiceImpl implements AdminUserService {
 
     private final UserRepository userRepository;
     private final MongoTemplate mongoTemplate;
+    private final AuditLogService auditLogService;
 
     @Override
     public Page<User> listUsers(Pageable pageable, String q) {
@@ -119,7 +122,6 @@ public class AdminUserServiceImpl implements AdminUserService {
     public void lockUser(String id, String currentUserId) {
         User user = getUserById(id);
 
-        // Admin Protection: ADMIN cannot lock their own ADMIN account.
         if (user.getRole() == UserRole.ADMIN
                 && currentUserId != null
                 && currentUserId.equals(user.getId())) {
@@ -127,13 +129,27 @@ public class AdminUserServiceImpl implements AdminUserService {
                     "Bạn không thể tự khóa tài khoản ADMIN của chính mình");
         }
 
-        if (user.getStatus() == AccountStatus.LOCKED) {
+        AccountStatus beforeStatus = user.getStatus();
+
+        if (beforeStatus == AccountStatus.LOCKED) {
             log.info("AdminUserService.lockUser: user {} already LOCKED, skip", id);
             return;
         }
 
         user.setStatus(AccountStatus.LOCKED);
         userRepository.save(user);
+
+        // ===== TASK #24: AuditLog =====
+        auditLogService.logWarning(
+                AuditAction.USER_LOCKED,
+                "USER",
+                id,
+                currentUserId,
+                null,
+                "ADMIN",
+                "Admin khóa tài khoản: " + user.getEmail() + " (" + beforeStatus + " → LOCKED)"
+        );
+
         log.info("AdminUserService.lockUser: user {} locked by {}", id, currentUserId);
     }
 
@@ -141,13 +157,27 @@ public class AdminUserServiceImpl implements AdminUserService {
     public void unlockUser(String id) {
         User user = getUserById(id);
 
-        if (user.getStatus() == AccountStatus.ACTIVE) {
+        AccountStatus beforeStatus = user.getStatus();
+
+        if (beforeStatus == AccountStatus.ACTIVE) {
             log.info("AdminUserService.unlockUser: user {} already ACTIVE, skip", id);
             return;
         }
 
         user.setStatus(AccountStatus.ACTIVE);
         userRepository.save(user);
+
+        // ===== TASK #24: AuditLog =====
+        auditLogService.logInfo(
+                AuditAction.USER_UNLOCKED,
+                "USER",
+                id,
+                null,
+                null,
+                "ADMIN",
+                "Admin mở khóa tài khoản: " + user.getEmail() + " (" + beforeStatus + " → ACTIVE)"
+        );
+
         log.info("AdminUserService.unlockUser: user {} unlocked", id);
     }
 

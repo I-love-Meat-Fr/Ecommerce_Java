@@ -262,13 +262,35 @@ public class OrderServiceImpl implements OrderService {
     }
 
     /**
-     * TASK #21 — Kiểm tra Customer đã mua Product hay chưa.
+     * TASK #14/#20/#21 — Kiểm tra Customer đã nhận được Product hay chưa.
+     * Chỉ Order ở trạng thái DELIVERED mới được coi là "đã nhận hàng".
+     * Dùng cho Review validation: chỉ cho phép tạo Review khi đã giao thành công.
+     *
+     * @return true nếu có Order DELIVERED chứa productId của user
+     */
+    @Override
+    @Transactional(readOnly = true)
+    public boolean hasUserReceivedProduct(String userId, String productId) {
+        if (userId == null || productId == null || userId.isBlank() || productId.isBlank()) {
+            return false;
+        }
+        List<Order> userOrders = orderRepository.findByUserId(userId);
+        return userOrders.stream()
+                .filter(o -> o.getStatus() == OrderStatus.DELIVERED)
+                .filter(o -> o.getItems() != null)
+                .flatMap(o -> o.getItems().stream())
+                .anyMatch(item -> productId.equals(item.getProductId()));
+    }
+
+    /**
+     * TASK #21 (legacy) — Kiểm tra Customer đã mua Product hay chưa.
      * Đếm Order của user có chứa productId và đang ở trạng thái "đã mua thành công".
      *
      * Logic "đã mua thành công" = Order KHÔNG ở trạng thái CANCELLED.
      * PENDING, PREPARING, SHIPPING, DELIVERED đều được tính là đã mua.
      * Lý do: một khi user đã đặt hàng (PENDING), họ đã giao dịch mua bán với shop;
      * chỉ CANCELLED là thực sự không mua nữa.
+     * CHÚ Ý: method này dùng cho hiển thị lịch sử mua hàng, KHÔNG dùng cho Review.
      */
     @Override
     @Transactional(readOnly = true)

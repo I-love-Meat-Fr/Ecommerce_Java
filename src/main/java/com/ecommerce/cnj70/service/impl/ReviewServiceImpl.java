@@ -3,26 +3,33 @@ package com.ecommerce.cnj70.service.impl;
 import com.ecommerce.cnj70.document.Product;
 import com.ecommerce.cnj70.document.Review;
 import com.ecommerce.cnj70.document.User;
+import com.ecommerce.cnj70.enums.AuditAction;
+import com.ecommerce.cnj70.enums.ReviewModerationStatus;
 import com.ecommerce.cnj70.exception.BadRequestException;
 import com.ecommerce.cnj70.exception.ResourceNotFoundException;
 import com.ecommerce.cnj70.repository.ProductRepository;
 import com.ecommerce.cnj70.repository.ReviewRepository;
 import com.ecommerce.cnj70.repository.UserRepository;
+import com.ecommerce.cnj70.service.AuditLogService;
 import com.ecommerce.cnj70.service.OrderService;
 import com.ecommerce.cnj70.service.ReviewService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Service
 @RequiredArgsConstructor
 public class ReviewServiceImpl implements ReviewService {
 
+    private static final int AUTO_REPORT_THRESHOLD = 3;
+
     private final ReviewRepository reviewRepository;
     private final UserRepository userRepository;
     private final ProductRepository productRepository;
     private final OrderService orderService;
+    private final AuditLogService auditLogService;
 
     @Override
     public Review createReview(String userId, String productId, int rating, String comment) {
@@ -40,12 +47,12 @@ public class ReviewServiceImpl implements ReviewService {
         Product product = productRepository.findById(productId)
                 .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy sản phẩm"));
 
-        // ===== TASK #21: bắt buộc đã mua Product mới được review =====
-        // Trước đây: chỉ check user tồn tại + product tồn tại + chưa review → lỏng lẻo
-        // Bây giờ: phải có Order (không CANCELLED) chứa productId của user
-        if (!orderService.hasUserPurchasedProduct(userId, productId)) {
+        // ===== TASK #14/#20: bắt buộc đã nhận Product (DELIVERED) mới được review =====
+        // Trước đây: check hasUserPurchasedProduct → Order không CANCELLED → vẫn review khi chưa nhận hàng
+        // Bây giờ: phải có Order DELIVERED chứa productId của user mới được review
+        if (!orderService.hasUserReceivedProduct(userId, productId)) {
             throw new BadRequestException(
-                    "Bạn chỉ có thể đánh giá sản phẩm sau khi đã mua và đơn hàng không bị hủy");
+                    "Bạn chỉ có thể đánh giá sản phẩm sau khi đã nhận được hàng");
         }
 
         if (reviewRepository.findByProductIdAndUserId(productId, userId).isPresent()) {
@@ -132,12 +139,12 @@ public class ReviewServiceImpl implements ReviewService {
     }
 
     /**
-     * TASK #21 — Check user có quyền review hay không.
-     * Điều kiện: đã mua Product thành công (Order không CANCELLED) + chưa review.
+     * TASK #14/#20/#21 — Kiểm tra user có quyền review hay không.
+     * Điều kiện: đã nhận Product (Order DELIVERED) + chưa review.
      */
     @Override
     public boolean canUserReviewProduct(String userId, String productId) {
-        if (!orderService.hasUserPurchasedProduct(userId, productId)) {
+        if (!orderService.hasUserReceivedProduct(userId, productId)) {
             return false;
         }
         return !hasUserReviewedProduct(userId, productId);
@@ -169,5 +176,147 @@ public class ReviewServiceImpl implements ReviewService {
             product.setReviewCount(reviewCount);
             productRepository.save(product);
         }
+    }
+
+    // ===== TASK #15: Review Moderation =====
+
+    @Override
+    public void reportReview(String reviewId, String reporterId, String reason) {
+        if (reporterId == null || reporterId.isBlank()) {
+            throw new BadRequestException("Không xác định được người report");
+        }
+        if (reason == null || reason.isBlank()) {
+            throw new BadRequestException("Lý do report không được để trống");
+        }
+
+        Review review = reviewRepository.findById(reviewId)
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy đánh giá"));
+
+        // Không cho tự report chính mình
+        if (review.getUserId().equals(reporterId)) {
+            throw new BadRequestException("Bạn không thể tự report đánh giá của chính mình");
+        }
+
+        review.setReportCount(review.getReportCount() + 1);
+
+        // Tự động chuyển sang REPORTED nếu đạt threshold
+        if (review.getReportCount() >= AUTO_REPORT_THRESHOLD) {
+            review.setModerationStatus(ReviewModerationStatus.REPORTED);
+            review.setModerationReason("Tự động chuyển sang REPORTED: " + review.getReportCount() + " reports");
+            review.setModeratedAt(LocalDateTime.now());
+            review.setModeratedBy("SYSTEM");
+
+            auditLogService.logWarning(
+                    AuditAction.REVIEW_REPORTED,
+                    "REVIEW",
+                    reviewId,
+                    "SYSTEM",
+                    "SYSTEM",
+                    "SYSTEM",
+                    "Review tự động bị đánh dấu REPORTED: " + review.getReportCount() +
+                            " reports cho review của userId=" + review.getUserId() +
+                            ", productId=" + review.getProductId()
+            );
+        }
+
+        reviewRepository.save(review);
+
+        // Audit log cho report
+        auditLogService.logInfo(
+                AuditAction.REVIEW_REPORTED,
+                "REVIEW",
+                reviewId,
+                reporterId,
+                null,
+                "CUSTOMER",
+                "Customer report review. Lý do: " + reason +
+                        ". Tổng report: " + review.getReportCount()
+        );
+    }
+
+    @Override
+    public Review hideReview(String reviewId, String moderatorId, String reason) {
+        Review review = reviewRepository.findById(reviewId)
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy đánh giá"));
+
+        ReviewModerationStatus before = review.getModerationStatus();
+
+        review.setModerationStatus(ReviewModerationStatus.HIDDEN);
+        review.setModerationReason(reason);
+        review.setModeratedBy(moderatorId);
+        review.setModeratedAt(LocalDateTime.now());
+
+        Review saved = reviewRepository.save(review);
+
+        auditLogService.logWarning(
+                AuditAction.REVIEW_HIDDEN,
+                "REVIEW",
+                reviewId,
+                moderatorId,
+                null,
+                "MODERATOR",
+                "Moderator ẩn review: productId=" + review.getProductId() +
+                        ", userId=" + review.getUserId() + ". Lý do: " + reason +
+                        " (trước: " + before + " → HIDDEN)"
+        );
+
+        return saved;
+    }
+
+    @Override
+    public void deleteReviewByModerator(String reviewId, String adminId, String reason) {
+        Review review = reviewRepository.findById(reviewId)
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy đánh giá"));
+
+        review.setModerationStatus(ReviewModerationStatus.DELETED);
+        review.setModerationReason(reason);
+        review.setModeratedBy(adminId);
+        review.setModeratedAt(LocalDateTime.now());
+
+        reviewRepository.save(review);
+
+        // Audit log
+        auditLogService.logCritical(
+                AuditAction.REVIEW_DELETED,
+                "REVIEW",
+                reviewId,
+                adminId,
+                null,
+                "ADMIN",
+                "Admin xóa review: productId=" + review.getProductId() +
+                        ", userId=" + review.getUserId() + ". Lý do: " + reason
+        );
+    }
+
+    @Override
+    public Review restoreReview(String reviewId, String moderatorId) {
+        Review review = reviewRepository.findById(reviewId)
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy đánh giá"));
+
+        review.setModerationStatus(ReviewModerationStatus.VISIBLE);
+        review.setModerationReason(null);
+        review.setModeratedBy(moderatorId);
+        review.setModeratedAt(LocalDateTime.now());
+        review.setReportCount(0);
+
+        Review saved = reviewRepository.save(review);
+
+        auditLogService.logInfo(
+                AuditAction.REVIEW_CREATED,
+                "REVIEW",
+                reviewId,
+                moderatorId,
+                null,
+                "MODERATOR",
+                "Moderator khôi phục review: productId=" + review.getProductId() +
+                        ", userId=" + review.getUserId()
+        );
+
+        return saved;
+    }
+
+    @Override
+    public List<Review> getReviewsByModerationStatus(ReviewModerationStatus status) {
+        return reviewRepository.findByModerationStatus(status);
     }
 }

@@ -34,4 +34,7 @@ public interface ShopRepository extends MongoRepository<Shop, String> {
 
     Page<Shop> findByStatusAndShopNameContainingIgnoreCase(
             ShopStatus status, String shopName, Pageable pageable);
+
+    // === TASK #18 KYC Callback: find shop by provider referenceId ===
+    Optional<Shop> findByKycReferenceId(String kycReferenceId);
 }

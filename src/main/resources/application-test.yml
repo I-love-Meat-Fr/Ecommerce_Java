@@ -1,0 +1,23 @@
+spring:
+  # Test profile: use embedded MongoDB or disable DB
+  data:
+    mongodb:
+      uri: ${MONGODB_URI:mongodb://localhost:27017}
+      database: cnj70_ecommerce_test
+
+  # Disable security for specific test scenarios if needed
+  security:
+    enabled: true
+
+# JWT test config
+jwt:
+  secret: ${JWT_SECRET:testSecretKeyForUnitTestingMustBeAtLeast256BitsLong123456}
+  expiration: 86400000
+
+# Encryption key for test (32 bytes, Base64-encoded)
+encryption-key: ${ENCRYPTION_KEY:dGVzdC1lbmNyeXB0aW9uLWtleS0zMi1ieXRlcy1mb3ItdGVzdA==}
+
+logging:
+  level:
+    root: WARN
+    com.ecommerce.cnj70: DEBUG

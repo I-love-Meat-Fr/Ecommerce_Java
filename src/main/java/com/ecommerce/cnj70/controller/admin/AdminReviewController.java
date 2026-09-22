@@ -5,11 +5,14 @@ import com.ecommerce.cnj70.document.Review;
 import com.ecommerce.cnj70.exception.ResourceNotFoundException;
 import com.ecommerce.cnj70.repository.ProductRepository;
 import com.ecommerce.cnj70.service.AdminReviewService;
+import com.ecommerce.cnj70.service.ReviewService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -23,16 +26,14 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Phase 15 — Admin Review Moderation Controller.
+ * TASK #15 — Admin Review Moderation Controller.
  *
- * Routes đã implement:
+ * Routes:
  *   GET  /admin/reviews              - Review List (search + filter rating + pagination)
  *   GET  /admin/reviews/{id}         - Review Detail
- *   POST /admin/reviews/{id}/delete  - Delete Violation (hard delete)
- *
- * Routes BLOCKED / DEPENDENCY (chờ Business Contract):
- *   POST /admin/reviews/{id}/hide
- *   POST /admin/reviews/{id}/unhide
+ *   POST /admin/reviews/{id}/delete  - Delete (hard delete, dùng cho AdminReviewService)
+ *   POST /admin/reviews/{id}/hide   - Moderator ẩn review
+ *   POST /admin/reviews/{id}/restore - Moderator khôi phục review
  *
  * Security: /admin/** đã được bảo vệ bởi SecurityConfig.hasRole("ADMIN").
  */
@@ -45,6 +46,7 @@ public class AdminReviewController {
 
     private final AdminReviewService adminReviewService;
     private final ProductRepository productRepository;
+    private final ReviewService reviewService;
 
     @GetMapping
     public String reviewList(@RequestParam(defaultValue = "0") int page,
@@ -114,6 +116,50 @@ public class AdminReviewController {
             adminReviewService.deleteReview(id);
             redirectAttributes.addFlashAttribute("flashSuccess",
                     "Đã xóa đánh giá vi phạm (ID: " + id + ")");
+        } catch (ResourceNotFoundException ex) {
+            redirectAttributes.addFlashAttribute("flashError", ex.getMessage());
+        } catch (RuntimeException ex) {
+            redirectAttributes.addFlashAttribute("flashError", ex.getMessage());
+        }
+        return buildRedirectUrl(page, size, q, rating);
+    }
+
+    @PostMapping("/{id}/hide")
+    public String hideReview(@PathVariable String id,
+                           @RequestParam(required = false) String reason,
+                           @RequestParam(defaultValue = "0") int page,
+                           @RequestParam(defaultValue = "10") int size,
+                           @RequestParam(required = false) String q,
+                           @RequestParam(required = false) String rating,
+                           @AuthenticationPrincipal UserDetails userDetails,
+                           RedirectAttributes redirectAttributes) {
+        try {
+            reviewService.hideReview(id,
+                    userDetails != null ? userDetails.getUsername() : "ADMIN",
+                    reason != null ? reason : "Vi phạm nội quy đánh giá");
+            redirectAttributes.addFlashAttribute("flashSuccess",
+                    "Đã ẩn đánh giá (ID: " + id + ")");
+        } catch (ResourceNotFoundException ex) {
+            redirectAttributes.addFlashAttribute("flashError", ex.getMessage());
+        } catch (RuntimeException ex) {
+            redirectAttributes.addFlashAttribute("flashError", ex.getMessage());
+        }
+        return buildRedirectUrl(page, size, q, rating);
+    }
+
+    @PostMapping("/{id}/restore")
+    public String restoreReview(@PathVariable String id,
+                               @RequestParam(defaultValue = "0") int page,
+                               @RequestParam(defaultValue = "10") int size,
+                               @RequestParam(required = false) String q,
+                               @RequestParam(required = false) String rating,
+                               @AuthenticationPrincipal UserDetails userDetails,
+                               RedirectAttributes redirectAttributes) {
+        try {
+            reviewService.restoreReview(id,
+                    userDetails != null ? userDetails.getUsername() : "ADMIN");
+            redirectAttributes.addFlashAttribute("flashSuccess",
+                    "Đã khôi phục đánh giá (ID: " + id + ")");
         } catch (ResourceNotFoundException ex) {
             redirectAttributes.addFlashAttribute("flashError", ex.getMessage());
         } catch (RuntimeException ex) {

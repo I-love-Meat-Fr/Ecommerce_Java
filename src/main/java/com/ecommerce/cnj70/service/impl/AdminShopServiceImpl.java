@@ -1,11 +1,14 @@
 package com.ecommerce.cnj70.service.impl;
 
 import com.ecommerce.cnj70.document.Shop;
+import com.ecommerce.cnj70.enums.AuditAction;
+import com.ecommerce.cnj70.enums.AuditSeverity;
 import com.ecommerce.cnj70.enums.ShopStatus;
 import com.ecommerce.cnj70.exception.BusinessException;
 import com.ecommerce.cnj70.exception.ResourceNotFoundException;
 import com.ecommerce.cnj70.repository.ShopRepository;
 import com.ecommerce.cnj70.service.AdminShopService;
+import com.ecommerce.cnj70.service.AuditLogService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -13,12 +16,18 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
+import java.util.Map;
+
+/**
+ * TASK #24 — AdminShopService với AuditLog integration.
+ */
 @Slf4j
 @Service
 @RequiredArgsConstructor
 public class AdminShopServiceImpl implements AdminShopService {
 
     private final ShopRepository shopRepository;
+    private final AuditLogService auditLogService;
 
     @Override
     public Page<Shop> listShops(Pageable pageable, String q) {
@@ -28,7 +37,6 @@ public class AdminShopServiceImpl implements AdminShopService {
     @Override
     public Page<Shop> listShops(Pageable pageable, String q, ShopStatus status) {
         boolean hasQ = StringUtils.hasText(q);
-        // Phase 10: Status filter (null/ALL means no status filter applied)
         if (status == null) {
             if (!hasQ) {
                 return shopRepository.findAll(pageable);
@@ -49,20 +57,47 @@ public class AdminShopServiceImpl implements AdminShopService {
 
     @Override
     public void approveShop(String id) {
-        Shop shop = getShopById(id);
+        approveShop(id, null, null);
+    }
 
-        if (shop.getStatus() == ShopStatus.APPROVED) {
+    @Override
+    public void approveShop(String id, String actorId, String actorUsername) {
+        Shop shop = getShopById(id);
+        ShopStatus beforeStatus = shop.getStatus();
+
+        if (beforeStatus == ShopStatus.APPROVED) {
             log.info("AdminShopService.approveShop: shop {} already approved, skip", id);
             return;
         }
 
         shop.setStatus(ShopStatus.APPROVED);
         shopRepository.save(shop);
-        log.info("AdminShopService.approveShop: shop {} approved (was {})", id, shop.getStatus());
+
+        // ===== TASK #24: AuditLog =====
+        if (actorId != null || actorUsername != null) {
+            auditLogService.log(
+                    AuditAction.SHOP_APPROVED,
+                    "SHOP",
+                    id,
+                    actorId,
+                    actorUsername,
+                    "ADMIN",
+                    AuditSeverity.INFO,
+                    "Admin duyệt shop: " + shop.getShopName() + " (từ " + beforeStatus + " sang APPROVED)",
+                    Map.of("beforeStatus", beforeStatus.name(), "afterStatus", "APPROVED")
+            );
+        }
+
+        log.info("AdminShopService.approveShop: shop {} approved (was {})", id, beforeStatus);
     }
 
     @Override
     public void activateShop(String id) {
+        activateShop(id, null, null);
+    }
+
+    @Override
+    public void activateShop(String id, String actorId, String actorUsername) {
         Shop shop = getShopById(id);
 
         if (shop.isActive()) {
@@ -71,11 +106,29 @@ public class AdminShopServiceImpl implements AdminShopService {
 
         shop.setActive(true);
         shopRepository.save(shop);
+
+        if (actorId != null || actorUsername != null) {
+            auditLogService.logInfo(
+                    AuditAction.SHOP_APPROVED,
+                    "SHOP",
+                    id,
+                    actorId,
+                    actorUsername,
+                    "ADMIN",
+                    "Admin kích hoạt shop: " + shop.getShopName()
+            );
+        }
+
         log.info("AdminShopService.activateShop: shop {} activated", id);
     }
 
     @Override
     public void deactivateShop(String id) {
+        deactivateShop(id, null, null);
+    }
+
+    @Override
+    public void deactivateShop(String id, String actorId, String actorUsername) {
         Shop shop = getShopById(id);
 
         if (!shop.isActive()) {
@@ -84,20 +137,54 @@ public class AdminShopServiceImpl implements AdminShopService {
 
         shop.setActive(false);
         shopRepository.save(shop);
+
+        if (actorId != null || actorUsername != null) {
+            auditLogService.logWarning(
+                    AuditAction.SHOP_SUSPENDED,
+                    "SHOP",
+                    id,
+                    actorId,
+                    actorUsername,
+                    "ADMIN",
+                    "Admin ngừng hoạt động shop: " + shop.getShopName()
+            );
+        }
+
         log.info("AdminShopService.deactivateShop: shop {} deactivated", id);
     }
 
     @Override
     public void rejectShop(String id) {
-        Shop shop = getShopById(id);
+        rejectShop(id, null, null, null);
+    }
 
-        if (shop.getStatus() == ShopStatus.REJECTED) {
+    @Override
+    public void rejectShop(String id, String actorId, String actorUsername, String reason) {
+        Shop shop = getShopById(id);
+        ShopStatus beforeStatus = shop.getStatus();
+
+        if (beforeStatus == ShopStatus.REJECTED) {
             log.info("AdminShopService.rejectShop: shop {} already rejected, skip", id);
             return;
         }
 
         shop.setStatus(ShopStatus.REJECTED);
         shopRepository.save(shop);
-        log.info("AdminShopService.rejectShop: shop {} rejected (was {})", id, shop.getStatus());
+
+        // ===== TASK #24: AuditLog (WARNING vì reject là tác động lớn) =====
+        if (actorId != null || actorUsername != null) {
+            auditLogService.logWarning(
+                    AuditAction.SHOP_REJECTED,
+                    "SHOP",
+                    id,
+                    actorId,
+                    actorUsername,
+                    "ADMIN",
+                    "Admin từ chối shop: " + shop.getShopName() +
+                            (reason != null ? ". Lý do: " + reason : "")
+            );
+        }
+
+        log.info("AdminShopService.rejectShop: shop {} rejected (was {})", id, beforeStatus);
     }
 }

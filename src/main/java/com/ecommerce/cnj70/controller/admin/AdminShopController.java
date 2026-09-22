@@ -12,6 +12,8 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -33,6 +35,10 @@ public class AdminShopController {
 
     private final AdminShopService adminShopService;
     private final UserRepository userRepository;
+
+    private String currentActorId(UserDetails user) {
+        return user != null ? user.getUsername() : null;
+    }
 
     @GetMapping
     public String shopList(@RequestParam(defaultValue = "0") int page,
@@ -90,6 +96,7 @@ public class AdminShopController {
 
     @PostMapping("/{id}/approve")
     public String approveShop(@PathVariable String id,
+                              @AuthenticationPrincipal UserDetails userDetails,
                               @RequestParam(defaultValue = "0") int page,
                               @RequestParam(defaultValue = "5") int size,
                               @RequestParam(required = false) String q,
@@ -108,7 +115,8 @@ public class AdminShopController {
                     "Shop \"" + shop.getShopName() + "\" đã được duyệt trước đó");
         } else {
             try {
-                adminShopService.approveShop(id);
+                // TASK #24: truyền actor vào audit log
+                adminShopService.approveShop(id, currentActorId(userDetails), currentActorId(userDetails));
                 redirectAttributes.addFlashAttribute("flashSuccess",
                         "Đã duyệt shop \"" + shop.getShopName() + "\" thành công");
             } catch (BusinessException ex) {
@@ -127,6 +135,7 @@ public class AdminShopController {
 
     @PostMapping("/{id}/activate")
     public String activateShop(@PathVariable String id,
+                                @AuthenticationPrincipal UserDetails userDetails,
                                 @RequestParam(defaultValue = "0") int page,
                                 @RequestParam(defaultValue = "5") int size,
                                 @RequestParam(required = false) String q,
@@ -141,7 +150,7 @@ public class AdminShopController {
         }
 
         try {
-            adminShopService.activateShop(id);
+            adminShopService.activateShop(id, currentActorId(userDetails), currentActorId(userDetails));
             redirectAttributes.addFlashAttribute("flashSuccess",
                     "Đã kích hoạt shop \"" + shop.getShopName() + "\"");
         } catch (BusinessException ex) {
@@ -159,6 +168,7 @@ public class AdminShopController {
 
     @PostMapping("/{id}/deactivate")
     public String deactivateShop(@PathVariable String id,
+                                 @AuthenticationPrincipal UserDetails userDetails,
                                  @RequestParam(defaultValue = "0") int page,
                                  @RequestParam(defaultValue = "5") int size,
                                  @RequestParam(required = false) String q,
@@ -173,7 +183,7 @@ public class AdminShopController {
         }
 
         try {
-            adminShopService.deactivateShop(id);
+            adminShopService.deactivateShop(id, currentActorId(userDetails), currentActorId(userDetails));
             redirectAttributes.addFlashAttribute("flashSuccess",
                     "Đã ngừng hoạt động shop \"" + shop.getShopName() + "\"");
         } catch (BusinessException ex) {
@@ -191,10 +201,12 @@ public class AdminShopController {
 
     @PostMapping("/{id}/reject")
     public String rejectShop(@PathVariable String id,
+                             @AuthenticationPrincipal UserDetails userDetails,
                              @RequestParam(defaultValue = "0") int page,
                              @RequestParam(defaultValue = "5") int size,
                              @RequestParam(required = false) String q,
                              @RequestParam(required = false) String status,
+                             @RequestParam(required = false) String reason,
                              RedirectAttributes redirectAttributes) {
         Shop shop;
         try {
@@ -205,7 +217,7 @@ public class AdminShopController {
         }
 
         try {
-            adminShopService.rejectShop(id);
+            adminShopService.rejectShop(id, currentActorId(userDetails), currentActorId(userDetails), reason);
             redirectAttributes.addFlashAttribute("flashSuccess",
                     "Đã từ chối shop \"" + shop.getShopName() + "\"");
         } catch (BusinessException ex) {
