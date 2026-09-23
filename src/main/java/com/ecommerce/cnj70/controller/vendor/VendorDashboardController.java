@@ -1,5 +1,6 @@
 package com.ecommerce.cnj70.controller.vendor;
 
+import com.ecommerce.cnj70.document.User;
 import com.ecommerce.cnj70.dto.response.VendorDashboardRes;
 import com.ecommerce.cnj70.security.CustomUserDetails;
 import com.ecommerce.cnj70.service.VendorService;
@@ -17,6 +18,12 @@ public class VendorDashboardController {
     
     @GetMapping("/vendor/dashboard")
     public String dashboard(@AuthenticationPrincipal CustomUserDetails user, Model model) {
+        // Check KYC: nếu chưa APPROVED → redirect sang /vendor/kyc
+        User vendor = vendorService.getCurrentVendor(user);
+        if (!vendor.isKycApproved()) {
+            return "redirect:/vendor/kyc";
+        }
+
         VendorDashboardRes stats = vendorService.getDashboardStats(user);
         model.addAttribute("stats", stats);
         model.addAttribute("pendingOrders", stats.getPendingOrders());

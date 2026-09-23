@@ -40,6 +40,18 @@ public class Shop {
     @Builder.Default
     private boolean active = true;
 
+    /** Lý do admin từ chối shop (khi status = REJECTED) */
+    private String rejectionReason;
+
+    /** Lý do admin ngừng hoạt động shop (khi active = false) */
+    private String deactivationReason;
+
+    /** Admin thực hiện từ chối / ngừng hoạt động */
+    private String actionBy;
+
+    /** Thời điểm admin thực hiện thao tác */
+    private LocalDateTime actionAt;
+
     @CreatedDate
     private LocalDateTime createdAt;
 

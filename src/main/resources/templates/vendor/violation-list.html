@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/springsecurity6"
+      th:replace="~{layout/vendor-layout :: layout(title='Cảnh báo & Vi phạm - CNJ70 Vendor', content=~{::main-content}, scripts=~{::page-scripts})}">
+<head>
+    <title>Cảnh báo & Vi phạm - CNJ70 Vendor</title>
+</head>
+<body>
+<main th:fragment="main-content">
+
+    <div class="vd-page-hero">
+        <div class="vd-page-hero-left">
+            <div class="vd-page-hero-icon"><i class="fas fa-triangle-exclamation"></i></div>
+            <div class="vd-page-hero-info">
+                <h2>Cảnh báo & Vi phạm</h2>
+                <p>Theo dõi các cảnh báo và lịch sử vi phạm của cửa hàng.</p>
+            </div>
+        </div>
+    </div>
+
+    <div th:if="${success}" class="sd-alert sd-alert-success"><i class="fas fa-circle-check"></i><span th:text="${success}"></span></div>
+    <div th:if="${error}" class="sd-alert sd-alert-danger"><i class="fas fa-triangle-exclamation"></i><span th:text="${error}"></span></div>
+
+    <!-- Alert strip -->
+    <div th:if="${criticalCount > 0}" class="sd-alert sd-alert-danger" style="margin-bottom:16px;">
+        <i class="fas fa-circle-exclamation"></i>
+        <span>
+            Cửa hàng của bạn có <strong th:text="${criticalCount}">0</strong> vi phạm nghiêm trọng chưa được xử lý.
+            Vui lòng liên hệ admin để xử lý để tiếp tục hoạt động bán hàng.
+        </span>
+    </div>
+    <div th:if="${criticalCount == 0 and activeCount > 0}" class="sd-alert sd-alert-warning" style="margin-bottom:16px;">
+        <i class="fas fa-exclamation-circle"></i>
+        <span>Bạn có <strong th:text="${activeCount}">0</strong> cảnh báo chưa xử lý. Vui lòng xem chi tiết bên dưới.</span>
+    </div>
+    <div th:if="${activeCount == 0 and totalItems == 0}" class="sd-alert sd-alert-success" style="margin-bottom:16px;">
+        <i class="fas fa-shield-halved"></i>
+        <span>Tuyệt vời! Cửa hàng của bạn chưa có cảnh báo hay vi phạm nào.</span>
+    </div>
+
+    <!-- Stat cards -->
+    <div class="vd-stat-strip" style="margin-bottom:20px;">
+        <div class="vd-stat-strip-card highlight">
+            <div class="vd-stat-strip-label">Chưa xử lý</div>
+            <div class="vd-stat-strip-value" th:text="${activeCount}">0</div>
+        </div>
+        <div class="vd-stat-strip-card">
+            <div class="vd-stat-strip-label">Nghiêm trọng (chưa xử lý)</div>
+            <div class="vd-stat-strip-value" th:text="${criticalCount}">0</div>
+        </div>
+        <div class="vd-stat-strip-card success">
+            <div class="vd-stat-strip-label">Tổng cộng</div>
+            <div class="vd-stat-strip-value" th:text="${totalItems}">0</div>
+        </div>
+    </div>
+
+    <div class="sd-card">
+        <div class="sd-card-head">
+            <div>
+                <h3><i class="fas fa-history"></i> Lịch sử vi phạm</h3>
+                <p>Danh sách tất cả cảnh báo và vi phạm của cửa hàng.</p>
+            </div>
+        </div>
+        <div class="sd-card-body sd-card-body-flush">
+            <div th:if="${#lists.isEmpty(violations)}" class="sd-empty">
+                <i class="fas fa-shield-halved"></i>
+                <h3>Chưa có vi phạm nào</h3>
+                <p>Cửa hàng của bạn đang hoạt động tốt.</p>
+            </div>
+
+            <table th:unless="${#lists.isEmpty(violations)}" class="sd-table">
+                <thead>
+                    <tr>
+                        <th class="sd-col-stt">STT</th>
+                        <th>Ngày tạo</th>
+                        <th>Loại</th>
+                        <th>Mức độ</th>
+                        <th>Sản phẩm</th>
+                        <th>Lý do</th>
+                        <th>Trạng thái</th>
+                        <th style="text-align:right;">Thao tác</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr th:each="v, iter : ${violations}">
+                        <td class="sd-col-stt" th:text="${iter.count + page * size}">1</td>
+                        <td>
+                            <span th:text="${#temporals.format(v.createdAt, 'dd/MM/yyyy')}">Ngày</span>
+                            <div class="vd-row-sub" th:text="${#temporals.format(v.createdAt, 'HH:mm')}">Giờ</div>
+                        </td>
+                        <td>
+                            <span class="sd-badge"
+                                  th:classappend="${v.type.name() == 'WARNING' ? 'sd-badge-amber' :
+                                                  (v.type.name() == 'VIOLATION' ? 'sd-badge-orange' :
+                                                  (v.type.name() == 'BAN' ? 'sd-badge-red' : 'sd-badge-slate'))}"
+                                  th:text="${v.type.name() == 'WARNING' ? 'Cảnh báo' :
+                                          (v.type.name() == 'VIOLATION' ? 'Vi phạm' :
+                                          (v.type.name() == 'BAN' ? 'Đình chỉ' : v.type.name()))}">TYPE</span>
+                        </td>
+                        <td>
+                            <span class="sd-badge"
+                                  th:classappend="${v.severity.name() == 'LOW' ? 'sd-badge-slate' :
+                                                  (v.severity.name() == 'MEDIUM' ? 'sd-badge-amber' :
+                                                  (v.severity.name() == 'HIGH' ? 'sd-badge-orange' :
+                                                  (v.severity.name() == 'CRITICAL' ? 'sd-badge-red' : 'sd-badge-slate')))}"
+                                  th:text="${v.severity.name()}">SEVERITY</span>
+                        </td>
+                        <td th:text="${v.productName != null ? v.productName : '-'}">-</td>
+                        <td>
+                            <span class="vd-row-name" th:text="${v.reason}">Lý do</span>
+                        </td>
+                        <td>
+                            <span th:if="${v.resolvedAt == null}" class="sd-badge sd-badge-red">Chưa xử lý</span>
+                            <span th:if="${v.resolvedAt != null}" class="sd-badge sd-badge-green">Đã xử lý</span>
+                        </td>
+                        <td style="text-align:right;">
+                            <a th:href="@{/vendor/violations/{id}(id=${v.id})}" class="sd-btn sd-btn-secondary sd-btn-sm">
+                                <i class="fas fa-eye"></i> Chi tiết
+                            </a>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <!-- Pagination -->
+            <div th:if="${totalPages > 1}" style="display:flex;justify-content:center;gap:6px;padding:16px;">
+                <a th:if="${page > 0}"
+                   th:href="@{/vendor/violations(page=${page - 1}, size=${size})}"
+                   class="sd-btn sd-btn-secondary sd-btn-sm">
+                    <i class="fas fa-chevron-left"></i> Trước
+                </a>
+                <span class="sd-badge sd-badge-slate">
+                    Trang <th:block th:text="${page + 1}"></th:block> / <th:block th:text="${totalPages}"></th:block>
+                </span>
+                <a th:if="${page + 1 < totalPages}"
+                   th:href="@{/vendor/violations(page=${page + 1}, size=${size})}"
+                   class="sd-btn sd-btn-secondary sd-btn-sm">
+                    Sau <i class="fas fa-chevron-right"></i>
+                </a>
+            </div>
+        </div>
+    </div>
+
+</main>
+
+<th:block th:fragment="page-scripts"></th:block>
+</body>
+</html>

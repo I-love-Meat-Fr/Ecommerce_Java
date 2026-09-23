@@ -1,0 +1,731 @@
+/* ============================================================
+   SELLER ONBOARDING LANDING PAGE
+   - Public marketing-style page (/seller)
+   - Tone: teal accent (đồng bộ home.css)
+   - Layout: container max-width 1200
+   ============================================================ */
+
+.seller-onboarding-page {
+    --teal: #0fb5b0;
+    --teal-deep: #0a8a87;
+    --teal-soft: #e6f8f7;
+    --teal-glow: rgba(15, 181, 176, 0.18);
+    --ink: #0b1320;
+    --ink-soft: #475569;
+    --muted: #94a3b8;
+    --line: #e6efee;
+    --bg-alt: #f7faf9;
+    --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.06);
+    --shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    --shadow-lg: 0 16px 40px rgba(0, 0, 0, 0.12);
+    --radius: 8px;
+    font-family: 'Work Sans', sans-serif;
+    color: var(--ink);
+    overflow-x: hidden;
+}
+
+.seller-onboarding-page .container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 20px;
+}
+
+/* ============================================================
+   SHARED SECTION HEAD
+   ============================================================ */
+.seller-section-head {
+    text-align: center;
+    margin-bottom: 40px;
+}
+.seller-section-eyebrow {
+    display: inline-block;
+    font-size: 0.8rem;
+    font-weight: 700;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: var(--teal);
+    background: var(--teal-soft);
+    padding: 6px 14px;
+    border-radius: 999px;
+    margin-bottom: 14px;
+}
+.seller-section-head h2 {
+    font-size: 2rem;
+    font-weight: 800;
+    color: var(--ink);
+    margin: 0 0 8px;
+    line-height: 1.25;
+}
+.seller-section-sub {
+    color: var(--ink-soft);
+    font-size: 1rem;
+    margin: 0;
+}
+
+/* ============================================================
+   BUTTONS
+   ============================================================ */
+.seller-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 22px;
+    border-radius: var(--radius);
+    font-weight: 700;
+    font-size: 0.95rem;
+    text-decoration: none;
+    border: 1px solid transparent;
+    cursor: pointer;
+    transition: all 0.18s ease;
+    white-space: nowrap;
+}
+.seller-btn-lg {
+    padding: 16px 32px;
+    font-size: 1.05rem;
+}
+.seller-btn-primary {
+    background: var(--teal);
+    color: #fff;
+    box-shadow: 0 4px 12px var(--teal-glow);
+}
+.seller-btn-primary:hover {
+    background: var(--teal-deep);
+    transform: translateY(-1px);
+    box-shadow: 0 6px 18px var(--teal-glow);
+}
+.seller-btn-ghost {
+    background: #fff;
+    color: var(--ink);
+    border-color: var(--line);
+}
+.seller-btn-ghost:hover {
+    border-color: var(--teal);
+    color: var(--teal-deep);
+}
+.seller-btn-light {
+    background: #fff;
+    color: var(--teal-deep);
+}
+.seller-btn-light:hover {
+    background: var(--teal-soft);
+}
+.seller-btn-ghost-light {
+    background: transparent;
+    color: #fff;
+    border-color: rgba(255, 255, 255, 0.6);
+}
+.seller-btn-ghost-light:hover {
+    background: rgba(255, 255, 255, 0.12);
+}
+
+/* ============================================================
+   1. HERO
+   ============================================================ */
+.seller-hero {
+    position: relative;
+    padding: 70px 0 80px;
+    background: linear-gradient(180deg, #f7faf9 0%, #ffffff 100%);
+    overflow: hidden;
+}
+.seller-hero-bg {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    pointer-events: none;
+}
+.seller-hero-blob {
+    position: absolute;
+    border-radius: 50%;
+    filter: blur(60px);
+    opacity: 0.5;
+}
+.seller-hero-blob-1 {
+    width: 380px;
+    height: 380px;
+    background: var(--teal-soft);
+    top: -120px;
+    right: -80px;
+}
+.seller-hero-blob-2 {
+    width: 280px;
+    height: 280px;
+    background: #fef3c7;
+    bottom: -120px;
+    left: -60px;
+}
+.seller-hero-grid {
+    position: relative;
+    z-index: 1;
+    display: grid;
+    grid-template-columns: 1.2fr 1fr;
+    gap: 60px;
+    align-items: center;
+}
+.seller-hero-eyebrow {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 14px;
+    background: var(--teal-soft);
+    color: var(--teal-deep);
+    border-radius: 999px;
+    font-weight: 700;
+    font-size: 0.8rem;
+    letter-spacing: 0.3px;
+    margin-bottom: 18px;
+}
+.seller-hero-title {
+    font-size: 3rem;
+    font-weight: 900;
+    line-height: 1.15;
+    color: var(--ink);
+    margin: 0 0 16px;
+}
+.seller-hero-accent {
+    color: var(--teal);
+    position: relative;
+    display: inline-block;
+}
+.seller-hero-accent::after {
+    content: "";
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 4px;
+    height: 8px;
+    background: var(--teal-soft);
+    z-index: -1;
+    border-radius: 2px;
+}
+.seller-hero-desc {
+    font-size: 1.1rem;
+    color: var(--ink-soft);
+    line-height: 1.6;
+    margin: 0 0 28px;
+    max-width: 540px;
+}
+.seller-hero-cta {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+    margin-bottom: 28px;
+}
+.seller-hero-trust {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    gap: 22px;
+    flex-wrap: wrap;
+    font-size: 0.9rem;
+    color: var(--ink-soft);
+}
+.seller-hero-trust li {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+.seller-hero-trust i {
+    color: var(--teal);
+}
+
+/* Hero art (mock dashboard cards) */
+.seller-hero-art {
+    position: relative;
+    height: 420px;
+}
+.seller-hero-card {
+    position: absolute;
+    background: #fff;
+    border-radius: 12px;
+    box-shadow: var(--shadow-lg);
+    padding: 18px 20px;
+    min-width: 220px;
+    transition: transform 0.3s ease;
+}
+.seller-hero-card-head {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: 700;
+    color: var(--ink);
+    font-size: 0.95rem;
+    margin-bottom: 10px;
+}
+.seller-hero-card-head i {
+    color: var(--teal);
+}
+.seller-hero-card-1 {
+    top: 20px;
+    left: 0;
+    animation: seller-float 6s ease-in-out infinite;
+}
+.seller-hero-card-1 .seller-hero-card-stats {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+}
+.seller-hero-card-1 .seller-hero-card-stats > div {
+    background: var(--bg-alt);
+    padding: 12px;
+    border-radius: 8px;
+    text-align: center;
+}
+.seller-hero-card-1 .seller-hero-card-stats strong {
+    display: block;
+    font-size: 1.4rem;
+    color: var(--ink);
+    font-weight: 800;
+}
+.seller-hero-card-1 .seller-hero-card-stats span {
+    font-size: 0.78rem;
+    color: var(--muted);
+}
+.seller-hero-card-2 {
+    top: 130px;
+    right: 0;
+    animation: seller-float 7s ease-in-out infinite reverse;
+}
+.seller-hero-card-money {
+    font-size: 1.6rem;
+    font-weight: 800;
+    color: var(--ink);
+    margin-bottom: 6px;
+}
+.seller-hero-card-trend {
+    color: #15803d;
+    font-size: 0.85rem;
+    font-weight: 600;
+}
+.seller-hero-card-3 {
+    bottom: 20px;
+    left: 60px;
+    background: linear-gradient(135deg, var(--teal) 0%, var(--teal-deep) 100%);
+    color: #fff;
+    animation: seller-float 8s ease-in-out infinite;
+}
+.seller-hero-card-3 .seller-hero-card-head {
+    color: #fff;
+}
+.seller-hero-card-3 .seller-hero-card-head i {
+    color: #fff;
+}
+.seller-hero-card-badge {
+    background: rgba(255, 255, 255, 0.18);
+    padding: 8px 12px;
+    border-radius: 6px;
+    font-weight: 600;
+    font-size: 0.9rem;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+@keyframes seller-float {
+    0%, 100% { transform: translateY(0); }
+    50%      { transform: translateY(-10px); }
+}
+
+/* ============================================================
+   2. BENEFITS
+   ============================================================ */
+.seller-benefits {
+    padding: 80px 0;
+    background: #fff;
+}
+.seller-benefit-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 24px;
+}
+.seller-benefit {
+    padding: 28px 24px;
+    border-radius: var(--radius);
+    border: 1px solid var(--line);
+    background: #fff;
+    transition: all 0.2s ease;
+}
+.seller-benefit:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--shadow);
+    border-color: var(--teal);
+}
+.seller-benefit-icon {
+    width: 52px;
+    height: 52px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.3rem;
+    margin-bottom: 16px;
+}
+.seller-benefit h3 {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: var(--ink);
+    margin: 0 0 8px;
+}
+.seller-benefit p {
+    color: var(--ink-soft);
+    font-size: 0.95rem;
+    line-height: 1.55;
+    margin: 0;
+}
+
+/* ============================================================
+   3. PROCESS (5 steps)
+   ============================================================ */
+.seller-process {
+    padding: 80px 0;
+    background: var(--bg-alt);
+}
+.seller-steps {
+    list-style: none;
+    padding: 0;
+    margin: 0 0 40px;
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 16px;
+    position: relative;
+}
+.seller-steps::before {
+    content: "";
+    position: absolute;
+    top: 30px;
+    left: 8%;
+    right: 8%;
+    height: 2px;
+    background: var(--line);
+    z-index: 0;
+}
+.seller-step {
+    background: #fff;
+    border-radius: var(--radius);
+    padding: 28px 20px 22px;
+    text-align: center;
+    position: relative;
+    z-index: 1;
+    border: 1px solid var(--line);
+    transition: all 0.2s ease;
+}
+.seller-step:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--shadow);
+    border-color: var(--teal);
+}
+.seller-step-number {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    background: #fff;
+    border: 3px solid var(--teal);
+    color: var(--teal);
+    font-size: 1.4rem;
+    font-weight: 800;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 16px;
+}
+.seller-step-number-final {
+    background: var(--teal);
+    color: #fff;
+}
+.seller-step-body h3 {
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--ink);
+    margin: 0 0 8px;
+}
+.seller-step-body p {
+    font-size: 0.88rem;
+    color: var(--ink-soft);
+    line-height: 1.5;
+    margin: 0 0 12px;
+}
+.seller-step-meta {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    background: var(--teal-soft);
+    color: var(--teal-deep);
+    padding: 4px 10px;
+    border-radius: 999px;
+    font-size: 0.78rem;
+    font-weight: 600;
+}
+.seller-process-cta {
+    text-align: center;
+}
+
+/* ============================================================
+   4. REQUIREMENTS
+   ============================================================ */
+.seller-requirements {
+    padding: 80px 0;
+    background: #fff;
+}
+.seller-req-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 60px;
+    align-items: center;
+}
+.seller-req-text h2 {
+    font-size: 1.9rem;
+    font-weight: 800;
+    margin: 14px 0 14px;
+    color: var(--ink);
+    line-height: 1.25;
+}
+.seller-req-desc {
+    color: var(--ink-soft);
+    line-height: 1.6;
+    margin: 0 0 24px;
+}
+.seller-req-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: grid;
+    gap: 14px;
+}
+.seller-req-list li {
+    display: flex;
+    gap: 16px;
+    align-items: flex-start;
+    background: var(--bg-alt);
+    padding: 18px 20px;
+    border-radius: var(--radius);
+    border-left: 4px solid var(--teal);
+}
+.seller-req-list i {
+    color: var(--teal);
+    font-size: 1.3rem;
+    margin-top: 2px;
+    flex-shrink: 0;
+}
+.seller-req-list strong {
+    display: block;
+    color: var(--ink);
+    font-weight: 700;
+    margin-bottom: 2px;
+}
+.seller-req-list span {
+    color: var(--ink-soft);
+    font-size: 0.9rem;
+    line-height: 1.5;
+}
+
+/* ============================================================
+   5. FAQ
+   ============================================================ */
+.seller-faq {
+    padding: 80px 0;
+    background: var(--bg-alt);
+}
+.seller-faq-list {
+    max-width: 800px;
+    margin: 0 auto;
+    display: grid;
+    gap: 12px;
+}
+.seller-faq-item {
+    background: #fff;
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    overflow: hidden;
+    transition: all 0.2s ease;
+}
+.seller-faq-item[open] {
+    border-color: var(--teal);
+    box-shadow: var(--shadow-sm);
+}
+.seller-faq-item summary {
+    list-style: none;
+    cursor: pointer;
+    padding: 18px 22px;
+    font-weight: 600;
+    color: var(--ink);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 16px;
+}
+.seller-faq-item summary::-webkit-details-marker {
+    display: none;
+}
+.seller-faq-item summary i {
+    color: var(--teal);
+    transition: transform 0.2s ease;
+    flex-shrink: 0;
+}
+.seller-faq-item[open] summary i {
+    transform: rotate(180deg);
+}
+.seller-faq-answer {
+    padding: 0 22px 20px;
+    color: var(--ink-soft);
+    line-height: 1.65;
+}
+.seller-faq-answer p {
+    margin: 0;
+}
+
+/* ============================================================
+   6. FINAL CTA
+   ============================================================ */
+.seller-cta-final {
+    padding: 80px 0;
+    background: #fff;
+}
+.seller-cta-card {
+    background: linear-gradient(135deg, var(--teal) 0%, var(--teal-deep) 100%);
+    color: #fff;
+    border-radius: 16px;
+    padding: 56px 40px;
+    text-align: center;
+    box-shadow: 0 20px 50px var(--teal-glow);
+    position: relative;
+    overflow: hidden;
+}
+.seller-cta-card::before {
+    content: "";
+    position: absolute;
+    top: -50px;
+    right: -50px;
+    width: 200px;
+    height: 200px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 50%;
+}
+.seller-cta-card::after {
+    content: "";
+    position: absolute;
+    bottom: -80px;
+    left: -80px;
+    width: 240px;
+    height: 240px;
+    background: rgba(255, 255, 255, 0.08);
+    border-radius: 50%;
+}
+.seller-cta-icon {
+    width: 72px;
+    height: 72px;
+    background: rgba(255, 255, 255, 0.18);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.8rem;
+    margin: 0 auto 22px;
+    position: relative;
+    z-index: 1;
+}
+.seller-cta-card h2 {
+    font-size: 2rem;
+    font-weight: 800;
+    margin: 0 0 12px;
+    position: relative;
+    z-index: 1;
+}
+.seller-cta-card p {
+    font-size: 1.05rem;
+    opacity: 0.9;
+    margin: 0 0 28px;
+    position: relative;
+    z-index: 1;
+}
+.seller-cta-actions {
+    display: flex;
+    gap: 12px;
+    justify-content: center;
+    flex-wrap: wrap;
+    position: relative;
+    z-index: 1;
+}
+
+/* ============================================================
+   ENTRY ANIMATION (nhẹ nhàng)
+   ============================================================ */
+.seller-section-head,
+.seller-step,
+.seller-benefit,
+.seller-req-list li,
+.seller-faq-item {
+    opacity: 0;
+    transform: translateY(20px);
+    transition: opacity 0.6s ease, transform 0.6s ease;
+}
+.seller-in-view {
+    opacity: 1 !important;
+    transform: translateY(0) !important;
+}
+
+/* ============================================================
+   RESPONSIVE
+   ============================================================ */
+@media (max-width: 992px) {
+    .seller-hero-grid,
+    .seller-req-grid {
+        grid-template-columns: 1fr;
+        gap: 40px;
+    }
+    .seller-hero-title {
+        font-size: 2.3rem;
+    }
+    .seller-hero-art {
+        height: 360px;
+        max-width: 500px;
+        margin: 0 auto;
+    }
+    .seller-benefit-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    .seller-steps {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    .seller-steps::before {
+        display: none;
+    }
+}
+@media (max-width: 640px) {
+    .seller-hero {
+        padding: 50px 0 60px;
+    }
+    .seller-hero-title {
+        font-size: 1.9rem;
+    }
+    .seller-hero-desc {
+        font-size: 1rem;
+    }
+    .seller-section-head h2 {
+        font-size: 1.5rem;
+    }
+    .seller-benefits,
+    .seller-process,
+    .seller-requirements,
+    .seller-faq,
+    .seller-cta-final {
+        padding: 56px 0;
+    }
+    .seller-benefit-grid {
+        grid-template-columns: 1fr;
+    }
+    .seller-steps {
+        grid-template-columns: 1fr;
+    }
+    .seller-hero-art {
+        height: 320px;
+    }
+    .seller-hero-card {
+        min-width: 180px;
+        padding: 14px 16px;
+    }
+    .seller-cta-card {
+        padding: 40px 24px;
+    }
+    .seller-cta-card h2 {
+        font-size: 1.5rem;
+    }
+}

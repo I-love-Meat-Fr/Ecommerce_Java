@@ -1,6 +1,7 @@
 package com.ecommerce.cnj70.document;
 
 import com.ecommerce.cnj70.enums.AccountStatus;
+import com.ecommerce.cnj70.enums.KycStatus;
 import com.ecommerce.cnj70.enums.UserRole;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -44,9 +45,19 @@ public class User {
     
     private String avatarUrl;
     
+    /** Trạng thái KYC (denormalized từ KycProfile để check nhanh) */
+    @Builder.Default
+    private KycStatus kycStatus = KycStatus.NOT_SUBMITTED;
+    
     @CreatedDate
     private LocalDateTime createdAt;
     
     @LastModifiedDate
     private LocalDateTime updatedAt;
+
+    /** Vendor đã hoàn tất xác minh KYC chưa? */
+    public boolean isKycApproved() {
+        return kycStatus == KycStatus.APPROVED;
+    }
 }
+

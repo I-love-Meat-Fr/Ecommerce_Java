@@ -2,6 +2,7 @@ package com.ecommerce.cnj70.dto.response;
 
 import com.ecommerce.cnj70.enums.OrderStatus;
 import com.ecommerce.cnj70.enums.PaymentMethod;
+import com.ecommerce.cnj70.enums.ShippingStatus;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -16,7 +17,7 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 public class VendorOrderRes {
-    
+
     private String orderId;
     private String userId;
     private String userName;
@@ -33,7 +34,7 @@ public class VendorOrderRes {
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
     private LocalDateTime deliveredAt;
-    
+
     @Data
     @Builder
     @NoArgsConstructor
@@ -45,5 +46,20 @@ public class VendorOrderRes {
         private BigDecimal price;
         private int quantity;
         private BigDecimal subtotal;
+        /** Shipping status riêng cho phần của shop này */
+        private ShippingStatusRes shippingStatus;
+    }
+
+    @Data
+    @Builder
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class ShippingStatusRes {
+        private ShippingStatus status;
+        private String trackingNumber;
+        private String carrier;
+        private LocalDateTime shippedAt;
+        private LocalDateTime deliveredAt;
+        private String failureReason;
     }
 }

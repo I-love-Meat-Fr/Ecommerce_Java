@@ -13,6 +13,8 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
+import java.time.LocalDateTime;
+
 @Slf4j
 @Service
 @RequiredArgsConstructor
@@ -57,6 +59,7 @@ public class AdminShopServiceImpl implements AdminShopService {
         }
 
         shop.setStatus(ShopStatus.APPROVED);
+        shop.setRejectionReason(null);
         shopRepository.save(shop);
         log.info("AdminShopService.approveShop: shop {} approved (was {})", id, shop.getStatus());
     }
@@ -70,12 +73,13 @@ public class AdminShopServiceImpl implements AdminShopService {
         }
 
         shop.setActive(true);
+        shop.setDeactivationReason(null);
         shopRepository.save(shop);
         log.info("AdminShopService.activateShop: shop {} activated", id);
     }
 
     @Override
-    public void deactivateShop(String id) {
+    public void deactivateShop(String id, String reason, String adminUsername) {
         Shop shop = getShopById(id);
 
         if (!shop.isActive()) {
@@ -83,12 +87,16 @@ public class AdminShopServiceImpl implements AdminShopService {
         }
 
         shop.setActive(false);
+        shop.setDeactivationReason(StringUtils.hasText(reason) ? reason : null);
+        shop.setActionBy(adminUsername);
+        shop.setActionAt(LocalDateTime.now());
         shopRepository.save(shop);
-        log.info("AdminShopService.deactivateShop: shop {} deactivated", id);
+        log.info("AdminShopService.deactivateShop: shop {} deactivated by {} - reason: {}",
+                id, adminUsername, reason);
     }
 
     @Override
-    public void rejectShop(String id) {
+    public void rejectShop(String id, String reason, String adminUsername) {
         Shop shop = getShopById(id);
 
         if (shop.getStatus() == ShopStatus.REJECTED) {
@@ -97,7 +105,11 @@ public class AdminShopServiceImpl implements AdminShopService {
         }
 
         shop.setStatus(ShopStatus.REJECTED);
+        shop.setRejectionReason(StringUtils.hasText(reason) ? reason : null);
+        shop.setActionBy(adminUsername);
+        shop.setActionAt(LocalDateTime.now());
         shopRepository.save(shop);
-        log.info("AdminShopService.rejectShop: shop {} rejected (was {})", id, shop.getStatus());
+        log.info("AdminShopService.rejectShop: shop {} rejected by {} - reason: {}",
+                id, adminUsername, reason);
     }
 }

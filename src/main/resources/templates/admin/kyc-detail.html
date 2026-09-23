@@ -1,0 +1,377 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/springsecurity6"
+      th:replace="~{layout/admin-layout :: layout(title='Chi tiết KYC - CNJ70 Admin', content=~{::main-content}, scripts=~{::page-scripts})}">
+<head>
+    <title>Chi tiết KYC - CNJ70 Admin</title>
+</head>
+<body>
+<main th:fragment="main-content">
+
+    <div class="vd-page-hero">
+        <div class="vd-page-hero-left">
+            <div class="vd-page-hero-icon"><i class="fas fa-shield-halved"></i></div>
+            <div class="vd-page-hero-info">
+                <h2>Chi tiết hồ sơ KYC</h2>
+                <p>Xem xét và ra quyết định duyệt / từ chối.</p>
+            </div>
+        </div>
+        <a th:href="@{/admin/kyc}" class="sd-btn sd-btn-secondary">
+            <i class="fas fa-arrow-left"></i> Quay lại danh sách
+        </a>
+    </div>
+
+    <!-- Alerts -->
+    <div th:if="${success}" class="sd-alert sd-alert-success"><i class="fas fa-circle-check"></i><span th:text="${success}"></span></div>
+    <div th:if="${error}" class="sd-alert sd-alert-danger"><i class="fas fa-triangle-exclamation"></i><span th:text="${error}"></span></div>
+
+    <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 20px;">
+        <!-- Left: Thông tin hồ sơ -->
+        <div>
+            <!-- User Info -->
+            <div class="sd-card" style="margin-bottom: 16px;">
+                <div class="sd-card-head">
+                    <h3><i class="fas fa-user"></i> Thông tin User</h3>
+                </div>
+                <div class="sd-card-body">
+                    <table class="sd-info-table">
+                        <tr><th>Email</th><td th:text="${user != null ? user.email : '—'}">—</td></tr>
+                        <tr><th>Họ tên</th><td th:text="${user != null ? user.fullName : '—'}">—</td></tr>
+                        <tr><th>Số điện thoại</th><td th:text="${user != null ? user.phone : '—'}">—</td></tr>
+                        <tr><th>User ID</th><td><code th:text="${profile.userId}">—</code></td></tr>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Chủ shop -->
+            <div class="sd-card" style="margin-bottom: 16px;">
+                <div class="sd-card-head">
+                    <h3><i class="fas fa-id-card"></i> Thông tin chủ shop</h3>
+                </div>
+                <div class="sd-card-body">
+                    <table class="sd-info-table">
+                        <tr>
+                            <th>Họ tên chủ shop</th>
+                            <td th:text="${profile.ownerFullName}">—</td>
+                        </tr>
+                        <tr>
+                            <th>Số CCCD</th>
+                            <td>
+                                <code class="kyc-mask"
+                                      th:text="${T(com.ecommerce.cnj70.util.KycMaskUtil).maskCccd(profile.idNumber)}"
+                                      data-full="${profile.idNumber}">***</code>
+                                <i class="fas fa-shield-halved kyc-sensitive-icon" title="Dữ liệu nhạy cảm - đã mask"></i>
+                            </td>
+                        </tr>
+                    </table>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 12px;">
+                        <div>
+                            <strong>Ảnh mặt trước:</strong><br>
+                            <div class="kyc-img-blur-wrapper">
+                                <a th:if="${profile.idFrontImageUrl}" th:href="${profile.idFrontImageUrl}" target="_blank" class="kyc-img-link">
+                                    <img th:src="${profile.idFrontImageUrl}"
+                                         class="kyc-img-blur"
+                                         style="max-width: 100%; border-radius: 4px; border: 1px solid #ddd;"
+                                         alt="CCCD mặt trước">
+                                </a>
+                                <p th:unless="${profile.idFrontImageUrl}" style="color: #999;">Không có</p>
+                                <div class="kyc-img-overlay">
+                                    <i class="fas fa-lock"></i>
+                                    <span>Đã xác minh bởi 3rd-party</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div>
+                            <strong>Ảnh mặt sau:</strong><br>
+                            <div class="kyc-img-blur-wrapper">
+                                <a th:if="${profile.idBackImageUrl}" th:href="${profile.idBackImageUrl}" target="_blank" class="kyc-img-link">
+                                    <img th:src="${profile.idBackImageUrl}"
+                                         class="kyc-img-blur"
+                                         style="max-width: 100%; border-radius: 4px; border: 1px solid #ddd;"
+                                         alt="CCCD mặt sau">
+                                </a>
+                                <p th:unless="${profile.idBackImageUrl}" style="color: #999;">Không có</p>
+                                <div class="kyc-img-overlay">
+                                    <i class="fas fa-lock"></i>
+                                    <span>Đã xác minh bởi 3rd-party</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Doanh nghiệp -->
+            <div class="sd-card" style="margin-bottom: 16px;">
+                <div class="sd-card-head">
+                    <h3><i class="fas fa-building"></i> Thông tin doanh nghiệp</h3>
+                </div>
+                <div class="sd-card-body">
+                    <table class="sd-info-table">
+                        <tr>
+                            <th>Tên doanh nghiệp</th>
+                            <td th:text="${profile.businessName ?: '—'}">—</td>
+                        </tr>
+                        <tr>
+                            <th>Mã số thuế</th>
+                            <td>
+                                <code class="kyc-mask"
+                                      th:text="${T(com.ecommerce.cnj70.util.KycMaskUtil).maskTaxCode(profile.taxCode)}"
+                                      data-full="${profile.taxCode}">***</code>
+                                <i class="fas fa-shield-halved kyc-sensitive-icon" title="Dữ liệu nhạy cảm - đã mask"></i>
+                            </td>
+                        </tr>
+                    </table>
+                    <div th:if="${profile.businessLicenseUrl}" style="margin-top: 12px;">
+                        <strong>Giấy phép kinh doanh:</strong>
+                        <div class="kyc-img-blur-wrapper" style="display: inline-block; position: relative;">
+                            <a th:href="${profile.businessLicenseUrl}" target="_blank" class="kyc-img-link">
+                                <img th:src="${profile.businessLicenseUrl}"
+                                     class="kyc-img-blur"
+                                     style="max-width: 400px; border-radius: 4px; border: 1px solid #ddd;"
+                                     alt="Giấy phép">
+                            </a>
+                            <div class="kyc-img-overlay">
+                                <i class="fas fa-lock"></i>
+                                <span>Đã xác minh bởi 3rd-party</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Ngân hàng -->
+            <div class="sd-card" style="margin-bottom: 16px;">
+                <div class="sd-card-head">
+                    <h3><i class="fas fa-university"></i> Thông tin ngân hàng</h3>
+                </div>
+                <div class="sd-card-body">
+                    <table class="sd-info-table">
+                        <tr>
+                            <th>Ngân hàng</th>
+                            <td th:text="${profile.bankName}">—</td>
+                        </tr>
+                        <tr>
+                            <th>Số tài khoản</th>
+                            <td>
+                                <code class="kyc-mask"
+                                      th:text="${T(com.ecommerce.cnj70.util.KycMaskUtil).maskBankAccount(profile.bankAccount)}"
+                                      data-full="${profile.bankAccount}">***</code>
+                                <i class="fas fa-shield-halved kyc-sensitive-icon" title="Dữ liệu nhạy cảm - đã mask"></i>
+                            </td>
+                        </tr>
+                        <tr>
+                            <th>Chi nhánh</th>
+                            <td th:text="${profile.bankBranch ?: '—'}">—</td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right: Action Panel -->
+        <div>
+            <!-- Status -->
+            <div class="sd-card" style="margin-bottom: 16px;">
+                <div class="sd-card-body">
+                    <div class="kyc-current-status">
+                        <span class="sd-badge sd-badge-lg" th:classappend="
+                            ${profile.status.name() == 'APPROVED' ? 'sd-badge-green' : ''} +
+                            ${profile.status.name() == 'PENDING_ADMIN' ? 'sd-badge-indigo' : ''} +
+                            ${profile.status.name() == 'PENDING_THIRD_PARTY' ? 'sd-badge-amber' : ''} +
+                            ${profile.status.name() == 'THIRD_PARTY_REJECTED' ? 'sd-badge-red' : ''} +
+                            ${profile.status.name() == 'ADMIN_REJECTED' ? 'sd-badge-red' : ''} +
+                            ${profile.status.name() == 'SUSPENDED' ? 'sd-badge-gray' : ''}"
+                              th:text="${profile.status}">
+                        </span>
+                    </div>
+                    <table class="sd-info-table" style="margin-top: 12px;">
+                        <tr><th>Số lần gửi</th><td th:text="${profile.submitCount ?: 1}">1</td></tr>
+                        <tr><th>Gửi lúc</th><td th:text="${profile.submittedAt != null ? #temporals.format(profile.submittedAt, 'dd/MM/yyyy HH:mm') : '—'}">—</td></tr>
+                        <tr th:if="${profile.adminReviewedAt != null}">
+                            <th>Admin duyệt lúc</th>
+                            <td th:text="${#temporals.format(profile.adminReviewedAt, 'dd/MM/yyyy HH:mm')}">—</td>
+                        </tr>
+                        <tr th:if="${profile.adminReviewerName != null}">
+                            <th>Người duyệt</th>
+                            <td th:text="${profile.adminReviewerName}">—</td>
+                        </tr>
+                    </table>
+                    <div th:if="${profile.adminNote}" style="margin-top: 12px; padding: 12px; background: #fff3cd; border-radius: 4px; border-left: 3px solid #ffc107;">
+                        <strong>Ghi chú:</strong><br>
+                        <span th:text="${profile.adminNote}">—</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 3rd-party -->
+            <div class="sd-card" style="margin-bottom: 16px;" th:if="${profile.thirdPartyResult != null}">
+                <div class="sd-card-head">
+                    <h3><i class="fas fa-robot"></i> Kết quả bên thứ ba</h3>
+                </div>
+                <div class="sd-card-body">
+                    <table class="sd-info-table">
+                        <tr><th>Kết quả</th><td><code th:text="${profile.thirdPartyResult}">—</code></td></tr>
+                        <tr><th>Reference ID</th><td><code th:text="${profile.thirdPartyReferenceId ?: '—'}">—</code></td></tr>
+                        <tr><th>Thời gian</th><td th:text="${profile.thirdPartyVerifiedAt != null ? #temporals.format(profile.thirdPartyVerifiedAt, 'dd/MM/yyyy HH:mm:ss') : '—'}">—</td></tr>
+                    </table>
+                    <div th:if="${profile.thirdPartyRejectionReason}" style="margin-top: 12px; padding: 8px; background: #f8d7da; border-radius: 4px; color: #721c24;">
+                        <strong>Lý do:</strong> <span th:text="${profile.thirdPartyRejectionReason}">—</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Actions -->
+            <div class="sd-card">
+                <div class="sd-card-head">
+                    <h3><i class="fas fa-gavel"></i> Hành động</h3>
+                </div>
+                <div class="sd-card-body">
+                    <!-- Approve button - chỉ khi có thể approve -->
+                    <form th:if="${profile.status.name() == 'PENDING_ADMIN' or profile.status.name() == 'PENDING_THIRD_PARTY' or profile.status.name() == 'THIRD_PARTY_REJECTED'}"
+                          th:action="@{/admin/kyc/{id}/approve(id=${profile.id})}" method="post" style="margin-bottom: 12px;">
+                        <div class="sd-form-group">
+                            <label>Ghi chú (tùy chọn)</label>
+                            <textarea name="note" class="sd-form-control" rows="2" placeholder="VD: Đã xác minh CCCD, MST hợp lệ..."></textarea>
+                        </div>
+                        <button type="submit" class="sd-btn" style="width: 100%; background: #28a745; color: #ffffff; border: 1px solid #28a745; font-weight: 600;" onclick="return confirm('Xác nhận duyệt hồ sơ KYC này? Vendor sẽ được phép tạo shop.')">
+                            <i class="fas fa-check"></i> Duyệt hồ sơ
+                        </button>
+                    </form>
+
+                    <!-- Reject button -->
+                    <form th:if="${profile.status.name() == 'PENDING_ADMIN' or profile.status.name() == 'PENDING_THIRD_PARTY' or profile.status.name() == 'THIRD_PARTY_REJECTED'}"
+                          th:action="@{/admin/kyc/{id}/reject(id=${profile.id})}" method="post" style="margin-bottom: 12px;">
+                        <div class="sd-form-group">
+                            <label>Lý do từ chối <span style="color: #dc3545;">*</span></label>
+                            <textarea name="note" class="sd-form-control" rows="2" required placeholder="VD: Ảnh CCCD không rõ, vui lòng gửi lại..."></textarea>
+                        </div>
+                        <button type="submit" class="sd-btn" style="width: 100%; background: #dc3545; color: #ffffff; border: 1px solid #dc3545; font-weight: 600;" onclick="return confirm('Xác nhận từ chối hồ sơ này?')">
+                            <i class="fas fa-xmark"></i> Từ chối
+                        </button>
+                    </form>
+
+                    <!-- Suspend (chỉ khi APPROVED) -->
+                    <form th:if="${profile.status.name() == 'APPROVED'}"
+                          th:action="@{/admin/kyc/{id}/suspend(id=${profile.id})}" method="post">
+                        <div class="sd-form-group">
+                            <label>Lý do đình chỉ</label>
+                            <textarea name="note" class="sd-form-control" rows="2" placeholder="Lý do..."></textarea>
+                        </div>
+                        <button type="submit" class="sd-btn" style="width: 100%; background: #dc3545; color: #ffffff; border: 1px solid #dc3545; font-weight: 600;" onclick="return confirm('Đình chỉ hồ sơ KYC này?')">
+                            <i class="fas fa-ban"></i> Đình chỉ
+                        </button>
+                    </form>
+
+                    <div th:if="${profile.status.name() == 'ADMIN_REJECTED' or profile.status.name() == 'SUSPENDED'}" style="text-align: center; padding: 12px; color: #6c757d;">
+                        Hồ sơ đã được xử lý cuối cùng.
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</main>
+
+<th:block th:fragment="page-scripts">
+<style>
+.sd-info-table {
+    width: 100%;
+}
+.sd-info-table th {
+    text-align: left;
+    padding: 8px 12px 8px 0;
+    color: #6c757d;
+    font-weight: 500;
+    font-size: 0.85rem;
+    width: 40%;
+    vertical-align: top;
+}
+.sd-info-table td {
+    padding: 8px 0;
+    color: #333;
+}
+.kyc-current-status {
+    text-align: center;
+    padding: 12px 0;
+}
+.sd-badge-lg {
+    font-size: 1rem;
+    padding: 8px 16px;
+}
+.sd-btn-danger {
+    background: #dc3545;
+    color: #fff;
+}
+.sd-btn-danger:hover {
+    background: #c82333;
+}
+
+/* ===== Mask dữ liệu nhạy cảm (CCCD, MST, STK) ===== */
+.kyc-mask {
+    background: #f0f4f8;
+    border: 1px solid #d6e0ea;
+    border-radius: 4px;
+    padding: 2px 8px;
+    font-family: 'SFMono-Regular', Menlo, Consolas, monospace;
+    color: #495057;
+    letter-spacing: 1px;
+}
+.kyc-sensitive-icon {
+    color: #28a745;
+    margin-left: 6px;
+    font-size: 0.85em;
+}
+
+/* ===== Blur ảnh KYC - admin không cần xem rõ vì 3rd-party đã verify ===== */
+.kyc-img-blur-wrapper {
+    position: relative;
+    display: inline-block;
+    width: 100%;
+}
+.kyc-img-blur {
+    filter: blur(8px);
+    transition: filter 0.3s ease;
+    cursor: not-allowed;
+    pointer-events: none; /* Ngăn mở ảnh qua click */
+}
+.kyc-img-blur-wrapper:hover .kyc-img-blur {
+    filter: blur(6px);
+}
+.kyc-img-blur-wrapper::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: rgba(40, 167, 69, 0.06);
+    pointer-events: none;
+    border-radius: 4px;
+}
+.kyc-img-overlay {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: rgba(255, 255, 255, 0.95);
+    color: #28a745;
+    padding: 8px 14px;
+    border-radius: 24px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    border: 1px solid #28a745;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    pointer-events: none;
+}
+.kyc-img-overlay i {
+    font-size: 0.9rem;
+}
+.kyc-img-link {
+    pointer-events: none;
+    cursor: not-allowed;
+}
+</style>
+</th:block>
+</body>
+</html>

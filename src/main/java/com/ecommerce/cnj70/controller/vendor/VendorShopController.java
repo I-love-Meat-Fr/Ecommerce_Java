@@ -3,6 +3,7 @@ package com.ecommerce.cnj70.controller.vendor;
 import com.ecommerce.cnj70.document.Shop;
 import com.ecommerce.cnj70.dto.request.ShopFormReq;
 import com.ecommerce.cnj70.exception.BadRequestException;
+import com.ecommerce.cnj70.exception.ResourceNotFoundException;
 import com.ecommerce.cnj70.security.CustomUserDetails;
 import com.ecommerce.cnj70.service.VendorService;
 import com.ecommerce.cnj70.service.impl.StorageService;
@@ -42,7 +43,8 @@ public class VendorShopController {
                     .bannerUrl(shop.getBannerUrl())
                     .build());
             return "vendor/shop-profile";
-        } catch (BadRequestException e) {
+        } catch (BadRequestException | ResourceNotFoundException e) {
+            // Chưa có shop, hoặc shopId trỏ đến Shop không tồn tại (orphan) → cho tạo mới
             model.addAttribute("noShop", true);
             model.addAttribute("shopFormReq", new ShopFormReq());
             return "vendor/shop-create";
@@ -51,6 +53,13 @@ public class VendorShopController {
     
     @GetMapping("/create")
     public String createShopForm(@AuthenticationPrincipal CustomUserDetails user, Model model) {
+        // Chặn: phải hoàn tất KYC trước khi tạo shop
+        var vendor = vendorService.getCurrentVendor(user);
+        if (!vendor.isKycApproved()) {
+            model.addAttribute("error",
+                    "Bạn cần hoàn tất xác minh KYC trước khi tạo cửa hàng.");
+            return "redirect:/vendor/kyc";
+        }
         model.addAttribute("shopFormReq", new ShopFormReq());
         return "vendor/shop-create";
     }
@@ -69,9 +78,16 @@ public class VendorShopController {
                 request.setBannerUrl(storageService.save(bannerFile));
             }
             vendorService.createShop(user, request);
-            redirectAttributes.addFlashAttribute("success", "Tạo shop thành công!");
+            redirectAttributes.addFlashAttribute("success",
+                    "Tạo shop thành công! Shop đang chờ admin duyệt.");
+            // Đã qua KYC, về trang shop chờ admin duyệt
             return "redirect:/vendor/shop";
         } catch (BadRequestException e) {
+            // Lỗi do chưa KYC → redirect sang trang KYC
+            if (e.getMessage() != null && e.getMessage().contains("KYC")) {
+                redirectAttributes.addFlashAttribute("error", e.getMessage());
+                return "redirect:/vendor/kyc";
+            }
             redirectAttributes.addFlashAttribute("error", e.getMessage());
             return "redirect:/vendor/shop/create";
         }

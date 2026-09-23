@@ -64,6 +64,14 @@
                         </span>
                     </div>
                 </div>
+                <div class="sd-detail-item" th:if="${shop.status.name() == 'REJECTED'}">
+                    <div class="sd-detail-label">Lý do từ chối</div>
+                    <div class="sd-detail-value" th:text="${shop.rejectionReason != null and !shop.rejectionReason.isEmpty()} ? ${shop.rejectionReason} : 'Không có'">-</div>
+                </div>
+                <div class="sd-detail-item" th:if="${shop.status.name() == 'REJECTED' and shop.actionBy != null}">
+                    <div class="sd-detail-label">Người xử lý</div>
+                    <div class="sd-detail-value" th:text="${shop.actionBy + ' • ' + (shop.actionAt != null ? #temporals.format(shop.actionAt, 'dd/MM/yyyy HH:mm') : '-')}">-</div>
+                </div>
                 <div class="sd-detail-item">
                     <div class="sd-detail-label">Trạng thái hoạt động</div>
                     <div class="sd-detail-value">
@@ -74,6 +82,10 @@
                             <i class="fas fa-circle-xmark"></i> Không hoạt động
                         </span>
                     </div>
+                </div>
+                <div class="sd-detail-item" th:unless="${shop.active}">
+                    <div class="sd-detail-label">Lý do ngừng hoạt động</div>
+                    <div class="sd-detail-value" th:text="${shop.deactivationReason != null and !shop.deactivationReason.isEmpty()} ? ${shop.deactivationReason} : 'Không có'">-</div>
                 </div>
                 <div class="sd-detail-item">
                     <div class="sd-detail-label">Ngày tạo</div>
@@ -129,6 +141,8 @@
                     <form th:action="@{/admin/shops/{id}/reject(id=${shop.id}, page=${page}, size=${size}, q=${q})}"
                           method="post" style="display:inline;"
                           onsubmit="return confirm('Bạn có chắc muốn từ chối cửa hàng này?');">
+                        <input type="text" name="reason" placeholder="Lý do từ chối..."
+                               style="padding:6px 10px;border:1px solid var(--border,#e2e8f0);border-radius:6px;margin-right:6px;min-width:240px;">
                         <button type="submit" class="sd-btn sd-btn-danger"
                                 th:disabled="${shop.status.name() == 'REJECTED'}">
                             <i class="fas fa-xmark"></i> Từ chối cửa hàng
@@ -140,6 +154,8 @@
                     <form th:action="@{/admin/shops/{id}/deactivate(id=${shop.id}, page=${page}, size=${size}, q=${q})}"
                           method="post" style="display:inline;"
                           onsubmit="return confirm('Bạn có chắc muốn ngừng hoạt động cửa hàng này?');">
+                        <input type="text" name="reason" placeholder="Lý do ngừng hoạt động..."
+                               style="padding:6px 10px;border:1px solid var(--border,#e2e8f0);border-radius:6px;margin-right:6px;min-width:240px;">
                         <button type="submit" class="sd-btn sd-btn-secondary">
                             <i class="fas fa-ban"></i> Ngừng hoạt động
                         </button>
