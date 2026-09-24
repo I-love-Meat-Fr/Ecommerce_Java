@@ -21,10 +21,6 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestParam;
 
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.nio.file.StandardOpenOption;
 import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.List;
@@ -33,8 +29,6 @@ import java.util.stream.Collectors;
 @Controller
 @RequiredArgsConstructor
 public class ProductController {
-
-    private static final Path LOG_FILE = Paths.get(".cursor", "debug-04f262.log");
 
     private final ProductService productService;
     private final CategoryRepository categoryRepository;
@@ -113,23 +107,6 @@ public class ProductController {
 
     @GetMapping("/products/{id}")
     public String productDetail(@PathVariable String id, Model model, @AuthenticationPrincipal CustomUserDetails user) {
-        // #region DEBUG: server-side trace - entered productDetail
-        try {
-            Path parent = LOG_FILE.getParent();
-            if (parent != null && !Files.exists(parent)) Files.createDirectories(parent);
-            StringBuilder sb = new StringBuilder();
-            sb.append("{")
-              .append("\"sessionId\":\"04f262\",")
-              .append("\"runId\":\"initial\",")
-              .append("\"hypothesisId\":\"SERVER\",")
-              .append("\"location\":\"ProductController.productDetail:ENTRY\",")
-              .append("\"message\":\"productDetail entry\",")
-              .append("\"data\":{\"id\":\"").append(id == null ? "null" : id).append("\"},")
-              .append("\"timestamp\":").append(System.currentTimeMillis())
-              .append("}\n");
-            Files.writeString(LOG_FILE, sb.toString(), StandardOpenOption.CREATE, StandardOpenOption.APPEND);
-        } catch (Exception ignored) {}
-        // #endregion
         Product product = productService.getProductById(id);
         model.addAttribute("product", product);
 
@@ -147,24 +124,6 @@ public class ProductController {
                         .createdAt(review.getCreatedAt() != null ? review.getCreatedAt() : LocalDateTime.now())
                         .build())
                 .collect(Collectors.toList());
-        // #region DEBUG: server-side trace - reviews loaded
-        try {
-            StringBuilder sb = new StringBuilder();
-            sb.append("{")
-              .append("\"sessionId\":\"04f262\",")
-              .append("\"runId\":\"initial\",")
-              .append("\"hypothesisId\":\"SERVER\",")
-              .append("\"location\":\"ProductController.productDetail:REVIEWS\",")
-              .append("\"message\":\"reviews loaded\",")
-              .append("\"data\":{\"count\":").append(reviewList.size())
-              .append(",\"firstCommentNull\":").append(reviewList.isEmpty() ? "false" : String.valueOf(reviewList.get(0).getComment() == null))
-              .append(",\"firstCreatedAtNull\":").append(reviewList.isEmpty() ? "false" : String.valueOf(reviewList.get(0).getCreatedAt() == null))
-              .append("},")
-              .append("\"timestamp\":").append(System.currentTimeMillis())
-              .append("}\n");
-            Files.writeString(LOG_FILE, sb.toString(), StandardOpenOption.CREATE, StandardOpenOption.APPEND);
-        } catch (Exception ignored) {}
-        // #endregion
         model.addAttribute("reviews", reviewList);
 
         // Check if current user has reviewed
@@ -183,22 +142,6 @@ public class ProductController {
                     .toList();
         }
         model.addAttribute("relatedProducts", relatedProducts);
-
-        // #region DEBUG: server-side trace - about to render template
-        try {
-            StringBuilder sb = new StringBuilder();
-            sb.append("{")
-              .append("\"sessionId\":\"04f262\",")
-              .append("\"runId\":\"initial\",")
-              .append("\"hypothesisId\":\"SERVER\",")
-              .append("\"location\":\"ProductController.productDetail:RENDER\",")
-              .append("\"message\":\"about to render template\",")
-              .append("\"data\":{\"relatedCount\":").append(relatedProducts.size()).append("},")
-              .append("\"timestamp\":").append(System.currentTimeMillis())
-              .append("}\n");
-            Files.writeString(LOG_FILE, sb.toString(), StandardOpenOption.CREATE, StandardOpenOption.APPEND);
-        } catch (Exception ignored) {}
-        // #endregion
 
         return "web/product-detail";
     }

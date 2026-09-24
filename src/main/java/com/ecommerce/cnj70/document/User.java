@@ -41,6 +41,10 @@ public class User {
     @Builder.Default
     private AccountStatus status = AccountStatus.UNVERIFIED;
 
+    /** TASK #16 — KYC status đồng bộ từ KycProfile (denormalized cho query nhanh). */
+    @Builder.Default
+    private KycStatus kycStatus = KycStatus.NOT_SUBMITTED;
+
     private String shopId;
 
     private String avatarUrl;

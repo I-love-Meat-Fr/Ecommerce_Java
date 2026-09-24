@@ -7,6 +7,7 @@ import com.ecommerce.cnj70.repository.OrderRepository;
 import com.ecommerce.cnj70.repository.ProductRepository;
 import com.ecommerce.cnj70.service.CartService;
 import com.ecommerce.cnj70.service.OrderService;
+import com.ecommerce.cnj70.service.VoucherService;
 import com.ecommerce.cnj70.service.impl.OrderServiceImpl;
 import com.ecommerce.cnj70.support.TestFixtures;
 import org.junit.jupiter.api.BeforeEach;
@@ -54,7 +55,8 @@ class OrderIsolationTest {
         when(orderRepository.save(any(Order.class))).thenAnswer(inv -> inv.getArgument(0));
         when(productRepository.save(any(Product.class))).thenAnswer(inv -> inv.getArgument(0));
         orderService = new OrderServiceImpl(orderRepository, mock(com.ecommerce.cnj70.repository.UserRepository.class),
-                productRepository, mock(com.ecommerce.cnj70.repository.CartRepository.class), shopRepository, cartService);
+                productRepository, mock(com.ecommerce.cnj70.repository.CartRepository.class), shopRepository, cartService,
+                mock(com.ecommerce.cnj70.service.VoucherService.class));
     }
 
     @Test

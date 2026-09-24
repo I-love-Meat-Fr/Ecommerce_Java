@@ -5,13 +5,22 @@ import com.ecommerce.cnj70.document.Product;
 import com.ecommerce.cnj70.document.ProductSpecification;
 import com.ecommerce.cnj70.document.ProductVariant;
 import com.ecommerce.cnj70.dto.request.ProductFormReq;
+import com.ecommerce.cnj70.dto.request.ReportCaseCreateReq;
+import com.ecommerce.cnj70.enums.AuditAction;
+import com.ecommerce.cnj70.enums.AuditSeverity;
 import com.ecommerce.cnj70.enums.ProductStatus;
+import com.ecommerce.cnj70.enums.ReportTargetType;
 import com.ecommerce.cnj70.exception.BadRequestException;
 import com.ecommerce.cnj70.exception.ResourceNotFoundException;
 import com.ecommerce.cnj70.repository.CategoryRepository;
 import com.ecommerce.cnj70.repository.ProductRepository;
+import com.ecommerce.cnj70.service.AutoModerationService;
+import com.ecommerce.cnj70.service.AuditLogService;
 import com.ecommerce.cnj70.service.ProductService;
+import com.ecommerce.cnj70.service.ReportCaseService;
+import com.ecommerce.cnj70.service.automation.AutoModerationResult;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -19,19 +28,29 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class ProductServiceImpl implements ProductService {
 
+    /** C1 — field mà thay đổi sẽ trigger re-run Auto Moderation. */
+    private static final String AUDIT_ACTOR_SYSTEM = "SYSTEM";
+
     private final ProductRepository productRepository;
     private final CategoryRepository categoryRepository;
+    private final AutoModerationService autoModerationService;
+    private final ReportCaseService reportCaseService;
+    private final AuditLogService auditLogService;
 
     @Override
     @Transactional
     public Product createProduct(ProductFormReq request, String shopId, String shopName) {
-        if (request.getStock() < 0) {
+        if (request.getStock() != null && request.getStock() < 0) {
             throw new BadRequestException("Số lượng tồn kho không được âm");
         }
 
@@ -62,14 +81,23 @@ public class ProductServiceImpl implements ProductService {
                 .variants(variants)
                 .shopId(shopId)
                 .shopName(shopName)
-                .status(request.getStatus() != null ? request.getStatus() : ProductStatus.ACTIVE)
+                // C1 — FORCE PENDING_AUTO. Vendor KHÔNG được bypass pipeline
+                // bằng cách set thẳng ACTIVE qua request.getStatus().
+                // Status được quyết định bởi AutoModerationService sau khi pipeline chạy.
+                .status(ProductStatus.PENDING_AUTO)
                 .build();
 
         if (product.getImageUrls() != null && !product.getImageUrls().isEmpty()) {
             product.setThumbnailUrl(product.getImageUrls().get(0));
         }
 
-        return productRepository.save(product);
+        Product saved = productRepository.save(product);
+
+        log.info("[Product] Created product id={} name='{}' shopId={} — entering Auto Moderation Pipeline",
+                saved.getId(), saved.getName(), saved.getShopId());
+
+        // C1 — chạy pipeline + apply kết quả
+        return runAutoModerationPipeline(saved);
     }
 
     @Override
@@ -77,6 +105,17 @@ public class ProductServiceImpl implements ProductService {
     public Product updateProduct(String id, ProductFormReq request) {
         Product product = getProductById(id);
 
+        // Capture trạng thái + các field "significant" TRƯỚC khi apply để
+        // quyết định re-run pipeline.
+        ProductStatus oldStatus = product.getStatus();
+        String oldName = product.getName();
+        String oldDescription = product.getDescription();
+        BigDecimal oldPrice = product.getPrice();
+        List<String> oldImageUrls = product.getImageUrls() == null
+                ? null : new ArrayList<>(product.getImageUrls());
+        String oldCategoryId = product.getCategoryId();
+
+        // ===== Apply field updates (KHÔNG apply status — vendor bypass bị chặn) =====
         if (request.getName() != null && !request.getName().isBlank()) {
             product.setName(request.getName());
         }
@@ -128,11 +167,157 @@ public class ProductServiceImpl implements ProductService {
         if (request.getVariants() != null) {
             product.setVariants(sanitizeVariants(request.getVariants()));
         }
-        if (request.getStatus() != null) {
-            product.setStatus(request.getStatus());
+        // C1 — bỏ qua request.getStatus() hoàn toàn. Vendor không đổi status
+        // qua edit form. Status chỉ thay đổi qua pipeline (re-run) hoặc qua admin/
+        // moderator action. HIDDEN status vẫn giữ nguyên.
+
+        // ===== Detect significant change =====
+        boolean significantChange = !Objects.equals(oldName, product.getName())
+                || !Objects.equals(oldDescription, product.getDescription())
+                || bigDecimalChanged(oldPrice, product.getPrice())
+                || imageUrlsChanged(oldImageUrls, product.getImageUrls())
+                || !Objects.equals(oldCategoryId, product.getCategoryId());
+
+        // Re-moderate nếu: content đổi + status hiện KHÔNG phải HIDDEN
+        // (HIDDEN là admin-controlled, vendor update không tự động recover).
+        boolean canReModerate = oldStatus != ProductStatus.HIDDEN;
+
+        if (significantChange && canReModerate) {
+            log.info("[Product] Update product id={} triggered by significant content change — re-running Auto Moderation Pipeline (was={})",
+                    product.getId(), oldStatus);
+
+            // Reset về PENDING_AUTO trước khi chạy pipeline để khớp vòng đời
+            // C1 (mọi entry point phải vào pipeline qua PENDING_AUTO).
+            product.setStatus(ProductStatus.PENDING_AUTO);
+            product = productRepository.save(product);
+
+            return runAutoModerationPipeline(product);
         }
 
+        // Không thay đổi significant → chỉ save thông thường.
         return productRepository.save(product);
+    }
+
+    // ===== C1 helper: chạy pipeline + apply + audit + ReportCase (nếu cần) =====
+
+    /**
+     * Chạy Auto Moderation Pipeline trên Product hiện tại.
+     * - Pipeline throw → ép về MANUAL_REVIEW với flag SYSTEM:ERROR (fail-safe).
+     * - Pipeline return ACTIVE / REJECTED_AUTO → setStatus + save.
+     * - Pipeline return MANUAL_REVIEW → setStatus + save + tạo ReportCase + audit log.
+     *
+     * KHÔNG tạo 2 trạng thái cuối khác nhau cho cùng Product (idempotent về
+     * ReportCase nhờ ReportCaseService.createCase kiểm tra case PENDING tồn tại).
+     */
+    private Product runAutoModerationPipeline(Product product) {
+        AutoModerationResult result;
+        try {
+            result = autoModerationService.runProductChecks(product);
+        } catch (Exception ex) {
+            log.error("[Product] AutoModeration pipeline threw for product id={}: {} — falling back to MANUAL_REVIEW",
+                    product.getId(), ex.getMessage(), ex);
+            result = AutoModerationResult.manualReview(
+                    product,
+                    new ArrayList<>(List.of("SYSTEM:ERROR")),
+                    new ArrayList<>(List.of("Auto Moderation pipeline gặp lỗi hệ thống: " + ex.getMessage()))
+            );
+        }
+
+        product.setStatus(result.getTargetStatus());
+        Product finalized = productRepository.save(product);
+
+        log.info("[Product] Auto Moderation pipeline result for id={} name='{}': {} (flags={})",
+                finalized.getId(), finalized.getName(),
+                result.getTargetStatus(),
+                result.getAutoFlags());
+
+        // MANUAL_REVIEW → tạo ReportCase cho Moderator queue.
+        // Idempotent: ReportCaseService tự skip nếu đã có case PENDING cho target.
+        if (result.isManualReview()) {
+            try {
+                createAutoReportCase(result);
+            } catch (Exception ex) {
+                log.error("[Product] createAutoReportCase failed for product id={}: {}",
+                        finalized.getId(), ex.getMessage(), ex);
+                // Không fail — product đã ở MANUAL_REVIEW. Moderator có thể pick up qua các kênh khác.
+            }
+        }
+
+        // Audit log — dùng AuditAction đã có sẵn trong enum để tránh tạo mới.
+        try {
+            logAutoModerationOutcome(finalized, result);
+        } catch (Exception ex) {
+            log.warn("[Product] AuditLog failed for product id={} (non-fatal): {}",
+                    finalized.getId(), ex.getMessage());
+        }
+
+        return finalized;
+    }
+
+    private void createAutoReportCase(AutoModerationResult result) {
+        Product product = result.getProduct();
+        String description = "Auto Moderation phát hiện dấu hiệu đáng ngờ:\n"
+                + String.join("\n", result.getReasons());
+        ReportCaseCreateReq req = ReportCaseCreateReq.builder()
+                .targetType(ReportTargetType.PRODUCT)
+                .targetId(product.getId())
+                .reason("Auto Moderation flag")
+                .description(description)
+                .autoFlags(result.getAutoFlags())
+                .source("AUTO")
+                .priority(5)
+                .build();
+        // Note: ReportCaseServiceImpl.validateTargetExists() tự snapshot
+        // targetName/productName vào ReportCase.targetSnapshot.
+        reportCaseService.createCase(req, null, AUDIT_ACTOR_SYSTEM);
+    }
+
+    private void logAutoModerationOutcome(Product product, AutoModerationResult result) {
+        AuditAction action = AuditAction.PRODUCT_AUTO_PASS;
+        AuditSeverity severity = AuditSeverity.INFO;
+
+        if (result.isAutoRejected()) {
+            action = AuditAction.PRODUCT_AUTO_REJECT;
+            severity = AuditSeverity.WARNING;
+        } else if (result.isManualReview()) {
+            action = AuditAction.PRODUCT_MANUAL_REVIEW;
+            severity = AuditSeverity.WARNING;
+        }
+
+        Map<String, Object> metadata = new HashMap<>();
+        metadata.put("targetStatus", result.getTargetStatus().name());
+        metadata.put("autoFlags", result.getAutoFlags());
+        metadata.put("reasons", result.getReasons());
+
+        auditLogService.log(
+                action,
+                "PRODUCT",
+                product.getId(),
+                AUDIT_ACTOR_SYSTEM,
+                AUDIT_ACTOR_SYSTEM,
+                AUDIT_ACTOR_SYSTEM,
+                severity,
+                "Auto Moderation result for product '" + product.getName() + "': "
+                        + result.getTargetStatus() + " - " + String.join("; ", result.getReasons()),
+                metadata
+        );
+    }
+
+    // ===== Significant-change detection helpers =====
+    private boolean bigDecimalChanged(BigDecimal old, BigDecimal now) {
+        if (old == null && now == null) return false;
+        if (old == null || now == null) return true;
+        return old.compareTo(now) != 0;
+    }
+
+    private boolean imageUrlsChanged(List<String> oldList, List<String> newList) {
+        if (oldList == null && newList == null) return false;
+        if (oldList == null || newList == null) return true;
+        if (oldList.size() != newList.size()) return true;
+        for (int i = 0; i < oldList.size(); i++) {
+            if (!Objects.equals(oldList.get(i), newList.get(i))) return true;
+        }
+        return false;
     }
 
     private List<ProductSpecification> sanitizeSpecifications(List<ProductSpecification> specs) {

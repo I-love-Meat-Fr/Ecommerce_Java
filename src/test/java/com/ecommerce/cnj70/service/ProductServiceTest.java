@@ -8,12 +8,14 @@ import com.ecommerce.cnj70.exception.BadRequestException;
 import com.ecommerce.cnj70.exception.ResourceNotFoundException;
 import com.ecommerce.cnj70.repository.CategoryRepository;
 import com.ecommerce.cnj70.repository.ProductRepository;
+import com.ecommerce.cnj70.service.automation.AutoModerationResult;
 import com.ecommerce.cnj70.service.impl.ProductServiceImpl;
 import com.ecommerce.cnj70.support.TestFixtures;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -21,24 +23,31 @@ import org.mockito.junit.jupiter.MockitoSettings;
 import org.mockito.quality.Strictness;
 
 import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 /**
  * Unit test cho ProductServiceImpl.
  *
- * Verify rule validate:
- *  - createProduct: stock < 0 → throw
- *  - createProduct: categoryId không tồn tại → throw
- *  - updateProduct: price <= 0 → throw
- *  - updateProduct: stock < 0 → throw
- *  - deleteProduct: status HIDDEN → throw (soft delete semantics)
- *  - updateProductStatus: round-trip đúng status
+ * <p>C1 — Product Moderation Pipeline:
+ * <ul>
+ *   <li>createProduct: ép PENDING_AUTO, gọi pipeline, áp kết quả.</li>
+ *   <li>updateProduct: bỏ qua {@code request.getStatus()} (vendor bypass chặn),
+ *       re-run pipeline khi thay đổi significant.</li>
+ * </ul>
+ *
+ * <p>Behavior cũ vẫn giữ cho các case không liên quan C1 (validate stock,
+ * category, price...). Pipeline được mock trả PASS mặc định (giả lập hiện
+ * chưa có AutoCheckStrategy nào).
  */
 @ExtendWith(MockitoExtension.class)
 @MockitoSettings(strictness = Strictness.LENIENT)
@@ -47,6 +56,10 @@ class ProductServiceTest {
 
     @Mock private ProductRepository productRepository;
     @Mock private CategoryRepository categoryRepository;
+    // C1 — pipeline + side effects
+    @Mock private AutoModerationService autoModerationService;
+    @Mock private ReportCaseService reportCaseService;
+    @Mock private AuditLogService auditLogService;
 
     @InjectMocks private ProductServiceImpl productService;
 
@@ -57,6 +70,9 @@ class ProductServiceTest {
             if (p.getId() == null) p.setId("p-new");
             return p;
         });
+        // C1 — default pipeline result = PASS (mô phỏng hiện chưa có AutoCheckStrategy nào).
+        when(autoModerationService.runProductChecks(any(Product.class)))
+                .thenAnswer(inv -> AutoModerationResult.pass(inv.getArgument(0)));
     }
 
     // ============ createProduct ============
@@ -93,8 +109,8 @@ class ProductServiceTest {
     }
 
     @Test
-    @DisplayName("createProduct: happy path → lưu ACTIVE mặc định + set thumbnail từ imageUrls[0]")
-    void createProduct_happyPath_defaultsToActive() {
+    @DisplayName("createProduct: happy path → pipeline PASS → ACTIVE + thumbnail + shopId")
+    void createProduct_happyPath_pipelinePassedBecomesActive() {
         when(categoryRepository.findById("cat-1")).thenReturn(Optional.of(
                 TestFixtures.category("cat-1", "Điện tử")));
 
@@ -112,6 +128,81 @@ class ProductServiceTest {
         assertThat(saved.getCategoryName()).isEqualTo("Điện tử");
         assertThat(saved.getThumbnailUrl()).isEqualTo("/uploads/a.jpg");
         assertThat(saved.getShopId()).isEqualTo("shop-1");
+        verify(autoModerationService, times(1)).runProductChecks(any(Product.class));
+    }
+
+    @Test
+    @DisplayName("createProduct: pipeline MANUAL_REVIEW → product MANUAL_REVIEW + ReportCase created")
+    void createProduct_pipelineManualReview_createsReportCase() {
+        when(categoryRepository.findById("cat-1")).thenReturn(Optional.of(
+                TestFixtures.category("cat-1", "Điện tử")));
+        when(autoModerationService.runProductChecks(any(Product.class)))
+                .thenAnswer(inv -> AutoModerationResult.manualReview(
+                        inv.getArgument(0),
+                        new ArrayList<>(List.of("BLACKLIST_KEYWORD:HIT")),
+                        new ArrayList<>(List.of("phát hiện từ cấm"))
+                ));
+
+        ProductFormReq req = ProductFormReq.builder()
+                .name("Sp có từ khóa bị cấm")
+                .price(new BigDecimal("100000"))
+                .stock(5)
+                .categoryId("cat-1")
+                .build();
+
+        Product saved = productService.createProduct(req, "shop-1", "Shop ABC");
+
+        assertThat(saved.getStatus()).isEqualTo(ProductStatus.MANUAL_REVIEW);
+        verify(reportCaseService, times(1))
+                .createCase(any(), any(), org.mockito.ArgumentMatchers.isNull());
+    }
+
+    @Test
+    @DisplayName("createProduct: pipeline REJECTED_AUTO → product REJECTED_AUTO + KHÔNG tạo ReportCase")
+    void createProduct_pipelineAutoRejected_noReportCase() {
+        when(categoryRepository.findById("cat-1")).thenReturn(Optional.of(
+                TestFixtures.category("cat-1", "Điện tử")));
+        when(autoModerationService.runProductChecks(any(Product.class)))
+                .thenAnswer(inv -> AutoModerationResult.autoReject(
+                        inv.getArgument(0),
+                        new ArrayList<>(List.of("FORBIDDEN_CATEGORY:WEAPON")),
+                        new ArrayList<>(List.of("danh mục bị cấm"))
+                ));
+
+        ProductFormReq req = ProductFormReq.builder()
+                .name("Vũ khí")
+                .price(new BigDecimal("100000"))
+                .stock(5)
+                .categoryId("cat-1")
+                .build();
+
+        Product saved = productService.createProduct(req, "shop-1", "Shop ABC");
+
+        assertThat(saved.getStatus()).isEqualTo(ProductStatus.REJECTED_AUTO);
+        // REJECTED_AUTO không cần ReportCase — đã là verdict cuối
+        verify(reportCaseService, never()).createCase(any(), any(), any());
+    }
+
+    @Test
+    @DisplayName("createProduct: pipeline throw exception → fallback MANUAL_REVIEW + ReportCase")
+    void createProduct_pipelineThrows_fallbackToManualReview() {
+        when(categoryRepository.findById("cat-1")).thenReturn(Optional.of(
+                TestFixtures.category("cat-1", "Điện tử")));
+        when(autoModerationService.runProductChecks(any(Product.class)))
+                .thenThrow(new RuntimeException("Pipeline down"));
+
+        ProductFormReq req = ProductFormReq.builder()
+                .name("Test")
+                .price(new BigDecimal("100000"))
+                .stock(5)
+                .categoryId("cat-1")
+                .build();
+
+        Product saved = productService.createProduct(req, "shop-1", "Shop ABC");
+
+        assertThat(saved.getStatus()).isEqualTo(ProductStatus.MANUAL_REVIEW);
+        verify(reportCaseService, times(1))
+                .createCase(any(), any(), org.mockito.ArgumentMatchers.isNull());
     }
 
     // ============ updateProduct ============
@@ -145,7 +236,7 @@ class ProductServiceTest {
     }
 
     @Test
-    @DisplayName("updateProduct: happy path → giữ nguyên field không truyền")
+    @DisplayName("updateProduct: chỉ thay đổi stock (không significant) → KHÔNG re-run pipeline")
     void updateProduct_partialUpdate_keepsUntouched() {
         Product existing = TestFixtures.activeProduct("p-1", "shop-1", 10);
         existing.setName("Tên cũ");
@@ -156,7 +247,62 @@ class ProductServiceTest {
         Product updated = productService.updateProduct("p-1", req);
 
         assertThat(updated.getStock()).isEqualTo(7);
-        assertThat(updated.getName()).isEqualTo("Tên cũ"); // không thay đổi
+        assertThat(updated.getName()).isEqualTo("Tên cũ");
+        // Pipeline KHÔNG chạy vì stock-only update không phải significant change
+        verify(autoModerationService, never()).runProductChecks(any(Product.class));
+    }
+
+    @Test
+    @DisplayName("updateProduct: C1 — request.setStatus(ACTIVE) bị BỎ QUA, vendor không bypass")
+    void updateProduct_vendorStatusChange_ignored() {
+        Product existing = TestFixtures.hiddenProduct("p-1", "shop-1", 10); // HIDDEN
+        when(productRepository.findById("p-1")).thenReturn(Optional.of(existing));
+
+        ProductFormReq req = ProductFormReq.builder()
+                .stock(20)
+                .status(ProductStatus.ACTIVE) // vendor cố bypass
+                .build();
+
+        Product updated = productService.updateProduct("p-1", req);
+
+        assertThat(updated.getStatus()).isEqualTo(ProductStatus.HIDDEN); // KHÔNG đổi
+        verify(autoModerationService, never()).runProductChecks(any(Product.class));
+    }
+
+    @Test
+    @DisplayName("updateProduct: thay đổi significant (name) trên ACTIVE → re-run pipeline")
+    void updateProduct_significantChangeName_triggersReModeration() {
+        Product existing = TestFixtures.activeProduct("p-1", "shop-1", 10);
+        existing.setName("Tên cũ");
+        when(productRepository.findById("p-1")).thenReturn(Optional.of(existing));
+
+        ProductFormReq req = ProductFormReq.builder()
+                .name("Tên mới đáng ngờ")
+                .build();
+
+        Product updated = productService.updateProduct("p-1", req);
+
+        assertThat(updated.getName()).isEqualTo("Tên mới đáng ngờ");
+        // Pipeline được gọi vì name là significant change trên ACTIVE product
+        ArgumentCaptor<Product> captor = ArgumentCaptor.forClass(Product.class);
+        verify(autoModerationService, times(1)).runProductChecks(captor.capture());
+        assertThat(captor.getValue().getStatus()).isEqualTo(ProductStatus.PENDING_AUTO);
+    }
+
+    @Test
+    @DisplayName("updateProduct: thay đổi significant trên HIDDEN → KHÔNG re-run (admin-controlled)")
+    void updateProduct_significantChangeOnHidden_noReModeration() {
+        Product existing = TestFixtures.hiddenProduct("p-1", "shop-1", 10);
+        when(productRepository.findById("p-1")).thenReturn(Optional.of(existing));
+
+        ProductFormReq req = ProductFormReq.builder()
+                .name("Tên mới")
+                .build();
+
+        productService.updateProduct("p-1", req);
+
+        // HIDDEN products are admin-controlled — vendor update must not auto-restore
+        verify(autoModerationService, never()).runProductChecks(any(Product.class));
     }
 
     // ============ deleteProduct ============

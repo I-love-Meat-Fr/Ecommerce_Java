@@ -19,17 +19,27 @@ import java.util.List;
 @AllArgsConstructor
 @Document(collection = "carts")
 public class Cart {
-    
+
     @Id
     private String id;
-    
+
     @Indexed(unique = true)
     private String userId;
-    
+
     @Builder.Default
     private List<CartItem> items = new ArrayList<>();
-    
+
     private LocalDateTime updatedAt;
+
+    /**
+     * Mã voucher đang áp dụng trên Cart.
+     * - Được lưu trong Cart document (MongoDB) để persist qua mọi request, không phụ
+     *   thuộc HttpSession (vì app chạy SessionCreationPolicy.STATELESS).
+     * - null = không có voucher đang áp dụng.
+     * - Việc tính discount/finalTotal luôn lấy FRESH từ VoucherService để tránh
+     *   cache trạng thái cũ khi voucher bị xóa/hết hạn/đổi điều kiện.
+     */
+    private String appliedVoucherCode;
     
     @Data
     @Builder

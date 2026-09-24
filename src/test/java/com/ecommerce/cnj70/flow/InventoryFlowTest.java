@@ -15,6 +15,7 @@ import com.ecommerce.cnj70.repository.ShopRepository;
 import com.ecommerce.cnj70.repository.UserRepository;
 import com.ecommerce.cnj70.service.CartService;
 import com.ecommerce.cnj70.service.OrderService;
+import com.ecommerce.cnj70.service.VoucherService;
 import com.ecommerce.cnj70.service.impl.OrderServiceImpl;
 import com.ecommerce.cnj70.support.TestFixtures;
 import org.junit.jupiter.api.BeforeEach;
@@ -33,6 +34,7 @@ import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 /**
@@ -67,7 +69,7 @@ class InventoryFlowTest {
                 Optional.of(TestFixtures.shop(inv.getArgument(0), "owner",
                         com.ecommerce.cnj70.enums.ShopStatus.APPROVED, true)));
         orderService = new OrderServiceImpl(orderRepository, userRepository,
-                productRepository, cartRepository, shopRepository, cartService);
+                productRepository, cartRepository, shopRepository, cartService, mock(VoucherService.class));
     }
 
     @Test

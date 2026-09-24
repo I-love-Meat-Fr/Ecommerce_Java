@@ -16,6 +16,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
+import java.time.LocalDateTime;
 import java.util.Map;
 
 /**
@@ -138,8 +139,9 @@ public class AdminShopServiceImpl implements AdminShopService {
         }
 
         shop.setActive(false);
-        shop.setDeactivationReason(StringUtils.hasText(reason) ? reason : null);
-        shop.setActionBy(adminUsername);
+        // reason không nằm trong interface signature → clear lý do cũ, không set mới
+        shop.setDeactivationReason(null);
+        shop.setActionBy(actorUsername);
         shop.setActionAt(LocalDateTime.now());
         shopRepository.save(shop);
 
@@ -164,6 +166,13 @@ public class AdminShopServiceImpl implements AdminShopService {
     }
 
     @Override
+    public void rejectShop(String id, String reason, String actorUsername) {
+        // Convenience overload: bridge test signature (id, reason, actorUsername).
+        // Production code dùng 4-arg overload với actorId đầy đủ.
+        rejectShop(id, null, actorUsername, reason);
+    }
+
+    @Override
     public void rejectShop(String id, String actorId, String actorUsername, String reason) {
         Shop shop = getShopById(id);
         ShopStatus beforeStatus = shop.getStatus();
@@ -175,7 +184,7 @@ public class AdminShopServiceImpl implements AdminShopService {
 
         shop.setStatus(ShopStatus.REJECTED);
         shop.setRejectionReason(StringUtils.hasText(reason) ? reason : null);
-        shop.setActionBy(adminUsername);
+        shop.setActionBy(actorUsername);
         shop.setActionAt(LocalDateTime.now());
         shopRepository.save(shop);
 

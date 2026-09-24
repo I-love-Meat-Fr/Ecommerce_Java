@@ -41,6 +41,16 @@ public class Shop {
     @Builder.Default
     private boolean active = true;
 
+    // ===== Admin Shop action tracking (TASK #24) =====
+    /** Lý do Admin reject shop (khi ShopStatus=REJECTED). */
+    private String rejectionReason;
+    /** Lý do Admin deactivate shop (khi active=false). */
+    private String deactivationReason;
+    /** Username Admin đã thực hiện action gần nhất (reject/approve/activate/deactivate). */
+    private String actionBy;
+    /** Thời điểm Admin thực hiện action gần nhất. */
+    private LocalDateTime actionAt;
+
     // ===== TASK #16 KYC: KYC workflow status =====
     // Shop status (APPROVED/REJECTED/SUSPENDED) quản lý hoạt động bán hàng
     // KycStatus quản lý trạng thái xác minh danh tính Vendor

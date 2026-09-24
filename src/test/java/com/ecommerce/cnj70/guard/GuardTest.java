@@ -18,6 +18,7 @@ import com.ecommerce.cnj70.repository.UserRepository;
 import com.ecommerce.cnj70.service.CartService;
 import com.ecommerce.cnj70.service.OrderService;
 import com.ecommerce.cnj70.service.ProductService;
+import com.ecommerce.cnj70.service.VoucherService;
 import com.ecommerce.cnj70.service.VendorKycService;
 import com.ecommerce.cnj70.service.VendorService;
 import com.ecommerce.cnj70.service.impl.CartServiceImpl;
@@ -235,7 +236,8 @@ class GuardTest {
                     mock(ProductRepository.class),
                     mock(CartRepository.class),
                     mock(ShopRepository.class),
-                    mock(CartService.class));
+                    mock(CartService.class),
+                    mock(VoucherService.class));
 
             // Verify ownership check: vendor A có quyền update order này
             orderService.updateOrderStatus("o-1", com.ecommerce.cnj70.enums.OrderStatus.PREPARING);
@@ -273,7 +275,8 @@ class GuardTest {
                     mock(ProductRepository.class),
                     mock(CartRepository.class),
                     mock(ShopRepository.class),
-                    mock(CartService.class));
+                    mock(CartService.class),
+                    mock(VoucherService.class));
 
             // Vendor B getOrdersByShopId → trả về empty (vì order chỉ có item shop-A)
             java.util.List<Order> shopBOrders = orderService.getOrdersByShopId("shop-B");

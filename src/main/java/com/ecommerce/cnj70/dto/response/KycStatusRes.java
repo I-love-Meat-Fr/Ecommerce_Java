@@ -85,6 +85,10 @@ public class KycStatusRes {
             case APPROVED            -> "Đã xác minh - có thể tạo cửa hàng";
             case ADMIN_REJECTED      -> "Admin từ chối - vui lòng liên hệ hỗ trợ";
             case SUSPENDED           -> "Bị đình chỉ";
+            // Legacy mappings — chỉ để hiển thị cho dữ liệu cũ (không tạo mới)
+            case PENDING_KYC         -> "Chưa nộp hồ sơ";
+            case PENDING_PROVIDER    -> "Đang chờ bên thứ ba xác minh";
+            case KYC_REJECTED        -> "Admin từ chối - vui lòng liên hệ hỗ trợ";
         };
     }
 

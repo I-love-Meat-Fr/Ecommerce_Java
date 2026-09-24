@@ -30,4 +30,11 @@ public interface AdminShopService {
 
     /** TASK #24: với AuditLog actor tracking + reason */
     void rejectShop(String id, String actorId, String actorUsername, String reason);
+
+    /**
+     * Convenience overload cho test/dev: truyền {@code (id, reason, actorUsername)}
+     * thay vì {@code (id, actorId, actorUsername, reason)} — actorId = null.
+     * Không thay đổi business logic; chỉ bridge signature mismatch với tests cũ.
+     */
+    void rejectShop(String id, String reason, String actorUsername);
 }

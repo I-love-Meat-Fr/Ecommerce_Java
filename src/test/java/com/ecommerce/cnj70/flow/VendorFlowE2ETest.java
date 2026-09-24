@@ -110,14 +110,20 @@ class VendorFlowE2ETest {
 
         adminKycService = new AdminKycServiceImpl(kycProfileRepository, userRepository);
 
-        adminShopService = new AdminShopServiceImpl(shopRepository);
+        adminShopService = new AdminShopServiceImpl(shopRepository,
+                mock(com.ecommerce.cnj70.service.AuditLogService.class));
 
-        productService = new ProductServiceImpl(productRepository, mock(com.ecommerce.cnj70.repository.CategoryRepository.class));
+        productService = new ProductServiceImpl(productRepository,
+                mock(com.ecommerce.cnj70.repository.CategoryRepository.class),
+                mock(com.ecommerce.cnj70.service.AutoModerationService.class),
+                mock(com.ecommerce.cnj70.service.ReportCaseService.class),
+                mock(com.ecommerce.cnj70.service.AuditLogService.class));
 
         cartService = new CartServiceImpl(cartRepository, productRepository);
 
         orderService = new OrderServiceImpl(orderRepository, userRepository, productRepository,
-                cartRepository, shopRepository, cartService);
+                cartRepository, shopRepository, cartService,
+                mock(com.ecommerce.cnj70.service.VoucherService.class));
 
         // Common stubs
         vendor = TestFixtures.userVendor("v-1", "v1@cnj70.com", KycStatus.NOT_SUBMITTED, null);
