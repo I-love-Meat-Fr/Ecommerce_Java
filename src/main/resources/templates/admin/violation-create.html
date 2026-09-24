@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/springsecurity6"
+      th:replace="~{layout/admin-layout :: layout(title='Tạo vi phạm - CNJ70 Admin', content=~{::main-content}, scripts=~{::page-scripts})}">
+<head>
+    <title>Tạo vi phạm - CNJ70 Admin</title>
+</head>
+<body>
+<main th:fragment="main-content">
+    <div class="sd-page-head">
+        <div class="sd-page-head-title">
+            <h1>Tạo vi phạm mới</h1>
+            <p>Ghi nhận cảnh báo/vi phạm cho cửa hàng.</p>
+        </div>
+        <div class="sd-page-head-actions">
+            <a th:href="@{/admin/violations}" class="sd-btn sd-btn-secondary sd-btn-sm">
+                <i class="fas fa-arrow-left"></i> Quay lại
+            </a>
+        </div>
+    </div>
+
+    <div th:if="${flashError}" class="sd-alert sd-alert-danger"><i class="fas fa-triangle-exclamation"></i><span th:text="${flashError}"></span></div>
+
+    <div class="sd-card" style="max-width:680px;">
+        <div class="sd-card-head">
+            <div>
+                <h3>Thông tin vi phạm</h3>
+                <p>Điền các thông tin cần thiết để tạo violation cho shop.</p>
+            </div>
+        </div>
+        <div class="sd-card-body">
+            <form th:action="@{/admin/violations/create}" method="post" class="sd-form">
+                <div class="sd-form-group">
+                    <label>Cửa hàng *</label>
+                    <select name="shopId" class="sd-form-control" required>
+                        <option value="">-- Chọn cửa hàng --</option>
+                        <option th:each="s : ${shops}"
+                                th:value="${s.id}"
+                                th:text="${s.shopName + ' (' + s.id + ')'}"
+                                th:selected="${selectedShopId == s.id}">shop</option>
+                    </select>
+                </div>
+                <div class="sd-form-group">
+                    <label>Loại vi phạm *</label>
+                    <select name="type" class="sd-form-control" required>
+                        <option th:each="t : ${types}" th:value="${t.name()}" th:text="${t.name()}">T</option>
+                    </select>
+                </div>
+                <div class="sd-form-group">
+                    <label>Mức độ *</label>
+                    <select name="severity" class="sd-form-control" required>
+                        <option th:each="s : ${severities}" th:value="${s.name()}" th:text="${s.name()}">S</option>
+                    </select>
+                </div>
+                <div class="sd-form-group">
+                    <label>Lý do *</label>
+                    <textarea name="reason" class="sd-form-control" rows="3" required
+                              placeholder="Mô tả ngắn gọn lý do vi phạm..."></textarea>
+                </div>
+                <div class="sd-form-group">
+                    <label>Ghi chú admin</label>
+                    <textarea name="adminNote" class="sd-form-control" rows="2"
+                              placeholder="Ghi chú thêm cho vendor..."></textarea>
+                </div>
+                <div class="sd-form-group">
+                    <label>Sản phẩm liên quan (tùy chọn)</label>
+                    <input type="text" name="productName" class="sd-form-control" placeholder="Tên sản phẩm (nếu có)">
+                </div>
+                <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:18px;">
+                    <a th:href="@{/admin/violations}" class="sd-btn sd-btn-secondary"><i class="fas fa-xmark"></i> Hủy</a>
+                    <button type="submit" class="sd-btn sd-btn-cta"><i class="fas fa-save"></i> Tạo violation</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</main>
+<th:block th:fragment="page-scripts"></th:block>
+</body>
+</html>

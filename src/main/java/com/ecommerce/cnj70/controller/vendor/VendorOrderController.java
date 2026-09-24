@@ -3,9 +3,11 @@ package com.ecommerce.cnj70.controller.vendor;
 import com.ecommerce.cnj70.document.Order;
 import com.ecommerce.cnj70.dto.response.VendorOrderRes;
 import com.ecommerce.cnj70.enums.OrderStatus;
+import com.ecommerce.cnj70.enums.ShippingStatus;
 import com.ecommerce.cnj70.exception.BadRequestException;
 import com.ecommerce.cnj70.repository.OrderRepository;
 import com.ecommerce.cnj70.security.CustomUserDetails;
+import com.ecommerce.cnj70.service.OrderService;
 import com.ecommerce.cnj70.service.VendorService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -21,17 +23,18 @@ import java.util.List;
 @RequestMapping("/vendor/orders")
 @RequiredArgsConstructor
 public class VendorOrderController {
-    
+
     private final VendorService vendorService;
     private final OrderRepository orderRepository;
-    
+    private final OrderService orderService;
+
     @GetMapping
     public String orderList(@AuthenticationPrincipal CustomUserDetails user, Model model) {
         String shopId = vendorService.getShopIdFromUser(user);
-        
+
         List<Order> allOrders = orderRepository.findAll();
         List<Order> vendorOrders = allOrders.stream()
-                .filter(order -> order.getItems() != null && 
+                .filter(order -> order.getItems() != null &&
                         order.getItems().stream()
                                 .anyMatch(item -> shopId.equals(item.getShopId())))
                 .sorted((o1, o2) -> {
@@ -39,15 +42,15 @@ public class VendorOrderController {
                     return o2.getCreatedAt().compareTo(o1.getCreatedAt());
                 })
                 .toList();
-        
+
         List<VendorOrderRes> orderResponses = vendorOrders.stream()
                 .map(order -> mapToVendorOrderRes(order, shopId))
                 .toList();
-        
+
         model.addAttribute("orders", orderResponses);
         return "vendor/order-list";
     }
-    
+
     @GetMapping("/{id}")
     public String orderDetail(@AuthenticationPrincipal CustomUserDetails user,
                             @PathVariable String id,
@@ -55,25 +58,26 @@ public class VendorOrderController {
         try {
             Order order = orderRepository.findById(id)
                     .orElseThrow(() -> new BadRequestException("Không tìm thấy đơn hàng"));
-            
+
             String shopId = vendorService.getShopIdFromUser(user);
-            
+
             VendorOrderRes vendorOrderRes = mapToVendorOrderRes(order, shopId);
-            
+
             if (vendorOrderRes.getItems().isEmpty()) {
                 model.addAttribute("error", "Bạn không có quyền xem đơn hàng này");
                 return "redirect:/vendor/orders";
             }
-            
+
             model.addAttribute("order", vendorOrderRes);
             model.addAttribute("statuses", OrderStatus.values());
+            model.addAttribute("shippingStatuses", ShippingStatus.values());
             return "vendor/order-detail";
         } catch (BadRequestException e) {
             model.addAttribute("error", e.getMessage());
             return "redirect:/vendor/orders";
         }
     }
-    
+
     @PostMapping("/{id}/status")
     public String updateOrderStatus(@AuthenticationPrincipal CustomUserDetails user,
                                    @PathVariable String id,
@@ -82,24 +86,24 @@ public class VendorOrderController {
         try {
             Order order = orderRepository.findById(id)
                     .orElseThrow(() -> new BadRequestException("Không tìm thấy đơn hàng"));
-            
+
             String shopId = vendorService.getShopIdFromUser(user);
-            
-            boolean hasItemsFromShop = order.getItems() != null && 
+
+            boolean hasItemsFromShop = order.getItems() != null &&
                     order.getItems().stream()
                             .anyMatch(item -> shopId.equals(item.getShopId()));
-            
+
             if (!hasItemsFromShop) {
                 redirectAttributes.addFlashAttribute("error", "Bạn không có quyền cập nhật đơn hàng này");
                 return "redirect:/vendor/orders";
             }
-            
+
             order.setStatus(status);
-            
+
             if (status == OrderStatus.DELIVERED) {
                 order.setDeliveredAt(java.time.LocalDateTime.now());
             }
-            
+
             orderRepository.save(order);
             redirectAttributes.addFlashAttribute("success", "Cập nhật trạng thái đơn hàng thành công!");
         } catch (BadRequestException e) {
@@ -107,12 +111,53 @@ public class VendorOrderController {
         }
         return "redirect:/vendor/orders/" + id;
     }
-    
+
+    @PostMapping("/{id}/shipping")
+    public String updateShippingStatus(@AuthenticationPrincipal CustomUserDetails user,
+                                      @PathVariable String id,
+                                      @RequestParam ShippingStatus status,
+                                      @RequestParam(required = false) String trackingNumber,
+                                      @RequestParam(required = false) String carrier,
+                                      @RequestParam(required = false) String note,
+                                      RedirectAttributes redirectAttributes) {
+        try {
+            String shopId = vendorService.getShopIdFromUser(user);
+
+            Order updated = orderService.updateShippingStatus(id, shopId, status,
+                    trackingNumber, carrier, note);
+
+            redirectAttributes.addFlashAttribute("success",
+                    "Cập nhật trạng thái vận chuyển thành công!");
+        } catch (BadRequestException e) {
+            redirectAttributes.addFlashAttribute("error", e.getMessage());
+        }
+        return "redirect:/vendor/orders/" + id;
+    }
+
     private VendorOrderRes mapToVendorOrderRes(Order order, String shopId) {
         List<Order.OrderItem> shopItems = order.getItems().stream()
                 .filter(item -> shopId.equals(item.getShopId()))
                 .toList();
-        
+
+        // Lấy shipping status riêng cho shop này
+        Order.SubOrderShipping shopShipping = null;
+        if (order.getShippingByShop() != null) {
+            shopShipping = order.getShippingByShop().get(shopId);
+        }
+
+        VendorOrderRes.ShippingStatusRes shippingRes = null;
+        if (shopShipping != null) {
+            shippingRes = VendorOrderRes.ShippingStatusRes.builder()
+                    .status(shopShipping.getStatus())
+                    .trackingNumber(shopShipping.getTrackingNumber())
+                    .carrier(shopShipping.getCarrier())
+                    .shippedAt(shopShipping.getShippedAt())
+                    .deliveredAt(shopShipping.getDeliveredAt())
+                    .failureReason(shopShipping.getFailureReason())
+                    .build();
+        }
+        final VendorOrderRes.ShippingStatusRes finalShippingRes = shippingRes;
+
         List<VendorOrderRes.OrderItemRes> itemResponses = shopItems.stream()
                 .map(item -> VendorOrderRes.OrderItemRes.builder()
                         .productId(item.getProductId())
@@ -121,14 +166,15 @@ public class VendorOrderController {
                         .price(item.getPrice())
                         .quantity(item.getQuantity())
                         .subtotal(item.getSubtotal())
+                        .shippingStatus(finalShippingRes)
                         .build())
                 .toList();
-        
+
         BigDecimal shopSubtotal = shopItems.stream()
                 .map(Order.OrderItem::getSubtotal)
                 .filter(java.util.Objects::nonNull)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
-        
+
         return VendorOrderRes.builder()
                 .orderId(order.getId())
                 .userId(order.getUserId())

@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/springsecurity6"
+      th:replace="~{layout/vendor-layout :: layout(title='Chi tiết vi phạm - CNJ70 Vendor', content=~{::main-content}, scripts=~{::page-scripts})}">
+<head>
+    <title>Chi tiết vi phạm - CNJ70 Vendor</title>
+</head>
+<body>
+<main th:fragment="main-content">
+
+    <div class="vd-page-hero">
+        <div class="vd-page-hero-left">
+            <div class="vd-page-hero-icon"><i class="fas fa-triangle-exclamation"></i></div>
+            <div class="vd-page-hero-info">
+                <h2>Chi tiết vi phạm</h2>
+                <p>Mã vi phạm: <strong th:text="${violation.id}">ID</strong></p>
+            </div>
+        </div>
+        <div class="vd-page-hero-actions">
+            <a th:href="@{/vendor/violations}" class="sd-btn sd-btn-secondary"><i class="fas fa-arrow-left"></i> Quay lại</a>
+        </div>
+    </div>
+
+    <div style="display:grid;grid-template-columns:2fr 1fr;gap:16px;">
+        <div class="sd-card">
+            <div class="sd-card-head">
+                <div>
+                    <h3>Thông tin vi phạm</h3>
+                    <p>Chi tiết về lý do và nội dung vi phạm.</p>
+                </div>
+            </div>
+            <div class="sd-card-body">
+                <div class="vd-info-grid">
+                    <div class="vd-info-item">
+                        <div class="vd-info-label">Loại</div>
+                        <div class="vd-info-value">
+                            <span class="sd-badge"
+                                  th:classappend="${violation.type.name() == 'WARNING' ? 'sd-badge-amber' :
+                                                  (violation.type.name() == 'VIOLATION' ? 'sd-badge-orange' :
+                                                  (violation.type.name() == 'BAN' ? 'sd-badge-red' : 'sd-badge-slate'))}"
+                                  th:text="${violation.type.name() == 'WARNING' ? 'Cảnh báo' :
+                                          (violation.type.name() == 'VIOLATION' ? 'Vi phạm' :
+                                          (violation.type.name() == 'BAN' ? 'Đình chỉ' : violation.type.name()))}">TYPE</span>
+                        </div>
+                    </div>
+                    <div class="vd-info-item">
+                        <div class="vd-info-label">Mức độ</div>
+                        <div class="vd-info-value">
+                            <span class="sd-badge"
+                                  th:classappend="${violation.severity.name() == 'LOW' ? 'sd-badge-slate' :
+                                                  (violation.severity.name() == 'MEDIUM' ? 'sd-badge-amber' :
+                                                  (violation.severity.name() == 'HIGH' ? 'sd-badge-orange' :
+                                                  (violation.severity.name() == 'CRITICAL' ? 'sd-badge-red' : 'sd-badge-slate')))}"
+                                  th:text="${violation.severity.name()}">SEVERITY</span>
+                        </div>
+                    </div>
+                    <div class="vd-info-item vd-info-item-full">
+                        <div class="vd-info-label">Lý do</div>
+                        <div class="vd-info-value" th:text="${violation.reason}">-</div>
+                    </div>
+                    <div class="vd-info-item vd-info-item-full" th:if="${violation.adminNote != null and !violation.adminNote.isEmpty()}">
+                        <div class="vd-info-label">Ghi chú từ admin</div>
+                        <div class="vd-info-value" th:text="${violation.adminNote}">-</div>
+                    </div>
+                    <div class="vd-info-item" th:if="${violation.productName != null}">
+                        <div class="vd-info-label">Sản phẩm liên quan</div>
+                        <div class="vd-info-value" th:text="${violation.productName}">-</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div style="display:flex;flex-direction:column;gap:16px;">
+            <div class="sd-card">
+                <div class="sd-card-head"><h3>Trạng thái</h3></div>
+                <div class="sd-card-body">
+                    <div class="vd-info-grid">
+                        <div class="vd-info-item">
+                            <div class="vd-info-label">Trạng thái</div>
+                            <div class="vd-info-value">
+                                <span th:if="${violation.resolvedAt == null}" class="sd-badge sd-badge-red">Chưa xử lý</span>
+                                <span th:if="${violation.resolvedAt != null}" class="sd-badge sd-badge-green">Đã xử lý</span>
+                            </div>
+                        </div>
+                        <div class="vd-info-item">
+                            <div class="vd-info-label">Ngày tạo</div>
+                            <div class="vd-info-value" th:text="${#temporals.format(violation.createdAt, 'dd/MM/yyyy HH:mm')}">-</div>
+                        </div>
+                        <div class="vd-info-item">
+                            <div class="vd-info-label">Người tạo</div>
+                            <div class="vd-info-value" th:text="${violation.createdBy != null ? violation.createdBy : '-'}">-</div>
+                        </div>
+                        <div class="vd-info-item" th:if="${violation.resolvedAt != null}">
+                            <div class="vd-info-label">Ngày xử lý</div>
+                            <div class="vd-info-value" th:text="${#temporals.format(violation.resolvedAt, 'dd/MM/yyyy HH:mm')}">-</div>
+                        </div>
+                        <div class="vd-info-item" th:if="${violation.resolvedBy != null}">
+                            <div class="vd-info-label">Người xử lý</div>
+                            <div class="vd-info-value" th:text="${violation.resolvedBy}">-</div>
+                        </div>
+                        <div class="vd-info-item vd-info-item-full" th:if="${violation.resolutionNote != null and !violation.resolutionNote.isEmpty()}">
+                            <div class="vd-info-label">Ghi chú xử lý</div>
+                            <div class="vd-info-value" th:text="${violation.resolutionNote}">-</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="sd-card" th:if="${violation.resolvedAt == null}">
+                <div class="sd-card-head"><h3>Hướng dẫn</h3></div>
+                <div class="sd-card-body">
+                    <p style="margin:0;color:var(--ink-soft);font-size:14px;line-height:1.6;">
+                        Vi phạm này hiện đang chờ admin xử lý.
+                        <th:block th:if="${violation.severity.name() == 'CRITICAL' or violation.severity.name() == 'HIGH'}">
+                            Nếu không được xử lý trong thời gian sớm nhất, hoạt động bán hàng có thể bị tạm dừng.
+                        </th:block>
+                        Vui lòng liên hệ admin qua email hỗ trợ nếu cần làm rõ thêm.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</main>
+
+<th:block th:fragment="page-scripts"></th:block>
+</body>
+</html>

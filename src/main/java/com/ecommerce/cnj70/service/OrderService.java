@@ -3,6 +3,7 @@ package com.ecommerce.cnj70.service;
 import com.ecommerce.cnj70.document.Order;
 import com.ecommerce.cnj70.dto.request.CheckoutReq;
 import com.ecommerce.cnj70.enums.OrderStatus;
+import com.ecommerce.cnj70.enums.ShippingStatus;
 
 import java.util.List;
 

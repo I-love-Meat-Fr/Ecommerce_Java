@@ -121,6 +121,7 @@
                         </td>
                         <td><strong th:text="${@money.format(order.subtotal)}">0đ</strong></td>
                         <td>
+                            <!-- Order status badge -->
                             <span class="sd-badge"
                                   th:classappend="${order.status.name() == 'PENDING' ? 'sd-badge-amber' :
                                                    (order.status.name() == 'PROCESSING' ? 'sd-badge-sky' :
@@ -132,6 +133,31 @@
                                            (order.status.name() == 'SHIPPED' ? 'Đang giao' :
                                            (order.status.name() == 'DELIVERED' ? 'Đã giao' :
                                            (order.status.name() == 'CANCELLED' ? 'Đã hủy' : order.status.name()))))}">STATUS</span>
+                            <!-- Shipping status (chỉ hiện nếu có item) -->
+                            <th:block th:if="${order.items != null and not #lists.isEmpty(order.items)}">
+                                <th:block th:with="item=${order.items[0]}">
+                                    <th:block th:if="${item.shippingStatus != null}">
+                                        <br>
+                                        <span class="sd-badge"
+                                              style="font-size:11px;margin-top:2px;"
+                                              th:classappend="${item.shippingStatus.status.name() == 'PENDING' ? 'sd-badge-slate' :
+                                                              (item.shippingStatus.status.name() == 'PACKED' ? 'sd-badge-indigo' :
+                                                              (item.shippingStatus.status.name() == 'PICKED_UP' ? 'sd-badge-sky' :
+                                                              (item.shippingStatus.status.name() == 'IN_TRANSIT' ? 'sd-badge-blue' :
+                                                              (item.shippingStatus.status.name() == 'DELIVERED' ? 'sd-badge-green' :
+                                                              (item.shippingStatus.status.name() == 'FAILED' ? 'sd-badge-red' :
+                                                              (item.shippingStatus.status.name() == 'RETURNED' ? 'sd-badge-orange' : 'sd-badge-slate'))))))}"
+                                              th:text="${item.shippingStatus.status.name() == 'PENDING' ? '⚠️ Chờ xử lý' :
+                                                      (item.shippingStatus.status.name() == 'PACKED' ? '📦 Đóng gói xong' :
+                                                      (item.shippingStatus.status.name() == 'PICKED_UP' ? '🚚 Đã lấy hàng' :
+                                                      (item.shippingStatus.status.name() == 'IN_TRANSIT' ? '🚛 Đang vận chuyển' :
+                                                      (item.shippingStatus.status.name() == 'DELIVERED' ? '✅ Đã giao' :
+                                                      (item.shippingStatus.status.name() == 'FAILED' ? '❌ Giao thất bại' :
+                                                      (item.shippingStatus.status.name() == 'RETURNED' ? '↩️ Hoàn hàng' :
+                                                       item.shippingStatus.status.name()))))))}">SHIP</span>
+                                    </th:block>
+                                </th:block>
+                            </th:block>
                         </td>
                         <td style="text-align:right;">
                             <a th:href="@{/vendor/orders/{id}(id=${order.orderId})}" class="sd-btn sd-btn-secondary sd-btn-sm"><i class="fas fa-eye"></i> Xem</a>

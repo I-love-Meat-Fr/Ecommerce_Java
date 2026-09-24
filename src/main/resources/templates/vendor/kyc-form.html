@@ -1,0 +1,419 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/springsecurity6"
+      th:replace="~{layout/vendor-layout :: layout(title='Xác minh KYC - CNJ70 Vendor', content=~{::main-content}, scripts=~{::page-scripts})}">
+<head>
+    <title>Xác minh KYC - CNJ70 Vendor</title>
+</head>
+<body>
+<main th:fragment="main-content">
+
+    <!-- Page Hero -->
+    <div class="vd-page-hero">
+        <div class="vd-page-hero-left">
+            <div class="vd-page-hero-icon"><i class="fas fa-shield-halved"></i></div>
+            <div class="vd-page-hero-info">
+                <h2>Xác minh danh tính (KYC)</h2>
+                <p>Hoàn tất xác minh để bắt đầu bán hàng trên sàn.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Alerts -->
+    <div th:if="${success}" class="sd-alert sd-alert-success"><i class="fas fa-circle-check"></i><span th:text="${success}"></span></div>
+    <div th:if="${error}" class="sd-alert sd-alert-danger"><i class="fas fa-triangle-exclamation"></i><span th:text="${error}"></span></div>
+
+    <!-- Rejection Alert (hiện khi ADMIN_REJECTED hoặc THIRD_PARTY_REJECTED) -->
+    <div th:if="${kycStatus.status == 'ADMIN_REJECTED' or kycStatus.status == 'THIRD_PARTY_REJECTED'}"
+         class="sd-alert sd-alert-danger" style="margin-bottom: 20px;">
+        <i class="fas fa-circle-xmark"></i>
+        <div>
+            <strong>Hồ sơ KYC bị từ chối</strong><br>
+            <span>Lý do: <em th:text="${kycStatus.rejectionReason ?: 'Không có thông tin'}">—</em></span><br>
+            <small>Vui lòng kiểm tra, chỉnh sửa thông tin bên dưới rồi bấm "Gửi hồ sơ KYC".</small>
+        </div>
+    </div>
+
+    <!-- Instructions Card -->
+    <div class="sd-card" style="max-width: 880px; margin-bottom: 20px;">
+        <div class="sd-card-head">
+            <div>
+                <h3><i class="fas fa-list-check"></i> Hướng dẫn hoàn thành KYC</h3>
+                <p>Làm theo 4 bước đơn giản để xác minh danh tính.</p>
+            </div>
+        </div>
+        <div class="sd-card-body">
+            <div class="kyc-steps">
+                <div class="kyc-step">
+                    <div class="kyc-step-number">1</div>
+                    <div class="kyc-step-content">
+                        <h4>Chuẩn bị giấy tờ</h4>
+                        <ul>
+                            <li>CMND/CCCD còn hạn (mặt trước + mặt sau)</li>
+                            <li>Giấy phép kinh doanh (nếu có)</li>
+                            <li>Thông tin tài khoản ngân hàng</li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="kyc-step">
+                    <div class="kyc-step-number">2</div>
+                    <div class="kyc-step-content">
+                        <h4>Điền thông tin</h4>
+                        <p>Điền đầy đủ và chính xác các thông tin bên dưới.</p>
+                    </div>
+                </div>
+                <div class="kyc-step">
+                    <div class="kyc-step-number">3</div>
+                    <div class="kyc-step-content">
+                        <h4>Upload ảnh</h4>
+                        <p>Chụp hoặc chọn ảnh CCCD rõ ràng, không mờ.</p>
+                    </div>
+                </div>
+                <div class="kyc-step">
+                    <div class="kyc-step-number">4</div>
+                    <div class="kyc-step-content">
+                        <h4>Gửi hồ sơ</h4>
+                        <p>Nhấn "Gửi hồ sơ" và chờ xác minh trong vài phút.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- KYC Form -->
+    <div class="sd-card" style="max-width: 880px;">
+        <div class="sd-card-head">
+            <div>
+                <h3><i class="fas fa-file-alt"></i> Thông tin xác minh</h3>
+                <p>Điền đầy đủ thông tin bên dưới để xác minh danh tính.</p>
+            </div>
+        </div>
+        <div class="sd-card-body">
+            <form th:action="@{/vendor/kyc/submit}" th:object="${kycFormReq}" method="post" 
+                  enctype="multipart/form-data" id="kycForm" onsubmit="return validateForm()">
+
+                <!-- Section 1: Thông tin chủ shop -->
+                <div class="kyc-section">
+                    <h4 class="kyc-section-title"><i class="fas fa-user"></i> Thông tin chủ shop</h4>
+                    
+                    <div class="sd-form-group">
+                        <label>Họ tên chủ shop <span class="required">*</span></label>
+                        <input type="text" class="sd-form-control" th:field="*{ownerFullName}" 
+                               required maxlength="100" placeholder="VD: Nguyễn Văn A">
+                        <div class="sd-form-hint">Họ tên phải trùng khớp với CCCD</div>
+                    </div>
+
+                    <div class="sd-form-group">
+                        <label>Số CCCD <span class="required">*</span></label>
+                        <input type="text" class="sd-form-control" id="idNumber" th:field="*{idNumber}" 
+                               required maxlength="12" minlength="12" placeholder="VD: 012345678901">
+                        <div class="sd-form-hint">Nhập đúng 12 chữ số CCCD</div>
+                        <span class="field-error" id="idNumberError" style="color: #dc3545; font-size: 0.875rem; display: none;"></span>
+                    </div>
+
+                    <div class="sd-form-row">
+                        <div class="sd-form-group">
+                            <label>Ảnh mặt trước CCCD</label>
+                            <div class="vd-upload" onclick="document.getElementById('idFrontFile').click()">
+                                <i class="fas fa-camera"></i>
+                                <p>Nhấn để chọn ảnh (JPG, PNG. Tối đa 5MB)</p>
+                            </div>
+                            <input type="file" id="idFrontFile" name="idFrontFile" accept="image/*" style="display:none;"
+                                   onchange="handleImageUpload(this, 'idFrontPreview', 'idFrontImageUrl')">
+                            <img id="idFrontPreview" class="vd-preview-img" alt="Ảnh mặt trước CCCD" style="display:none;">
+                            <input type="hidden" id="idFrontImageUrl" th:field="*{idFrontImageUrl}">
+                        </div>
+
+                        <div class="sd-form-group">
+                            <label>Ảnh mặt sau CCCD</label>
+                            <div class="vd-upload" onclick="document.getElementById('idBackFile').click()">
+                                <i class="fas fa-camera"></i>
+                                <p>Nhấn để chọn ảnh (JPG, PNG. Tối đa 5MB)</p>
+                            </div>
+                            <input type="file" id="idBackFile" name="idBackFile" accept="image/*" style="display:none;"
+                                   onchange="handleImageUpload(this, 'idBackPreview', 'idBackImageUrl')">
+                            <img id="idBackPreview" class="vd-preview-img" alt="Ảnh mặt sau CCCD" style="display:none;">
+                            <input type="hidden" id="idBackImageUrl" th:field="*{idBackImageUrl}">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Section 2: Thông tin doanh nghiệp -->
+                <div class="kyc-section">
+                    <h4 class="kyc-section-title"><i class="fas fa-building"></i> Thông tin doanh nghiệp (tùy chọn)</h4>
+                    
+                    <div class="sd-form-group">
+                        <label>Tên doanh nghiệp</label>
+                        <input type="text" class="sd-form-control" th:field="*{businessName}" 
+                               maxlength="200" placeholder="VD: Công ty TNHH ABC">
+                    </div>
+
+                    <div class="sd-form-group">
+                        <label>Mã số thuế</label>
+                        <input type="text" class="sd-form-control" id="taxCode" th:field="*{taxCode}" 
+                               maxlength="13" placeholder="VD: 01234567890123">
+                        <div class="sd-form-hint">Mã số thuế gồm 10-13 chữ số</div>
+                        <span class="field-error" id="taxCodeError" style="color: #dc3545; font-size: 0.875rem; display: none;"></span>
+                    </div>
+
+                    <div class="sd-form-group">
+                        <label>Giấy phép kinh doanh</label>
+                        <div class="vd-upload" onclick="document.getElementById('businessLicenseFile').click()">
+                            <i class="fas fa-file-upload"></i>
+                            <p>Nhấn để upload giấy phép (JPG, PNG, PDF. Tối đa 5MB)</p>
+                        </div>
+                        <input type="file" id="businessLicenseFile" name="businessLicenseFile" accept="image/*,.pdf" 
+                               style="display:none;" onchange="handleFileUpload(this, 'businessLicenseUrl')">
+                        <div id="businessLicenseName" style="margin-top: 8px; font-size: 0.875rem;"></div>
+                        <input type="hidden" id="businessLicenseUrl" th:field="*{businessLicenseUrl}">
+                    </div>
+                </div>
+
+                <!-- Section 3: Thông tin ngân hàng -->
+                <div class="kyc-section">
+                    <h4 class="kyc-section-title"><i class="fas fa-university"></i> Thông tin ngân hàng</h4>
+                    
+                    <div class="sd-form-group">
+                        <label>Số tài khoản <span class="required">*</span></label>
+                        <input type="text" class="sd-form-control" th:field="*{bankAccount}" 
+                               required maxlength="20" placeholder="VD: 1234567890">
+                    </div>
+
+                    <div class="sd-form-group">
+                        <label>Tên ngân hàng <span class="required">*</span></label>
+                        <input type="text" class="sd-form-control" th:field="*{bankName}" 
+                               required maxlength="100" placeholder="VD: Ngân hàng Vietcombank">
+                    </div>
+
+                    <div class="sd-form-group">
+                        <label>Chi nhánh</label>
+                        <input type="text" class="sd-form-control" th:field="*{bankBranch}" 
+                               maxlength="200" placeholder="VD: Chi nhánh TP.HCM">
+                    </div>
+                </div>
+
+                <!-- Submit -->
+                <div style="display: flex; gap: 12px; justify-content: flex-end; margin-top: 24px; padding-top: 20px; border-top: 1px solid #e9ecef;">
+                    <a th:href="@{/vendor/dashboard}" class="sd-btn sd-btn-secondary">
+                        <i class="fas fa-arrow-left"></i> Quay lại
+                    </a>
+                    <button type="submit" class="sd-btn sd-btn-cta" id="submitBtn">
+                        <i class="fas fa-paper-plane"></i> Gửi hồ sơ KYC
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+</main>
+
+<th:block th:fragment="page-scripts">
+<script th:inline="none">
+// Handle image upload - upload to server and get URL
+async function handleImageUpload(input, previewId, hiddenId) {
+    const file = input.files[0];
+    if (!file) return;
+
+    // Validate file size (5MB)
+    if (file.size > 5 * 1024 * 1024) {
+        alert('Kích thước ảnh tối đa 5MB');
+        input.value = '';
+        return;
+    }
+
+    // Validate file type
+    if (!file.type.startsWith('image/')) {
+        alert('Chỉ chấp nhận file ảnh');
+        input.value = '';
+        return;
+    }
+
+    // Show preview
+    const preview = document.getElementById(previewId);
+    preview.src = URL.createObjectURL(file);
+    preview.style.display = 'block';
+
+    // Upload to server
+    const formData = new FormData();
+    formData.append('file', file);
+
+    try {
+        const response = await fetch('/vendor/kyc/upload-image', {
+            method: 'POST',
+            body: formData
+        });
+        const data = await response.json();
+        if (data.success) {
+            document.getElementById(hiddenId).value = data.url;
+        } else {
+            alert('Upload ảnh thất bại: ' + data.error);
+            preview.style.display = 'none';
+            input.value = '';
+        }
+    } catch (e) {
+        alert('Upload ảnh thất bại');
+        preview.style.display = 'none';
+        input.value = '';
+    }
+}
+
+// Handle file upload (for business license)
+async function handleFileUpload(input, hiddenId) {
+    const file = input.files[0];
+    if (!file) return;
+
+    if (file.size > 5 * 1024 * 1024) {
+        alert('Kích thước file tối đa 5MB');
+        input.value = '';
+        return;
+    }
+
+    document.getElementById('businessLicenseName').textContent = '📄 ' + file.name;
+
+    const formData = new FormData();
+    formData.append('file', file);
+
+    try {
+        const response = await fetch('/vendor/kyc/upload-image', {
+            method: 'POST',
+            body: formData
+        });
+        const data = await response.json();
+        if (data.success) {
+            document.getElementById(hiddenId).value = data.url;
+        }
+    } catch (e) {
+        console.error('Upload failed');
+    }
+}
+
+// Validate form before submit
+function validateForm() {
+    // Validate CCCD: 12 digits
+    const idNumber = document.getElementById('idNumber').value;
+    if (!/^\d{12}$/.test(idNumber)) {
+        document.getElementById('idNumberError').textContent = 'CCCD phải gồm đúng 12 chữ số';
+        document.getElementById('idNumberError').style.display = 'block';
+        return false;
+    }
+    document.getElementById('idNumberError').style.display = 'none';
+
+    // Validate tax code (optional): 10-13 digits
+    const taxCode = document.getElementById('taxCode').value;
+    if (taxCode && !/^\d{10,13}$/.test(taxCode)) {
+        document.getElementById('taxCodeError').textContent = 'Mã số thuế phải từ 10 đến 13 chữ số';
+        document.getElementById('taxCodeError').style.display = 'block';
+        return false;
+    }
+    document.getElementById('taxCodeError').style.display = 'none';
+
+    // Disable submit button to prevent double submit
+    document.getElementById('submitBtn').disabled = true;
+    document.getElementById('submitBtn').innerHTML = '<i class="fas fa-spinner fa-spin"></i> Đang gửi...';
+
+    return true;
+}
+
+// Real-time validation for CCCD
+document.getElementById('idNumber')?.addEventListener('input', function(e) {
+    this.value = this.value.replace(/\D/g, '').substring(0, 12);
+});
+
+// Real-time validation for tax code
+document.getElementById('taxCode')?.addEventListener('input', function(e) {
+    this.value = this.value.replace(/\D/g, '').substring(0, 13);
+});
+
+// Pre-fill preview ảnh từ hidden URL (khi vendor vào /vendor/kyc/edit sau khi bị reject)
+(function prefillExistingImages() {
+    const front = document.getElementById('idFrontImageUrl');
+    const back = document.getElementById('idBackImageUrl');
+    const license = document.getElementById('businessLicenseUrl');
+
+    if (front && front.value) {
+        const img = document.getElementById('idFrontPreview');
+        img.src = front.value;
+        img.style.display = 'block';
+    }
+    if (back && back.value) {
+        const img = document.getElementById('idBackPreview');
+        img.src = back.value;
+        img.style.display = 'block';
+    }
+    if (license && license.value) {
+        const name = license.value.split('/').pop();
+        document.getElementById('businessLicenseName').textContent = '📄 ' + name + ' (đã upload trước)';
+    }
+})();
+</script>
+
+<style>
+.kyc-steps {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+.kyc-step {
+    display: flex;
+    align-items: flex-start;
+    gap: 16px;
+}
+.kyc-step-number {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: var(--primary-color, #0d6efd);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    flex-shrink: 0;
+}
+.kyc-step-content h4 {
+    margin: 0 0 4px 0;
+    font-size: 1rem;
+}
+.kyc-step-content p, .kyc-step-content ul {
+    margin: 0;
+    font-size: 0.9rem;
+    color: #6c757d;
+}
+.kyc-step-content ul {
+    padding-left: 18px;
+}
+.kyc-section {
+    margin-bottom: 28px;
+    padding-bottom: 20px;
+    border-bottom: 1px solid #e9ecef;
+}
+.kyc-section:last-of-type {
+    border-bottom: none;
+    margin-bottom: 0;
+}
+.kyc-section-title {
+    margin: 0 0 16px 0;
+    font-size: 1rem;
+    color: #333;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+.kyc-section-title i {
+    color: var(--primary-color, #0d6efd);
+}
+.sd-form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+}
+.required {
+    color: #dc3545;
+}
+.field-error {
+    margin-top: 4px;
+}
+</style>
+</th:block>
+</body>
+</html>

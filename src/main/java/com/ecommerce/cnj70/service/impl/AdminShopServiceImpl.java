@@ -71,6 +71,7 @@ public class AdminShopServiceImpl implements AdminShopService {
         }
 
         shop.setStatus(ShopStatus.APPROVED);
+        shop.setRejectionReason(null);
         shopRepository.save(shop);
 
         // ===== TASK #24: AuditLog =====
@@ -105,6 +106,7 @@ public class AdminShopServiceImpl implements AdminShopService {
         }
 
         shop.setActive(true);
+        shop.setDeactivationReason(null);
         shopRepository.save(shop);
 
         if (actorId != null || actorUsername != null) {
@@ -136,6 +138,9 @@ public class AdminShopServiceImpl implements AdminShopService {
         }
 
         shop.setActive(false);
+        shop.setDeactivationReason(StringUtils.hasText(reason) ? reason : null);
+        shop.setActionBy(adminUsername);
+        shop.setActionAt(LocalDateTime.now());
         shopRepository.save(shop);
 
         if (actorId != null || actorUsername != null) {
@@ -169,6 +174,9 @@ public class AdminShopServiceImpl implements AdminShopService {
         }
 
         shop.setStatus(ShopStatus.REJECTED);
+        shop.setRejectionReason(StringUtils.hasText(reason) ? reason : null);
+        shop.setActionBy(adminUsername);
+        shop.setActionAt(LocalDateTime.now());
         shopRepository.save(shop);
 
         // ===== TASK #24: AuditLog (WARNING vì reject là tác động lớn) =====

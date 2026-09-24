@@ -79,4 +79,10 @@ public class User {
 
     @LastModifiedDate
     private LocalDateTime updatedAt;
+
+    /** Vendor đã hoàn tất xác minh KYC chưa? */
+    public boolean isKycApproved() {
+        return kycStatus == KycStatus.APPROVED;
+    }
 }
+

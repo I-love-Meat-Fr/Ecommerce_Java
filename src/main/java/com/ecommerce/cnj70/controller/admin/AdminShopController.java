@@ -7,6 +7,7 @@ import com.ecommerce.cnj70.exception.BusinessException;
 import com.ecommerce.cnj70.exception.ResourceNotFoundException;
 import com.ecommerce.cnj70.repository.UserRepository;
 import com.ecommerce.cnj70.service.AdminShopService;
+import com.ecommerce.cnj70.security.CustomUserDetails;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -173,6 +174,8 @@ public class AdminShopController {
                                  @RequestParam(defaultValue = "5") int size,
                                  @RequestParam(required = false) String q,
                                  @RequestParam(required = false) String status,
+                                 @RequestParam(required = false) String reason,
+                                 @AuthenticationPrincipal CustomUserDetails admin,
                                  RedirectAttributes redirectAttributes) {
         Shop shop;
         try {

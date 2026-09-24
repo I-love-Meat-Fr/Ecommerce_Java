@@ -5,11 +5,15 @@ import com.ecommerce.cnj70.dto.request.CheckoutReq;
 import com.ecommerce.cnj70.enums.DiscountType;
 import com.ecommerce.cnj70.enums.OrderStatus;
 import com.ecommerce.cnj70.enums.PaymentMethod;
+import com.ecommerce.cnj70.enums.ProductStatus;
+import com.ecommerce.cnj70.enums.ShippingStatus;
+import com.ecommerce.cnj70.enums.ShopStatus;
 import com.ecommerce.cnj70.exception.BadRequestException;
 import com.ecommerce.cnj70.exception.ResourceNotFoundException;
 import com.ecommerce.cnj70.repository.CartRepository;
 import com.ecommerce.cnj70.repository.OrderRepository;
 import com.ecommerce.cnj70.repository.ProductRepository;
+import com.ecommerce.cnj70.repository.ShopRepository;
 import com.ecommerce.cnj70.repository.UserRepository;
 import com.ecommerce.cnj70.service.CartService;
 import com.ecommerce.cnj70.service.OrderService;
@@ -39,6 +43,7 @@ public class OrderServiceImpl implements OrderService {
     private final UserRepository userRepository;
     private final ProductRepository productRepository;
     private final CartRepository cartRepository;
+    private final ShopRepository shopRepository;
     private final CartService cartService;
     private final VoucherService voucherService;
 
@@ -87,6 +92,7 @@ public class OrderServiceImpl implements OrderService {
 
         // ===== TASK #8: validate Product + stock =====
         List<Order.OrderItem> orderItems = new ArrayList<>();
+        Map<String, String> shopNames = new HashMap<>();
         BigDecimal subtotal = BigDecimal.ZERO;
 
         for (Cart.CartItem cartItem : itemsToCheckout) {
@@ -113,6 +119,7 @@ public class OrderServiceImpl implements OrderService {
 
             Order.OrderItem orderItem = Order.OrderItem.builder()
                     .shopId(product.getShopId())
+                    .shopName(product.getShopName())
                     .productId(product.getId())
                     .productName(product.getName())
                     .imageUrl(product.getThumbnailUrl())
@@ -356,5 +363,38 @@ public class OrderServiceImpl implements OrderService {
                 productRepository.save(product);
             }
         }
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public Order updateShippingStatus(String orderId, String shopId, ShippingStatus status,
+                                     String trackingNumber, String carrier, String note) {
+        Order order = getOrderById(orderId);
+
+        if (order.getShippingByShop() == null || !order.getShippingByShop().containsKey(shopId)) {
+            throw new BadRequestException("Đơn hàng không chứa sản phẩm của shop này");
+        }
+
+        Order.SubOrderShipping shipping = order.getShippingByShop().get(shopId);
+        shipping.setStatus(status);
+        if (trackingNumber != null && !trackingNumber.isBlank()) {
+            shipping.setTrackingNumber(trackingNumber);
+        }
+        if (carrier != null && !carrier.isBlank()) {
+            shipping.setCarrier(carrier);
+        }
+        if (note != null && !note.isBlank()) {
+            shipping.setNote(note);
+        }
+        shipping.setUpdatedAt(LocalDateTime.now());
+
+        if (status == ShippingStatus.DELIVERED) {
+            shipping.setDeliveredAt(LocalDateTime.now());
+        }
+        if (status == ShippingStatus.PICKED_UP || status == ShippingStatus.IN_TRANSIT) {
+            shipping.setShippedAt(LocalDateTime.now());
+        }
+
+        return orderRepository.save(order);
     }
 }

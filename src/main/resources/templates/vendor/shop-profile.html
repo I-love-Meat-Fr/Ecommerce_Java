@@ -36,6 +36,24 @@
                     <span th:if="${shop.active}" class="sd-badge sd-badge-indigo">Đang hoạt động</span>
                     <span th:unless="${shop.active}" class="sd-badge sd-badge-red">Tạm ngưng</span>
                 </div>
+                <div th:unless="${shop.active}" class="vd-shop-alert vd-shop-alert-warn" style="margin-top:12px;padding:10px 14px;border-radius:8px;background:#fef3c7;border:1px solid #fcd34d;color:#92400e;">
+                    <i class="fas fa-triangle-exclamation"></i>
+                    <strong>Cửa hàng đang bị ngừng hoạt động.</strong>
+                    <th:block th:if="${shop.deactivationReason != null and !shop.deactivationReason.isEmpty()}">
+                        Lý do: <em th:text="${shop.deactivationReason}">...</em>.
+                    </th:block>
+                    <th:block th:if="${shop.actionBy != null}">
+                        (Xử lý bởi <span th:text="${shop.actionBy}">admin</span>
+                        <span th:if="${shop.actionAt != null}"> lúc <th:block th:text="${#temporals.format(shop.actionAt, 'dd/MM/yyyy HH:mm')}"></th:block></span>)
+                    </th:block>
+                </div>
+                <div th:if="${shop.status.name() == 'REJECTED'}" class="vd-shop-alert vd-shop-alert-danger" style="margin-top:12px;padding:10px 14px;border-radius:8px;background:#fee2e2;border:1px solid #fca5a5;color:#991b1b;">
+                    <i class="fas fa-circle-xmark"></i>
+                    <strong>Cửa hàng đã bị từ chối.</strong>
+                    <th:block th:if="${shop.rejectionReason != null and !shop.rejectionReason.isEmpty()}">
+                        Lý do: <em th:text="${shop.rejectionReason}">...</em>.
+                    </th:block>
+                </div>
             </div>
         </div>
 
