@@ -2,6 +2,7 @@ package com.ecommerce.cnj70.controller.web;
 
 import com.ecommerce.cnj70.document.Cart;
 import com.ecommerce.cnj70.document.Voucher;
+import com.ecommerce.cnj70.dto.cart.CartItemValidation;
 import com.ecommerce.cnj70.enums.DiscountType;
 import com.ecommerce.cnj70.exception.BadRequestException;
 import com.ecommerce.cnj70.security.CustomUserDetails;
@@ -47,6 +48,13 @@ public class CartController {
         }
 
         Cart cart = cartService.getCartByUserId(user.getId());
+
+        // ===== Validate real-time: Product/Shop status + stock =====
+        // Bất kỳ CartItem nào không còn ACTIVE hoặc Shop không hợp lệ sẽ
+        // bị đánh dấu invalid và Cart UI sẽ vô hiệu hóa nút Checkout.
+        Map<String, CartItemValidation> invalidItems = cartService.validateCartItems(cart);
+        boolean hasInvalidItems = !invalidItems.isEmpty();
+
         BigDecimal cartTotal = cartService.calculateTotal(cart);
         int totalQuantity = cart.getItems().stream().mapToInt(Cart.CartItem::getQuantity).sum();
 
@@ -55,6 +63,24 @@ public class CartController {
                         item -> item.getShopId() != null ? item.getShopId() : "default",
                         LinkedHashMap::new,
                         Collectors.toList()));
+
+        // ===== Per-shop aggregates =====
+        // Subtotal & số lượng của mỗi shop, dùng để hiển thị "Tạm tính của shop này"
+        // và badge số lượng trên header shop. Giúp customer thấy rõ mình đang
+        // mua bao nhiêu từ từng shop khi giỏ hàng có nhiều shop.
+        Map<String, BigDecimal> shopSubtotals = new LinkedHashMap<>();
+        Map<String, Integer> shopQuantities = new LinkedHashMap<>();
+        for (Map.Entry<String, List<Cart.CartItem>> entry : itemsByShop.entrySet()) {
+            String shopId = entry.getKey();
+            List<Cart.CartItem> shopItems = entry.getValue();
+            BigDecimal shopSub = shopItems.stream()
+                    .map(Cart.CartItem::getSubtotal)
+                    .filter(java.util.Objects::nonNull)
+                    .reduce(BigDecimal.ZERO, BigDecimal::add);
+            int shopQty = shopItems.stream().mapToInt(Cart.CartItem::getQuantity).sum();
+            shopSubtotals.put(shopId, shopSub);
+            shopQuantities.put(shopId, shopQty);
+        }
 
         // Apply persisted voucher (nếu có) để hiển thị đúng summary
         AppliedVoucher applied = readAppliedVoucher(session);
@@ -82,10 +108,16 @@ public class CartController {
         model.addAttribute("cartTotal", cartTotal);
         model.addAttribute("totalQuantity", totalQuantity);
         model.addAttribute("itemsByShop", itemsByShop);
+        model.addAttribute("shopSubtotals", shopSubtotals);
+        model.addAttribute("shopQuantities", shopQuantities);
+        model.addAttribute("shopCount", itemsByShop.size());
         model.addAttribute("shippingFee", SHIPPING_FEE);
         model.addAttribute("appliedVoucher", applied);
         model.addAttribute("discount", discount);
         model.addAttribute("finalTotal", finalTotal);
+        model.addAttribute("invalidItems", invalidItems);
+        model.addAttribute("hasInvalidItems", hasInvalidItems);
+        model.addAttribute("invalidItemCount", invalidItems.size());
 
         return "web/cart";
     }
@@ -162,6 +194,70 @@ public class CartController {
         cartService.removeFromCart(user.getId(), productId);
         reEvaluateVoucher(session, user.getId());
         return "redirect:/cart";
+    }
+
+    /**
+     * Bulk-remove tất cả CartItem không còn hợp lệ (Product không ACTIVE,
+     * Shop bị suspend, hết hàng, v.v.). UI gọi khi user bấm nút
+     * "Xóa sản phẩm không hợp lệ".
+     */
+    @PostMapping("/cart/remove-invalid")
+    public String removeInvalidItems(@AuthenticationPrincipal CustomUserDetails user,
+                                     HttpSession session) {
+        if (user == null) {
+            return "redirect:/auth/login";
+        }
+        cartService.removeInvalidItems(user.getId());
+        reEvaluateVoucher(session, user.getId());
+        return "redirect:/cart";
+    }
+
+    /**
+     * Bulk-remove tất cả CartItem thuộc về một Shop. UI gọi khi user bấm nút
+     * "Xóa tất cả sản phẩm của shop này" trong từng shop-group.
+     * <p>
+     * Lưu ý: shopId = "default" sẽ được map sang null khi filter (giữ tương thích
+     * với các cart item không có shopId).
+     */
+    @PostMapping("/cart/remove-by-shop")
+    public String removeByShop(@AuthenticationPrincipal CustomUserDetails user,
+                               @RequestParam String shopId,
+                               HttpSession session) {
+        if (user == null) {
+            return "redirect:/auth/login";
+        }
+        String effectiveShopId = "default".equals(shopId) ? null : shopId;
+        cartService.removeByShop(user.getId(), effectiveShopId);
+        reEvaluateVoucher(session, user.getId());
+        return "redirect:/cart";
+    }
+
+    /**
+     * API endpoint (AJAX) trả về JSON — cho phép UI làm bulk-remove không cần
+     * reload toàn trang. Trả về số lượng item đã xóa.
+     */
+    @PostMapping("/api/cart/remove-invalid")
+    @ResponseBody
+    public ResponseEntity<Map<String, Object>> removeInvalidItemsApi(
+            @AuthenticationPrincipal CustomUserDetails user,
+            HttpSession session) {
+        Map<String, Object> response = new HashMap<>();
+        if (user == null) {
+            response.put("success", false);
+            response.put("message", "Vui lòng đăng nhập");
+            return ResponseEntity.status(401).body(response);
+        }
+        Cart before = cartService.getCartByUserId(user.getId());
+        Map<String, CartItemValidation> invalidBefore = cartService.validateCartItems(before);
+        int invalidCount = invalidBefore.size();
+        cartService.removeInvalidItems(user.getId());
+        reEvaluateVoucher(session, user.getId());
+        response.put("success", true);
+        response.put("removedCount", invalidCount);
+        response.put("message", invalidCount > 0
+                ? "Đã xóa " + invalidCount + " sản phẩm không hợp lệ khỏi giỏ hàng."
+                : "Giỏ hàng không có sản phẩm không hợp lệ.");
+        return ResponseEntity.ok(response);
     }
 
     /**

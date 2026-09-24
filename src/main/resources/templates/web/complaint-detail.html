@@ -1,0 +1,441 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/springsecurity6"
+      th:replace="~{layout/web-layout :: layout(title='Chi tiết khiếu nại - CNJ70 Shop', content=~{::main-content}, scripts=~{::page-scripts}, pageStyles=~{::page-styles})}">
+<head>
+    <title>Chi tiết khiếu nại - CNJ70 Shop</title>
+    <th:block th:fragment="page-styles">
+        <link rel="stylesheet" th:href="@{/css/complaint.css}">
+    </th:block>
+</head>
+<body>
+<main th:fragment="main-content" class="cmp-page cmp-detail-page">
+
+    <!-- Hero -->
+    <section class="cmp-hero">
+        <div class="container">
+            <nav class="cmp-breadcrumb">
+                <a th:href="@{/home}"><i class="fas fa-home"></i> Trang chủ</a>
+                <i class="fas fa-chevron-right"></i>
+                <a th:href="@{/complaints}">Khiếu nại của tôi</a>
+                <i class="fas fa-chevron-right"></i>
+                <span>Chi tiết</span>
+            </nav>
+            <div class="cmp-hero-inner">
+                <div class="cmp-hero-left">
+                    <span class="cmp-hero-tag">
+                        <i class="fas fa-shield-halved"></i>
+                        <span th:text="${statusLabel != null ? statusLabel : 'Chi tiết'}">Status</span>
+                    </span>
+                    <h1>
+                        Khiếu nại
+                        <span class="teal-word" th:if="${complaint != null and complaint.id != null}" th:text="'#' + ${complaint.id}">#ID</span>
+                    </h1>
+                    <p th:if="${complaint != null}">
+                        <span th:text="${reasonLabel}">Reason</span>
+                        <span th:if="${complaint.shopName != null}">
+                            • Shop: <strong th:text="${complaint.shopName}">Shop</strong>
+                        </span>
+                    </p>
+                </div>
+                <div class="cmp-hero-right" th:if="${complaint != null}">
+                    <a th:href="@{/complaints}" class="cmp-hero-cta cmp-hero-cta-ghost" id="back-btn">
+                        <i class="fas fa-arrow-left"></i>
+                        <span>Quay lại</span>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Body -->
+    <section class="cmp-section">
+        <div class="container">
+
+            <!-- Error state -->
+            <div th:if="${error}" class="cmp-alert cmp-alert-error">
+                <i class="fas fa-exclamation-circle"></i>
+                <div>
+                    <strong>Không thể tải khiếu nại.</strong>
+                    <p style="margin: 4px 0 0 0;" th:text="${error}">Error message</p>
+                </div>
+            </div>
+
+            <!-- Detail content -->
+            <div th:if="${complaint != null}" class="cmp-detail-layout">
+
+                <!-- Main column -->
+                <div class="cmp-detail-main">
+
+                    <!-- ============== Status banner ============== -->
+                    <div class="cmp-status-banner" th:classappend="${complaint.status.name()}">
+                        <div class="cmp-status-banner-icon">
+                            <i class="fas"
+                               th:classappend="${
+                                   complaint.status.name() == 'OPEN' ? 'fa-hourglass-half' :
+                                   complaint.status.name() == 'VENDOR_RESPONDED' ? 'fa-comment-dots' :
+                                   complaint.status.name() == 'ESCALATED' ? 'fa-level-up-alt' :
+                                   complaint.status.name() == 'MODERATOR_REVIEW' ? 'fa-user-shield' :
+                                   complaint.status.name() == 'ESCALATED_L2' ? 'fa-shield-alt' :
+                                   complaint.status.name() == 'ADMIN_REVIEW' ? 'fa-shield-alt' :
+                                   complaint.status.name() == 'RESOLVED' ? 'fa-check-circle' :
+                                   complaint.status.name() == 'REJECTED' ? 'fa-times-circle' :
+                                   'fa-folder'
+                               }"></i>
+                        </div>
+                        <div class="cmp-status-banner-body">
+                            <span class="cmp-status-banner-label">Trạng thái hiện tại</span>
+                            <h2 th:text="${statusLabel}">Status</h2>
+                            <p class="cmp-status-banner-sub">
+                                <i class="fas fa-layer-group"></i>
+                                <span th:text="${levelLabel}">Level</span>
+                            </p>
+                        </div>
+                    </div>
+
+                    <!-- ============== Handler badge (NEW) ============== -->
+                    <div class="cmp-handler-card"
+                         th:if="${handler != null}"
+                         th:classappend="${handler.role}">
+                        <div class="cmp-handler-card-body">
+                            <span class="cmp-handler-card-label">
+                                <i class="fas fa-user-tie"></i> Đang xử lý bởi
+                            </span>
+                            <div class="cmp-handler-card-info">
+                                <div class="cmp-handler-card-icon">
+                                    <i th:classappend="${handler.iconClass}"></i>
+                                </div>
+                                <div>
+                                    <strong class="cmp-handler-card-role"
+                                            th:text="${
+                                                handler.role == 'VENDOR' ? 'Shop / Vendor' :
+                                                handler.role == 'MODERATOR' ? 'Moderator' :
+                                                handler.role == 'ADMIN' ? 'Admin' :
+                                                handler.role == 'RESOLVED' ? 'Đã giải quyết' :
+                                                'Đã đóng'
+                                            }">Role</strong>
+                                    <span class="cmp-handler-card-name" th:text="${handler.displayName}">Name</span>
+                                </div>
+                            </div>
+                            <div class="cmp-handler-card-pipeline">
+                                <span class="cmp-handler-step"
+                                      th:classappend="${complaint.level.name() == 'LEVEL_0' or complaint.escalationCount >= 0 ? 'done' : ''}">Cấp 0</span>
+                                <i class="fas fa-chevron-right"></i>
+                                <span class="cmp-handler-step"
+                                      th:classappend="${complaint.level.name() == 'LEVEL_1' or complaint.level.name() == 'LEVEL_2' ? 'done' : ''}">Cấp 1</span>
+                                <i class="fas fa-chevron-right"></i>
+                                <span class="cmp-handler-step"
+                                      th:classappend="${complaint.level.name() == 'LEVEL_2' ? 'done' : ''}">Cấp 2</span>
+                            </div>
+                        </div>
+
+                        <!-- SLA Deadline bar -->
+                        <div class="cmp-handler-card-sla"
+                             th:if="${deadlinePercent != null and not deadlineExpired}">
+                            <div class="cmp-sla-header">
+                                <i class="fas fa-clock"></i>
+                                <span>Thời hạn phản hồi của shop</span>
+                                <strong th:if="${minutesToDeadline > 0}">
+                                    còn <span th:text="${minutesToDeadline / 1440}"></span> ngày
+                                    <span th:text="${(minutesToDeadline % 1440) / 60}"></span> giờ
+                                </strong>
+                                <strong th:if="${minutesToDeadline <= 0}">Đã hết hạn</strong>
+                            </div>
+                            <div class="cmp-sla-bar">
+                                <div class="cmp-sla-bar-fill"
+                                     th:style="'width:' + ${deadlinePercent} + '%'"
+                                     th:classappend="${deadlinePercent > 80 ? 'cmp-sla-warn' : ''}"></div>
+                            </div>
+                        </div>
+
+                        <!-- Expired warning -->
+                        <div class="cmp-handler-card-sla cmp-handler-card-sla-expired"
+                             th:if="${deadlineExpired}">
+                            <i class="fas fa-exclamation-triangle"></i>
+                            <span>Shop đã quá hạn phản hồi — hệ thống sẽ tự động chuyển Moderator.</span>
+                        </div>
+                    </div>
+
+                    <!-- ============== Customer action buttons (NEW) ============== -->
+                    <div class="cmp-actions" th:if="${canEscalate or canResolve}">
+                        <div class="cmp-actions-header">
+                            <i class="fas fa-hand-pointer"></i>
+                            <strong>Hành động của bạn</strong>
+                            <span>Shop đã phản hồi — bạn có thể chọn cách xử lý tiếp.</span>
+                        </div>
+                        <div class="cmp-actions-body">
+                            <form th:action="@{/complaints/{id}/resolve(id=${complaint.id})}"
+                                  method="post"
+                                  class="cmp-action-form"
+                                  onsubmit="return confirmAction('Đồng ý giải quyết khiếu nại này?');">
+                                <input type="hidden" name="note" value="Customer đồng ý giải quyết từ dashboard">
+                                <button type="submit" class="cmp-action-btn cmp-action-btn-resolve" id="action-resolve">
+                                    <i class="fas fa-check-circle"></i>
+                                    <span class="cmp-action-btn-body">
+                                        <strong>Đồng ý giải quyết</strong>
+                                        <small>Khiếu nại sẽ kết thúc ở Cấp 0</small>
+                                    </span>
+                                </button>
+                            </form>
+                            <form th:action="@{/complaints/{id}/escalate(id=${complaint.id})}"
+                                  method="post"
+                                  class="cmp-action-form"
+                                  onsubmit="return confirmAction('Chuyển khiếu nại lên Moderator xem xét?');">
+                                <input type="hidden" name="reason" value="Customer không đồng ý phản hồi của shop — yêu cầu Moderator xem xét">
+                                <button type="submit" class="cmp-action-btn cmp-action-btn-escalate" id="action-escalate">
+                                    <i class="fas fa-level-up-alt"></i>
+                                    <span class="cmp-action-btn-body">
+                                        <strong>Yêu cầu Moderator xem xét</strong>
+                                        <small>Chuyển lên Cấp 1 — Độc lập với shop</small>
+                                    </span>
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+
+                    <!-- ============== Escalation count meta ============== -->
+                    <div class="cmp-meta-row" th:if="${complaint.escalationCount > 0}">
+                        <i class="fas fa-history"></i>
+                        <span>Đã escalate <strong th:text="${complaint.escalationCount}">0</strong> lần</span>
+                    </div>
+
+                    <!-- ============== Description card ============== -->
+                    <article class="cmp-detail-card">
+                        <header class="cmp-detail-card-header">
+                            <h3><i class="fas fa-message"></i> Mô tả của bạn</h3>
+                        </header>
+                        <div class="cmp-detail-card-body">
+                            <p class="cmp-description-text"
+                               th:text="${complaint.description != null and not complaint.description.isBlank() ? complaint.description : 'Không có mô tả.'}">
+                                Description
+                            </p>
+                        </div>
+                    </article>
+
+                    <!-- ============== Evidence ============== -->
+                    <article class="cmp-detail-card"
+                             th:if="${complaint.evidence != null and not complaint.evidence.isEmpty()}">
+                        <header class="cmp-detail-card-header">
+                            <h3>
+                                <i class="fas fa-paperclip"></i>
+                                Bằng chứng
+                                <small th:text="'(' + ${complaint.evidence.size()} + ')'">(0)</small>
+                            </h3>
+                        </header>
+                        <div class="cmp-detail-card-body">
+                            <div class="cmp-evidence-grid">
+                                <th:block th:each="ev : ${complaint.evidence}">
+                                    <a th:href="${ev}" target="_blank" rel="noopener" class="cmp-evidence-tile">
+                                        <img th:if="${#strings.endsWith(ev, '.jpg') or #strings.endsWith(ev, '.jpeg') or #strings.endsWith(ev, '.png') or #strings.endsWith(ev, '.webp') or #strings.endsWith(ev, '.JPG') or #strings.endsWith(ev, '.JPEG') or #strings.endsWith(ev, '.PNG') or #strings.endsWith(ev, '.WEBP')}"
+                                             th:src="${ev}" th:alt="'Bằng chứng'">
+                                        <div th:unless="${#strings.endsWith(ev, '.jpg') or #strings.endsWith(ev, '.jpeg') or #strings.endsWith(ev, '.png') or #strings.endsWith(ev, '.webp') or #strings.endsWith(ev, '.JPG') or #strings.endsWith(ev, '.JPEG') or #strings.endsWith(ev, '.PNG') or #strings.endsWith(ev, '.WEBP')}"
+                                             class="cmp-evidence-tile-icon">
+                                            <i class="fas fa-file-pdf"></i>
+                                        </div>
+                                        <span class="cmp-evidence-tile-label">
+                                            <i class="fas fa-external-link-alt"></i> Xem
+                                        </span>
+                                    </a>
+                                </th:block>
+                            </div>
+                        </div>
+                    </article>
+
+                    <!-- ============== Conversation thread (NEW) ============== -->
+                    <article class="cmp-detail-card cmp-conversation-card"
+                             th:if="${not #lists.isEmpty(conversation)}">
+                        <header class="cmp-detail-card-header">
+                            <h3>
+                                <i class="fas fa-comments"></i>
+                                Lịch sử phản hồi
+                                <small th:text="'(' + ${#lists.size(conversation)} + ' tin nhắn)'">(0)</small>
+                            </h3>
+                        </header>
+                        <div class="cmp-detail-card-body">
+                            <div class="cmp-conversation">
+                                <div class="cmp-msg"
+                                     th:each="msg : ${conversation}"
+                                     th:classappend="${msg.actorRole}">
+                                    <div class="cmp-msg-avatar">
+                                        <i th:classappend="${msg.icon}"></i>
+                                    </div>
+                                    <div class="cmp-msg-body">
+                                        <header class="cmp-msg-header">
+                                            <span class="cmp-msg-actor" th:text="${msg.actorLabel}">Actor</span>
+                                            <span class="cmp-msg-name" th:text="${msg.actorName}">Name</span>
+                                            <small class="cmp-msg-time"
+                                                   th:if="${msg.timestamp != null}"
+                                                   th:text="${#temporals.format(msg.timestamp, 'dd/MM/yyyy HH:mm')}">Time</small>
+                                        </header>
+                                        <div class="cmp-msg-content" th:text="${msg.content}">Content</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </article>
+
+                    <!-- ============== Order info ============== -->
+                    <article class="cmp-detail-card" th:if="${order != null}">
+                        <header class="cmp-detail-card-header">
+                            <h3><i class="fas fa-receipt"></i> Đơn hàng liên quan</h3>
+                        </header>
+                        <div class="cmp-detail-card-body">
+                            <div class="cmp-order-summary">
+                                <div class="cmp-order-summary-row">
+                                    <span>Mã đơn hàng</span>
+                                    <code th:text="${order.id}">OID</code>
+                                </div>
+                                <div class="cmp-order-summary-row">
+                                    <span>Shop</span>
+                                    <strong th:text="${order.shopName != null ? order.shopName : 'Cửa hàng'}">Shop</strong>
+                                </div>
+                                <div class="cmp-order-summary-row">
+                                    <span>Tổng tiền</span>
+                                    <strong th:text="${@money.format(order.totalAmount)}">0đ</strong>
+                                </div>
+                                <div class="cmp-order-summary-row">
+                                    <span>Trạng thái đơn</span>
+                                    <span class="cmp-order-status" th:text="${order.status}">Status</span>
+                                </div>
+                                <div class="cmp-order-summary-row">
+                                    <span>Ngày đặt</span>
+                                    <span th:text="${order.createdAt != null ? #temporals.format(order.createdAt, 'dd/MM/yyyy HH:mm') : '—'}">Date</span>
+                                </div>
+                            </div>
+
+                            <div class="cmp-order-items" th:if="${order.items != null and not order.items.isEmpty()}">
+                                <h4>Sản phẩm trong đơn</h4>
+                                <ul>
+                                    <li th:each="item : ${order.items}"
+                                        th:classappend="${complaint.orderItemIds != null and complaint.orderItemIds.contains(item.productId) ? 'highlighted' : ''}">
+                                        <i class="fas fa-cube"></i>
+                                        <span class="cmp-order-item-name" th:text="${item.productName}">Product</span>
+                                        <small class="cmp-order-item-qty" th:text="'x' + ${item.quantity}">x1</small>
+                                        <strong class="cmp-order-item-price" th:text="${@money.format(item.subtotal)}">0đ</strong>
+                                        <span class="cmp-order-item-tag"
+                                              th:if="${complaint.orderItemIds != null and complaint.orderItemIds.contains(item.productId)}">
+                                            <i class="fas fa-bullseye"></i> Bị khiếu nại
+                                        </span>
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+                    </article>
+
+                    <!-- ============== Decision card (final) ============== -->
+                    <article class="cmp-detail-card"
+                             th:classappend="${complaint.status.name() == 'RESOLVED' ? 'cmp-detail-card-success' : (complaint.status.name() == 'REJECTED' ? 'cmp-detail-card-danger' : '')}"
+                             th:if="${complaint.status.name() == 'RESOLVED' or complaint.status.name() == 'REJECTED'}">
+                        <header class="cmp-detail-card-header">
+                            <h3>
+                                <i th:classappend="${complaint.status.name() == 'RESOLVED' ? 'fas fa-check-circle' : 'fas fa-times-circle'}"></i>
+                                <span th:text="${complaint.status.name() == 'RESOLVED' ? 'Kết quả xử lý' : 'Kết quả từ chối'}">Result</span>
+                            </h3>
+                            <small class="cmp-detail-card-meta"
+                                   th:if="${complaint.resolvedAt != null}"
+                                   th:text="${#temporals.format(complaint.resolvedAt, 'dd/MM/yyyy HH:mm')}">
+                                Date
+                            </small>
+                        </header>
+                        <div class="cmp-detail-card-body">
+                            <p class="cmp-decision-text"
+                               th:if="${complaint.decisionReason != null and not complaint.decisionReason.isBlank()}"
+                               th:text="${complaint.decisionReason}">Decision reason</p>
+                            <p class="cmp-decision-text"
+                               th:if="${complaint.decision != null and not complaint.decision.isBlank() and (complaint.decisionReason == null or complaint.decisionReason.isBlank())}"
+                               th:text="${complaint.decision}">Decision</p>
+                            <div class="cmp-vendor-meta" th:if="${complaint.resolvedByEmail != null}">
+                                <i class="fas fa-user-shield"></i>
+                                <span>Xử lý bởi: </span>
+                                <strong th:text="${complaint.resolvedByEmail}">Email</strong>
+                                <span class="cmp-role-badge" th:text="${complaint.resolvedByRole}">Role</span>
+                            </div>
+                        </div>
+                    </article>
+
+                </div>
+
+                <!-- Side column -->
+                <aside class="cmp-detail-side">
+                    <!-- Assignment info card -->
+                    <div class="cmp-timeline-card"
+                         th:if="${complaint.assignedModeratorEmail != null or complaint.assignedAdminEmail != null}">
+                        <h3><i class="fas fa-user-tag"></i> Phân công xử lý</h3>
+                        <div class="cmp-assign-list">
+                            <div class="cmp-assign-row" th:if="${complaint.assignedModeratorEmail != null}">
+                                <i class="fas fa-user-shield"></i>
+                                <div>
+                                    <span>Moderator</span>
+                                    <strong th:text="${complaint.assignedModeratorEmail}">M</strong>
+                                    <small th:if="${complaint.moderatorAssignedAt != null}"
+                                           th:text="'Từ ' + ${#temporals.format(complaint.moderatorAssignedAt, 'dd/MM/yyyy HH:mm')}"></small>
+                                </div>
+                            </div>
+                            <div class="cmp-assign-row" th:if="${complaint.assignedAdminEmail != null}">
+                                <i class="fas fa-shield-halved"></i>
+                                <div>
+                                    <span>Admin</span>
+                                    <strong th:text="${complaint.assignedAdminEmail}">A</strong>
+                                    <small th:if="${complaint.adminAssignedAt != null}"
+                                           th:text="'Từ ' + ${#temporals.format(complaint.adminAssignedAt, 'dd/MM/yyyy HH:mm')}"></small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Timeline -->
+                    <div class="cmp-timeline-card">
+                        <h3><i class="fas fa-timeline"></i> Lịch sử thay đổi cấp</h3>
+                        <ul class="cmp-timeline">
+                            <li th:each="ev : ${timeline}" th:classappend="${ev.state}">
+                                <div class="cmp-timeline-icon">
+                                    <i th:classappend="${ev.icon}"></i>
+                                </div>
+                                <div class="cmp-timeline-body">
+                                    <strong th:text="${ev.title}">Title</strong>
+                                    <p th:text="${ev.description}">Description</p>
+                                    <small th:if="${ev.timestamp != null}"
+                                           th:text="${#temporals.format(ev.timestamp, 'dd/MM/yyyy HH:mm')}">Date</small>
+                                </div>
+                            </li>
+                        </ul>
+                    </div>
+                </aside>
+
+            </div>
+
+        </div>
+    </section>
+
+    <!-- Toasts -->
+    <div th:if="${showCreatedToast}" class="cmp-toast cmp-toast-success" id="cmp-toast-created">
+        <i class="fas fa-check-circle"></i>
+        <span>Khiếu nại đã được gửi thành công. Shop có 48 giờ để phản hồi.</span>
+    </div>
+    <div th:if="${showEscalatedToast}" class="cmp-toast cmp-toast-info" id="cmp-toast-escalated">
+        <i class="fas fa-level-up-alt"></i>
+        <span>Khiếu nại đã được chuyển lên cấp xử lý tiếp theo.</span>
+    </div>
+    <script th:if="${showCreatedToast or showEscalatedToast}" th:inline="none">
+        (function() {
+            document.querySelectorAll('.cmp-toast').forEach(toast => {
+                setTimeout(() => {
+                    toast.classList.add('fade-out');
+                    setTimeout(() => toast.remove(), 400);
+                }, 5000);
+            });
+        })();
+    </script>
+
+</main>
+
+<th:block th:fragment="page-scripts">
+    <script th:src="@{/js/home.js}" defer></script>
+    <script th:inline="none">
+        function confirmAction(message) {
+            return window.confirm(message);
+        }
+    </script>
+</th:block>
+</body>
+</html>

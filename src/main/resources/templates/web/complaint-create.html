@@ -1,0 +1,518 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/springsecurity6"
+      th:replace="~{layout/web-layout :: layout(title='Tạo khiếu nại - CNJ70 Shop', content=~{::main-content}, scripts=~{::page-scripts}, pageStyles=~{::page-styles})}">
+<head>
+    <title>Tạo khiếu nại - CNJ70 Shop</title>
+    <th:block th:fragment="page-styles">
+        <link rel="stylesheet" th:href="@{/css/complaint.css}">
+    </th:block>
+</head>
+<body>
+<main th:fragment="main-content" class="cmp-page cmp-create-page">
+
+    <!-- Hero -->
+    <section class="cmp-hero">
+        <div class="container">
+            <nav class="cmp-breadcrumb">
+                <a th:href="@{/home}"><i class="fas fa-home"></i> Trang chủ</a>
+                <i class="fas fa-chevron-right"></i>
+                <a th:href="@{/complaints}">Khiếu nại của tôi</a>
+                <i class="fas fa-chevron-right"></i>
+                <span>Tạo mới</span>
+            </nav>
+            <div class="cmp-hero-inner">
+                <div class="cmp-hero-left">
+                    <span class="cmp-hero-tag">
+                        <i class="fas fa-pen-to-square"></i> Gửi khiếu nại
+                    </span>
+                    <h1>Tạo khiếu nại mới</h1>
+                    <p>Mô tả chi tiết vấn đề của bạn và đính kèm bằng chứng (nếu có) để shop xử lý nhanh nhất.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Body -->
+    <section class="cmp-section">
+        <div class="container">
+            <div class="cmp-create-layout">
+
+                <!-- Form -->
+                <div class="cmp-form-col">
+                    <!-- Server-side error (re-render after failed submit) -->
+                    <div th:if="${error}" class="cmp-alert cmp-alert-error">
+                        <i class="fas fa-exclamation-circle"></i>
+                        <span th:text="${error}">Có lỗi xảy ra.</span>
+                    </div>
+
+                    <div th:if="${#lists.isEmpty(orders)}" class="cmp-alert cmp-alert-warning">
+                        <i class="fas fa-info-circle"></i>
+                        <div>
+                            <strong>Bạn chưa có đơn hàng nào để khiếu nại.</strong>
+                            <p style="margin: 4px 0 0 0;">Vui lòng mua sắm trước, hoặc quay lại sau khi đã có đơn hàng.</p>
+                        </div>
+                    </div>
+
+                    <form th:if="${not #lists.isEmpty(orders)}"
+                          th:action="@{/complaints}"
+                          method="post"
+                          enctype="multipart/form-data"
+                          class="cmp-form"
+                          id="complaint-form"
+                          novalidate>
+
+                        <!-- ============== STEP 1: Target Order ============== -->
+                        <section class="cmp-form-section">
+                            <header class="cmp-form-section-header">
+                                <span class="cmp-form-step">1</span>
+                                <h3>Chọn đơn hàng cần khiếu nại</h3>
+                            </header>
+
+                            <div class="cmp-form-field">
+                                <label for="orderId">Đơn hàng <span class="required-mark">*</span></label>
+                                <select id="orderId" name="orderId" required class="cmp-select"
+                                        th:attr="data-prefilled=${formOrderId != null ? formOrderId : (selectedOrder != null ? selectedOrder.id : '')}">
+                                    <option value="">-- Chọn đơn hàng --</option>
+                                    <option th:each="o : ${orders}"
+                                            th:value="${o.id}"
+                                            th:attr="data-shop=${o.shopName}, data-shop-id=${o.shopId}, data-status=${o.status}, data-total=${o.totalAmount}, data-items=${#strings.listJoin(o.items.![productId], '|')}"
+                                            th:text="'#' + ${o.id} + ' — ' + (${o.shopName != null ? o.shopName : 'Cửa hàng'}) + ' — ' + ${@money.format(o.totalAmount)} + ' (' + ${o.status} + ')'">
+                                        Order option
+                                    </option>
+                                </select>
+                                <small class="cmp-field-hint">Chỉ những đơn hàng chưa bị hủy mới có thể khiếu nại.</small>
+                            </div>
+
+                            <!-- Selected order preview -->
+                            <div id="order-preview" class="cmp-order-preview" style="display:none">
+                                <div class="cmp-order-preview-row">
+                                    <div class="cmp-order-preview-shop">
+                                        <i class="fas fa-store"></i>
+                                        <div>
+                                            <span class="cmp-order-preview-label">Cửa hàng</span>
+                                            <strong id="op-shop-name">—</strong>
+                                        </div>
+                                    </div>
+                                    <div class="cmp-order-preview-total">
+                                        <span class="cmp-order-preview-label">Tổng tiền</span>
+                                        <strong id="op-total">—</strong>
+                                    </div>
+                                </div>
+                            </div>
+                        </section>
+
+                        <!-- ============== STEP 2: Target Products (optional) ============== -->
+                        <section class="cmp-form-section">
+                            <header class="cmp-form-section-header">
+                                <span class="cmp-form-step">2</span>
+                                <h3>Sản phẩm bị lỗi <small>(tùy chọn)</small></h3>
+                            </header>
+
+                            <div class="cmp-form-field">
+                                <label>Sản phẩm trong đơn hàng</label>
+                                <div id="products-picker" class="cmp-products-picker">
+                                    <p class="cmp-products-empty">
+                                        <i class="fas fa-info-circle"></i>
+                                        Vui lòng chọn đơn hàng ở bước 1 trước.
+                                    </p>
+                                </div>
+                                <small class="cmp-field-hint">
+                                    <i class="fas fa-lightbulb"></i>
+                                    Không chọn sản phẩm nào nếu khiếu nại áp dụng cho toàn bộ đơn hàng.
+                                </small>
+                            </div>
+                        </section>
+
+                        <!-- ============== STEP 3: Reason ============== -->
+                        <section class="cmp-form-section">
+                            <header class="cmp-form-section-header">
+                                <span class="cmp-form-step">3</span>
+                                <h3>Lý do khiếu nại</h3>
+                            </header>
+
+                            <div class="cmp-form-field">
+                                <label for="reason">Lý do <span class="required-mark">*</span></label>
+                                <select id="reason" name="reason" required class="cmp-select"
+                                        th:attr="data-prefilled=${formReason != null ? formReason : ''}">
+                                    <option value="">-- Chọn lý do --</option>
+                                    <option th:each="r : ${reasons}"
+                                            th:value="${r.name()}"
+                                            th:text="${reasonLabels.get(r)} ?: ${r.name()}">
+                                        Reason
+                                    </option>
+                                </select>
+                            </div>
+                        </section>
+
+                        <!-- ============== STEP 4: Description ============== -->
+                        <section class="cmp-form-section">
+                            <header class="cmp-form-section-header">
+                                <span class="cmp-form-step">4</span>
+                                <h3>Mô tả chi tiết</h3>
+                            </header>
+
+                            <div class="cmp-form-field">
+                                <label for="description">
+                                    Mô tả vấn đề của bạn
+                                    <span id="description-required-mark" class="required-mark" style="display:none">*</span>
+                                </label>
+                                <textarea id="description"
+                                          name="description"
+                                          rows="6"
+                                          maxlength="4000"
+                                          class="cmp-textarea"
+                                          placeholder="Mô tả chi tiết vấn đề bạn gặp phải: thời gian, tình trạng sản phẩm, điều bạn mong muốn shop xử lý..."
+                                          th:text="${formDescription != null ? formDescription : ''}"></textarea>
+                                <div class="cmp-field-counter">
+                                    <span id="description-counter">0</span> / 4000 ký tự
+                                </div>
+                                <small id="description-hint" class="cmp-field-hint">
+                                    <i class="fas fa-lightbulb"></i>
+                                    Bắt buộc khi chọn lý do "Khác".
+                                </small>
+                            </div>
+                        </section>
+
+                        <!-- ============== STEP 5: Evidence ============== -->
+                        <section class="cmp-form-section">
+                            <header class="cmp-form-section-header">
+                                <span class="cmp-form-step">5</span>
+                                <h3>Bằng chứng <small>(tùy chọn)</small></h3>
+                            </header>
+
+                            <div class="cmp-form-field">
+                                <label for="evidence">Hình ảnh / PDF</label>
+                                <div class="cmp-file-drop" id="evidence-drop">
+                                    <input type="file" id="evidence" name="evidence" multiple
+                                           accept=".jpg,.jpeg,.png,.pdf,image/jpeg,image/png,application/pdf"
+                                           class="cmp-file-input">
+                                    <div class="cmp-file-drop-content">
+                                        <i class="fas fa-cloud-arrow-up"></i>
+                                        <strong>Kéo thả file hoặc bấm để chọn</strong>
+                                        <small>Hỗ trợ: JPG, PNG, PDF. Tối đa 6 file, mỗi file ≤ 5MB.</small>
+                                    </div>
+                                </div>
+                                <ul id="evidence-preview" class="cmp-evidence-preview"></ul>
+                            </div>
+                        </section>
+
+                        <!-- Submit -->
+                        <div class="cmp-form-actions">
+                            <a th:href="@{/complaints}" class="cmp-btn-secondary" id="cancel-btn">
+                                <i class="fas fa-times"></i> Hủy
+                            </a>
+                            <button type="submit" class="cmp-btn-primary" id="submit-btn">
+                                <i class="fas fa-paper-plane"></i>
+                                <span>Gửi khiếu nại</span>
+                            </button>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- Side: Tips -->
+                <aside class="cmp-side-col">
+                    <div class="cmp-tips-card">
+                        <h3><i class="fas fa-circle-info"></i> Lưu ý khi khiếu nại</h3>
+                        <ul>
+                            <li>
+                                <i class="fas fa-check"></i>
+                                <span>Chỉ chọn sản phẩm thực sự bị lỗi — để shop xử lý nhanh hơn.</span>
+                            </li>
+                            <li>
+                                <i class="fas fa-check"></i>
+                                <span>Mô tả rõ ràng vấn đề (thời gian, tình trạng, mong muốn xử lý).</span>
+                            </li>
+                            <li>
+                                <i class="fas fa-check"></i>
+                                <span>Đính kèm ảnh chụp sản phẩm / đơn hàng làm bằng chứng.</span>
+                            </li>
+                            <li>
+                                <i class="fas fa-check"></i>
+                                <span>Shop có <strong>48 giờ</strong> để phản hồi. Sau đó khiếu nại sẽ tự động chuyển lên Moderator.</span>
+                            </li>
+                        </ul>
+                    </div>
+
+                    <div class="cmp-tips-card cmp-tips-card-soft">
+                        <h3><i class="fas fa-shield-halved"></i> Quy trình xử lý</h3>
+                        <ol>
+                            <li><strong>Cấp 0</strong> — Bạn ↔ Shop thương lượng.</li>
+                            <li><strong>Cấp 1</strong> — Moderator xem xét nếu không thống nhất.</li>
+                            <li><strong>Cấp 2</strong> — Admin phán quyết cuối cùng.</li>
+                        </ol>
+                    </div>
+                </aside>
+
+            </div>
+        </div>
+    </section>
+
+</main>
+
+<th:block th:fragment="page-scripts">
+    <script th:src="@{/js/home.js}" defer></script>
+    <script th:inline="none">
+        // ============================================================
+        // Customer Complaint Create — Dynamic product picker + UX polish
+        // ============================================================
+
+        (function() {
+            const orderSelect = document.getElementById('orderId');
+            const reasonSelect = document.getElementById('reason');
+            const descriptionField = document.getElementById('description');
+            const descriptionCounter = document.getElementById('description-counter');
+            const descriptionRequiredMark = document.getElementById('description-required-mark');
+            const descriptionHint = document.getElementById('description-hint');
+            const productsPicker = document.getElementById('products-picker');
+            const orderPreview = document.getElementById('order-preview');
+            const opShopName = document.getElementById('op-shop-name');
+            const opTotal = document.getElementById('op-total');
+            const evidenceInput = document.getElementById('evidence');
+            const evidenceDrop = document.getElementById('evidence-drop');
+            const evidencePreview = document.getElementById('evidence-preview');
+            const form = document.getElementById('complaint-form');
+            const submitBtn = document.getElementById('submit-btn');
+
+            // ===== Re-apply prefilled values (after error re-render) =====
+            function applyPrefilled() {
+                const prefilledOrderId = orderSelect.getAttribute('data-prefilled');
+                if (prefilledOrderId) {
+                    orderSelect.value = prefilledOrderId;
+                    handleOrderChange();
+                }
+                const prefilledReason = reasonSelect.getAttribute('data-prefilled');
+                if (prefilledReason) {
+                    reasonSelect.value = prefilledReason;
+                    handleReasonChange();
+                }
+                const existingProductIds = /*[[${formProductIds}]]*/ null;
+                if (existingProductIds && Array.isArray(existingProductIds) && existingProductIds.length) {
+                    setTimeout(() => {
+                        existingProductIds.forEach(pid => {
+                            const cb = document.querySelector('input.cmp-product-checkbox[value="' + cssEscape(pid) + '"]');
+                            if (cb) cb.checked = true;
+                        });
+                        updateSelectedCount();
+                    }, 50);
+                }
+            }
+
+            // ===== Description counter =====
+            function updateCounter() {
+                descriptionCounter.textContent = (descriptionField.value || '').length;
+            }
+
+            // ===== Reason change → toggle description required =====
+            function handleReasonChange() {
+                if (reasonSelect.value === 'OTHER') {
+                    descriptionRequiredMark.style.display = 'inline';
+                    descriptionField.setAttribute('required', 'required');
+                    descriptionHint.innerHTML = '<i class="fas fa-exclamation-circle"></i> Bắt buộc khi chọn lý do "Khác".';
+                    descriptionHint.classList.add('cmp-field-hint-warn');
+                } else {
+                    descriptionRequiredMark.style.display = 'none';
+                    descriptionField.removeAttribute('required');
+                    descriptionHint.innerHTML = '<i class="fas fa-lightbulb"></i> Bắt buộc khi chọn lý do "Khác".';
+                    descriptionHint.classList.remove('cmp-field-hint-warn');
+                }
+            }
+
+            // ===== Order change → fetch items from selected option's data-items =====
+            function handleOrderChange() {
+                const opt = orderSelect.options[orderSelect.selectedIndex];
+                if (!opt || !opt.value) {
+                    orderPreview.style.display = 'none';
+                    productsPicker.innerHTML = '<p class="cmp-products-empty"><i class="fas fa-info-circle"></i> Vui lòng chọn đơn hàng ở bước 1 trước.</p>';
+                    return;
+                }
+                const shopName = opt.getAttribute('data-shop') || '—';
+                const total = opt.getAttribute('data-total') || '0';
+                const itemsStr = opt.getAttribute('data-items') || '';
+
+                opShopName.textContent = shopName;
+                opTotal.textContent = formatVnd(total);
+                orderPreview.style.display = 'block';
+
+                const productIds = itemsStr.split('|').filter(Boolean);
+                if (!productIds.length) {
+                    productsPicker.innerHTML = '<p class="cmp-products-empty"><i class="fas fa-info-circle"></i> Đơn hàng không có sản phẩm nào.</p>';
+                    return;
+                }
+
+                // Render product checkboxes (không biết tên ở đây — hiển thị productId).
+                // Nếu cần tên sản phẩm, fetch qua API riêng (out-of-scope cho prototype).
+                let html = '<div class="cmp-products-list">';
+                productIds.forEach((pid, idx) => {
+                    html += '<label class="cmp-product-item">';
+                    html += '<input type="checkbox" name="productIds" value="' + escapeAttr(pid) + '" class="cmp-product-checkbox" data-pid="' + escapeAttr(pid) + '">';
+                    html += '<span class="cmp-product-item-body">';
+                    html += '<i class="fas fa-cube"></i>';
+                    html += '<span class="cmp-product-item-name">Sản phẩm #' + (idx + 1) + '</span>';
+                    html += '<small>' + escapeHtml(pid) + '</small>';
+                    html += '</span>';
+                    html += '<span class="cmp-product-item-check"><i class="fas fa-check"></i></span>';
+                    html += '</label>';
+                });
+                html += '</div>';
+                html += '<div class="cmp-products-summary">';
+                html += '<span id="cmp-products-count">0</span> sản phẩm được chọn';
+                html += '<button type="button" class="cmp-products-clear" id="cmp-clear-products"><i class="fas fa-times"></i> Bỏ chọn</button>';
+                html += '</div>';
+                productsPicker.innerHTML = html;
+
+                // Wire up checkboxes
+                document.querySelectorAll('.cmp-product-checkbox').forEach(cb => {
+                    cb.addEventListener('change', updateSelectedCount);
+                });
+                const clearBtn = document.getElementById('cmp-clear-products');
+                if (clearBtn) {
+                    clearBtn.addEventListener('click', () => {
+                        document.querySelectorAll('.cmp-product-checkbox').forEach(cb => cb.checked = false);
+                        updateSelectedCount();
+                    });
+                }
+            }
+
+            function updateSelectedCount() {
+                const count = document.querySelectorAll('.cmp-product-checkbox:checked').length;
+                const el = document.getElementById('cmp-products-count');
+                if (el) el.textContent = count;
+            }
+
+            // ===== Evidence file picker =====
+            function handleFiles(files) {
+                if (!files || !files.length) return;
+                // Reset preview
+                evidencePreview.innerHTML = '';
+                // Filter empty
+                const arr = Array.from(files).filter(f => f && f.size > 0);
+                if (arr.length > 6) {
+                    alert('Chỉ được phép upload tối đa 6 file. Bạn đã chọn ' + arr.length + ' file.');
+                }
+                arr.slice(0, 6).forEach((file, idx) => {
+                    const li = document.createElement('li');
+                    li.className = 'cmp-evidence-item';
+                    const isImage = file.type && file.type.startsWith('image/');
+                    if (isImage) {
+                        const reader = new FileReader();
+                        reader.onload = function(ev) {
+                            li.innerHTML = '<img src="' + ev.target.result + '" alt="">' +
+                                '<div class="cmp-evidence-meta">' +
+                                '<strong>' + escapeHtml(file.name) + '</strong>' +
+                                '<small>' + formatBytes(file.size) + '</small>' +
+                                '</div>';
+                        };
+                        reader.readAsDataURL(file);
+                    } else {
+                        li.innerHTML = '<div class="cmp-evidence-icon"><i class="fas fa-file-pdf"></i></div>' +
+                            '<div class="cmp-evidence-meta">' +
+                            '<strong>' + escapeHtml(file.name) + '</strong>' +
+                            '<small>' + formatBytes(file.size) + '</small>' +
+                            '</div>';
+                    }
+                    evidencePreview.appendChild(li);
+                });
+            }
+
+            if (evidenceInput) {
+                evidenceInput.addEventListener('change', function() {
+                    handleFiles(this.files);
+                });
+            }
+            if (evidenceDrop) {
+                ['dragover', 'dragenter'].forEach(ev => {
+                    evidenceDrop.addEventListener(ev, function(e) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        evidenceDrop.classList.add('is-drag');
+                    });
+                });
+                ['dragleave', 'drop'].forEach(ev => {
+                    evidenceDrop.addEventListener(ev, function(e) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        evidenceDrop.classList.remove('is-drag');
+                    });
+                });
+                evidenceDrop.addEventListener('drop', function(e) {
+                    const dt = e.dataTransfer;
+                    if (dt && dt.files && dt.files.length) {
+                        // Không thể set file list programmatically trên input → chỉ preview
+                        handleFiles(dt.files);
+                    }
+                });
+                evidenceDrop.addEventListener('click', function() {
+                    if (evidenceInput) evidenceInput.click();
+                });
+            }
+
+            // ===== Submit handler =====
+            if (form) {
+                form.addEventListener('submit', function(e) {
+                    const orderId = orderSelect.value;
+                    const reason = reasonSelect.value;
+
+                    if (!orderId) {
+                        e.preventDefault();
+                        alert('Vui lòng chọn đơn hàng cần khiếu nại.');
+                        orderSelect.focus();
+                        return;
+                    }
+                    if (!reason) {
+                        e.preventDefault();
+                        alert('Vui lòng chọn lý do khiếu nại.');
+                        reasonSelect.focus();
+                        return;
+                    }
+                    if (reason === 'OTHER' && !descriptionField.value.trim()) {
+                        e.preventDefault();
+                        alert('Vui lòng mô tả chi tiết vấn đề khi chọn lý do "Khác".');
+                        descriptionField.focus();
+                        return;
+                    }
+
+                    if (submitBtn) {
+                        submitBtn.disabled = true;
+                        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Đang gửi...';
+                    }
+                });
+            }
+
+            // ===== Helpers =====
+            function escapeHtml(str) {
+                if (str == null) return '';
+                return String(str)
+                    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+                    .replace(/"/g, '&quot;').replace(/'/g, '&#039;');
+            }
+            function escapeAttr(str) {
+                return escapeHtml(str);
+            }
+            function cssEscape(s) {
+                if (window.CSS && CSS.escape) return CSS.escape(s);
+                return String(s).replace(/["\\]/g, '\\$&');
+            }
+            function formatVnd(amount) {
+                if (amount == null || isNaN(amount)) return '0₫';
+                return new Intl.NumberFormat('vi-VN').format(Number(amount)) + '₫';
+            }
+            function formatBytes(bytes) {
+                if (!bytes) return '0 B';
+                if (bytes < 1024) return bytes + ' B';
+                if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+                return (bytes / (1024 * 1024)).toFixed(2) + ' MB';
+            }
+
+            // ===== Wire up =====
+            orderSelect.addEventListener('change', handleOrderChange);
+            reasonSelect.addEventListener('change', handleReasonChange);
+            descriptionField.addEventListener('input', updateCounter);
+
+            updateCounter();
+            applyPrefilled();
+        })();
+    </script>
+</th:block>
+</body>
+</html>

@@ -42,6 +42,13 @@
                             <span>loại sản phẩm</span>
                         </div>
                     </div>
+                    <div class="cart-hero-stat" th:if="${shopCount > 1}">
+                        <i class="fas fa-store"></i>
+                        <div>
+                            <strong th:text="${shopCount}">0</strong>
+                            <span>cửa hàng</span>
+                        </div>
+                    </div>
                     <div class="cart-hero-stat">
                         <i class="fas fa-cubes"></i>
                         <div>
@@ -57,41 +64,130 @@
     <!-- Cart body -->
     <section class="cart-section">
         <div class="container">
+
+            <!-- Banner cảnh báo khi có sản phẩm không hợp lệ -->
+            <div th:if="${hasInvalidItems}" class="cart-alert-block" id="cart-invalid-alert"
+                 th:attr="data-invalid-count=${invalidItemCount}">
+                <div class="cart-alert-icon">
+                    <i class="fas fa-exclamation-triangle"></i>
+                </div>
+                <div class="cart-alert-body">
+                    <strong>
+                        <th:block th:text="${invalidItemCount}">0</th:block> sản phẩm trong giỏ hàng không còn hợp lệ
+                    </strong>
+                    <p>Sản phẩm có thể đã ngừng bán, cửa hàng bị tạm ngưng hoặc đã hết hàng. Vui lòng xóa các sản phẩm này trước khi tiến hành thanh toán.</p>
+                </div>
+                <form th:action="@{/cart/remove-invalid}" method="post" class="cart-alert-action"
+                      onsubmit="return confirm('Bạn có chắc muốn xóa tất cả sản phẩm không hợp lệ?');">
+                    <button type="submit" class="btn-clean-invalid">
+                        <i class="fas fa-broom"></i> Xóa sản phẩm không hợp lệ
+                    </button>
+                </form>
+            </div>
+
+            <!-- Thông báo khi user bị chặn checkout từ OrderController -->
+            <div th:if="${session.checkoutBlockedReason != null}" class="cart-alert-block cart-alert-block-info" id="cart-checkout-blocked">
+                <div class="cart-alert-icon">
+                    <i class="fas fa-info-circle"></i>
+                </div>
+                <div class="cart-alert-body">
+                    <strong>Không thể tiến hành thanh toán</strong>
+                    <p th:text="${session.checkoutBlockedReason}">Lý do</p>
+                </div>
+                <th:block th:with="dummy=${session.removeAttribute('checkoutBlockedReason')}"></th:block>
+            </div>
+
             <div th:if="${cart != null and not #lists.isEmpty(cart.items)}" class="cart-layout">
                 <!-- Items column -->
                 <div class="cart-items-col">
                     <th:block th:each="shopEntry : ${itemsByShop}">
-                        <article class="cart-shop-group">
+                        <!-- Lấy thông tin tổng hợp cho từng shop -->
+                        <th:block th:with="
+                            shopKey=${shopEntry.key},
+                            shopItems=${shopEntry.value},
+                            shopSub=${shopSubtotals != null and shopSubtotals.containsKey(shopKey)
+                                ? shopSubtotals.get(shopKey) : T(java.math.BigDecimal).ZERO},
+                            shopQty=${shopQuantities != null and shopQuantities.containsKey(shopKey)
+                                ? shopQuantities.get(shopKey) : 0},
+                            shopName=${shopItems[0].shopName != null ? shopItems[0].shopName : 'Cửa hàng'},
+                            shopId=${shopItems[0].shopId},
+                            hasRealShopId=${shopId != null and shopId != 'default'}">
+                        <article class="cart-shop-group"
+                                 th:attr="data-shop-id=${shopKey}">
                             <header class="cart-shop-header">
-                                <i class="fas fa-store"></i>
-                                <span class="cart-shop-name"
-                                      th:text="${shopEntry.value[0].shopName != null ? shopEntry.value[0].shopName : 'Cửa hàng'}">Cửa hàng</span>
-                                <span class="cart-shop-count">
-                                    <th:block th:text="${#lists.size(shopEntry.value)}">0</th:block> sản phẩm
+                                <span class="cart-shop-icon">
+                                    <i class="fas fa-store"></i>
                                 </span>
+                                <div class="cart-shop-title">
+                                    <a th:if="${hasRealShopId}"
+                                       th:href="@{/shop/{id}(id=${shopId})}"
+                                       class="cart-shop-name"
+                                       th:text="${shopName}">Tên shop</a>
+                                    <span th:unless="${hasRealShopId}"
+                                          class="cart-shop-name"
+                                          th:text="${shopName}">Tên shop</span>
+                                    <small class="cart-shop-tagline">
+                                        <i class="fas fa-shopping-bag"></i>
+                                        <th:block th:text="${#lists.size(shopItems)}">0</th:block> sản phẩm
+                                        ·
+                                        <th:block th:text="${shopQty}">0</th:block> sản phẩm (tổng SL)
+                                    </small>
+                                </div>
+                                <div class="cart-shop-meta">
+                                    <span class="cart-shop-subtotal">
+                                        <span class="cart-shop-subtotal-label">Tạm tính shop</span>
+                                        <span class="cart-shop-subtotal-value" th:text="${@money.format(shopSub)}">0 ₫</span>
+                                    </span>
+                                    <form th:action="@{/cart/remove-by-shop}" method="post"
+                                          class="cart-shop-remove-form"
+                                          onsubmit="return confirm('Bạn có chắc muốn xóa tất cả sản phẩm của shop này?');">
+                                        <input type="hidden" name="shopId" th:value="${shopKey}">
+                                        <button type="submit" class="btn-shop-clear" aria-label="Xóa tất cả sản phẩm của shop này">
+                                            <i class="fas fa-times"></i> Xóa shop
+                                        </button>
+                                    </form>
+                                </div>
                             </header>
                             <div class="cart-item-list">
                                 <th:block th:each="item : ${shopEntry.value}">
-                                    <div class="cart-item-card" th:data-product-id="${item.productId}">
-                                        <a th:href="@{/products/{id}(id=${item.productId})}" class="cart-item-thumb">
+                                    <!-- Lấy validation result (mặc định VALID nếu không có key) -->
+                                    <th:block th:with="
+                                        invalidInfo=${invalidItems != null and invalidItems.containsKey(item.productId)
+                                            ? invalidItems.get(item.productId)
+                                            : T(com.ecommerce.cnj70.dto.cart.CartItemValidation).VALID},
+                                        isInvalid=${invalidInfo != null and !invalidInfo.valid}">
+                                    <div class="cart-item-card"
+                                         th:data-product-id="${item.productId}"
+                                         th:classappend="${isInvalid} ? ' cart-item-card-invalid'">
+                                        <a th:href="@{/products/{id}(id=${item.productId})}" class="cart-item-thumb"
+                                           th:classappend="${isInvalid} ? ' cart-item-thumb-invalid'">
                                             <img th:src="${@image.productImage(item.imageUrl)}"
                                                  th:alt="${item.productName}"
                                                  onerror="this.src='https://placehold.co/120x120/f0f7f6/94a3b8?text=No+Img'; this.onerror=null;">
                                         </a>
                                         <div class="cart-item-info">
-                                            <a th:href="@{/products/{id}(id=${item.productId})}" class="cart-item-name" th:text="${item.productName}">Tên sản phẩm</a>
+                                            <a th:href="@{/products/{id}(id=${item.productId})}" class="cart-item-name"
+                                               th:classappend="${isInvalid} ? ' cart-item-name-invalid'"
+                                               th:text="${item.productName}">Tên sản phẩm</a>
                                             <div class="cart-item-meta">
                                                 <span class="cart-item-shop" th:if="${item.shopName != null}">
                                                     <i class="fas fa-store"></i>
                                                     <th:block th:text="${item.shopName}">Shop</th:block>
                                                 </span>
-                                                <span class="cart-item-stock" th:if="${item.stock != null and item.stock <= 5}">
+                                                <span class="cart-item-stock" th:if="${item.stock != null and item.stock <= 5 and !isInvalid}">
                                                     <i class="fas fa-fire"></i> Chỉ còn <th:block th:text="${item.stock}">0</th:block>
                                                 </span>
                                             </div>
                                             <div class="cart-item-price" th:text="${@money.format(item.price)}">0đ</div>
+
+                                            <!-- Banner lý do không hợp lệ -->
+                                            <div th:if="${isInvalid}" class="cart-item-invalid-banner"
+                                                 th:attr="data-reason-code=${invalidInfo.reasonCode}">
+                                                <i class="fas fa-exclamation-circle"></i>
+                                                <span th:text="${invalidInfo.reasonMessage}">Sản phẩm không hợp lệ</span>
+                                            </div>
                                         </div>
-                                        <div class="cart-item-qty">
+                                        <div class="cart-item-qty" th:if="${!isInvalid}">
                                             <span class="cart-item-qty-label">Số lượng</span>
                                             <div class="qty-stepper"
                                                  th:data-product-id="${item.productId}"
@@ -109,7 +205,15 @@
                                                 </form>
                                             </div>
                                         </div>
-                                        <div class="cart-item-subtotal">
+                                        <!-- Với item invalid: hiển thị số lượng cố định, không cho chỉnh -->
+                                        <div class="cart-item-qty cart-item-qty-locked" th:if="${isInvalid}">
+                                            <span class="cart-item-qty-label">Số lượng</span>
+                                            <span class="cart-item-qty-locked-value">
+                                                <i class="fas fa-lock"></i> <th:block th:text="${item.quantity}">0</th:block>
+                                            </span>
+                                        </div>
+                                        <div class="cart-item-subtotal"
+                                             th:classappend="${isInvalid} ? ' cart-item-subtotal-invalid'">
                                             <span class="cart-item-subtotal-label">Thành tiền</span>
                                             <span class="cart-item-subtotal-value" th:text="${@money.format(item.subtotal)}">0đ</span>
                                         </div>
@@ -121,9 +225,11 @@
                                             </button>
                                         </form>
                                     </div>
+                                    </th:block>
                                 </th:block>
                             </div>
                         </article>
+                        </th:block>
                     </th:block>
 
                     <div class="cart-continue">
@@ -178,9 +284,23 @@
                             <span id="final-total-amount" class="summary-total-amount" th:text="${@money.format(finalTotal != null ? finalTotal : cartTotal)}">0đ</span>
                         </div>
                     </div>
-                    <a th:href="@{/checkout}" class="btn-checkout">
+                    <!-- Checkout button: disabled khi có invalid items -->
+                    <a th:if="${!hasInvalidItems}" th:href="@{/checkout}" class="btn-checkout" id="btn-checkout">
                         <i class="fas fa-lock"></i> Tiến hành thanh toán
                     </a>
+                    <button th:if="${hasInvalidItems}"
+                            type="button"
+                            class="btn-checkout btn-checkout-disabled"
+                            id="btn-checkout"
+                            disabled
+                            aria-disabled="true"
+                            th:attr="title='Có ' + ${invalidItemCount} + ' sản phẩm không hợp lệ. Vui lòng xóa trước khi thanh toán.'">
+                        <i class="fas fa-ban"></i> Không thể thanh toán — <th:block th:text="${invalidItemCount}">0</th:block> sản phẩm không hợp lệ
+                    </button>
+                    <p th:if="${hasInvalidItems}" class="cart-checkout-blocked-hint">
+                        <i class="fas fa-info-circle"></i>
+                        Vui lòng xóa các sản phẩm không hợp lệ ở trên để tiếp tục thanh toán.
+                    </p>
                     <ul class="trust-badges">
                         <li><i class="fas fa-shield-alt"></i> Thanh toán an toàn</li>
                         <li><i class="fas fa-undo"></i> Đổi trả trong 7 ngày</li>

@@ -1853,6 +1853,38 @@
     background: #fecaca;
 }
 
+/* Report button on review (link styled like button) */
+.pdp-review-report-btn {
+    padding: 6px 12px;
+    border: none;
+    border-radius: 6px;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    transition: all 0.2s;
+    background: #fff7ed;
+    color: #c2410c;
+    text-decoration: none;
+}
+
+.pdp-review-report-btn:hover {
+    background: #fed7aa;
+    color: #9a3412;
+}
+
+/* Make share-btn anchor look like span */
+a.pdp-share-btn {
+    cursor: pointer;
+    text-decoration: none;
+}
+
+a.pdp-share-btn:hover {
+    color: var(--teal);
+}
+
 /* Edit Modal Styles */
 .pdp-review-edit-modal {
     position: fixed;

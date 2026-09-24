@@ -1,0 +1,453 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/springsecurity6"
+      th:replace="~{layout/web-layout :: layout(title='Chi tiết đơn hàng - CNJ70 Shop', content=~{::main-content}, scripts=~{::page-scripts}, pageStyles=~{::page-styles})}">
+<head>
+    <title>Chi tiết đơn hàng - CNJ70 Shop</title>
+    <th:block th:fragment="page-styles">
+        <link rel="stylesheet" th:href="@{/css/order-history.css}">
+        <link rel="stylesheet" th:href="@{/css/order-detail.css}">
+    </th:block>
+</head>
+<body>
+<main th:fragment="main-content" class="oh-page od-page">
+
+    <!-- Hero -->
+    <section class="od-hero">
+        <div class="container">
+            <nav class="od-breadcrumb">
+                <a th:href="@{/home}"><i class="fas fa-home"></i> Trang chủ</a>
+                <i class="fas fa-chevron-right"></i>
+                <a th:href="@{/orders}">Đơn hàng của tôi</a>
+                <i class="fas fa-chevron-right"></i>
+                <span th:text="'#' + ${order.orderId}">#ID</span>
+            </nav>
+            <div class="od-hero-inner">
+                <div class="od-hero-left">
+                    <span class="od-hero-tag">
+                        <i class="fas fa-receipt"></i> Chi tiết đơn hàng
+                    </span>
+                    <h1>
+                        Đơn hàng
+                        <span class="teal-word" th:text="'#' + ${order.orderId}">#ID</span>
+                    </h1>
+                    <p class="od-hero-meta">
+                        <i class="far fa-calendar-alt"></i>
+                        <span th:text="${order.orderDate != null ? #temporals.format(order.orderDate, 'dd/MM/yyyy HH:mm') : ''}">Date</span>
+                    </p>
+                </div>
+                <div class="od-hero-right">
+                    <a th:href="@{/orders}" class="od-back-btn">
+                        <i class="fas fa-arrow-left"></i> Quay lại
+                    </a>
+                </div>
+            </div>
+
+            <!-- ==================================================
+                 PAYMENT STATUS BADGE — HERO
+                 Hiển thị nổi bật ngay tại hero để user thấy ngay
+                 trạng thái thanh toán (PENDING/PAID/FAILED/REFUNDED)
+                 mà không cần scroll xuống.
+                 ================================================== -->
+            <div class="od-hero-payment"
+                 th:with="ps=${order.paymentStatus != null ? order.paymentStatus : 'PENDING'}"
+                 th:attr="data-status=${ps}">
+                <i class="fas"
+                   th:classappend="${ps == 'PENDING' ? 'fa-clock' :
+                                     ps == 'PAID' ? 'fa-check-circle' :
+                                     ps == 'FAILED' ? 'fa-times-circle' :
+                                     ps == 'REFUNDED' ? 'fa-undo' :
+                                     'fa-clock'}"></i>
+                <span>
+                    Thanh toán:
+                    <strong th:text="${ps == 'PENDING' ? 'Chờ thanh toán' :
+                                       ps == 'PAID' ? 'Đã thanh toán' :
+                                       ps == 'FAILED' ? 'Thanh toán thất bại' :
+                                       ps == 'REFUNDED' ? 'Đã hoàn tiền' :
+                                       ps}">Status</strong>
+                </span>
+            </div>
+        </div>
+    </section>
+
+    <div class="container od-container">
+
+        <!-- ==================================================
+             STATUS SECTION — Master vs SubOrders (rõ ràng)
+             ================================================== -->
+        <section class="od-status-section">
+
+            <div class="od-section-header">
+                <h2><i class="fas fa-info-circle"></i> Trạng thái đơn hàng</h2>
+                <p class="od-section-sub">Master Order (đơn hàng tổng) và SubOrder (giao hàng theo shop) được hiển thị riêng — không tự suy diễn lẫn nhau.</p>
+            </div>
+
+            <!-- Master Order status card -->
+            <div class="od-status-grid">
+                <div class="od-master-card" th:attr="data-status=${order.status.name()}">
+                    <div class="od-card-label">
+                        <i class="fas fa-layer-group"></i>
+                        <span>Master Order — Trạng thái đơn hàng tổng</span>
+                    </div>
+                    <div class="od-card-status">
+                        <div class="od-status-icon">
+                            <i class="fas"
+                               th:classappend="${
+                                   order.status.name() == 'PENDING' ? 'fa-clock' :
+                                   order.status.name() == 'PREPARING' ? 'fa-box' :
+                                   order.status.name() == 'SHIPPING' ? 'fa-truck' :
+                                   order.status.name() == 'DELIVERED' ? 'fa-check-circle' :
+                                   'fa-times-circle'
+                               }"></i>
+                        </div>
+                        <div class="od-status-info">
+                            <span class="od-status-name"
+                                  th:text="${
+                                      order.status.name() == 'PENDING' ? 'Chờ xử lý' :
+                                      order.status.name() == 'PREPARING' ? 'Đang chuẩn bị' :
+                                      order.status.name() == 'SHIPPING' ? 'Đang giao hàng' :
+                                      order.status.name() == 'DELIVERED' ? 'Đã giao hàng' :
+                                      'Đã hủy'
+                                  }">Status</span>
+                            <small class="od-status-code" th:text="${order.status.name()}">PENDING</small>
+                        </div>
+                    </div>
+                    <div class="od-card-note">
+                        <i class="fas fa-info-circle"></i>
+                        <span>Trạng thái này do hệ thống quản lý theo workflow đơn hàng (OrderStatus).</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SubOrder shipping status cards -->
+            <div class="od-suborders-grid">
+                <div class="od-suborders-header">
+                    <h3><i class="fas fa-store"></i> SubOrder — Trạng thái vận chuyển theo từng shop</h3>
+                    <small class="od-suborders-count" th:if="${not #lists.isEmpty(order.subOrders)}">
+                        <span th:text="${order.subOrders.size()}">0</span> shop
+                    </small>
+                </div>
+
+                <div th:if="${#lists.isEmpty(order.subOrders)}" class="od-empty">
+                    Không có SubOrder nào trong đơn hàng này.
+                </div>
+
+                <div th:if="${not #lists.isEmpty(order.subOrders)}" class="od-suborders-list">
+                    <div th:each="sub, iter : ${order.subOrders}"
+                         class="od-suborder-card"
+                         th:attr="data-status=${sub.shippingStatus.name()}">
+
+                        <div class="od-suborder-card-header">
+                            <div class="od-suborder-shop">
+                                <i class="fas fa-store"></i>
+                                <strong th:text="${sub.shopName}">Shop Name</strong>
+                                <span class="od-suborder-index" th:text="'#' + ${iter.count}">#1</span>
+                            </div>
+                            <span class="od-suborder-status-badge"
+                                  th:attr="data-status=${sub.shippingStatus.name()}">
+                                <i class="fas"
+                                   th:classappend="${
+                                       sub.shippingStatus.name() == 'PENDING' ? 'fa-clock' :
+                                       sub.shippingStatus.name() == 'PACKED' ? 'fa-box' :
+                                       sub.shippingStatus.name() == 'PICKED_UP' ? 'fa-truck-loading' :
+                                       sub.shippingStatus.name() == 'IN_TRANSIT' ? 'fa-truck' :
+                                       sub.shippingStatus.name() == 'DELIVERED' ? 'fa-check-circle' :
+                                       sub.shippingStatus.name() == 'FAILED' ? 'fa-times-circle' :
+                                       sub.shippingStatus.name() == 'RETURNED' ? 'fa-undo' :
+                                       'fa-clock'
+                                   }"></i>
+                                <span th:text="${
+                                    sub.shippingStatus.name() == 'PENDING' ? 'Chờ giao' :
+                                    sub.shippingStatus.name() == 'PACKED' ? 'Đã đóng gói' :
+                                    sub.shippingStatus.name() == 'PICKED_UP' ? 'ĐVVC đã nhận' :
+                                    sub.shippingStatus.name() == 'IN_TRANSIT' ? 'Đang vận chuyển' :
+                                    sub.shippingStatus.name() == 'DELIVERED' ? 'Đã giao' :
+                                    sub.shippingStatus.name() == 'FAILED' ? 'Giao thất bại' :
+                                    sub.shippingStatus.name() == 'RETURNED' ? 'Đã hoàn trả' :
+                                    sub.shippingStatus.name()
+                                }">Status</span>
+                            </span>
+                        </div>
+
+                        <div class="od-suborder-card-meta">
+                            <div class="od-suborder-meta-row">
+                                <span class="od-meta-label">Trạng thái (ShippingStatus):</span>
+                                <code class="od-meta-value" th:text="${sub.shippingStatus.name()}">PENDING</code>
+                            </div>
+                            <div class="od-suborder-meta-row" th:if="${sub.trackingNumber != null and not sub.trackingNumber.isEmpty()}">
+                                <span class="od-meta-label"><i class="fas fa-barcode"></i> Mã vận đơn:</span>
+                                <code class="od-meta-value od-tracking-code" th:text="${sub.trackingNumber}">Tracking</code>
+                            </div>
+                            <div class="od-suborder-meta-row" th:if="${sub.carrier != null and not sub.carrier.isEmpty()}">
+                                <span class="od-meta-label"><i class="fas fa-truck"></i> ĐVVC:</span>
+                                <strong class="od-meta-value" th:text="${sub.carrier}">Carrier</strong>
+                            </div>
+                            <div class="od-suborder-meta-row" th:if="${sub.note != null and not sub.note.isEmpty()}">
+                                <span class="od-meta-label"><i class="fas fa-sticky-note"></i> Ghi chú:</span>
+                                <span class="od-meta-value" th:text="${sub.note}">Note</span>
+                            </div>
+                            <div class="od-suborder-meta-row" th:if="${sub.shippedAt != null}">
+                                <span class="od-meta-label"><i class="far fa-calendar-check"></i> Ngày gửi:</span>
+                                <span class="od-meta-value" th:text="${#temporals.format(sub.shippedAt, 'dd/MM/yyyy HH:mm')}">Date</span>
+                            </div>
+                            <div class="od-suborder-meta-row" th:if="${sub.deliveredAt != null}">
+                                <span class="od-meta-label"><i class="fas fa-check-double"></i> Ngày giao:</span>
+                                <span class="od-meta-value" th:text="${#temporals.format(sub.deliveredAt, 'dd/MM/yyyy HH:mm')}">Date</span>
+                            </div>
+                        </div>
+
+                        <!-- =============================================
+                             SHIPPING TRACKING PANEL — Master tracker per SubOrder
+                             Hiển thị: shipping fee, tracking number (carrier),
+                             timeline trạng thái vận chuyển của shop này.
+                             ============================================= -->
+                        <div class="od-suborder-shipping-panel"
+                             th:attr="data-status=${sub.shippingStatus.name()}">
+
+                            <div class="od-suborder-shipping-row">
+                                <div class="od-suborder-shipping-fee">
+                                    <i class="fas fa-truck-fast"></i>
+                                    <span class="od-meta-label">Phí vận chuyển (SubOrder):</span>
+                                    <strong class="od-fee-value"
+                                            th:text="${@money.format(sub.shippingFee != null ? sub.shippingFee : 0)}">0đ</strong>
+                                </div>
+
+                                <div class="od-suborder-shipping-tracking"
+                                     th:if="${sub.trackingNumber != null and not sub.trackingNumber.isEmpty()}">
+                                    <i class="fas fa-location-dot"></i>
+                                    <span class="od-meta-label">Tra cứu:</span>
+                                    <span class="od-tracking-info">
+                                        <strong th:if="${sub.carrier != null and not sub.carrier.isEmpty()}"
+                                                th:text="${sub.carrier}">Carrier</strong>
+                                        <code class="od-tracking-number" th:text="${sub.trackingNumber}">Tracking</code>
+                                    </span>
+                                </div>
+                            </div>
+
+                            <!-- Mini progress timeline cho SubOrder -->
+                            <div class="od-suborder-tracker">
+                                <div class="od-tracker-step"
+                                     th:classappend="${sub.shippingStatus.name() != 'PENDING' ? 'done' : 'active'}">
+                                    <div class="od-tracker-dot"><i class="fas fa-box"></i></div>
+                                    <span>Chờ giao</span>
+                                </div>
+                                <div class="od-tracker-line"
+                                     th:classappend="${sub.shippingStatus.name() == 'PACKED' or sub.shippingStatus.name() == 'PICKED_UP' or sub.shippingStatus.name() == 'IN_TRANSIT' or sub.shippingStatus.name() == 'DELIVERED' ? 'done' : ''}"></div>
+                                <div class="od-tracker-step"
+                                     th:classappend="${sub.shippingStatus.name() == 'PACKED' ? 'active' : (sub.shippingStatus.name() == 'PICKED_UP' or sub.shippingStatus.name() == 'IN_TRANSIT' or sub.shippingStatus.name() == 'DELIVERED' ? 'done' : '')}">
+                                    <div class="od-tracker-dot"><i class="fas fa-box-open"></i></div>
+                                    <span>Đã đóng gói</span>
+                                </div>
+                                <div class="od-tracker-line"
+                                     th:classappend="${sub.shippingStatus.name() == 'IN_TRANSIT' or sub.shippingStatus.name() == 'DELIVERED' ? 'done' : ''}"></div>
+                                <div class="od-tracker-step"
+                                     th:classappend="${sub.shippingStatus.name() == 'IN_TRANSIT' ? 'active' : (sub.shippingStatus.name() == 'DELIVERED' ? 'done' : (sub.shippingStatus.name() == 'PICKED_UP' ? 'active' : ''))}">
+                                    <div class="od-tracker-dot"><i class="fas fa-truck"></i></div>
+                                    <span>Vận chuyển</span>
+                                </div>
+                                <div class="od-tracker-line"
+                                     th:classappend="${sub.shippingStatus.name() == 'DELIVERED' ? 'done' : ''}"></div>
+                                <div class="od-tracker-step"
+                                     th:classappend="${sub.shippingStatus.name() == 'DELIVERED' ? 'done' : ''}">
+                                    <div class="od-tracker-dot"><i class="fas fa-check-double"></i></div>
+                                    <span>Đã giao</span>
+                                </div>
+                            </div>
+
+                            <!-- Empty state cho tracking (PENDING chưa có tracking) -->
+                            <div class="od-suborder-tracking-empty"
+                                 th:if="${(sub.trackingNumber == null or sub.trackingNumber.isEmpty()) and sub.shippingStatus.name() == 'PENDING'}">
+                                <i class="fas fa-clock"></i>
+                                <span>Mã vận đơn sẽ được cập nhật khi shop gửi hàng cho đơn vị vận chuyển.</span>
+                            </div>
+
+                            <!-- Failed/returned notice -->
+                            <div class="od-suborder-tracking-failed"
+                                 th:if="${sub.shippingStatus.name() == 'FAILED' or sub.shippingStatus.name() == 'RETURNED'}">
+                                <i class="fas fa-exclamation-triangle"></i>
+                                <span th:text="${sub.shippingStatus.name() == 'FAILED' ? 'Giao hàng thất bại. Vui lòng liên hệ shop để được hỗ trợ.' : 'Đơn hàng đã được hoàn trả.'}">Notice</span>
+                            </div>
+                        </div>
+
+                        <div class="od-suborder-card-items">
+                            <div class="od-suborder-items-label">
+                                <i class="fas fa-cube"></i>
+                                Sản phẩm (<span th:text="${sub.itemCount}">0</span>)
+                            </div>
+                            <div th:each="item : ${sub.items}" class="od-suborder-item-row">
+                                <img th:src="${item.imageUrl}" alt="" loading="lazy"
+                                     class="od-item-thumb"
+                                     onerror="this.src='https://placehold.co/60x60/f1f5f9/94a3b8?text=No+Img'">
+                                <div class="od-item-info">
+                                    <span class="od-item-name" th:text="${item.productName}">Product</span>
+                                    <span class="od-item-qty">x<span th:text="${item.quantity}">1</span></span>
+                                </div>
+                                <div class="od-item-price" th:text="${@money.format(item.subtotal)}">0đ</div>
+                            </div>
+                        </div>
+
+                        <div class="od-suborder-card-footer">
+                            <div class="od-suborder-footer-rows">
+                                <div class="od-suborder-footer-row">
+                                    <span>Tạm tính SubOrder:</span>
+                                    <span th:text="${@money.format(sub.subtotal)}">0đ</span>
+                                </div>
+                                <div class="od-suborder-footer-row">
+                                    <span><i class="fas fa-truck-fast"></i> Phí vận chuyển:</span>
+                                    <span th:text="${@money.format(sub.shippingFee != null ? sub.shippingFee : 0)}">0đ</span>
+                                </div>
+                                <div class="od-suborder-footer-row od-suborder-footer-total">
+                                    <span>Tổng SubOrder:</span>
+                                    <strong th:with="subTotal=${sub.subtotal != null ? sub.subtotal : 0},
+                                                   subShip=${sub.shippingFee != null ? sub.shippingFee : 0}"
+                                            th:text="${@money.format(subTotal + subShip)}">0đ</strong>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ==================================================
+             MASTER ORDER SUMMARY
+             ================================================== -->
+        <section class="od-summary-section">
+            <div class="od-summary-card">
+                <div class="od-summary-header">
+                    <h2><i class="fas fa-file-invoice-dollar"></i> Tổng quan đơn hàng</h2>
+                </div>
+                <div class="od-summary-body">
+                    <div class="od-summary-breakdown">
+                        <div class="od-summary-row">
+                            <span><i class="fas fa-shopping-bag"></i> Số sản phẩm</span>
+                            <strong th:text="${order.totalItemCount}">0</strong>
+                        </div>
+                        <div class="od-summary-row" th:if="${order.subtotal != null}">
+                            <span>Tạm tính</span>
+                            <strong th:text="${@money.format(order.subtotal)}">0đ</strong>
+                        </div>
+                        <div class="od-summary-row" th:if="${order.shippingFee != null}">
+                            <span><i class="fas fa-truck"></i> Phí vận chuyển</span>
+                            <strong th:text="${@money.format(order.shippingFee)}">0đ</strong>
+                        </div>
+                        <div class="od-summary-row od-summary-discount" th:if="${order.discount != null and order.discount > 0}">
+                            <span><i class="fas fa-ticket-alt"></i> Giảm giá <span th:if="${order.voucherCode != null}" th:text="'(' + ${order.voucherCode} + ')'">(CODE)</span></span>
+                            <strong class="od-text-success">-<span th:text="${@money.format(order.discount)}">0đ</span></strong>
+                        </div>
+                        <div class="od-summary-row od-summary-total">
+                            <span>Tổng cộng</span>
+                            <strong class="od-total-value" th:text="${@money.format(order.totalAmount)}">0đ</strong>
+                        </div>
+                    </div>
+
+                    <div class="od-summary-meta">
+                        <div class="od-meta-card" th:if="${order.paymentMethod != null}">
+                            <i class="fas fa-credit-card"></i>
+                            <span class="od-meta-card-label">Thanh toán</span>
+                            <span class="od-meta-card-value" th:text="${order.paymentMethod == 'COD' ? 'Thanh toán khi nhận hàng (COD)' : order.paymentMethod}">Payment</span>
+                        </div>
+
+                        <!-- ==================================================
+                             PAYMENT STATUS BADGE (Master Card)
+                             Hiển thị rõ ràng trạng thái thanh toán song song
+                             với payment method. Fallback an toàn về PENDING
+                             nếu backend không trả về (Order cũ).
+                             ================================================== -->
+                        <div class="od-meta-card od-payment-status-card"
+                             th:with="ps=${order.paymentStatus != null ? order.paymentStatus : 'PENDING'}"
+                             th:attr="data-status=${ps}">
+                            <i class="fas"
+                               th:classappend="${ps == 'PENDING' ? 'fa-clock' :
+                                                 ps == 'PAID' ? 'fa-check-circle' :
+                                                 ps == 'FAILED' ? 'fa-times-circle' :
+                                                 ps == 'REFUNDED' ? 'fa-undo' :
+                                                 'fa-clock'}"></i>
+                            <span class="od-meta-card-label">Trạng thái thanh toán</span>
+                            <span class="od-meta-card-value">
+                                <strong class="od-payment-status-label" th:text="${ps == 'PENDING' ? 'Chờ thanh toán' :
+                                                                                    ps == 'PAID' ? 'Đã thanh toán' :
+                                                                                    ps == 'FAILED' ? 'Thanh toán thất bại' :
+                                                                                    ps == 'REFUNDED' ? 'Đã hoàn tiền' :
+                                                                                    ps}">Status</strong>
+                                <small class="od-payment-status-code" th:text="${ps}">PENDING</small>
+                            </span>
+                            <small class="od-payment-status-time"
+                                   th:if="${ps == 'PAID' and order.paidAt != null}">
+                                <i class="far fa-calendar-check"></i>
+                                Lúc <span th:text="${#temporals.format(order.paidAt, 'dd/MM/yyyy HH:mm')}">date</span>
+                            </small>
+                            <small class="od-payment-status-time"
+                                   th:if="${ps == 'REFUNDED' and order.refundedAt != null}">
+                                <i class="fas fa-undo"></i>
+                                Lúc <span th:text="${#temporals.format(order.refundedAt, 'dd/MM/yyyy HH:mm')}">date</span>
+                            </small>
+                            <small class="od-payment-status-note"
+                                   th:if="${ps == 'FAILED'}">
+                                <i class="fas fa-info-circle"></i>
+                                Vui lòng liên hệ shop hoặc thử lại với phương thức khác.
+                            </small>
+                            <small class="od-payment-status-note"
+                                   th:if="${ps == 'PENDING' and order.paymentMethod == 'COD'}">
+                                <i class="fas fa-info-circle"></i>
+                                Bạn sẽ thanh toán khi nhận hàng.
+                            </small>
+                            <small class="od-payment-status-note"
+                                   th:if="${ps == 'PENDING' and order.paymentMethod == 'VNPAY'}">
+                                <i class="fas fa-info-circle"></i>
+                                Đang chờ xác nhận từ cổng VNPAY.
+                            </small>
+                        </div>
+                        <div class="od-meta-card" th:if="${order.userName != null}">
+                            <i class="fas fa-user"></i>
+                            <span class="od-meta-card-label">Người nhận</span>
+                            <span class="od-meta-card-value">
+                                <strong th:text="${order.userName}">Name</strong>
+                                <small th:if="${order.userPhone != null}" th:text="${order.userPhone}">Phone</small>
+                            </span>
+                        </div>
+                        <div class="od-meta-card" th:if="${order.shippingAddress != null}">
+                            <i class="fas fa-map-marker-alt"></i>
+                            <span class="od-meta-card-label">Địa chỉ</span>
+                            <span class="od-meta-card-value" th:text="${order.shippingAddress}">Address</span>
+                        </div>
+                        <div class="od-meta-card" th:if="${order.voucherName != null}">
+                            <i class="fas fa-gift"></i>
+                            <span class="od-meta-card-label">Voucher</span>
+                            <span class="od-meta-card-value" th:text="${order.voucherName}">Voucher</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ==================================================
+             ACTIONS
+             ================================================== -->
+        <section class="od-actions-section" th:if="${order.status.name() != 'CANCELLED'}">
+            <a th:href="@{/complaints/new(orderId=${order.orderId})}"
+               class="od-action-btn od-action-complaint">
+                <i class="fas fa-shield-halved"></i>
+                <div>
+                    <strong>Tạo khiếu nại</strong>
+                    <small>Nếu có vấn đề với đơn hàng này</small>
+                </div>
+            </a>
+            <a th:href="@{/orders}" class="od-action-btn od-action-secondary">
+                <i class="fas fa-arrow-left"></i>
+                <div>
+                    <strong>Quay lại danh sách</strong>
+                    <small>Xem các đơn hàng khác</small>
+                </div>
+            </a>
+        </section>
+
+    </div>
+
+</main>
+
+<th:block th:fragment="page-scripts">
+    <script th:src="@{/js/home.js}" defer></script>
+</th:block>
+</body>
+</html>

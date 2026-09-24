@@ -74,12 +74,20 @@
                                     <i class="fas fa-share-alt"></i> Chia sẻ
                                 </span>
                                 <span class="pdp-share-sep">|</span>
-                                <span class="pdp-share-btn">
-                                    <i class="fas fa-heart"></i> Yêu thích <em>|</em> <i class="fas fa-flag"></i> Báo lỗi
-                                </span>
-                                <span class="pdp-share-btn">
-                                    <i class="fas fa-flag"></i>
-                                </span>
+                                <a th:href="@{/reports/new(targetType='PRODUCT',targetId=${product.id})}"
+                                   sec:authorize="isAuthenticated()"
+                                   class="pdp-share-btn"
+                                   id="pdp-report-product-btn"
+                                   title="Báo cáo sản phẩm vi phạm">
+                                    <i class="fas fa-flag"></i> Báo cáo sản phẩm
+                                </a>
+                                <a th:href="@{/auth/login}"
+                                   sec:authorize="!isAuthenticated()"
+                                   class="pdp-share-btn"
+                                   id="pdp-report-product-btn-guest"
+                                   title="Đăng nhập để báo cáo">
+                                    <i class="fas fa-flag"></i> Báo cáo sản phẩm
+                                </a>
                             </div>
                         </div>
                     </div>
@@ -442,6 +450,17 @@
                                                         <i class="fas fa-trash-alt"></i> Xóa
                                                     </button>
                                                 </form>
+                                            </div>
+
+                                            <!-- Report button: hiện cho mọi user authenticated trừ chính chủ review -->
+                                            <div class="pdp-review-actions" sec:authorize="isAuthenticated()"
+                                                 th:unless="${#authentication.principal.id == review.userId}">
+                                                <a th:href="@{/reports/new(targetType='REVIEW',targetId=${review.id})}"
+                                                   class="pdp-review-report-btn"
+                                                   th:attr="data-review-id=${review.id}"
+                                                   title="Báo cáo đánh giá vi phạm">
+                                                    <i class="fas fa-flag"></i> Báo cáo
+                                                </a>
                                             </div>
                                         </div>
                                     </div>

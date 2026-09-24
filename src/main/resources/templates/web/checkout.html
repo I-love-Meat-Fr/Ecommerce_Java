@@ -72,9 +72,15 @@
                         <span th:text="${error}">Có lỗi xảy ra</span>
                     </div>
 
+                    <!-- Pre-submit validation banner (price/stock/shop/voucher changed since page load) -->
+                    <div id="checkout-validation-banner" class="checkout-validation-banner" style="display:none">
+                        <!-- JS sẽ render nội dung vào đây -->
+                    </div>
+
                     <!-- Cart Items (grouped by shop) -->
                     <th:block th:each="shopEntry : ${itemsByShop}">
-                        <article class="checkout-shop-group">
+                        <article class="checkout-shop-group"
+                                 th:attr="data-shop-id=${shopEntry.key}">
                             <header class="checkout-shop-header">
                                 <i class="fas fa-store"></i>
                                 <span class="checkout-shop-name"
@@ -85,7 +91,12 @@
                             </header>
                             <div class="checkout-item-list">
                                 <th:block th:each="item : ${shopEntry.value}">
-                                    <div class="checkout-item">
+                                    <div class="checkout-item"
+                                         th:attr="data-product-id=${item.productId},
+                                                  data-product-name=${item.productName},
+                                                  data-old-price=${item.price},
+                                                  data-old-quantity=${item.quantity},
+                                                  data-old-subtotal=${item.subtotal}">
                                         <a th:href="@{/products/{id}(id=${item.productId})}" class="checkout-item-thumb">
                                             <img th:src="${@image.productImage(item.imageUrl)}"
                                                  th:alt="${item.productName}"
@@ -94,12 +105,16 @@
                                         <div class="checkout-item-info">
                                             <a th:href="@{/products/{id}(id=${item.productId})}" class="checkout-item-name" th:text="${item.productName}">Tên sản phẩm</a>
                                             <div class="checkout-item-meta">
-                                                <span class="checkout-item-price" th:text="${@money.format(item.price)}">0đ</span>
+                                                <span class="checkout-item-price"
+                                                      th:text="${@money.format(item.price)}">0đ</span>
                                                 <span class="checkout-item-qty">x<span th:text="${item.quantity}">0</span></span>
+                                                <span class="checkout-item-stock-hint" style="display:none"></span>
                                             </div>
+                                            <div class="checkout-item-validation" style="display:none"></div>
                                         </div>
                                         <div class="checkout-item-right">
-                                            <span class="checkout-item-subtotal" th:text="${@money.format(item.subtotal)}">0đ</span>
+                                            <span class="checkout-item-subtotal"
+                                                  th:text="${@money.format(item.subtotal)}">0đ</span>
                                         </div>
                                     </div>
                                 </th:block>
@@ -243,18 +258,59 @@
                             <span>
                                 <i class="fas fa-tag"></i>
                                 Giảm giá
-                                <small th:if="${appliedVoucher != null}"
+                                <small id="discount-voucher-code"
+                                       th:if="${appliedVoucher != null}"
                                        th:text="'(' + ${appliedVoucher.code} + ')'">(CODE)</small>
                             </span>
                             <span class="summary-value summary-discount"
+                                  id="discount-amount"
                                   th:text="'-' + ${@money.format(discount != null ? discount : 0)}">-0đ</span>
+                        </div>
+
+                        <!-- Inline Voucher error (server-side render khi backend từ chối voucher) -->
+                        <div id="voucher-error-inline"
+                             class="voucher-error-inline"
+                             th:style="${voucherError != null ? 'display:flex' : 'display:none'}">
+                            <i class="fas fa-exclamation-circle"></i>
+                            <div class="voucher-error-body">
+                                <strong>Voucher không hợp lệ</strong>
+                                <span id="voucher-error-message"
+                                      th:text="${voucherError != null ? voucherError : ''}">Voucher không hợp lệ</span>
+                            </div>
+                            <button type="button"
+                                    class="voucher-remove-btn"
+                                    id="btn-remove-voucher"
+                                    title="Bỏ voucher khỏi giỏ hàng">
+                                <i class="fas fa-times"></i>
+                                <span>Bỏ voucher</span>
+                            </button>
+                        </div>
+
+                        <!-- Inline Voucher error (client-side render khi pre-submit validation từ chối voucher) -->
+                        <div id="voucher-error-inline-client" class="voucher-error-inline" style="display:none">
+                            <i class="fas fa-exclamation-circle"></i>
+                            <div class="voucher-error-body">
+                                <strong>Voucher không hợp lệ</strong>
+                                <span id="voucher-error-message-client">Voucher không hợp lệ</span>
+                            </div>
+                            <button type="button"
+                                    class="voucher-remove-btn"
+                                    id="btn-remove-voucher-client"
+                                    title="Bỏ voucher khỏi giỏ hàng">
+                                <i class="fas fa-times"></i>
+                                <span>Bỏ voucher</span>
+                            </button>
                         </div>
 
                         <div class="summary-total-row">
                             <span class="summary-total-label">Tổng cộng</span>
                             <span class="summary-total-value"
+                                  id="final-total-amount"
                                   th:text="${@money.format(finalTotal != null ? finalTotal : (cartTotal + shippingFee))}">0đ</span>
                         </div>
+
+                        <!-- Pre-submit revalidation status -->
+                        <div id="checkout-validation-summary" class="checkout-validation-summary" style="display:none"></div>
                     </div>
 
                     <!-- Trust badges -->
@@ -286,48 +342,443 @@
 <th:block th:fragment="page-scripts">
     <script th:src="@{/js/home.js}" defer></script>
     <script th:inline="none">
-        // Payment option visual selection
-        document.querySelectorAll('.payment-option').forEach(option => {
-            option.addEventListener('click', function() {
-                document.querySelectorAll('.payment-option').forEach(o => o.classList.remove('selected'));
-                this.classList.add('selected');
-                const radio = this.querySelector('input[type="radio"]');
-                if (radio) radio.checked = true;
-            });
-        });
+        // ============================================================
+        // Checkout Pre-submit Validation
+        // Trước khi gửi CheckoutReq, gọi POST /api/checkout/validate
+        // để kiểm tra lại giá, tồn kho, Shop, Voucher từ DB hiện tại.
+        // UI refresh từ response — KHÔNG dùng dữ liệu cũ khi backend trả về thay đổi.
+        // ============================================================
 
-        // Form validation before submit
-        document.getElementById('checkout-form')?.addEventListener('submit', function(e) {
-            const phone = document.getElementById('phone').value.trim();
-            const address = document.getElementById('shippingAddress').value.trim();
-            const btn = document.getElementById('btn-place-order');
+        // Format VND giống @money.format trên server
+        function formatVnd(amount) {
+            if (amount == null || isNaN(amount)) return '0₫';
+            const n = Number(amount);
+            return new Intl.NumberFormat('vi-VN').format(n) + '₫';
+        }
 
-            let valid = true;
+        function formatMoneyMinus(amount) {
+            return '-' + formatVnd(amount);
+        }
 
-            // Clear previous errors
-            document.querySelectorAll('.co-input.is-error').forEach(el => el.classList.remove('is-error'));
-
-            if (!phone) {
-                document.getElementById('phone').classList.add('is-error');
-                valid = false;
+        function showToast(type, message) {
+            if (typeof window.showToast === 'function') {
+                window.showToast(type, message);
+            } else if (type === 'error') {
+                alert(message);
+            } else {
+                console.log('Toast:', message);
             }
+        }
 
-            if (!address) {
-                document.getElementById('shippingAddress').classList.add('is-error');
-                valid = false;
-            }
+        /**
+         * Render banner lỗi/cảnh báo trên đầu form checkout.
+         * @param {Object} data  CheckoutValidationRes từ server
+         */
+        function renderValidationBanner(data) {
+            const banner = document.getElementById('checkout-validation-banner');
+            const summary = document.getElementById('checkout-validation-summary');
+            if (!banner) return;
 
-            if (!valid) {
-                e.preventDefault();
-                alert('Vui lòng điền đầy đủ thông tin bắt buộc (số điện thoại và địa chỉ giao hàng).');
+            const errors = data.errors || [];
+            const warnings = data.warnings || [];
+
+            if (errors.length === 0 && warnings.length === 0) {
+                banner.style.display = 'none';
+                banner.innerHTML = '';
+                if (summary) { summary.style.display = 'none'; summary.innerHTML = ''; }
                 return;
             }
 
-            // Disable button to prevent double submit
-            if (btn) {
-                btn.disabled = true;
-                btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Đang xử lý...';
+            // Banner trên cùng (errors)
+            if (errors.length > 0) {
+                banner.className = 'checkout-validation-banner checkout-validation-banner-error';
+                banner.style.display = 'flex';
+                banner.innerHTML =
+                    '<i class="fas fa-times-circle"></i>' +
+                    '<div class="checkout-validation-body">' +
+                        '<strong>Không thể đặt hàng — vui lòng kiểm tra lại:</strong>' +
+                        '<ul>' + errors.map(e => '<li>' + escapeHtml(e) + '</li>').join('') + '</ul>' +
+                    '</div>';
+            } else {
+                banner.className = 'checkout-validation-banner checkout-validation-banner-warning';
+                banner.style.display = 'flex';
+                banner.innerHTML =
+                    '<i class="fas fa-exclamation-triangle"></i>' +
+                    '<div class="checkout-validation-body">' +
+                        '<strong>Đã có thay đổi từ cửa hàng/hệ thống:</strong>' +
+                        '<ul>' + warnings.map(w => '<li>' + escapeHtml(w) + '</li>').join('') + '</ul>' +
+                    '</div>';
             }
+
+            // Summary bên phải
+            if (summary) {
+                summary.className = 'checkout-validation-summary';
+                if (errors.length > 0) {
+                    summary.classList.add('checkout-validation-summary-error');
+                    summary.innerHTML = '<i class="fas fa-ban"></i> Có ' + errors.length + ' lỗi cần xử lý trước khi đặt hàng.';
+                } else {
+                    summary.classList.add('checkout-validation-summary-warning');
+                    summary.innerHTML = '<i class="fas fa-sync"></i> Tổng tiền đã được cập nhật theo dữ liệu mới nhất.';
+                }
+                summary.style.display = 'block';
+            }
+        }
+
+        function escapeHtml(str) {
+            if (str == null) return '';
+            return String(str)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#039;');
+        }
+
+        /**
+         * Render inline voucher error (cạnh discount row).
+         *
+         * <p>Có 2 element khác nhau:</p>
+         * <ul>
+         *   <li>{@code #voucher-error-inline} — server-side render khi POST /checkout
+         *       bị backend từ chối (race condition hoặc backend chặt hơn client).</li>
+         *   <li>{@code #voucher-error-inline-client} — client-side render khi
+         *       POST /api/checkout/validate trả về voucher.valid=false.</li>
+         * </ul>
+         *
+         * <p>Quy tắc ưu tiên:</p>
+         * <ul>
+         *   <li>Nếu voucher hợp lệ → ẩn cả 2 (server-rendered + client-rendered).</li>
+         *   <li>Nếu voucher không hợp lệ → ẩn server-rendered (stale) và hiển thị
+         *       client-rendered với message mới nhất từ pre-submit validation.</li>
+         *   <li>Nếu không có voucher (null) → chỉ ẩn client-rendered, server-rendered
+         *       giữ nguyên (vì là message riêng từ server-side).</li>
+         * </ul>
+         *
+         * @param {Object} voucher VoucherState từ server (có thể null)
+         * @param {string} [fallbackMessage] message dự phòng (vd: từ top banner)
+         */
+        function renderVoucherInlineError(voucher, fallbackMessage) {
+            const clientEl = document.getElementById('voucher-error-inline-client');
+            const clientMsg = document.getElementById('voucher-error-message-client');
+            const serverEl = document.getElementById('voucher-error-inline');
+            if (!clientEl) return;
+
+            if (!voucher) {
+                // Không có voucher trong response → chỉ ẩn client-rendered
+                clientEl.style.display = 'none';
+                return;
+            }
+
+            if (voucher.valid) {
+                // Voucher hợp lệ → ẩn cả 2
+                clientEl.style.display = 'none';
+                if (serverEl) serverEl.style.display = 'none';
+                return;
+            }
+
+            // Voucher không hợp lệ → ẩn server-rendered (stale) và hiển thị client-rendered
+            if (serverEl) serverEl.style.display = 'none';
+
+            const reason = voucher.reasonMessage || fallbackMessage || 'Voucher không hợp lệ.';
+            const code = voucher.code ? `Mã "${voucher.code}": ` : '';
+            clientMsg.textContent = code + reason;
+            clientEl.style.display = 'flex';
+        }
+
+        /**
+         * Refresh UI từ CheckoutValidationRes:
+         *  - Cập nhật giá, subtotal cho từng item
+         *  - Cập nhật summary (subtotal, discount, finalTotal)
+         *  - Cập nhật hidden fields để submit dùng dữ liệu mới
+         */
+        function refreshCheckoutFromValidation(data) {
+            const items = data.items || [];
+            const summary = data.summary || {};
+            const voucher = data.voucher || null;
+
+            // 1) Refresh từng line-item
+            items.forEach(function(it) {
+                const node = document.querySelector(
+                    '.checkout-item[data-product-id="' + cssEscape(it.productId) + '"]'
+                );
+                if (!node) return;
+
+                // Cập nhật giá hiển thị
+                const priceEl = node.querySelector('.checkout-item-price');
+                if (priceEl && it.currentPrice != null) {
+                    priceEl.innerHTML = formatVnd(it.currentPrice)
+                        + (it.priceChanged ? ' <i class="fas fa-arrow-up" style="color:#ef4444;font-size:10px" title="Giá đã thay đổi"></i>' : '');
+                }
+
+                // Cập nhật subtotal
+                const subEl = node.querySelector('.checkout-item-subtotal');
+                if (subEl && it.subtotal != null) {
+                    subEl.textContent = formatVnd(it.subtotal);
+                }
+
+                // Cập nhật stock hint
+                const stockHint = node.querySelector('.checkout-item-stock-hint');
+                if (stockHint) {
+                    if (it.currentStock != null && it.requestedQuantity != null) {
+                        const remain = it.currentStock - it.requestedQuantity;
+                        if (remain <= 3 && remain > 0) {
+                            stockHint.innerHTML = '<i class="fas fa-fire"></i> Còn ' + remain + ' sau khi đặt';
+                            stockHint.style.display = 'inline';
+                        } else {
+                            stockHint.style.display = 'none';
+                        }
+                    }
+                }
+
+                // Cập nhật validation cho từng item
+                const valEl = node.querySelector('.checkout-item-validation');
+                if (valEl) {
+                    if (!it.valid && it.reasonMessage) {
+                        valEl.innerHTML = '<i class="fas fa-exclamation-circle"></i> ' + escapeHtml(it.reasonMessage);
+                        valEl.className = 'checkout-item-validation checkout-item-validation-invalid';
+                        valEl.style.display = 'block';
+                        node.classList.add('checkout-item-invalid');
+                    } else {
+                        valEl.style.display = 'none';
+                        node.classList.remove('checkout-item-invalid');
+                    }
+                }
+            });
+
+            // 2) Refresh shop-group header nếu shopName đã đổi
+            document.querySelectorAll('.checkout-shop-group').forEach(function(group) {
+                const shopId = group.getAttribute('data-shop-id');
+                if (!shopId) return;
+                // Tìm item thuộc shop này
+                const firstItem = items.find(function(it) { return it.shopId === shopId; });
+                if (firstItem && firstItem.shopCurrentName) {
+                    const nameEl = group.querySelector('.checkout-shop-name');
+                    if (nameEl) nameEl.textContent = firstItem.shopCurrentName;
+                }
+            });
+
+            // 3) Refresh summary
+            const subtotalEl = document.querySelector('.summary-value.summary-subtotal') ||
+                               Array.from(document.querySelectorAll('.summary-row span'))
+                                    .find(function(s){ return s.textContent.trim().startsWith('Tạm tính'); });
+            // Tìm row "Tạm tính" -> cập nhật value ở span thứ 2
+            document.querySelectorAll('.summary-row').forEach(function(row) {
+                const lbl = row.querySelector('span:first-child');
+                const val = row.querySelector('.summary-value');
+                if (!lbl || !val) return;
+                if (lbl.textContent.trim().startsWith('Tạm tính') && summary.subtotal != null) {
+                    val.textContent = formatVnd(summary.subtotal);
+                }
+            });
+
+            // 4) Refresh discount + final total
+            const discountRow = document.getElementById('discount-row');
+            const discountAmount = document.getElementById('discount-amount');
+            const discountCode = document.getElementById('discount-voucher-code');
+            const finalTotal = document.getElementById('final-total-amount');
+            const hiddenDiscount = document.getElementById('hidden-voucher-discount');
+            const hiddenVoucherCode = document.getElementById('hidden-voucher-code');
+
+            const hasDiscount = voucher && voucher.valid && voucher.discount && Number(voucher.discount) > 0;
+            if (hasDiscount) {
+                discountRow.style.display = 'flex';
+                discountAmount.textContent = formatMoneyMinus(voucher.discount);
+                if (discountCode) discountCode.textContent = '(' + voucher.code + ')';
+            } else {
+                discountRow.style.display = 'none';
+                if (discountCode) discountCode.textContent = '';
+            }
+
+            if (finalTotal && summary.finalTotal != null) {
+                finalTotal.textContent = formatVnd(summary.finalTotal);
+            }
+
+            // 5) Sync hidden fields để form submit dùng giá trị mới
+            // QUAN TRỌNG: khi voucher invalid (voucher.valid === false), phải clear
+            // hidden field để form re-submit KHÔNG gửi lại mã bị reject.
+            // Nếu không clear, user có thể click "Đặt hàng" lần nữa và server
+            // lại từ chối cùng một mã → UX rất tệ.
+            if (hiddenVoucherCode) {
+                hiddenVoucherCode.value = (voucher && voucher.valid && voucher.code)
+                        ? voucher.code : '';
+            }
+            if (hiddenDiscount) {
+                hiddenDiscount.value = (voucher && voucher.valid && voucher.discount)
+                        ? voucher.discount : '0';
+            }
+
+            // 6) Render inline voucher error (cạnh discount row)
+            renderVoucherInlineError(voucher);
+        }
+
+        function cssEscape(s) {
+            if (window.CSS && CSS.escape) return CSS.escape(s);
+            return String(s).replace(/["\\]/g, '\\$&');
+        }
+
+        /**
+         * Gọi POST /api/checkout/validate để kiểm tra lại price/stock/shop/voucher.
+         * Trả về Promise<{ok: boolean, data: CheckoutValidationRes}>
+         * - ok=true nếu server trả 200
+         * - data.valid quyết định có submit form hay không
+         */
+        async function callValidateApi(voucherCode) {
+            const fd = new FormData();
+            if (voucherCode) fd.append('voucherCode', voucherCode);
+
+            const resp = await fetch('/api/checkout/validate', {
+                method: 'POST',
+                body: fd,
+                headers: { 'X-Requested-With': 'XMLHttpRequest' }
+            });
+
+            if (resp.status === 401) {
+                window.location.href = '/auth/login';
+                return { ok: false, data: null };
+            }
+
+            let data;
+            try {
+                data = await resp.json();
+            } catch (e) {
+                return { ok: false, data: null };
+            }
+            return { ok: resp.ok, data: data };
+        }
+
+        // ============================================================
+        // Init — wire up submit handler
+        // ============================================================
+        document.addEventListener('DOMContentLoaded', function() {
+            // Payment option visual selection
+            document.querySelectorAll('.payment-option').forEach(function(option) {
+                option.addEventListener('click', function() {
+                    document.querySelectorAll('.payment-option').forEach(function(o) { o.classList.remove('selected'); });
+                    this.classList.add('selected');
+                    const radio = this.querySelector('input[type="radio"]');
+                    if (radio) radio.checked = true;
+                });
+            });
+
+            // ----- "Bỏ voucher" buttons -----
+            // Cả 2 phiên bản (server-rendered + client-rendered) đều gọi cùng endpoint
+            // /api/cart/remove-voucher để clear session voucher, sau đó reload trang
+            // để đảm bảo UI đồng bộ với trạng thái server.
+            document.querySelectorAll('.voucher-remove-btn').forEach(function(btn) {
+                btn.addEventListener('click', async function(ev) {
+                    ev.preventDefault();
+                    btn.disabled = true;
+                    const originalHtml = btn.innerHTML;
+                    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Đang hủy...';
+
+                    try {
+                        const resp = await fetch('/api/cart/remove-voucher', {
+                            method: 'POST',
+                            headers: { 'X-Requested-With': 'XMLHttpRequest' }
+                        });
+                        if (resp.ok) {
+                            // Reload để re-render trang checkout với trạng thái không voucher
+                            window.location.reload();
+                            return;
+                        }
+                        // Không thành công → khôi phục button
+                        btn.disabled = false;
+                        btn.innerHTML = originalHtml;
+                        alert('Không thể hủy voucher. Vui lòng thử lại.');
+                    } catch (e) {
+                        btn.disabled = false;
+                        btn.innerHTML = originalHtml;
+                        alert('Lỗi kết nối. Vui lòng thử lại.');
+                    }
+                });
+            });
+
+            // ----- Pre-submit validation -----
+            const form = document.getElementById('checkout-form');
+            const btn = document.getElementById('btn-place-order');
+            if (!form) return;
+
+            form.addEventListener('submit', async function(e) {
+                e.preventDefault(); // chặn submit cho tới khi validation xong
+
+                const phone = document.getElementById('phone').value.trim();
+                const address = document.getElementById('shippingAddress').value.trim();
+                let valid = true;
+                document.querySelectorAll('.co-input.is-error').forEach(function(el){ el.classList.remove('is-error'); });
+
+                if (!phone) {
+                    document.getElementById('phone').classList.add('is-error');
+                    valid = false;
+                }
+                if (!address) {
+                    document.getElementById('shippingAddress').classList.add('is-error');
+                    valid = false;
+                }
+                if (!valid) {
+                    alert('Vui lòng điền đầy đủ thông tin bắt buộc (số điện thoại và địa chỉ giao hàng).');
+                    return;
+                }
+
+                // Lấy voucherCode hiện tại (từ hidden field đã render bởi server)
+                const voucherCodeEl = document.getElementById('hidden-voucher-code');
+                const voucherCode = voucherCodeEl ? voucherCodeEl.value.trim() : '';
+
+                // Disable button + show spinner
+                if (btn) {
+                    btn.disabled = true;
+                    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Đang kiểm tra đơn hàng...';
+                }
+
+                let result;
+                try {
+                    result = await callValidateApi(voucherCode);
+                } catch (err) {
+                    console.error('Validate error:', err);
+                    alert('Có lỗi khi kiểm tra đơn hàng. Vui lòng thử lại.');
+                    if (btn) {
+                        btn.disabled = false;
+                        btn.innerHTML = '<i class="fas fa-lock"></i> Xác nhận đặt hàng';
+                    }
+                    return;
+                }
+
+                if (!result.ok || !result.data) {
+                    alert('Không thể kiểm tra đơn hàng. Vui lòng thử lại.');
+                    if (btn) {
+                        btn.disabled = false;
+                        btn.innerHTML = '<i class="fas fa-lock"></i> Xác nhận đặt hàng';
+                    }
+                    return;
+                }
+
+                const data = result.data;
+
+                // LUÔN refresh UI từ data mới nhất (kể cả khi valid=true, vì giá có thể đã đổi)
+                refreshCheckoutFromValidation(data);
+
+                // Render banner lỗi / warning
+                renderValidationBanner(data);
+
+                if (!data.valid) {
+                    // Có lỗi nghiêm trọng — không submit
+                    if (btn) {
+                        btn.disabled = false;
+                        btn.innerHTML = '<i class="fas fa-lock"></i> Xác nhận đặt hàng';
+                    }
+                    // Scroll banner lên trên cùng
+                    const banner = document.getElementById('checkout-validation-banner');
+                    if (banner) banner.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                    return;
+                }
+
+                // Hợp lệ (hoặc chỉ warning) → submit form thật
+                // Hidden field hidden-voucher-discount đã được refresh ở trên
+                if (btn) {
+                    btn.disabled = true;
+                    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Đang xử lý...';
+                }
+                form.submit();
+            });
         });
     </script>
 </th:block>

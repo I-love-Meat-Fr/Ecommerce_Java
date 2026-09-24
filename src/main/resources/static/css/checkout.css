@@ -863,6 +863,230 @@
     }
 }
 
+/* ============================================================
+   Inline Voucher Error
+   Hiển thị ngay cạnh discount row trong summary khi:
+     - Backend từ chối voucher (server-side render)
+     - Pre-submit validation phát hiện voucher invalid (client-side render)
+   Bao gồm nút "Bỏ voucher" để user clear nhanh khỏi session.
+   ============================================================ */
+
+.voucher-error-inline {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    margin-top: 10px;
+    padding: 10px 12px;
+    background: #fef2f2;
+    border: 1px solid #fecaca;
+    border-left: 3px solid #ef4444;
+    border-radius: var(--radius-sm);
+    color: #b91c1c;
+    font-size: 12.5px;
+    line-height: 1.5;
+    animation: coFadeIn 0.25s ease;
+}
+
+.voucher-error-inline > i {
+    color: #ef4444;
+    font-size: 16px;
+    flex-shrink: 0;
+    margin-top: 1px;
+}
+
+.voucher-error-body {
+    flex: 1;
+    min-width: 0;
+}
+
+.voucher-error-body strong {
+    display: block;
+    font-size: 13px;
+    font-weight: 800;
+    color: #991b1b;
+    margin-bottom: 2px;
+}
+
+.voucher-error-body span {
+    display: block;
+    color: #b91c1c;
+    word-break: break-word;
+}
+
+.voucher-remove-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    flex-shrink: 0;
+    padding: 5px 10px;
+    background: #fff;
+    color: #b91c1c;
+    border: 1px solid #fecaca;
+    border-radius: var(--radius-sm);
+    font-size: 11.5px;
+    font-weight: 700;
+    font-family: var(--font);
+    cursor: pointer;
+    transition: all 0.2s;
+    align-self: center;
+}
+
+.voucher-remove-btn:hover:not(:disabled) {
+    background: #ef4444;
+    color: #fff;
+    border-color: #ef4444;
+}
+
+.voucher-remove-btn:active:not(:disabled) {
+    transform: scale(0.97);
+}
+
+.voucher-remove-btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.voucher-remove-btn i {
+    font-size: 11px;
+}
+
+/* Khi summary row discount bị ẩn, inline error vẫn giữ margin-top
+   để không bị dính vào summary-total-row */
+.summary-row[style*="display: none"] + .voucher-error-inline {
+    margin-top: 10px;
+}
+
+/* ============================================================
+   Pre-submit Validation Banner
+   Hiển thị khi POST /api/checkout/validate trả về errors/warnings.
+   ============================================================ */
+
+.checkout-validation-banner {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 14px 18px;
+    border-radius: var(--radius);
+    font-size: 13.5px;
+    line-height: 1.55;
+    animation: coFadeIn 0.3s ease;
+    border: 1px solid;
+}
+
+.checkout-validation-banner > i {
+    font-size: 20px;
+    flex-shrink: 0;
+    margin-top: 1px;
+}
+
+.checkout-validation-body {
+    flex: 1;
+    min-width: 0;
+}
+
+.checkout-validation-body strong {
+    display: block;
+    font-size: 14px;
+    font-weight: 800;
+    margin-bottom: 6px;
+}
+
+.checkout-validation-body ul {
+    margin: 0;
+    padding-left: 18px;
+    list-style: disc;
+}
+
+.checkout-validation-body li {
+    margin-bottom: 2px;
+}
+
+.checkout-validation-banner-error {
+    background: #fff5f5;
+    border-color: #fecaca;
+    color: #b91c1c;
+}
+
+.checkout-validation-banner-error > i {
+    color: #ef4444;
+}
+
+.checkout-validation-banner-warning {
+    background: #fffbeb;
+    border-color: #fde68a;
+    color: #92400e;
+}
+
+.checkout-validation-banner-warning > i {
+    color: #f59e0b;
+}
+
+/* Trạng thái tóm tắt trong summary card (góc phải) */
+.checkout-validation-summary {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 14px;
+    padding: 10px 12px;
+    border-radius: var(--radius-sm);
+    font-size: 12.5px;
+    font-weight: 600;
+    border: 1px solid;
+}
+
+.checkout-validation-summary-error {
+    background: #fef2f2;
+    border-color: #fecaca;
+    color: #b91c1c;
+}
+
+.checkout-validation-summary-warning {
+    background: #fffbeb;
+    border-color: #fde68a;
+    color: #92400e;
+}
+
+.checkout-validation-summary i {
+    font-size: 14px;
+}
+
+/* Per-item validation message */
+.checkout-item-validation {
+    margin-top: 6px;
+    padding: 6px 10px;
+    background: #fef2f2;
+    border-left: 3px solid #ef4444;
+    color: #b91c1c;
+    border-radius: var(--radius-sm);
+    font-size: 12px;
+    line-height: 1.4;
+}
+
+.checkout-item-validation i {
+    color: #ef4444;
+    margin-right: 4px;
+}
+
+.checkout-item-validation-invalid {
+    /* marker — JS toggles class */
+}
+
+.checkout-item.checkout-item-invalid {
+    background: #fef9f9;
+    border-radius: var(--radius-sm);
+}
+
+.checkout-item-stock-hint {
+    color: #f59e0b;
+    font-weight: 600;
+    font-size: 11.5px;
+    margin-left: 4px;
+}
+
+.checkout-item-stock-hint i {
+    margin-right: 2px;
+}
+
 /* ---------- Responsive ---------- */
 @media (max-width: 1080px) {
     .checkout-layout {

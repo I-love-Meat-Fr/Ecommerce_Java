@@ -24,33 +24,39 @@ import org.springframework.web.bind.annotation.RestController;
 import java.util.Map;
 
 /**
- * Phase 3 — Complaint REST controller.
+ * Phase 3 — Complaint REST API controller.
  *
  * <p>Customer / Vendor / Moderator / Admin đều gọi vào cùng
- * {@code /complaints/**} gateway. Ownership + role + state guards
+ * {@code /api/complaints/**} gateway. Ownership + role + state guards
  * enforced trong {@link ComplaintService}.</p>
  *
- * <p>Phase 3 §52 contract:</p>
+ * <p>Phase 3 §52 contract (REST endpoints — JSON in/out):</p>
  * <ul>
- *     <li>POST   /complaints                       — Customer create</li>
- *     <li>GET    /complaints                       — List theo role</li>
- *     <li>GET    /complaints/{id}                  — Detail (ownership-checked)</li>
- *     <li>POST   /complaints/{id}/respond          — Vendor respond (L0)</li>
- *     <li>POST   /complaints/{id}/escalate         — Customer/Vendor escalate L0→L1</li>
- *     <li>POST   /complaints/{id}/resolve          — Both-party resolve L0</li>
- *     <li>POST   /complaints/{id}/moderator-act    — Moderator claim/resolve/reject/escalate</li>
- *     <li>POST   /complaints/{id}/admin-act        — Admin Level 2</li>
+ *     <li>POST   /api/complaints                       — Customer create</li>
+ *     <li>GET    /api/complaints                       — List theo role</li>
+ *     <li>GET    /api/complaints/{id}                  — Detail (ownership-checked)</li>
+ *     <li>POST   /api/complaints/{id}/respond          — Vendor respond (L0)</li>
+ *     <li>POST   /api/complaints/{id}/escalate         — Customer/Vendor escalate L0→L1</li>
+ *     <li>POST   /api/complaints/{id}/resolve          — Both-party resolve L0</li>
+ *     <li>POST   /api/complaints/{id}/moderator-act    — Moderator claim/resolve/reject/escalate</li>
+ *     <li>POST   /api/complaints/{id}/admin-act        — Admin Level 2</li>
  * </ul>
+ *
+ * <p>Lưu ý: Customer-facing HTML UI (page rendering) nằm ở
+ * {@code controller.web.ComplaintController} xử lý các URL không có
+ * prefix {@code /api} (vd: {@code /complaints}, {@code /complaints/new},
+ * {@code /complaints/{id}}). Hai controller được tách theo convention
+ * REST-vs-Web của project để tránh xung đột bean name + URL mapping.</p>
  *
  * <p>Security: route-level role enforcement bởi SecurityConfig +
  * method-level {@code @PreAuthorize} nếu cần. Ownership/state guards
  * trong service.</p>
  */
 @Slf4j
-@RestController
-@RequestMapping("/complaints")
+@RestController("complaintApiController")
+@RequestMapping("/api/complaints")
 @RequiredArgsConstructor
-public class ComplaintController {
+public class ComplaintApiController {
 
     private final ComplaintService complaintService;
 

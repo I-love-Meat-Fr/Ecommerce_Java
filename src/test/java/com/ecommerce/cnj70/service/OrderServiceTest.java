@@ -36,6 +36,7 @@ import java.util.Optional;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -63,6 +64,7 @@ class OrderServiceTest {
     @Mock private CartRepository cartRepository;
     @Mock private ShopRepository shopRepository;
     @Mock private CartService cartService;
+    @Mock private VoucherService voucherService;
 
     @InjectMocks private OrderServiceImpl orderService;
 
@@ -396,5 +398,143 @@ class OrderServiceTest {
         assertThatThrownBy(() -> orderService.createOrder("u-1", req))
                 .isInstanceOf(BadRequestException.class)
                 .hasMessageContaining("chưa được xác minh");
+    }
+
+    // ============ Voucher rejection ============
+    // Đảm bảo: khi backend từ chối voucher theo rule (hết hạn / hết lượt /
+    // không tồn tại / không áp dụng cho shop / ...) → Order KHÔNG được tạo,
+    // exception được wrap với prefix "Voucher không hợp lệ:" để
+    // OrderController dễ dàng phát hiện và clear session voucher.
+
+    @Test
+    @DisplayName("createOrder: voucher hết lượt (BadRequestException từ VoucherService) "
+            + "→ wrap thành 'Voucher không hợp lệ:' + KHÔNG tạo Order")
+    void createOrder_voucherExhausted_throwsAndNoOrderCreated() {
+        User customer = TestFixtures.userCustomer();
+        Product product = TestFixtures.activeProduct("p-1", "shop-1", 10);
+        Cart cart = TestFixtures.cartWith("u-1", new ArrayList<>(List.of(
+                TestFixtures.cartItem("p-1", "shop-1", 1, 10, new BigDecimal("100000")))));
+
+        when(userRepository.findById("u-1")).thenReturn(Optional.of(customer));
+        when(cartRepository.findByUserId("u-1")).thenReturn(Optional.of(cart));
+        when(productRepository.findById("p-1")).thenReturn(Optional.of(product));
+        when(voucherService.validateForCheckout(eq("USED"), any(), any()))
+                .thenThrow(new BadRequestException("Voucher đã hết lượt sử dụng"));
+
+        CheckoutReq req = CheckoutReq.builder()
+                .shippingAddress("X")
+                .voucherCode("USED")
+                .build();
+
+        assertThatThrownBy(() -> orderService.createOrder("u-1", req))
+                .isInstanceOf(BadRequestException.class)
+                .hasMessageStartingWith("Voucher không hợp lệ:")
+                .hasMessageContaining("Voucher đã hết lượt sử dụng");
+
+        // QUAN TRỌNG (theo yêu cầu):
+        //   1) Order KHÔNG được lưu
+        //   2) Voucher KHÔNG bị increment used (nếu lỡ increment rồi thì rule bị vi phạm)
+        //   3) Cart KHÔNG bị clear
+        // Lưu ý: productRepository.save có thể đã được gọi để trừ stock trước khi
+        // validate voucher — nhưng @Transactional sẽ rollback nên dữ liệu không
+        // thực sự bị thay đổi trong DB.
+        verify(orderRepository, never()).save(any(Order.class));
+        verify(voucherService, never()).incrementUsed(any());
+        verify(voucherService, never()).tryIncrementUsed(any());
+        verify(cartService, never()).clearCart(any());
+        verify(cartService, never()).removeItems(any(), any());
+    }
+
+    @Test
+    @DisplayName("createOrder: voucher hết hạn → wrap thành 'Voucher không hợp lệ:'")
+    void createOrder_voucherExpired_throwsWrapped() {
+        User customer = TestFixtures.userCustomer();
+        Product product = TestFixtures.activeProduct("p-1", "shop-1", 10);
+        Cart cart = TestFixtures.cartWith("u-1", new ArrayList<>(List.of(
+                TestFixtures.cartItem("p-1", "shop-1", 1, 10, new BigDecimal("100000")))));
+
+        when(userRepository.findById("u-1")).thenReturn(Optional.of(customer));
+        when(cartRepository.findByUserId("u-1")).thenReturn(Optional.of(cart));
+        when(productRepository.findById("p-1")).thenReturn(Optional.of(product));
+        when(voucherService.validateForCheckout(eq("OLD"), any(), any()))
+                .thenThrow(new BadRequestException("Voucher đã hết hạn"));
+
+        CheckoutReq req = CheckoutReq.builder()
+                .shippingAddress("X")
+                .voucherCode("OLD")
+                .build();
+
+        assertThatThrownBy(() -> orderService.createOrder("u-1", req))
+                .isInstanceOf(BadRequestException.class)
+                .hasMessageStartingWith("Voucher không hợp lệ:")
+                .hasMessageContaining("Voucher đã hết hạn");
+
+        verify(orderRepository, never()).save(any(Order.class));
+        verify(voucherService, never()).incrementUsed(any());
+        verify(voucherService, never()).tryIncrementUsed(any());
+        verify(cartService, never()).clearCart(any());
+    }
+
+    @Test
+    @DisplayName("createOrder: voucher không tồn tại (ResourceNotFoundException) "
+            + "→ wrap thành 'Voucher không hợp lệ:' + KHÔNG tạo Order")
+    void createOrder_voucherNotFound_throwsWrapped() {
+        User customer = TestFixtures.userCustomer();
+        Product product = TestFixtures.activeProduct("p-1", "shop-1", 10);
+        Cart cart = TestFixtures.cartWith("u-1", new ArrayList<>(List.of(
+                TestFixtures.cartItem("p-1", "shop-1", 1, 10, new BigDecimal("100000")))));
+
+        when(userRepository.findById("u-1")).thenReturn(Optional.of(customer));
+        when(cartRepository.findByUserId("u-1")).thenReturn(Optional.of(cart));
+        when(productRepository.findById("p-1")).thenReturn(Optional.of(product));
+        when(voucherService.validateForCheckout(eq("GHOST"), any(), any()))
+                .thenThrow(new ResourceNotFoundException("Không tìm thấy voucher với mã: GHOST"));
+
+        CheckoutReq req = CheckoutReq.builder()
+                .shippingAddress("X")
+                .voucherCode("GHOST")
+                .build();
+
+        assertThatThrownBy(() -> orderService.createOrder("u-1", req))
+                .isInstanceOf(BadRequestException.class)
+                .hasMessageStartingWith("Voucher không hợp lệ:")
+                .hasMessageContaining("Không tìm thấy voucher với mã: GHOST");
+
+        // QUAN TRỌNG: Order KHÔNG được lưu
+        verify(orderRepository, never()).save(any(Order.class));
+        verify(voucherService, never()).incrementUsed(any());
+        verify(voucherService, never()).tryIncrementUsed(any());
+        verify(cartService, never()).clearCart(any());
+    }
+
+    @Test
+    @DisplayName("createOrder: voucher không áp dụng cho shop (BadRequestException) "
+            + "→ wrap thành 'Voucher không hợp lệ:' + KHÔNG tạo Order")
+    void createOrder_voucherNotApplicableForShop_throwsWrapped() {
+        User customer = TestFixtures.userCustomer();
+        Product product = TestFixtures.activeProduct("p-1", "shop-1", 10);
+        Cart cart = TestFixtures.cartWith("u-1", new ArrayList<>(List.of(
+                TestFixtures.cartItem("p-1", "shop-1", 1, 10, new BigDecimal("100000")))));
+
+        when(userRepository.findById("u-1")).thenReturn(Optional.of(customer));
+        when(cartRepository.findByUserId("u-1")).thenReturn(Optional.of(cart));
+        when(productRepository.findById("p-1")).thenReturn(Optional.of(product));
+        when(voucherService.validateForCheckout(eq("OTHER_SHOP"), any(), any()))
+                .thenThrow(new BadRequestException("Voucher không áp dụng cho shop này"));
+
+        CheckoutReq req = CheckoutReq.builder()
+                .shippingAddress("X")
+                .voucherCode("OTHER_SHOP")
+                .build();
+
+        assertThatThrownBy(() -> orderService.createOrder("u-1", req))
+                .isInstanceOf(BadRequestException.class)
+                .hasMessageStartingWith("Voucher không hợp lệ:")
+                .hasMessageContaining("Voucher không áp dụng cho shop này");
+
+        verify(orderRepository, never()).save(any(Order.class));
+        verify(voucherService, never()).incrementUsed(any());
+        verify(voucherService, never()).tryIncrementUsed(any());
+        verify(cartService, never()).clearCart(any());
     }
 }

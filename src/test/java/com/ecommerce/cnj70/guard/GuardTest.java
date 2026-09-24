@@ -184,7 +184,7 @@ class GuardTest {
                     TestFixtures.emptyCart("u-1")));
             when(cartRepo.save(any(Cart.class))).thenAnswer(inv -> inv.getArgument(0));
 
-            CartServiceImpl cartService = new CartServiceImpl(cartRepo, productRepo);
+            CartServiceImpl cartService = new CartServiceImpl(cartRepo, productRepo, mock(ShopRepository.class));
 
             // Hiện tại KHÔNG throw → đây là bug cần fix ở task Inventory
             Cart result = cartService.addToCart("u-1", "p-1", 1);

@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/springsecurity6"
+      th:replace="~{layout/web-layout :: layout(title='Báo cáo của tôi - CNJ70 Shop', content=~{::main-content}, scripts=~{::page-scripts}, pageStyles=~{::page-styles})}">
+<head>
+    <title>Báo cáo của tôi - CNJ70 Shop</title>
+    <th:block th:fragment="page-styles">
+        <link rel="stylesheet" th:href="@{/css/report.css}">
+    </th:block>
+</head>
+<body>
+<main th:fragment="main-content" class="rpt-page">
+
+    <!-- Hero -->
+    <section class="rpt-hero">
+        <div class="container">
+            <nav class="rpt-breadcrumb">
+                <a th:href="@{/home}"><i class="fas fa-home"></i> Trang chủ</a>
+                <i class="fas fa-chevron-right"></i>
+                <span>Báo cáo của tôi</span>
+            </nav>
+            <div class="rpt-hero-inner">
+                <div class="rpt-hero-left">
+                    <span class="rpt-hero-tag">
+                        <i class="fas fa-flag"></i> Trung tâm báo cáo
+                    </span>
+                    <h1>
+                        Báo cáo của tôi
+                        <span class="teal-word" th:if="${totalCount > 0}" th:text="'(' + ${totalCount} + ')'">(0)</span>
+                    </h1>
+                    <p>Theo dõi các báo cáo Review/Sản phẩm bạn đã gửi. Mỗi case có mã riêng và được đội ngũ kiểm duyệt xử lý.</p>
+                </div>
+                <div class="rpt-hero-right">
+                    <a th:href="@{/products}" class="rpt-hero-cta rpt-hero-cta-ghost">
+                        <i class="fas fa-th-large"></i>
+                        <span>Danh sách sản phẩm</span>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Body -->
+    <section class="rpt-section">
+        <div class="container">
+
+            <!-- Filter bar: status -->
+            <div class="rpt-filter-bar">
+                <a th:href="@{/reports(status='ALL',targetType=${activeTargetType})}"
+                   th:classappend="${activeStatus == 'ALL' ? 'active' : ''}"
+                   class="rpt-filter-tab">
+                    <i class="fas fa-list-ul"></i>
+                    <span>Tất cả</span>
+                    <span class="rpt-filter-count" th:text="${totalCount}">0</span>
+                </a>
+                <a th:href="@{/reports(status='PENDING',targetType=${activeTargetType})}"
+                   th:classappend="${activeStatus == 'PENDING' ? 'active' : ''}"
+                   class="rpt-filter-tab">
+                    <i class="fas fa-hourglass-half"></i>
+                    <span>Đang chờ Moderator</span>
+                    <span class="rpt-filter-count" th:text="${pendingCount}">0</span>
+                </a>
+                <a th:href="@{/reports(status='IN_REVIEW',targetType=${activeTargetType})}"
+                   th:classappend="${activeStatus == 'OPEN' or activeStatus == 'IN_REVIEW' ? 'active' : ''}"
+                   class="rpt-filter-tab">
+                    <i class="fas fa-magnifying-glass"></i>
+                    <span>Đang xem xét</span>
+                    <span class="rpt-filter-count" th:text="${inReviewCount}">0</span>
+                </a>
+                <a th:href="@{/reports(status='RESOLVED',targetType=${activeTargetType})}"
+                   th:classappend="${activeStatus == 'RESOLVED' or activeStatus == 'APPROVED' ? 'active' : ''}"
+                   class="rpt-filter-tab">
+                    <i class="fas fa-check-circle"></i>
+                    <span>Đã xử lý</span>
+                    <span class="rpt-filter-count" th:text="${resolvedCount}">0</span>
+                </a>
+                <a th:href="@{/reports(status='ESCALATED',targetType=${activeTargetType})}"
+                   th:classappend="${activeStatus == 'ESCALATED' ? 'active' : ''}"
+                   class="rpt-filter-tab">
+                    <i class="fas fa-level-up-alt"></i>
+                    <span>Đã chuyển Admin</span>
+                    <span class="rpt-filter-count" th:text="${escalatedCount}">0</span>
+                </a>
+                <a th:href="@{/reports(status='REJECTED',targetType=${activeTargetType})}"
+                   th:classappend="${activeStatus == 'REJECTED' ? 'active' : ''}"
+                   class="rpt-filter-tab">
+                    <i class="fas fa-times-circle"></i>
+                    <span>Bị từ chối</span>
+                    <span class="rpt-filter-count" th:text="${rejectedCount}">0</span>
+                </a>
+            </div>
+
+            <!-- Filter bar: target type -->
+            <div class="rpt-target-filter">
+                <span class="rpt-target-filter-label"><i class="fas fa-filter"></i> Loại:</span>
+                <a th:href="@{/reports(status=${activeStatus},targetType='ALL')}"
+                   th:classappend="${activeTargetType == 'ALL' ? 'active' : ''}"
+                   class="rpt-target-chip">
+                    Tất cả
+                </a>
+                <a th:href="@{/reports(status=${activeStatus},targetType='REVIEW')}"
+                   th:classappend="${activeTargetType == 'REVIEW' ? 'active' : ''}"
+                   class="rpt-target-chip">
+                    <i class="fas fa-comment-dots"></i> Đánh giá
+                </a>
+                <a th:href="@{/reports(status=${activeStatus},targetType='PRODUCT')}"
+                   th:classappend="${activeTargetType == 'PRODUCT' ? 'active' : ''}"
+                   class="rpt-target-chip">
+                    <i class="fas fa-box"></i> Sản phẩm
+                </a>
+            </div>
+
+            <!-- Empty state -->
+            <div th:if="${#lists.isEmpty(reports)}" class="rpt-empty">
+                <div class="rpt-empty-inner">
+                    <div class="rpt-empty-icon">
+                        <i class="fas fa-folder-open"></i>
+                    </div>
+                    <h3>Chưa có báo cáo nào</h3>
+                    <p>Bạn chưa gửi báo cáo nào về đánh giá hoặc sản phẩm. Khi thấy nội dung vi phạm, hãy dùng nút "Báo cáo" trên Review/Sản phẩm để gửi cho đội ngũ kiểm duyệt.</p>
+                    <a th:href="@{/products}" class="rpt-empty-btn">
+                        <i class="fas fa-search"></i> Khám phá sản phẩm
+                    </a>
+                </div>
+            </div>
+
+            <!-- List cards -->
+            <div th:if="${not #lists.isEmpty(reports)}" class="rpt-list">
+                <article class="rpt-card" th:each="r : ${reports}"
+                         th:attr="data-status=${r.status.name()}, data-target=${r.targetType.name()}">
+                    <header class="rpt-card-header">
+                        <div class="rpt-card-id">
+                            <i class="fas fa-hashtag"></i>
+                            <span th:text="${r.id}">ID</span>
+                        </div>
+                        <span class="rpt-status" th:attr="data-status=${r.status.name()}"
+                              th:text="${statusLabels.get(r.status) ?: r.status.name()}">
+                            Status
+                        </span>
+                    </header>
+
+                    <div class="rpt-card-body">
+                        <!-- Target row -->
+                        <div class="rpt-card-row">
+                            <div class="rpt-card-info">
+                                <div class="rpt-card-target">
+                                    <i th:classappend="${r.targetType.name() == 'REVIEW' ? 'fas fa-comment-dots' : 'fas fa-box'}"></i>
+                                    <span th:text="${targetTypeLabels.get(r.targetType) ?: r.targetType.name()}">Target type</span>
+                                    <code th:text="'#' + ${r.targetId}">targetId</code>
+                                </div>
+                                <div class="rpt-card-reason">
+                                    <i class="fas fa-exclamation-triangle"></i>
+                                    Lý do: <strong th:text="${reasonLabels.get(T(com.ecommerce.cnj70.enums.ReportReason).valueOf(r.reason)) ?: r.reason}">Reason</strong>
+                                </div>
+                            </div>
+                            <div class="rpt-card-date">
+                                <i class="far fa-calendar-alt"></i>
+                                <span th:text="${r.createdAt != null ? #temporals.format(r.createdAt, 'dd/MM/yyyy HH:mm') : ''}">Date</span>
+                            </div>
+                        </div>
+
+                        <!-- Snapshot (if any) -->
+                        <div class="rpt-card-snapshot" th:if="${r.targetSnapshot != null and not #strings.isEmpty(r.targetSnapshot)}">
+                            <i class="fas fa-quote-left"></i>
+                            <span th:text="${#strings.length(r.targetSnapshot) > 200 ? #strings.substring(r.targetSnapshot, 0, 200) + '…' : r.targetSnapshot}">Snapshot</span>
+                        </div>
+
+                        <!-- Description preview -->
+                        <div class="rpt-card-desc" th:if="${r.description != null and not #strings.isEmpty(r.description)}">
+                            <p th:text="${#strings.length(r.description) > 180 ? #strings.substring(r.description, 0, 180) + '…' : r.description}">Description</p>
+                        </div>
+
+                        <!-- Evidence count -->
+                        <div class="rpt-card-evidence" th:if="${r.evidence != null and not #lists.isEmpty(r.evidence)}">
+                            <i class="fas fa-paperclip"></i>
+                            <span th:text="${r.evidence.size()} + ' bằng chứng'">0 bằng chứng</span>
+                        </div>
+                    </div>
+
+                    <footer class="rpt-card-footer">
+                        <div class="rpt-card-source">
+                            <i class="fas fa-user"></i>
+                            <span>Báo cáo của bạn</span>
+                        </div>
+                        <a th:href="@{/reports/{id}(id=${r.id})}" class="rpt-card-detail-btn">
+                            Xem chi tiết <i class="fas fa-arrow-right"></i>
+                        </a>
+                    </footer>
+                </article>
+            </div>
+
+        </div>
+    </section>
+</main>
+</body>
+</html>
