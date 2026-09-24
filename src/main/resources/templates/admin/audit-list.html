@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/springsecurity6"
+      th:replace="~{layout/admin-layout :: layout(title='Audit Log - CNJ70 Admin', content=~{::main-content}, scripts=~{::page-scripts})}">
+<head>
+    <title>Audit Log - CNJ70 Admin</title>
+</head>
+<body>
+<main th:fragment="main-content">
+    <div class="sd-page-head">
+        <div class="sd-page-head-title">
+            <h1><i class="fas fa-clipboard-list"></i> Audit Log</h1>
+            <p>Tra cứu nhật ký hành động trên hệ thống — READ ONLY.</p>
+        </div>
+        <div class="sd-page-head-meta">
+            <span class="sd-page-head-meta-label">Tổng entries</span>
+            <span class="sd-page-head-meta-value" th:text="${totalItems}">0</span>
+        </div>
+    </div>
+
+    <div class="sd-card sd-toolbar" style="margin-bottom:20px;">
+        <div class="sd-card-body">
+            <form th:action="@{/admin/audit}" method="get" class="sd-toolbar-form">
+                <input type="hidden" name="size" th:value="${size}" />
+                <select name="role" class="sd-select sd-toolbar-select"
+                        style="padding:8px 10px;border:1px solid var(--border,#e2e8f0);border-radius:6px;">
+                    <option value="">Tất cả role</option>
+                    <option th:each="r : ${roleChoices}"
+                            th:value="${r.name()}"
+                            th:text="${r.name()}"
+                            th:selected="${roleFilter == r.name()}"></option>
+                </select>
+                <input type="text" name="actorId" th:value="${actorId}"
+                       placeholder="Actor ID..."
+                       style="padding:8px 10px;border:1px solid var(--border,#e2e8f0);border-radius:6px;min-width:160px;" />
+                <input type="text" name="resourceType" th:value="${resourceType}"
+                       placeholder="Resource Type..."
+                       style="padding:8px 10px;border:1px solid var(--border,#e2e8f0);border-radius:6px;min-width:160px;" />
+                <input type="text" name="resourceId" th:value="${resourceId}"
+                       placeholder="Resource ID..."
+                       style="padding:8px 10px;border:1px solid var(--border,#e2e8f0);border-radius:6px;min-width:160px;" />
+                <input type="datetime-local" name="from" th:value="${from}"
+                       style="padding:8px 10px;border:1px solid var(--border,#e2e8f0);border-radius:6px;" />
+                <input type="datetime-local" name="to" th:value="${to}"
+                       style="padding:8px 10px;border:1px solid var(--border,#e2e8f0);border-radius:6px;" />
+                <button type="submit" class="sd-btn sd-btn-primary sd-btn-sm sd-toolbar-btn">
+                    <i class="fas fa-filter"></i> Lọc
+                </button>
+                <a th:href="@{/admin/audit(page=0, size=${size})}"
+                   class="sd-btn sd-btn-secondary sd-btn-sm sd-toolbar-btn">
+                    <i class="fas fa-rotate-left"></i> Đặt lại
+                </a>
+            </form>
+        </div>
+    </div>
+
+    <div class="sd-card" th:if="${(roleFilter != null and !#strings.isEmpty(roleFilter))
+                                  or (actorId != null and !#strings.isEmpty(actorId))
+                                  or (resourceType != null and !#strings.isEmpty(resourceType))
+                                  or (resourceId != null and !#strings.isEmpty(resourceId))
+                                  or (from != null and !#strings.isEmpty(from))
+                                  or (to != null and !#strings.isEmpty(to))}"
+         style="margin-bottom:16px;">
+        <div class="sd-card-body" style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+            <i class="fas fa-filter"></i>
+            <span>Đang lọc theo:</span>
+            <span th:if="${roleFilter != null and !#strings.isEmpty(roleFilter)}" class="sd-badge sd-badge-blue">
+                Role: <span th:text="${roleFilter}"></span>
+            </span>
+            <span th:if="${actorId != null and !#strings.isEmpty(actorId)}" class="sd-badge sd-badge-slate">
+                Actor: <span th:text="${actorId}"></span>
+            </span>
+            <span th:if="${resourceType != null and !#strings.isEmpty(resourceType)}" class="sd-badge sd-badge-slate">
+                Resource Type: <span th:text="${resourceType}"></span>
+            </span>
+            <span th:if="${resourceId != null and !#strings.isEmpty(resourceId)}" class="sd-badge sd-badge-slate">
+                Resource ID: <span th:text="${resourceId}"></span>
+            </span>
+            <span th:if="${from != null and !#strings.isEmpty(from)}" class="sd-badge sd-badge-sky">
+                Từ: <span th:text="${from}"></span>
+            </span>
+            <span th:if="${to != null and !#strings.isEmpty(to)}" class="sd-badge sd-badge-sky">
+                Đến: <span th:text="${to}"></span>
+            </span>
+            <a th:href="@{/admin/audit(page=0, size=${size})}"
+               class="sd-btn sd-btn-secondary sd-btn-sm" style="margin-left:auto;">
+                <i class="fas fa-times"></i> Bỏ lọc
+            </a>
+            <span style="color:var(--text-muted);font-size:13px;">
+                <span th:text="${totalItems}">0</span> kết quả
+            </span>
+        </div>
+    </div>
+
+    <div class="sd-card">
+        <div class="sd-card-body sd-card-body-flush">
+            <table class="sd-table">
+                <thead>
+                    <tr>
+                        <th>Timestamp</th>
+                        <th>Actor</th>
+                        <th>Role</th>
+                        <th>Action</th>
+                        <th>Resource</th>
+                        <th>Severity</th>
+                        <th>Reason</th>
+                        <th>IP</th>
+                        <th style="text-align:right;">Thao tác</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr th:if="${#lists.isEmpty(logs)}">
+                        <td colspan="9">
+                            <div class="sd-empty">
+                                <i class="fas fa-clipboard"></i>
+                                <h3>Không có audit log nào</h3>
+                                <p>Audit entries sẽ xuất hiện khi có action thay đổi trạng thái.</p>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr th:each="e, iter : ${logs}">
+                        <td class="sd-table-sub"
+                            th:text="${e.createdAt != null} ? ${#temporals.format(e.createdAt, 'yyyy-MM-dd HH:mm:ss')} : '—'">—</td>
+                        <td>
+                            <div class="sd-table-title" th:text="${e.actorEmail ?: e.actorId}">actor</div>
+                            <div class="sd-table-sub sd-mono" th:text="${e.actorId}">id</div>
+                        </td>
+                        <td><span class="sd-badge sd-badge-slate" th:text="${e.role}">ADMIN</span></td>
+                        <td><span class="sd-badge sd-badge-blue" th:text="${e.action}">ACTION</span></td>
+                        <td>
+                            <span class="sd-badge sd-badge-slate" th:text="${e.resourceType}">TYPE</span>
+                            <div class="sd-table-sub sd-mono" th:text="${e.resourceId}">id</div>
+                        </td>
+                        <td th:text="${e.severity != null ? e.severity : '—'}">—</td>
+                        <td class="sd-table-sub" style="max-width:220px;">
+                            <div th:text="${e.reason != null and #strings.length(e.reason) > 60}
+                                          ? ${#strings.substring(e.reason, 0, 60)} + '...'
+                                          : ${e.reason}">reason</div>
+                        </td>
+                        <td class="sd-table-sub sd-mono" th:text="${e.ip != null ? e.ip : '—'}">—</td>
+                        <td style="text-align:right; white-space:nowrap;">
+                            <a th:href="@{/admin/audit/{id}(id=${e.id}, page=${page}, size=${size}, role=${roleFilter}, actorId=${actorId}, from=${from}, to=${to})}"
+                               class="sd-btn sd-btn-primary sd-btn-sm">
+                                <i class="fas fa-eye"></i> Chi tiết
+                            </a>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="sd-card-body" th:if="${totalPages > 0}"
+             style="display:flex;justify-content:center;border-top:1px solid var(--border,#e2e8f0);">
+            <nav class="sd-pagination" aria-label="Phân trang">
+                <a th:if="${hasPrev}"
+                   th:href="@{/admin/audit(page=${page - 1}, size=${size}, role=${roleFilter}, actorId=${actorId}, resourceType=${resourceType}, resourceId=${resourceId}, from=${from}, to=${to})}"
+                   class="sd-page-link">
+                    <i class="fas fa-chevron-left"></i> Trước
+                </a>
+                <span th:unless="${hasPrev}" class="sd-page-link sd-page-disabled">
+                    <i class="fas fa-chevron-left"></i> Trước
+                </span>
+
+                <th:block th:each="i : ${pageNumbers}" th:if="${i == page}">
+                    <span class="sd-page-link sd-page-active" th:text="${i + 1}">1</span>
+                </th:block>
+                <th:block th:each="i : ${pageNumbers}" th:unless="${i == page}">
+                    <a th:href="@{/admin/audit(page=${i}, size=${size}, role=${roleFilter}, actorId=${actorId}, resourceType=${resourceType}, resourceId=${resourceId}, from=${from}, to=${to})}"
+                       class="sd-page-link" th:text="${i + 1}">1</a>
+                </th:block>
+
+                <a th:if="${hasNext}"
+                   th:href="@{/admin/audit(page=${page + 1}, size=${size}, role=${roleFilter}, actorId=${actorId}, resourceType=${resourceType}, resourceId=${resourceId}, from=${from}, to=${to})}"
+                   class="sd-page-link">
+                    Sau <i class="fas fa-chevron-right"></i>
+                </a>
+                <span th:unless="${hasNext}" class="sd-page-link sd-page-disabled">
+                    Sau <i class="fas fa-chevron-right"></i>
+                </span>
+            </nav>
+        </div>
+    </div>
+</main>
+<th:block th:fragment="page-scripts"></th:block>
+</body>
+</html>

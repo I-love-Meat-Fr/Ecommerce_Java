@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/springsecurity6"
+      th:replace="~{layout/moderator-layout :: layout(title='Moderator History - CNJ70', content=~{::main-content}, scripts=~{::page-scripts})}">
+<head>
+    <title>Moderator History - CNJ70</title>
+</head>
+<body>
+<main th:fragment="main-content">
+    <div class="sd-page-head">
+        <div class="sd-page-head-title">
+            <h1><i class="fas fa-clock-rotate-left"></i> Lịch sử kiểm duyệt</h1>
+            <p>Lịch sử tất cả quyết định Moderator (Product / Review / ReportCase / Shop).</p>
+        </div>
+        <div class="sd-page-head-meta">
+            <span class="sd-page-head-meta-label">Tổng entries</span>
+            <span class="sd-page-head-meta-value" th:text="${totalItems}">0</span>
+        </div>
+    </div>
+
+    <div class="sd-card">
+        <div class="sd-card-body sd-card-body-flush">
+            <table class="sd-table" th:if="${not #lists.isEmpty(history)}">
+                <thead>
+                    <tr>
+                        <th>Thời gian</th>
+                        <th>Resource Type</th>
+                        <th>Resource</th>
+                        <th>Hành động</th>
+                        <th>Trước</th>
+                        <th>Sau</th>
+                        <th>Moderator</th>
+                        <th>Lý do</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr th:each="h : ${history}">
+                        <td class="sd-table-sub" th:text="${h.createdAt != null ? #temporals.format(h.createdAt, 'dd/MM/yyyy HH:mm') : '—'}">—</td>
+                        <td>
+                            <span class="sd-badge"
+                                  th:classappend="${h.resourceType == 'REPORTCASE'} ? 'sd-badge-red'
+                                                  : (${h.resourceType == 'REVIEW'} ? 'sd-badge-sky'
+                                                  : (${h.resourceType == 'PRODUCT'} ? 'sd-badge-amber'
+                                                  : (${h.resourceType == 'SHOP'} ? 'sd-badge-purple'
+                                                  : 'sd-badge-slate')))"
+                                  th:text="${h.resourceType != null ? h.resourceType : '—'}">—</span>
+                        </td>
+                        <td>
+                            <div class="sd-table-title" th:text="${h.resourceName != null ? h.resourceName : '—'}">—</div>
+                            <div class="sd-table-sub sd-mono">
+                                <a th:if="${h.resourceType == 'REPORTCASE'}"
+                                   th:href="@{/moderator/cases/{id}(id=${h.resourceId})}"
+                                   class="sd-link" th:text="${h.resourceId}">id</a>
+                                <a th:if="${h.resourceType == 'PRODUCT'}"
+                                   th:href="@{/moderator/products/{id}(id=${h.resourceId})}"
+                                   class="sd-link" th:text="${h.resourceId}">id</a>
+                                <a th:if="${h.resourceType == 'REVIEW'}"
+                                   th:href="@{/moderator/reviews/{id}(id=${h.resourceId})}"
+                                   class="sd-link" th:text="${h.resourceId}">id</a>
+                                <a th:if="${h.resourceType == 'SHOP'}"
+                                   th:href="@{/moderator/shops/{id}(id=${h.resourceId})}"
+                                   class="sd-link" th:text="${h.resourceId}">id</a>
+                                <code th:unless="${h.resourceType == 'REPORTCASE' or h.resourceType == 'PRODUCT' or h.resourceType == 'REVIEW' or h.resourceType == 'SHOP'}"
+                                      th:text="${h.resourceId}">id</code>
+                            </div>
+                        </td>
+                        <td>
+                            <span class="sd-badge"
+                                  th:classappend="${h.action.name() == 'APPROVE'} ? 'sd-badge-green'
+                                                  : (${h.action.name() == 'REJECT'} ? 'sd-badge-red'
+                                                  : (${h.action.name() == 'ESCALATE'} ? 'sd-badge-amber'
+                                                  : (${h.action.name() == 'HIDE'} ? 'sd-badge-slate'
+                                                  : (${h.action.name() == 'UNHIDE'} ? 'sd-badge-sky'
+                                                  : (${h.action.name() == 'SUSPEND'} ? 'sd-badge-red'
+                                                  : (${h.action.name() == 'RESTORE'} ? 'sd-badge-green'
+                                                  : 'sd-badge-blue'))))))"
+                                  th:text="${h.action.name()}">ACTION</span>
+                        </td>
+                        <td th:text="${h.beforeStatus != null ? h.beforeStatus.name() : '—'}">—</td>
+                        <td th:text="${h.afterStatus != null ? h.afterStatus.name() : '—'}">—</td>
+                        <td>
+                            <div th:text="${h.moderatorEmail != null ? h.moderatorEmail : '—'}">—</div>
+                            <div class="sd-table-sub" th:text="${h.moderatorRole}">ROLE</div>
+                        </td>
+                        <td class="sd-table-sub" th:text="${h.reason != null ? h.reason : '—'}">—</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <div th:if="${#lists.isEmpty(history)}" style="padding:40px;">
+                <div class="sd-empty">
+                    <i class="fas fa-clock-rotate-left"></i>
+                    <h3>Chưa có lịch sử kiểm duyệt</h3>
+                    <p>Các quyết định Moderator (Approve / Reject / Escalate / Hide / Unhide / Suspend / Restore) sẽ hiển thị ở đây.</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="sd-card-body" th:if="${totalPages > 0}"
+             style="display:flex;justify-content:center;border-top:1px solid var(--border,#e2e8f0);">
+            <nav class="sd-pagination" aria-label="Phân trang">
+                <a th:if="${hasPrev}" th:href="@{/moderator/history(page=${page - 1}, size=${size})}"
+                   class="sd-page-link">
+                    <i class="fas fa-chevron-left"></i> Trước
+                </a>
+                <span th:unless="${hasPrev}" class="sd-page-link sd-page-disabled">
+                    <i class="fas fa-chevron-left"></i> Trước
+                </span>
+
+                <th:block th:each="i : ${#numbers.sequence(0, totalPages - 1)}"
+                           th:if="${i >= page - 2 and i <= page + 2 and i == page}">
+                    <span class="sd-page-link sd-page-active" th:text="${i + 1}">1</span>
+                </th:block>
+                <th:block th:each="i : ${#numbers.sequence(0, totalPages - 1)}"
+                           th:if="${i >= page - 2 and i <= page + 2 and i != page}">
+                    <a th:href="@{/moderator/history(page=${i}, size=${size})}"
+                       class="sd-page-link" th:text="${i + 1}">1</a>
+                </th:block>
+
+                <a th:if="${hasNext}" th:href="@{/moderator/history(page=${page + 1}, size=${size})}"
+                   class="sd-page-link">
+                    Sau <i class="fas fa-chevron-right"></i>
+                </a>
+                <span th:unless="${hasNext}" class="sd-page-link sd-page-disabled">
+                    Sau <i class="fas fa-chevron-right"></i>
+                </span>
+            </nav>
+        </div>
+    </div>
+</main>
+<th:block th:fragment="page-scripts"></th:block>
+</body>
+</html>

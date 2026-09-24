@@ -25,11 +25,17 @@
                         <i class="fas fa-store"></i>
                         Thông tin Shop
                     </h2>
-                    <span th:if="${shop.kycStatus.name() == 'PENDING_PROVIDER'}" class="sd-badge sd-badge-warning">
-                        <i class="fas fa-clock"></i> Đang xử lý
+                    <span th:if="${shop.kycStatus.name() == 'PENDING_THIRD_PARTY'}" class="sd-badge sd-badge-warning">
+                        <i class="fas fa-clock"></i> Đang chờ 3rd-party
                     </span>
-                    <span th:if="${shop.kycStatus.name() == 'KYC_REJECTED'}" class="sd-badge sd-badge-danger">
-                        <i class="fas fa-xmark"></i> Bị từ chối
+                    <span th:if="${shop.kycStatus.name() == 'PENDING_ADMIN'}" class="sd-badge sd-badge-warning">
+                        <i class="fas fa-clock"></i> Đang chờ admin
+                    </span>
+                    <span th:if="${shop.kycStatus.name() == 'THIRD_PARTY_REJECTED'}" class="sd-badge sd-badge-danger">
+                        <i class="fas fa-xmark"></i> 3rd-party từ chối
+                    </span>
+                    <span th:if="${shop.kycStatus.name() == 'ADMIN_REJECTED'}" class="sd-badge sd-badge-danger">
+                        <i class="fas fa-xmark"></i> Admin từ chối
                     </span>
                     <span th:if="${shop.kycStatus.name() == 'APPROVED'}" class="sd-badge sd-badge-success">
                         <i class="fas fa-check"></i> Đã duyệt
@@ -161,17 +167,17 @@
                             <div style="font-size:12px;color:#64748b;" th:text="${shop.kycSubmittedAt != null ? #temporals.format(shop.kycSubmittedAt, 'dd/MM/yyyy HH:mm') : '—'}">—</div>
                             <div>Vendor nộp KYC</div>
                         </div>
-                        <div style="margin-bottom:16px;position:relative;" th:if="${shop.kycStatus.name() == 'PENDING_PROVIDER'}">
+                        <div style="margin-bottom:16px;position:relative;" th:if="${shop.kycStatus.name() == 'PENDING_THIRD_PARTY' or shop.kycStatus.name() == 'PENDING_ADMIN'}">
                             <div style="position:absolute;left:-22px;top:4px;width:10px;height:10px;border-radius:50%;background:#f59e0b;"></div>
                             <div style="font-size:12px;color:#64748b;">Đang xử lý</div>
-                            <div>Đang chờ provider xác minh</div>
+                            <div th:text="${shop.kycStatus.name() == 'PENDING_THIRD_PARTY' ? 'Đang chờ 3rd-party xác minh' : 'Đang chờ admin duyệt'}">Đang chờ xác minh</div>
                         </div>
                         <div style="margin-bottom:16px;position:relative;" th:if="${shop.kycStatus.name() == 'APPROVED'}">
                             <div style="position:absolute;left:-22px;top:4px;width:10px;height:10px;border-radius:50%;background:#10b981;"></div>
                             <div style="font-size:12px;color:#64748b;" th:text="${shop.kycApprovedAt != null ? #temporals.format(shop.kycApprovedAt, 'dd/MM/yyyy HH:mm') : '—'}">—</div>
                             <div>KYC được duyệt</div>
                         </div>
-                        <div style="margin-bottom:16px;position:relative;" th:if="${shop.kycStatus.name() == 'KYC_REJECTED'}">
+                        <div style="margin-bottom:16px;position:relative;" th:if="${shop.kycStatus.name() == 'THIRD_PARTY_REJECTED' or shop.kycStatus.name() == 'ADMIN_REJECTED'}">
                             <div style="position:absolute;left:-22px;top:4px;width:10px;height:10px;border-radius:50%;background:#ef4444;"></div>
                             <div style="font-size:12px;color:#64748b;">Bị từ chối</div>
                             <div th:text="${shop.kycRejectionReason}">Lý do</div>

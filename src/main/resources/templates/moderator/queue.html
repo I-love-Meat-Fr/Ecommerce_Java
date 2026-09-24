@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security6"
+      th:replace="~{layout/moderator-layout :: layout(title='Review Queue - CNJ70', content=~{::main-content}, scripts=~{::page-scripts})}">
+<head>
+    <title>Review Queue - CNJ70</title>
+</head>
+<body>
+<main th:fragment="main-content">
+    <div class="dash-hero" style="padding: 1.5rem 2rem;">
+        <div class="dash-hero-content">
+            <div class="dash-greeting">
+                <h1>Review Queue</h1>
+                <p class="dash-greeting-sub">Danh sách review chờ kiểm duyệt</p>
+            </div>
+        </div>
+    </div>
+    <div class="dash-card" style="margin: 0 2rem 2rem;">
+        <div class="dash-card-header">
+            <div class="dash-card-title-group">
+                <h3><i class="fas fa-comment-dots"></i> Review Queue</h3>
+                <p>Phase 2B — Review Moderation (chưa triển khai)</p>
+            </div>
+        </div>
+        <div class="dash-card-body">
+            <div class="dash-empty">
+                <div class="dash-empty-icon"><i class="fas fa-comment-dots"></i></div>
+                <h3>Chưa có dữ liệu</h3>
+                <p>Review Moderation sẽ được triển khai trong Phase 2B.</p>
+                <p style="margin-top:0.5rem;">Hiện tại, Product Queue đã có tại <a th:href="@{/moderator/queue}">/moderator/queue</a>.</p>
+            </div>
+        </div>
+    </div>
+</main>
+<th:block th:fragment="page-scripts"></th:block>
+</body>
+</html>

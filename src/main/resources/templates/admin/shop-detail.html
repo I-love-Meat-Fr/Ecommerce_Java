@@ -14,8 +14,37 @@
         </div>
         <div class="sd-page-head-actions">
             <a th:href="@{/admin/shops(page=${page}, size=${size}, q=${q}, status=${status})}" class="sd-btn sd-btn-secondary sd-btn-sm">
-                <i class="fas fa-arrow-left"></i> Quay lại
+                <i class="fas fa-arrow-left"></i>
+                <span>Quay lại</span>
             </a>
+        </div>
+    </div>
+
+    <!-- Status badges row -->
+    <div class="sd-card" style="margin-bottom:20px;">
+        <div class="sd-card-body" style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
+            <span class="sd-badge sd-badge-slate sd-mono" th:text="'ID: ' + ${shop.id}">#id</span>
+            <span th:if="${shop.status.name() == 'APPROVED'}" class="sd-badge sd-badge-green">
+                <i class="fas fa-circle-check"></i> Đã duyệt
+            </span>
+            <span th:if="${shop.status.name() == 'PENDING'}" class="sd-badge sd-badge-amber">
+                <i class="fas fa-hourglass-half"></i> Chờ duyệt
+            </span>
+            <span th:if="${shop.status.name() == 'RESTRICTED'}" class="sd-badge sd-badge-warning">
+                <i class="fas fa-circle-exclamation"></i> Bị giới hạn
+            </span>
+            <span th:if="${shop.status.name() == 'SUSPENDED'}" class="sd-badge sd-badge-red">
+                <i class="fas fa-ban"></i> Bị đình chỉ
+            </span>
+            <span th:if="${shop.status.name() == 'REJECTED'}" class="sd-badge sd-badge-slate">
+                <i class="fas fa-circle-xmark"></i> Từ chối
+            </span>
+            <span th:if="${shop.active}" class="sd-badge sd-badge-green">
+                <i class="fas fa-circle"></i> Hoạt động
+            </span>
+            <span th:unless="${shop.active}" class="sd-badge sd-badge-slate">
+                <i class="fas fa-circle-xmark"></i> Không hoạt động
+            </span>
         </div>
     </div>
 
@@ -38,12 +67,12 @@
                 </div>
                 <div class="sd-detail-item">
                     <div class="sd-detail-label">Mô tả</div>
-                    <div class="sd-detail-value" th:text="${shop.description} ?: '-'">Mô tả</div>
+                    <div class="sd-detail-value" th:text="${shop.description} ?: '—'">Mô tả</div>
                 </div>
                 <div class="sd-detail-item">
                     <div class="sd-detail-label">Chủ cửa hàng</div>
                     <div class="sd-detail-value" th:if="${owner != null}">
-                        <div th:text="${owner.fullName} ?: '-'">Tên chủ</div>
+                        <div th:text="${owner.fullName} ?: '—'">Tên chủ</div>
                         <div class="sd-detail-sub sd-mono" th:text="${owner.email}">email</div>
                     </div>
                     <div class="sd-detail-value sd-mono" th:unless="${owner != null}" th:text="${shop.ownerId}">
@@ -64,6 +93,14 @@
                         </span>
                     </div>
                 </div>
+                <div class="sd-detail-item" th:if="${shop.status.name() == 'REJECTED'}">
+                    <div class="sd-detail-label">Lý do từ chối</div>
+                    <div class="sd-detail-value" th:text="${shop.rejectionReason != null and !shop.rejectionReason.isEmpty()} ? ${shop.rejectionReason} : 'Không có'">-</div>
+                </div>
+                <div class="sd-detail-item" th:if="${shop.status.name() == 'REJECTED' and shop.actionBy != null}">
+                    <div class="sd-detail-label">Người xử lý</div>
+                    <div class="sd-detail-value" th:text="${shop.actionBy + ' • ' + (shop.actionAt != null ? #temporals.format(shop.actionAt, 'dd/MM/yyyy HH:mm') : '-')}">-</div>
+                </div>
                 <div class="sd-detail-item">
                     <div class="sd-detail-label">Trạng thái hoạt động</div>
                     <div class="sd-detail-value">
@@ -75,15 +112,19 @@
                         </span>
                     </div>
                 </div>
+                <div class="sd-detail-item" th:unless="${shop.active}">
+                    <div class="sd-detail-label">Lý do ngừng hoạt động</div>
+                    <div class="sd-detail-value" th:text="${shop.deactivationReason != null and !shop.deactivationReason.isEmpty()} ? ${shop.deactivationReason} : 'Không có'">-</div>
+                </div>
                 <div class="sd-detail-item">
                     <div class="sd-detail-label">Ngày tạo</div>
                     <div class="sd-detail-value"
-                         th:text="${shop.createdAt != null} ? ${#temporals.format(shop.createdAt, 'dd/MM/yyyy HH:mm')} : '-'">-</div>
+                         th:text="${shop.createdAt != null} ? ${#temporals.format(shop.createdAt, 'dd/MM/yyyy HH:mm')} : '—'">—</div>
                 </div>
                 <div class="sd-detail-item">
                     <div class="sd-detail-label">Ngày cập nhật</div>
                     <div class="sd-detail-value"
-                         th:text="${shop.updatedAt != null} ? ${#temporals.format(shop.updatedAt, 'dd/MM/yyyy HH:mm')} : '-'">-</div>
+                         th:text="${shop.updatedAt != null} ? ${#temporals.format(shop.updatedAt, 'dd/MM/yyyy HH:mm')} : '—'">—</div>
                 </div>
             </div>
         </div>
@@ -97,38 +138,21 @@
             </div>
         </div>
         <div class="sd-card-body">
-            <div class="sd-action-row" style="margin-bottom:16px;">
-                <th:block th:if="${shop.status.name() == 'PENDING'}">
-                    <span class="sd-badge sd-badge-amber">
-                        <i class="fas fa-hourglass-half"></i> Chờ duyệt
-                    </span>
-                </th:block>
-                <th:block th:if="${shop.status.name() == 'APPROVED'}">
-                    <span class="sd-badge sd-badge-green">
-                        <i class="fas fa-circle-check"></i> Đã duyệt
-                    </span>
-                </th:block>
-                <th:block th:if="${shop.status.name() == 'REJECTED'}">
-                    <span class="sd-badge sd-badge-red">
-                        <i class="fas fa-circle-xmark"></i> Từ chối
-                    </span>
-                </th:block>
-            </div>
-
             <div class="sd-action-row" style="flex-wrap:wrap; gap:10px;">
-                <th:block>
+                <th:block th:if="${shop.status.name() != 'APPROVED'}">
                     <form th:action="@{/admin/shops/{id}/approve(id=${shop.id}, page=${page}, size=${size}, q=${q})}"
                           method="post" style="display:inline;">
-                        <button type="submit" class="sd-btn sd-btn-primary"
-                                th:disabled="${shop.status.name() == 'APPROVED'}">
+                        <button type="submit" class="sd-btn sd-btn-primary">
                             <i class="fas fa-check"></i> Duyệt cửa hàng
                         </button>
                     </form>
                 </th:block>
-                <th:block>
+                <th:block th:if="${shop.status.name() != 'REJECTED'}">
                     <form th:action="@{/admin/shops/{id}/reject(id=${shop.id}, page=${page}, size=${size}, q=${q})}"
                           method="post" style="display:inline;"
                           onsubmit="return confirm('Bạn có chắc muốn từ chối cửa hàng này?');">
+                        <input type="text" name="reason" placeholder="Lý do từ chối..."
+                               style="padding:6px 10px;border:1px solid var(--border,#e2e8f0);border-radius:6px;margin-right:6px;min-width:240px;">
                         <button type="submit" class="sd-btn sd-btn-danger"
                                 th:disabled="${shop.status.name() == 'REJECTED'}">
                             <i class="fas fa-xmark"></i> Từ chối cửa hàng
@@ -140,6 +164,8 @@
                     <form th:action="@{/admin/shops/{id}/deactivate(id=${shop.id}, page=${page}, size=${size}, q=${q})}"
                           method="post" style="display:inline;"
                           onsubmit="return confirm('Bạn có chắc muốn ngừng hoạt động cửa hàng này?');">
+                        <input type="text" name="reason" placeholder="Lý do ngừng hoạt động..."
+                               style="padding:6px 10px;border:1px solid var(--border,#e2e8f0);border-radius:6px;margin-right:6px;min-width:240px;">
                         <button type="submit" class="sd-btn sd-btn-secondary">
                             <i class="fas fa-ban"></i> Ngừng hoạt động
                         </button>

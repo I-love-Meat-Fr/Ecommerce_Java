@@ -1,5 +1,6 @@
 package com.ecommerce.cnj70.document;
 
+import com.ecommerce.cnj70.enums.ModerationStatus;
 import com.ecommerce.cnj70.enums.ReviewModerationStatus;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -7,6 +8,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.Id;
+import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.Document;
 
@@ -56,6 +58,43 @@ public class Review {
     @Builder.Default
     private int reportCount = 0;
 
+    /**
+     * Phase 2B — Moderator who most recently processed this review.
+     * Bổ sung từ stash, không xung đột với moderatedBy (đó là field legacy).
+     */
+    private String moderationActorId;
+
+    /**
+     * Phase 2B — Timestamp của moderation action gần nhất (alias cho moderatedAt
+     * cho pipeline mới của Moderator).
+     */
+    private LocalDateTime moderationAt;
+
+    /**
+     * Phase 2B — Whether this review is hidden from public view.
+     * Distinct from {@link #moderationStatus}: HIDDEN ẩn review khỏi public
+     * nhưng vẫn còn trong hệ thống (recoverable qua Unhide).
+     */
+    @Builder.Default
+    private boolean hidden = false;
+
+    /**
+     * Phase 2B — Reason for hiding (khi {@link #hidden} = true).
+     */
+    private String hiddenReason;
+
+    /**
+     * Phase 2B — Trạng thái moderation trong pipeline mới (ModerationStatus).
+     * Song song với {@link #moderationStatus} (ReviewModerationStatus - legacy).
+     * Giữ cả hai để đảm bảo backward compatibility với code dùng ReviewModerationStatus
+     * trong khi Phase 2B pipeline dùng ModerationStatus.
+     */
+    @Indexed
+    private ModerationStatus pipelineModerationStatus;
+
     @CreatedDate
     private LocalDateTime createdAt;
+
+    @LastModifiedDate
+    private LocalDateTime updatedAt;
 }

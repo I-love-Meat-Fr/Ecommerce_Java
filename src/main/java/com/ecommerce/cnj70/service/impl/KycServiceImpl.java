@@ -20,15 +20,19 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
-import java.util.Map;
 
 /**
- * TASK #16 — KycService implementation.
+ * TASK #16 — KycService implementation (LEGACY).
  *
  * Flow:
- * 1. Vendor gọi submitKyc() → mã hóa PII → gửi provider → lưu referenceId + PENDING_PROVIDER
+ * 1. Vendor gọi submitKyc() → mã hóa PII → gửi provider → lưu referenceId + PENDING_THIRD_PARTY
  * 2. (Trong demo/mock) provider xử lý sync → gọi callback → cập nhật kycStatus
  * 3. getKycStatus() / getVendorKycStatus() → trả response KHÔNG có PII plaintext
+ *
+ * Lưu ý: service này thuộc feature/admin (cũ) và vẫn được dùng bởi
+ * KycController (/api/kyc/*). Hệ thống KYC chính thức mới do
+ * VendorKycService/AdminKycService/ThirdPartyKycVerifier + KycProfile cung cấp.
+ * Hai hệ thống cùng tồn tại sau merge feature/vendors-module.
  *
  * PII được mã hóa:
  * - encryptPii() → Base64(iv || ciphertext || authTag) → lưu vào Shop/User encrypted* field
@@ -51,7 +55,10 @@ public class KycServiceImpl implements KycService {
                 .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy Shop"));
 
         // ===== TASK #16: validate shop có thể nộp KYC =====
-        if (shop.getKycStatus() == KycStatus.PENDING_PROVIDER) {
+        // Note: feature/admin cũ dùng PENDING_PROVIDER; sau merge với feature/vendors-module,
+        // map sang PENDING_THIRD_PARTY + PENDING_ADMIN (cùng ngữ nghĩa: "đã submit, đang xử lý").
+        KycStatus current = shop.getKycStatus();
+        if (current == KycStatus.PENDING_THIRD_PARTY || current == KycStatus.PENDING_ADMIN) {
             throw new BadRequestException(
                     "KYC đang được xử lý. Vui lòng chờ kết quả trước khi nộp lại.");
         }
@@ -75,7 +82,7 @@ public class KycServiceImpl implements KycService {
 
         // ===== TASK #16: cập nhật Shop =====
         shop.setKycReferenceId(referenceId);
-        shop.setKycStatus(KycStatus.PENDING_PROVIDER);
+        shop.setKycStatus(KycStatus.PENDING_THIRD_PARTY);
         shop.setKycSubmittedAt(LocalDateTime.now());
         shop.setEncryptedCitizenId(encryptedCitizenId);
         shop.setEncryptedTaxCode(encryptedTaxCode);
@@ -137,6 +144,11 @@ public class KycServiceImpl implements KycService {
     /**
      * Cập nhật KYC result từ provider callback (TASK #18).
      * Được gọi bởi KycController.
+     *
+     * Sau merge feature/vendors-module: REJECTED giờ có 2 trạng thái
+     * (THIRD_PARTY_REJECTED / ADMIN_REJECTED). Tạm thời dùng
+     * THIRD_PARTY_REJECTED cho callback từ provider vì đây là kết quả
+     * từ bên thứ ba (chưa qua admin duyệt).
      */
     @Override
     public void processKycCallback(String referenceId, boolean approved, String rejectionReason) {
@@ -153,7 +165,7 @@ public class KycServiceImpl implements KycService {
                 shop.setStatus(com.ecommerce.cnj70.enums.ShopStatus.APPROVED);
             }
         } else {
-            shop.setKycStatus(KycStatus.KYC_REJECTED);
+            shop.setKycStatus(KycStatus.THIRD_PARTY_REJECTED);
             shop.setKycRejectionReason(rejectionReason);
         }
 
@@ -187,18 +199,22 @@ public class KycServiceImpl implements KycService {
     }
 
     private KycStatusResponse toResponse(Shop shop) {
-        String message = switch (shop.getKycStatus()) {
-            case PENDING_KYC -> "Chưa nộp KYC";
-            case PENDING_PROVIDER -> "Đang xác minh, vui lòng chờ";
+        KycStatus current = shop.getKycStatus() != null ? shop.getKycStatus() : KycStatus.NOT_SUBMITTED;
+        String message = switch (current) {
+            case NOT_SUBMITTED -> "Chưa nộp KYC";
+            case PENDING_THIRD_PARTY -> "Đang xác minh, vui lòng chờ";
+            case PENDING_ADMIN -> "Đang chờ admin duyệt";
             case APPROVED -> "KYC đã được xác minh thành công";
-            case KYC_REJECTED -> "KYC bị từ chối: " +
+            case THIRD_PARTY_REJECTED -> "3rd-party từ chối: " +
+                    (shop.getKycRejectionReason() != null ? shop.getKycRejectionReason() : "Không rõ lý do");
+            case ADMIN_REJECTED -> "Admin từ chối: " +
                     (shop.getKycRejectionReason() != null ? shop.getKycRejectionReason() : "Không rõ lý do");
             case SUSPENDED -> "KYC đã bị tạm ngưng";
         };
 
         return KycStatusResponse.builder()
                 .shopId(shop.getId())
-                .kycStatus(shop.getKycStatus())
+                .kycStatus(current)
                 .kycReferenceId(shop.getKycReferenceId())
                 .kycApprovedAt(shop.getKycApprovedAt())
                 .kycRejectionReason(shop.getKycRejectionReason())

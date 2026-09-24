@@ -11,6 +11,7 @@ import com.ecommerce.cnj70.enums.OrderStatus;
 import com.ecommerce.cnj70.enums.ProductStatus;
 import com.ecommerce.cnj70.enums.ShopStatus;
 import com.ecommerce.cnj70.exception.BadRequestException;
+import com.ecommerce.cnj70.exception.BusinessException;
 import com.ecommerce.cnj70.exception.ResourceNotFoundException;
 import com.ecommerce.cnj70.exception.UnauthorizedException;
 import com.ecommerce.cnj70.repository.OrderRepository;
@@ -43,6 +44,7 @@ public class VendorServiceImpl implements VendorService {
     private final ShopRepository shopRepository;
     private final ProductRepository productRepository;
     private final OrderRepository orderRepository;
+    private final com.ecommerce.cnj70.service.VendorKycService vendorKycService;
     
     @Override
     public User getCurrentVendor(UserDetails userDetails) {
@@ -74,9 +76,21 @@ public class VendorServiceImpl implements VendorService {
     @Override
     public Shop createShop(UserDetails userDetails, ShopFormReq request) {
         User vendor = getCurrentVendor(userDetails);
-        
+
+        // Chặn: phải hoàn tất KYC trước
+        if (!vendor.isKycApproved()) {
+            throw new BadRequestException(
+                    "Bạn cần hoàn tất xác minh danh tính (KYC) trước khi tạo cửa hàng. "
+                  + "Vui lòng truy cập /vendor/kyc để hoàn tất xác minh.");
+        }
+
+        // Nếu User.shopId trỏ đến Shop không tồn tại (orphan) → clear và cho phép tạo lại
         if (vendor.getShopId() != null && !vendor.getShopId().isBlank()) {
-            throw new BadRequestException("Bạn đã có shop. Không thể tạo shop mới.");
+            if (shopRepository.existsById(vendor.getShopId())) {
+                throw new BadRequestException("Bạn đã có shop. Không thể tạo shop mới.");
+            }
+            // Orphan reference (Shop đã bị xóa nhưng User.shopId chưa được clear) → reset
+            vendor.setShopId(null);
         }
         
         if (shopRepository.existsByShopName(request.getShopName())) {
@@ -163,11 +177,15 @@ public class VendorServiceImpl implements VendorService {
     public VendorDashboardRes getDashboardStats(UserDetails userDetails) {
         String shopId;
         Shop shop = null;
-        
+
         try {
             shopId = getShopIdFromUser(userDetails);
             shop = getShopByCurrentVendor(userDetails);
-        } catch (BadRequestException e) {
+        } catch (BadRequestException | BusinessException | ResourceNotFoundException e) {
+            // No shop yet OR shop record missing — render the empty-state branch
+            // instead of bubbling a 500/404. BadRequestException is thrown when
+            // user.shopId == null (getShopIdFromUser); BusinessException/ResourceNotFoundException
+            // if Shop record is orphaned.
             return VendorDashboardRes.builder()
                     .totalProducts(0)
                     .outOfStockProducts(0)
@@ -251,6 +269,22 @@ public class VendorServiceImpl implements VendorService {
                 .revenueTrend(revenueTrend);
         
         if (shop != null) {
+            final String shopIdForAgg = shop.getId();
+            long uniqueCustomers = 0L;
+            try {
+                Long count = orderRepository.countUniqueCustomersByShopId(shopIdForAgg);
+                uniqueCustomers = count != null ? count : 0L;
+            } catch (Exception e) {
+                // Nếu aggregation lỗi (vd: collection rỗng) → fallback bằng distinct userId in-memory
+                uniqueCustomers = orders.stream()
+                        .filter(o -> o.getItems() != null && o.getItems().stream()
+                                .anyMatch(item -> shopIdForAgg.equals(item.getShopId())))
+                        .map(Order::getUserId)
+                        .filter(java.util.Objects::nonNull)
+                        .distinct()
+                        .count();
+            }
+
             builder.shopSummary(VendorDashboardRes.ShopSummary.builder()
                     .shopId(shop.getId())
                     .shopName(shop.getShopName())
@@ -258,6 +292,7 @@ public class VendorServiceImpl implements VendorService {
                     .verified(shop.isVerified())
                     .active(shop.isActive())
                     .createdAt(shop.getCreatedAt())
+                    .uniqueCustomers(uniqueCustomers)
                     .build());
         }
         

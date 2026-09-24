@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/springsecurity6"
+      th:replace="~{layout/vendor-layout :: layout(title='Trạng thái KYC - CNJ70 Vendor', content=~{::main-content}, scripts=~{::page-scripts})}">
+<head>
+    <title>Trạng thái KYC - CNJ70 Vendor</title>
+</head>
+<body>
+<main th:fragment="main-content">
+
+    <!-- Page Hero -->
+    <div class="vd-page-hero">
+        <div class="vd-page-hero-left">
+            <div class="vd-page-hero-icon"><i class="fas fa-shield-halved"></i></div>
+            <div class="vd-page-hero-info">
+                <h2>Xác minh danh tính (KYC)</h2>
+                <p>Theo dõi trạng thái hồ sơ xác minh của bạn.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Alerts -->
+    <div th:if="${success}" class="sd-alert sd-alert-success"><i class="fas fa-circle-check"></i><span th:text="${success}"></span></div>
+    <div th:if="${error}" class="sd-alert sd-alert-danger"><i class="fas fa-triangle-exclamation"></i><span th:text="${error}"></span></div>
+
+    <!-- NOT_SUBMITTED Status -->
+    <div th:if="${kycStatus.status == 'NOT_SUBMITTED'}" class="sd-alert sd-alert-info" style="margin-bottom: 20px;">
+        <div style="display: flex; align-items: center; gap: 16px;">
+            <div style="font-size: 2.5rem;"><i class="fas fa-file-circle-plus"></i></div>
+            <div style="flex: 1;">
+                <strong style="font-size: 1.1rem;">Bạn chưa nộp hồ sơ KYC</strong><br>
+                <span>Vui lòng hoàn tất xác minh danh tính để có thể tạo cửa hàng và bán hàng.</span>
+            </div>
+            <a th:href="@{/vendor/kyc/edit}" class="sd-btn sd-btn-cta">
+                <i class="fas fa-pen-to-square"></i> Bắt đầu nộp hồ sơ
+            </a>
+        </div>
+    </div>
+
+    <!-- APPROVED Status -->
+    <div th:if="${kycStatus.status == 'APPROVED'}" class="sd-alert sd-alert-success" style="margin-bottom: 20px;">
+        <div style="display: flex; align-items: center; gap: 16px;">
+            <div style="font-size: 2.5rem;"><i class="fas fa-circle-check"></i></div>
+            <div style="flex: 1;">
+                <strong style="font-size: 1.1rem;">🎉 Hồ sơ KYC đã được admin duyệt!</strong><br>
+                <span>Bạn đã có thể tạo cửa hàng và bắt đầu bán hàng trên sàn.</span><br>
+                <small th:if="${kycStatus.reviewedAt}">
+                    Ngày duyệt: <span th:text="${#temporals.format(kycStatus.reviewedAt, 'dd/MM/yyyy HH:mm')}">—</span>
+                </small>
+            </div>
+            <a th:href="@{/vendor/shop/create}" class="sd-btn sd-btn-cta">
+                <i class="fas fa-store"></i> Tạo cửa hàng ngay
+            </a>
+        </div>
+    </div>
+
+    <!-- PENDING_THIRD_PARTY Status -->
+    <div th:if="${kycStatus.status == 'PENDING_THIRD_PARTY'}" class="sd-alert sd-alert-warning" style="margin-bottom: 20px;">
+        <div style="display: flex; align-items: center; gap: 16px;">
+            <div style="font-size: 2.5rem;"><i class="fas fa-hourglass-half fa-spin"></i></div>
+            <div>
+                <strong style="font-size: 1.1rem;">Đang chờ bên thứ ba xác minh</strong><br>
+                <span>Hồ sơ đang được bên thứ ba kiểm tra CCCD, mã số thuế...</span><br>
+                <small th:if="${kycStatus.submittedAt}">
+                    Đã gửi lúc: <span th:text="${#temporals.format(kycStatus.submittedAt, 'dd/MM/yyyy HH:mm')}">—</span>
+                </small>
+            </div>
+        </div>
+    </div>
+
+    <!-- PENDING_ADMIN Status -->
+    <div th:if="${kycStatus.status == 'PENDING_ADMIN'}" class="sd-alert sd-alert-info" style="margin-bottom: 20px;">
+        <div style="display: flex; align-items: center; gap: 16px;">
+            <div style="font-size: 2.5rem;"><i class="fas fa-user-shield"></i></div>
+            <div>
+                <strong style="font-size: 1.1rem;">Đã qua bên thứ ba - đang chờ admin duyệt</strong><br>
+                <span>Bên thứ ba đã xác minh thành công. Hồ sơ đang chờ admin duyệt cuối cùng.</span><br>
+                <small>Xin vui lòng chờ trong vài giờ làm việc.</small>
+            </div>
+        </div>
+    </div>
+
+    <!-- THIRD_PARTY_REJECTED Status -->
+    <div th:if="${kycStatus.status == 'THIRD_PARTY_REJECTED'}" class="sd-alert sd-alert-danger" style="margin-bottom: 20px;">
+        <div style="display: flex; align-items: center; gap: 16px;">
+            <div style="font-size: 2.5rem;"><i class="fas fa-circle-xmark"></i></div>
+            <div style="flex: 1;">
+                <strong style="font-size: 1.1rem;">Bên thứ ba từ chối hồ sơ</strong><br>
+                <span>Lý do: <em th:text="${kycStatus.rejectionReason ?: 'Không có thông tin'}">—</em></span><br>
+                <small>Vui lòng sửa lại thông tin và gửi lại hồ sơ.</small>
+            </div>
+            <a th:href="@{/vendor/kyc/edit}" class="sd-btn sd-btn-cta">
+                <i class="fas fa-rotate-right"></i> Sửa &amp; gửi lại
+            </a>
+        </div>
+    </div>
+
+    <!-- ADMIN_REJECTED Status -->
+    <div th:if="${kycStatus.status == 'ADMIN_REJECTED'}" class="sd-alert sd-alert-danger" style="margin-bottom: 20px;">
+        <div style="display: flex; align-items: center; gap: 16px;">
+            <div style="font-size: 2.5rem;"><i class="fas fa-circle-xmark"></i></div>
+            <div style="flex: 1;">
+                <strong style="font-size: 1.1rem;">Admin từ chối hồ sơ</strong><br>
+                <span>Lý do: <em th:text="${kycStatus.rejectionReason ?: 'Không có thông tin'}">—</em></span><br>
+                <small>Vui lòng sửa lại thông tin và gửi lại hồ sơ.</small>
+            </div>
+            <a th:href="@{/vendor/kyc/edit}" class="sd-btn sd-btn-cta">
+                <i class="fas fa-rotate-right"></i> Sửa &amp; gửi lại
+            </a>
+        </div>
+    </div>
+
+    <!-- SUSPENDED Status -->
+    <div th:if="${kycStatus.status == 'SUSPENDED'}" class="sd-alert sd-alert-danger" style="margin-bottom: 20px;">
+        <div style="display: flex; align-items: center; gap: 16px;">
+            <div style="font-size: 2.5rem;"><i class="fas fa-ban"></i></div>
+            <div>
+                <strong style="font-size: 1.1rem;">Hồ sơ KYC bị đình chỉ</strong><br>
+                <span>Vui lòng liên hệ bộ phận hỗ trợ để được giải quyết.</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Status Info Card -->
+    <div class="sd-card" style="max-width: 880px; margin-bottom: 20px;">
+        <div class="sd-card-head">
+            <div>
+                <h3><i class="fas fa-info-circle"></i> Thông tin hồ sơ</h3>
+                <p>Chi tiết thông tin bạn đã gửi xác minh.</p>
+            </div>
+        </div>
+        <div class="sd-card-body">
+            <div class="kyc-info-grid">
+                <!-- Status Badge -->
+                <div class="kyc-info-item kyc-info-status">
+                    <span class="kyc-label">Trạng thái</span>
+                    <span class="kyc-value">
+                        <span class="sd-badge" th:classappend="
+                            ${kycStatus.status == 'APPROVED' ? 'sd-badge-green' : ''} +
+                            ${kycStatus.status == 'PENDING_THIRD_PARTY' ? 'sd-badge-amber' : ''} +
+                            ${kycStatus.status == 'PENDING_ADMIN' ? 'sd-badge-indigo' : ''} +
+                            ${kycStatus.status == 'THIRD_PARTY_REJECTED' ? 'sd-badge-red' : ''} +
+                            ${kycStatus.status == 'ADMIN_REJECTED' ? 'sd-badge-red' : ''} +
+                            ${kycStatus.status == 'SUSPENDED' ? 'sd-badge-red' : ''} +
+                            ${kycStatus.status == 'NOT_SUBMITTED' ? 'sd-badge-gray' : ''}"
+                              th:text="${kycStatus.statusLabel}">
+                        </span>
+                    </span>
+                </div>
+
+                <!-- Submit Count -->
+                <div class="kyc-info-item" th:if="${kycStatus.submitCount != null and kycStatus.submitCount > 0}">
+                    <span class="kyc-label">Số lần đã gửi</span>
+                    <span class="kyc-value" th:text="${kycStatus.submitCount}">—</span>
+                </div>
+
+                <!-- Owner Full Name -->
+                <div class="kyc-info-item" th:if="${kycStatus.ownerFullName != null}">
+                    <span class="kyc-label">Họ tên chủ shop</span>
+                    <span class="kyc-value" th:text="${kycStatus.ownerFullName}">—</span>
+                </div>
+
+                <!-- ID Number -->
+                <div class="kyc-info-item" th:if="${kycStatus.idNumber != null}">
+                    <span class="kyc-label">Số CCCD</span>
+                    <span class="kyc-value" th:text="${kycStatus.idNumber}">—</span>
+                </div>
+
+                <!-- Business Name -->
+                <div class="kyc-info-item" th:if="${kycStatus.businessName != null}">
+                    <span class="kyc-label">Tên doanh nghiệp</span>
+                    <span class="kyc-value" th:text="${kycStatus.businessName}">—</span>
+                </div>
+
+                <!-- Tax Code -->
+                <div class="kyc-info-item" th:if="${kycStatus.taxCode != null}">
+                    <span class="kyc-label">Mã số thuế</span>
+                    <span class="kyc-value" th:text="${kycStatus.taxCode}">—</span>
+                </div>
+
+                <!-- Bank Account -->
+                <div class="kyc-info-item" th:if="${kycStatus.bankAccount != null}">
+                    <span class="kyc-label">Số tài khoản</span>
+                    <span class="kyc-value" th:text="${kycStatus.bankAccount}">—</span>
+                </div>
+
+                <!-- Bank Name -->
+                <div class="kyc-info-item" th:if="${kycStatus.bankName != null}">
+                    <span class="kyc-label">Ngân hàng</span>
+                    <span class="kyc-value" th:text="${kycStatus.bankName}">—</span>
+                </div>
+
+                <!-- Submitted At -->
+                <div class="kyc-info-item" th:if="${kycStatus.submittedAt != null}">
+                    <span class="kyc-label">Ngày gửi</span>
+                    <span class="kyc-value" th:text="${#temporals.format(kycStatus.submittedAt, 'dd/MM/yyyy HH:mm')}">—</span>
+                </div>
+
+                <!-- Reviewed At -->
+                <div class="kyc-info-item" th:if="${kycStatus.reviewedAt != null}">
+                    <span class="kyc-label">Ngày admin duyệt</span>
+                    <span class="kyc-value" th:text="${#temporals.format(kycStatus.reviewedAt, 'dd/MM/yyyy HH:mm')}">—</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Flow Explainer -->
+    <div class="sd-card" style="max-width: 880px;">
+        <div class="sd-card-head">
+            <div>
+                <h3><i class="fas fa-route"></i> Quy trình xác minh</h3>
+                <p>Hồ sơ của bạn sẽ trải qua 2 bước xác minh:</p>
+            </div>
+        </div>
+        <div class="sd-card-body">
+            <div class="kyc-flow">
+                <div class="kyc-flow-step" th:classappend="${kycStatus.status == 'PENDING_THIRD_PARTY' or kycStatus.status == 'PENDING_ADMIN' or kycStatus.status == 'APPROVED' or kycStatus.status == 'THIRD_PARTY_REJECTED' or kycStatus.status == 'ADMIN_REJECTED'} ? 'kyc-flow-done' : ''">
+                    <div class="kyc-flow-icon"><i class="fas fa-paper-plane"></i></div>
+                    <div class="kyc-flow-text">
+                        <strong>Bước 1: Gửi hồ sơ</strong>
+                        <span>Vendor điền form và gửi CCCD</span>
+                    </div>
+                </div>
+                <div class="kyc-flow-arrow"><i class="fas fa-arrow-right"></i></div>
+                <div class="kyc-flow-step" th:classappend="${kycStatus.status == 'PENDING_ADMIN' or kycStatus.status == 'APPROVED' or kycStatus.status == 'ADMIN_REJECTED'} ? 'kyc-flow-done' : ''">
+                    <div class="kyc-flow-icon"><i class="fas fa-robot"></i></div>
+                    <div class="kyc-flow-text">
+                        <strong>Bước 2: Bên thứ ba xác minh</strong>
+                        <span>Hệ thống KYC tự động kiểm tra</span>
+                    </div>
+                </div>
+                <div class="kyc-flow-arrow"><i class="fas fa-arrow-right"></i></div>
+                <div class="kyc-flow-step" th:classappend="${kycStatus.status == 'APPROVED'} ? 'kyc-flow-done' : ''">
+                    <div class="kyc-flow-icon"><i class="fas fa-user-shield"></i></div>
+                    <div class="kyc-flow-text">
+                        <strong>Bước 3: Admin duyệt</strong>
+                        <span>Admin duyệt cuối → có thể tạo shop</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</main>
+
+<th:block th:fragment="page-scripts">
+<style>
+/* KYC info grid (giữ nguyên từ template gốc) */
+.kyc-info-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+}
+.kyc-info-item {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+.kyc-info-full {
+    grid-column: 1 / -1;
+}
+.kyc-label {
+    font-size: 0.8rem;
+    color: #6c757d;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+.kyc-value {
+    font-size: 1rem;
+    color: #333;
+    font-weight: 500;
+}
+.kyc-value-danger {
+    color: #dc3545;
+    background: #fff5f5;
+    padding: 8px 12px;
+    border-radius: 4px;
+    border-left: 3px solid #dc3545;
+}
+.kyc-info-status {
+    grid-column: 1 / -1;
+    padding-bottom: 12px;
+    border-bottom: 1px solid #e9ecef;
+}
+.kyc-info-status .kyc-value {
+    font-size: 1.1rem;
+}
+
+/* Flow visualizer */
+.kyc-flow {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+}
+.kyc-flow-step {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px;
+    border-radius: 8px;
+    background: #f8f9fa;
+    border: 1px dashed #dee2e6;
+    opacity: 0.5;
+    transition: all 0.3s;
+}
+.kyc-flow-step.kyc-flow-done {
+    opacity: 1;
+    background: #d4edda;
+    border-color: #28a745;
+    border-style: solid;
+}
+.kyc-flow-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #6c757d;
+    flex-shrink: 0;
+}
+.kyc-flow-done .kyc-flow-icon {
+    color: #28a745;
+}
+.kyc-flow-text {
+    display: flex;
+    flex-direction: column;
+}
+.kyc-flow-text strong {
+    font-size: 0.9rem;
+    color: #333;
+}
+.kyc-flow-text span {
+    font-size: 0.8rem;
+    color: #6c757d;
+}
+.kyc-flow-arrow {
+    color: #adb5bd;
+    flex-shrink: 0;
+}
+</style>
+</th:block>
+</body>
+</html>

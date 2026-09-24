@@ -3,6 +3,7 @@ package com.ecommerce.cnj70.service;
 import com.ecommerce.cnj70.document.Order;
 import com.ecommerce.cnj70.dto.request.CheckoutReq;
 import com.ecommerce.cnj70.enums.OrderStatus;
+import com.ecommerce.cnj70.enums.ShippingStatus;
 
 import java.util.List;
 
@@ -37,4 +38,11 @@ public interface OrderService {
      * @return true nếu Order không CANCELLED và chứa productId
      */
     boolean hasUserPurchasedProduct(String userId, String productId);
+
+    /**
+     * Cập nhật shipping status của 1 shop trong đơn hàng (sub-order).
+     * Vendor gọi method này để cập nhật trạng thái vận chuyển phần của mình.
+     */
+    Order updateShippingStatus(String orderId, String shopId, ShippingStatus status,
+                               String trackingNumber, String carrier, String note);
 }

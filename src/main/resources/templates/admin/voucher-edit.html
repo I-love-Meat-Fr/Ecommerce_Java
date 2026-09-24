@@ -29,7 +29,9 @@
                 <ul style="margin: 0; padding-left: 18px; color: #2563eb; font-size: 13px; line-height: 1.6;">
                     <li>Mã voucher không thể thay đổi sau khi tạo</li>
                     <li>Loại voucher và shop luôn là <strong>WEB</strong> (không thuộc shop nào)</li>
-                    <li>Đã sử dụng: <strong th:text="${voucher.used}">0</strong> lượt</li>
+                    <li>Đã sử dụng: <strong th:text="${voucher.used}">0</strong> lượt — Số lượng không thể nhỏ hơn số đã dùng</li>
+                    <li>Ngày kết thúc phải &gt;= ngày bắt đầu (Phase 4B §27)</li>
+                    <li>Mọi thao tác edit được ghi nhận qua audit (Phase 4B §36)</li>
                 </ul>
             </div>
         </div>

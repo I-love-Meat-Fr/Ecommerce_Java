@@ -33,4 +33,10 @@ public interface AuditLogRepository extends MongoRepository<AuditLog, String> {
 
     /** Filter theo resource type + action */
     Page<AuditLog> findByResourceTypeAndAction(String resourceType, AuditAction action, Pageable pageable);
+
+    Page<AuditLog> findByActorIdOrderByCreatedAtDesc(String actorId, Pageable pageable);
+
+    Page<AuditLog> findAllByOrderByCreatedAtDesc(Pageable pageable);
+
+    Page<AuditLog> findByActorRoleOrderByCreatedAtDesc(String actorRole, Pageable pageable);
 }

@@ -111,18 +111,130 @@
         </a>
     </div>
 
+    <!-- ====== PHASE 4A — Financial Overview ====== -->
+    <div class="dash-card dash-card-section">
+        <div class="dash-card-header">
+            <div class="dash-card-title-group">
+                <h3><i class="fas fa-sack-dollar"></i> Financial Overview</h3>
+                <p>GMV ≠ Platform Revenue ≠ Vendor Sales ≠ Vendor Payable ≠ Refund (Phase 4A §20–24)</p>
+            </div>
+        </div>
+        <div class="dash-stats dash-stats-financial">
+            <div class="dash-stat-card dash-stat-info">
+                <div class="dash-stat-icon-wrap">
+                    <div class="dash-stat-icon"><i class="fas fa-money-bill-trend-up"></i></div>
+                </div>
+                <div class="dash-stat-value" th:text="${stats.gmv != null} ? ${@money.format(stats.gmv)} : 'N/A'">0đ</div>
+                <div class="dash-stat-label">GMV (Gross Merchandise Value)</div>
+                <div class="dash-stat-sub" style="font-size:11px;color:#94a3b8;">Sum of DELIVERED order totals (all-time)</div>
+            </div>
+            <div class="dash-stat-card dash-stat-purple">
+                <div class="dash-stat-icon-wrap">
+                    <div class="dash-stat-icon"><i class="fas fa-coins"></i></div>
+                </div>
+                <div class="dash-stat-value" th:text="${stats.platformRevenue != null} ? ${@money.format(stats.platformRevenue)} : 'N/A'">0đ</div>
+                <div class="dash-stat-label">Platform Revenue</div>
+                <div class="dash-stat-sub" style="font-size:11px;color:#94a3b8;">Commission / fee earned by platform</div>
+            </div>
+            <div class="dash-stat-card dash-stat-slate" th:classappend="${stats.availability != null and !stats.availability.vendorSales} ? 'dash-stat-na'">
+                <div class="dash-stat-icon-wrap">
+                    <div class="dash-stat-icon"><i class="fas fa-receipt"></i></div>
+                    <span class="dash-na-badge" th:if="${stats.availability == null or !stats.availability.vendorSales}">N/A</span>
+                </div>
+                <div class="dash-stat-value" th:text="${stats.vendorSales != null} ? ${@money.format(stats.vendorSales)} : 'N/A'">N/A</div>
+                <div class="dash-stat-label">Vendor Sales</div>
+                <div class="dash-stat-sub" style="font-size:11px;color:#94a3b8;">Vendor Finance backend — INTEGRATION-READY</div>
+            </div>
+            <div class="dash-stat-card dash-stat-slate" th:classappend="${stats.availability != null and !stats.availability.vendorPayable} ? 'dash-stat-na'">
+                <div class="dash-stat-icon-wrap">
+                    <div class="dash-stat-icon"><i class="fas fa-hand-holding-dollar"></i></div>
+                    <span class="dash-na-badge" th:if="${stats.availability == null or !stats.availability.vendorPayable}">N/A</span>
+                </div>
+                <div class="dash-stat-value" th:text="${stats.vendorPayable != null} ? ${@money.format(stats.vendorPayable)} : 'N/A'">N/A</div>
+                <div class="dash-stat-label">Vendor Payable</div>
+                <div class="dash-stat-sub" style="font-size:11px;color:#94a3b8;">Settlement backend — INTEGRATION-READY</div>
+            </div>
+            <div class="dash-stat-card dash-stat-slate" th:classappend="${stats.availability != null and !stats.availability.refund} ? 'dash-stat-na'">
+                <div class="dash-stat-icon-wrap">
+                    <div class="dash-stat-icon"><i class="fas fa-rotate-left"></i></div>
+                    <span class="dash-na-badge" th:if="${stats.availability == null or !stats.availability.refund}">N/A</span>
+                </div>
+                <div class="dash-stat-value" th:text="${stats.refund != null} ? ${@money.format(stats.refund)} : 'N/A'">N/A</div>
+                <div class="dash-stat-label">Refund</div>
+                <div class="dash-stat-sub" style="font-size:11px;color:#94a3b8;">Refund backend — INTEGRATION-READY</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ====== PHASE 4A — Compliance / Risk ====== -->
+    <div class="dash-card dash-card-section">
+        <div class="dash-card-header">
+            <div class="dash-card-title-group">
+                <h3><i class="fas fa-shield-halved"></i> Compliance &amp; Risk</h3>
+                <p>Pending KYC / Moderation / Escalation / Violation / Suspended Shops</p>
+            </div>
+        </div>
+        <div class="dash-stats dash-stats-compliance">
+            <a th:href="@{/admin/users}" class="dash-stat-card dash-stat-amber dash-stat-link"
+               th:classappend="${stats.pendingKyc == null} ? 'dash-stat-na'">
+                <div class="dash-stat-icon-wrap">
+                    <div class="dash-stat-icon"><i class="fas fa-id-card"></i></div>
+                    <span class="dash-na-badge" th:if="${stats.pendingKyc == null}">N/A</span>
+                </div>
+                <div class="dash-stat-value" th:text="${stats.pendingKyc != null} ? ${stats.pendingKyc} : 'N/A'">0</div>
+                <div class="dash-stat-label">Pending KYC</div>
+                <div class="dash-stat-sub" style="font-size:11px;color:#94a3b8;">KycStatus.PENDING_KYC</div>
+            </a>
+            <div class="dash-stat-card dash-stat-info">
+                <div class="dash-stat-icon-wrap">
+                    <div class="dash-stat-icon"><i class="fas fa-eye"></i></div>
+                </div>
+                <div class="dash-stat-value" th:text="${stats.pendingModeration != null} ? ${stats.pendingModeration} : '0'">0</div>
+                <div class="dash-stat-label">Pending Moderation</div>
+                <div class="dash-stat-sub" style="font-size:11px;color:#94a3b8;">Product + Review awaiting Moderator</div>
+            </div>
+            <a th:href="@{/admin/escalations}" class="dash-stat-card dash-stat-danger dash-stat-link">
+                <div class="dash-stat-icon-wrap">
+                    <div class="dash-stat-icon"><i class="fas fa-triangle-exclamation"></i></div>
+                </div>
+                <div class="dash-stat-value" th:text="${stats.openEscalation != null} ? ${stats.openEscalation} : '0'">0</div>
+                <div class="dash-stat-label">Open Escalation</div>
+                <div class="dash-stat-sub" style="font-size:11px;color:#94a3b8;">Phase 3A: PENDING + IN_REVIEW</div>
+                <div class="dash-stat-link-indicator"><i class="fas fa-arrow-right"></i></div>
+            </a>
+            <a th:href="@{/admin/violations}" class="dash-stat-card dash-stat-red dash-stat-link">
+                <div class="dash-stat-icon-wrap">
+                    <div class="dash-stat-icon"><i class="fas fa-exclamation-circle"></i></div>
+                </div>
+                <div class="dash-stat-value" th:text="${stats.openViolation != null} ? ${stats.openViolation} : '0'">0</div>
+                <div class="dash-stat-label">Open Violation</div>
+                <div class="dash-stat-sub" style="font-size:11px;color:#94a3b8;">Phase 3C: OPEN + UNDER_REVIEW + APPEALED</div>
+                <div class="dash-stat-link-indicator"><i class="fas fa-arrow-right"></i></div>
+            </a>
+            <a th:href="@{/admin/shops}" class="dash-stat-card dash-stat-dark dash-stat-link">
+                <div class="dash-stat-icon-wrap">
+                    <div class="dash-stat-icon"><i class="fas fa-store-slash"></i></div>
+                </div>
+                <div class="dash-stat-value" th:text="${stats.suspendedShops != null} ? ${stats.suspendedShops} : '0'">0</div>
+                <div class="dash-stat-label">Suspended Shops</div>
+                <div class="dash-stat-sub" style="font-size:11px;color:#94a3b8;">ShopStatus.SUSPENDED + RESTRICTED (Phase 3A)</div>
+                <div class="dash-stat-link-indicator"><i class="fas fa-arrow-right"></i></div>
+            </a>
+        </div>
+    </div>
+
     <!-- Main Content Grid -->
     <div class="dash-main-grid">
-        <!-- Revenue Card -->
+        <!-- Revenue Card — Phase 4A §11: shows GMV (delivered order totals), NOT Platform Revenue. -->
         <div class="dash-card dash-card-chart">
             <div class="dash-card-header">
                 <div class="dash-card-title-group">
-                    <h3><i class="fas fa-chart-line"></i> Doanh thu nền tảng</h3>
-                    <p>Tổng doanh thu từ các đơn đã giao thành công</p>
+                    <h3><i class="fas fa-chart-line"></i> GMV — Doanh thu hàng hóa</h3>
+                    <p>Tổng giá trị đơn hàng đã giao thành công (Gross Merchandise Value, không phải Platform Revenue)</p>
                 </div>
                 <div class="dash-revenue-meta">
                     <div class="dash-revenue-period-wrap">
-                        <label class="dash-period-label" for="dashPeriodSelect">Revenue</label>
+                        <label class="dash-period-label" for="dashPeriodSelect">Period</label>
                         <select id="dashPeriodSelect" class="dash-period-select" data-current-period="${period ?: 'WEEK'}">
                             <option value="DAY" th:selected="${period == 'DAY'}">Day</option>
                             <option value="WEEK" th:selected="${period == 'WEEK' || period == null}">Week</option>
@@ -135,15 +247,20 @@
                 </div>
             </div>
             <div class="dash-revenue-display">
-                <div class="dash-revenue-value" th:text="${@money.format(stats.totalPlatformRevenue)}">0đ</div>
+                <!--
+                    Phase 4A §11: this card shows GMV (sum of DELIVERED order totals),
+                    NOT Platform Revenue. Platform Revenue is a separate metric in the
+                    Financial Overview section above (N/A until Finance backend is wired).
+                -->
+                <div class="dash-revenue-value" th:text="${@money.format(stats.gmv)}">0đ</div>
                 <div class="dash-revenue-label" th:switch="${period ?: 'WEEK'}">
-                    <span th:case="'DAY'">Tổng doanh thu 14 ngày gần nhất</span>
-                    <span th:case="'WEEK'">Tổng doanh thu 8 tuần gần nhất</span>
-                    <span th:case="'MONTH'">Tổng doanh thu 12 tháng gần nhất</span>
-                    <span th:case="'QUARTER'">Tổng doanh thu 8 quý gần nhất</span>
-                    <span th:case="'YEAR'">Tổng doanh thu 6 năm gần nhất</span>
-                    <span th:case="'ALL'">Tổng doanh thu toàn thời gian</span>
-                    <span th:case="*">Tổng doanh thu 8 tuần gần nhất</span>
+                    <span th:case="'DAY'">GMV 14 ngày gần nhất</span>
+                    <span th:case="'WEEK'">GMV 8 tuần gần nhất</span>
+                    <span th:case="'MONTH'">GMV 12 tháng gần nhất</span>
+                    <span th:case="'QUARTER'">GMV 8 quý gần nhất</span>
+                    <span th:case="'YEAR'">GMV 6 năm gần nhất</span>
+                    <span th:case="'ALL'">GMV toàn thời gian</span>
+                    <span th:case="*">GMV 8 tuần gần nhất</span>
                 </div>
             </div>
             <div id="adminRevenueChart" class="dash-chart-container"></div>

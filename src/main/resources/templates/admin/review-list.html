@@ -9,8 +9,8 @@
 <main th:fragment="main-content">
     <div class="sd-page-head">
         <div class="sd-page-head-title">
-            <h1>Kiểm duyệt đánh giá</h1>
-            <p>Admin moderation: xem và xóa đánh giá vi phạm. Hide/Unhide chờ Business Contract.</p>
+            <h1><i class="fas fa-comment-dots"></i> Đánh giá</h1>
+            <p>Admin xem và thực hiện kiểm duyệt đánh giá (Hide/Unhide/Delete) theo contract.</p>
         </div>
         <div class="sd-page-head-meta">
             <span class="sd-page-head-meta-label">Tổng đánh giá</span>
@@ -124,7 +124,7 @@
                         <td style="text-align:right; white-space:nowrap;">
                             <a th:href="@{/admin/reviews/{id}(id=${review.id}, page=${page}, size=${size}, q=${q}, rating=${rating})}"
                                class="sd-btn sd-btn-secondary sd-btn-sm">
-                                <i class="fas fa-eye"></i> Chi tiết
+                                <i class="fas fa-eye"></i> Xem
                             </a>
                             <form th:action="@{/admin/reviews/{id}/delete(id=${review.id}, page=${page}, size=${size}, q=${q}, rating=${rating})}"
                                   method="post"

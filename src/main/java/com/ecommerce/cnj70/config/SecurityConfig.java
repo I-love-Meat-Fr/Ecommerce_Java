@@ -5,7 +5,7 @@ import com.ecommerce.cnj70.security.JwtAuthenticationFilter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.http.HttpMethod;
+import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
@@ -30,6 +30,7 @@ import java.util.List;
 @Configuration
 @EnableWebSecurity
 @EnableMethodSecurity
+@EnableScheduling
 @RequiredArgsConstructor
 public class SecurityConfig {
 
@@ -81,10 +82,15 @@ public class SecurityConfig {
                 .requestMatchers("/api/products/**").permitAll()
                 .requestMatchers("/api/categories/**").permitAll()
                 .requestMatchers("/vouchers").permitAll()  // Trang công khai xem voucher
-                .requestMatchers("/checkout/apply-voucher").permitAll()  // Áp dụng voucher
+                // Phase 4 §43/§44 — /checkout/apply-voucher phải authenticated.
+                // Endpoint này thực hiện price/discount evaluation dựa trên voucher
+                // contract, chỉ meaningful khi user đã login và đang trong checkout flow.
+                // permitAll() trước đây cho phép anonymous user dò voucher — fix tại Phase 4.
+                .requestMatchers("/api/kyc/callback").permitAll()  // KYC provider webhook (Phase 4 §8)
                 .requestMatchers("/admin/**").hasRole("ADMIN")
                 .requestMatchers("/moderator/**").hasRole("MODERATOR")
                 .requestMatchers("/vendor/**").hasRole("VENDOR")
+                .requestMatchers("/complaints/**").authenticated()
                 .requestMatchers("/api/**").authenticated()
                 .anyRequest().permitAll()
             )

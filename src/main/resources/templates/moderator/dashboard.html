@@ -16,21 +16,21 @@
 
     <!-- Stats Cards -->
     <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:20px;margin-bottom:24px;">
-        <!-- Reported Reviews -->
-        <a th:href="@{/moderator/reviews(status=REPORTED)}" class="sd-card" style="text-decoration:none;color:inherit;">
+        <!-- Reported Reviews (pipeline PENDING_MANUAL — Phase 2B contract) -->
+        <a th:href="@{/moderator/reviews(moderationStatus=PENDING_MANUAL)}" class="sd-card" style="text-decoration:none;color:inherit;">
             <div class="sd-card-body" style="display:flex;align-items:center;gap:16px;">
                 <div style="width:48px;height:48px;border-radius:12px;background:#fef2f2;display:flex;align-items:center;justify-content:center;">
                     <i class="fas fa-flag" style="font-size:20px;color:#ef4444;"></i>
                 </div>
                 <div>
                     <div style="font-size:28px;font-weight:700;color:#1e293b;" th:text="${reportedCount}">0</div>
-                    <div style="font-size:13px;color:#64748b;">Review bị report</div>
+                    <div style="font-size:13px;color:#64748b;">Review chờ Moderator</div>
                 </div>
             </div>
         </a>
 
-        <!-- Hidden Reviews -->
-        <a th:href="@{/moderator/reviews(status=HIDDEN)}" class="sd-card" style="text-decoration:none;color:inherit;">
+        <!-- Hidden Reviews (orthogonal to pipeline — counted via legacy ReviewModerationStatus.HIDDEN) -->
+        <a th:href="@{/moderator/reviews}" class="sd-card" style="text-decoration:none;color:inherit;">
             <div class="sd-card-body" style="display:flex;align-items:center;gap:16px;">
                 <div style="width:48px;height:48px;border-radius:12px;background:#fff7ed;display:flex;align-items:center;justify-content:center;">
                     <i class="fas fa-eye-slash" style="font-size:20px;color:#f59e0b;"></i>
@@ -43,7 +43,7 @@
         </a>
 
         <!-- Pending KYC -->
-        <a th:href="@{/moderator/kyc(status=PENDING_PROVIDER)}" class="sd-card" style="text-decoration:none;color:inherit;">
+        <a th:href="@{/moderator/kyc(status=PENDING_THIRD_PARTY)}" class="sd-card" style="text-decoration:none;color:inherit;">
             <div class="sd-card-body" style="display:flex;align-items:center;gap:16px;">
                 <div style="width:48px;height:48px;border-radius:12px;background:#f0fdf4;display:flex;align-items:center;justify-content:center;">
                     <i class="fas fa-clock" style="font-size:20px;color:#10b981;"></i>
@@ -56,7 +56,7 @@
         </a>
 
         <!-- Rejected KYC -->
-        <a th:href="@{/moderator/kyc(status=KYC_REJECTED)}" class="sd-card" style="text-decoration:none;color:inherit;">
+        <a th:href="@{/moderator/kyc(status=THIRD_PARTY_REJECTED)}" class="sd-card" style="text-decoration:none;color:inherit;">
             <div class="sd-card-body" style="display:flex;align-items:center;gap:16px;">
                 <div style="width:48px;height:48px;border-radius:12px;background:#fef2f2;display:flex;align-items:center;justify-content:center;">
                     <i class="fas fa-xmark" style="font-size:20px;color:#ef4444;"></i>
@@ -76,7 +76,7 @@
                 <i class="fas fa-flag" style="color:#ef4444;"></i>
                 Review bị report gần đây
             </h2>
-            <a th:href="@{/moderator/reviews(status=REPORTED)}" class="sd-btn sd-btn-secondary sd-btn-sm">
+            <a th:href="@{/moderator/reviews(moderationStatus=PENDING_MANUAL)}" class="sd-btn sd-btn-secondary sd-btn-sm">
                 Xem tất cả <i class="fas fa-arrow-right"></i>
             </a>
         </div>

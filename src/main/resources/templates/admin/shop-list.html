@@ -127,15 +127,13 @@
                                class="sd-btn sd-btn-secondary sd-btn-sm">
                                 <i class="fas fa-eye"></i> Xem
                             </a>
-                            <th:block th:if="${shop.status.name() != 'APPROVED'}">
+                            <th:block th:if="${shop.status.name() == 'PENDING'}">
                                 <form th:action="@{/admin/shops/{id}/approve(id=${shop.id}, page=${page}, size=${size}, q=${q}, status=${status})}"
                                       method="post" style="display:inline;">
                                     <button type="submit" class="sd-btn sd-btn-primary sd-btn-sm">
                                         <i class="fas fa-check"></i> Duyệt
                                     </button>
                                 </form>
-                            </th:block>
-                            <th:block th:if="${shop.status.name() == 'APPROVED'}">
                                 <form th:action="@{/admin/shops/{id}/reject(id=${shop.id}, page=${page}, size=${size}, q=${q}, status=${status})}"
                                       method="post" style="display:inline;"
                                       onsubmit="return confirm('Bạn có chắc muốn từ chối shop này?');">

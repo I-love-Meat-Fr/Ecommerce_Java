@@ -42,13 +42,17 @@ public class AuthServiceImpl implements AuthService {
             throw new BadRequestException("Email đã tồn tại");
         }
 
-        // TASK 1.5 — Public registration MUST NOT create ADMIN.
+        // TASK 1.5 — Public registration MUST NOT create ADMIN or MODERATOR.
+        // Client-supplied role is rejected when it equals ADMIN or MODERATOR.
         UserRole role = UserRole.CUSTOMER;
         if (request.getRole() != null && !request.getRole().isBlank()) {
             try {
                 UserRole requested = UserRole.valueOf(request.getRole().toUpperCase());
                 if (requested == UserRole.ADMIN) {
                     throw new BadRequestException("ADMIN role cannot be created via public registration");
+                }
+                if (requested == UserRole.MODERATOR) {
+                    throw new BadRequestException("MODERATOR role cannot be created via public registration");
                 }
                 role = requested;
             } catch (BadRequestException e) {

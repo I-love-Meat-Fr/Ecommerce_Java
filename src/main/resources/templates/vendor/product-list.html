@@ -74,65 +74,94 @@
                 <thead>
                     <tr>
                         <th class="sd-col-stt">STT</th>
-                        <th>Sản phẩm</th>
-                        <th>Danh mục</th>
-                        <th>Giá</th>
-                        <th>Tồn kho</th>
-                        <th>Trạng thái</th>
-                        <th style="text-align:right;">Thao tác</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr th:if="${#lists.isEmpty(products)}">
-                        <td colspan="7">
-                            <div class="sd-empty">
-                                <i class="fas fa-box-open"></i>
-                                <h3>Chưa có sản phẩm nào</h3>
-                                <p>Bắt đầu bán hàng bằng cách thêm sản phẩm đầu tiên của bạn.</p>
-                                <a th:href="@{/vendor/products/create}" class="sd-btn sd-btn-cta"><i class="fas fa-plus"></i> Thêm sản phẩm</a>
-                            </div>
-                        </td>
-                    </tr>
-                    <tr th:each="product, iter : ${products}">
-                        <td class="sd-col-stt" th:text="${iter.count}">1</td>
-                        <td>
-                            <div class="vd-row-stack">
-                                <div class="vd-row-thumb">
-                                    <img th:if="${product.thumbnailUrl}" th:src="${product.thumbnailUrl}" alt="">
-                                    <i th:unless="${product.thumbnailUrl}" class="fas fa-image"></i>
-                                </div>
-                                <div>
-                                    <div class="vd-row-name" th:text="${product.name}">Tên sản phẩm</div>
-                                    <div class="vd-row-sub" th:text="${product.brand != null ? product.brand : '—'}">Brand</div>
-                                </div>
-                            </div>
-                        </td>
-                        <td th:text="${product.categoryName != null ? product.categoryName : 'Chưa phân loại'}">Danh mục</td>
-                        <td><strong th:text="${@money.format(product.price)}">0đ</strong></td>
-                        <td>
-                            <span class="vd-stock-pill"
-                                  th:classappend="${product.stock <= 0 ? 'out' : (product.stock <= 10 ? 'low' : '')}"
-                                  th:text="${product.stock}">0</span>
-                        </td>
-                        <td>
-                            <span class="sd-badge"
-                                  th:classappend="${product.status.name() == 'ACTIVE' ? 'sd-badge-green' : (product.status.name() == 'DRAFT' ? 'sd-badge-slate' : 'sd-badge-red')}"
-                                  th:text="${product.status.name() == 'ACTIVE' ? 'Đang bán' : (product.status.name() == 'DRAFT' ? 'Bản nháp' : 'Ngừng bán')}">ACTIVE</span>
-                        </td>
-                        <td>
-                            <div class="vd-row-actions">
-                                <a th:href="@{/vendor/products/edit/{id}(id=${product.id})}" class="sd-btn sd-btn-secondary sd-btn-sm" title="Sửa">
-                                    <i class="fas fa-pen"></i>
-                                </a>
-                                <form th:action="@{/vendor/products/delete/{id}(id=${product.id})}" method="post" class="sd-logout-form">
-                                    <button type="submit" class="sd-btn sd-btn-danger sd-btn-sm" onclick="return confirm('Bạn có chắc muốn xóa sản phẩm này?')" title="Xóa">
-                                        <i class="fas fa-trash"></i>
-                                    </button>
-                                </form>
-                            </div>
-                        </td>
-                    </tr>
-                </tbody>
+<th>Sản phẩm</th>
+                <th>Danh mục</th>
+                <th>Giá</th>
+                <th>Tồn kho</th>
+                <th>Trạng thái</th>
+                <th>Kiểm duyệt</th>
+                <th style="text-align:right;">Thao tác</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr th:if="${#lists.isEmpty(products)}">
+                <td colspan="8">
+                    <div class="sd-empty">
+                        <i class="fas fa-box-open"></i>
+                        <h3>Chưa có sản phẩm nào</h3>
+                        <p>Bắt đầu bán hàng bằng cách thêm sản phẩm đầu tiên của bạn.</p>
+                        <a th:href="@{/vendor/products/create}" class="sd-btn sd-btn-cta"><i class="fas fa-plus"></i> Thêm sản phẩm</a>
+                    </div>
+                </td>
+            </tr>
+            <tr th:each="product, iter : ${products}">
+                <td class="sd-col-stt" th:text="${iter.count}">1</td>
+                <td>
+                    <div class="vd-row-stack">
+                        <div class="vd-row-thumb">
+                            <img th:if="${product.thumbnailUrl}" th:src="${product.thumbnailUrl}" alt="">
+                            <i th:unless="${product.thumbnailUrl}" class="fas fa-image"></i>
+                        </div>
+                        <div>
+                            <div class="vd-row-name" th:text="${product.name}">Tên sản phẩm</div>
+                            <div class="vd-row-sub" th:text="${product.brand != null ? product.brand : '—'}">Brand</div>
+                        </div>
+                    </div>
+                </td>
+                <td th:text="${product.categoryName != null ? product.categoryName : 'Chưa phân loại'}">Danh mục</td>
+                <td><strong th:text="${@money.format(product.price)}">0đ</strong></td>
+                <td>
+                    <span class="vd-stock-pill"
+                          th:classappend="${product.stock <= 0 ? 'out' : (product.stock <= 10 ? 'low' : '')}"
+                          th:text="${product.stock}">0</span>
+                </td>
+                <td>
+                    <span class="sd-badge"
+                          th:classappend="${product.status.name() == 'ACTIVE' ? 'sd-badge-green' : (product.status.name() == 'DRAFT' ? 'sd-badge-slate' : 'sd-badge-red')}"
+                          th:text="${product.status.name() == 'ACTIVE' ? 'Đang bán' : (product.status.name() == 'DRAFT' ? 'Bản nháp' : 'Ngừng bán')}">ACTIVE</span>
+                </td>
+                <td>
+                    <!-- Phase 2 §30 — Vendor thấy Moderation status + rejection reason -->
+                    <span th:if="${product.moderationStatus == null}"
+                          class="sd-badge sd-badge-slate">Chưa duyệt</span>
+                    <span th:unless="${product.moderationStatus == null}"
+                          class="sd-badge"
+                          th:classappend="${product.moderationStatus.name() == 'APPROVED' ? 'sd-badge-green' :
+                                          (product.moderationStatus.name() == 'REJECTED' ? 'sd-badge-red' :
+                                          (product.moderationStatus.name() == 'PENDING_MANUAL' ? 'sd-badge-warning' :
+                                          (product.moderationStatus.name() == 'AUTO_REJECTED' ? 'sd-badge-red' :
+                                          (product.moderationStatus.name() == 'AUTO_PASSED' ? 'sd-badge-blue' :
+                                          (product.moderationStatus.name() == 'ESCALATED' ? 'sd-badge-slate' : 'sd-badge-slate')))))}"
+                          th:text="${product.moderationStatus.name() == 'PENDING_MANUAL' ? 'Chờ duyệt' :
+                                   (product.moderationStatus.name() == 'AUTO_PASSED' ? 'Auto-passed' :
+                                   (product.moderationStatus.name() == 'AUTO_REJECTED' ? 'Auto-rejected' :
+                                   (product.moderationStatus.name() == 'APPROVED' ? 'Đã duyệt' :
+                                   (product.moderationStatus.name() == 'REJECTED' ? 'Bị từ chối' :
+                                   (product.moderationStatus.name() == 'ESCALATED' ? 'Đã leo thang' : product.moderationStatus.name())))))}">
+                        PENDING_MANUAL
+                    </span>
+                    <div th:if="${product.moderationStatus != null and product.moderationStatus.name() == 'REJECTED' and product.moderationReason != null}"
+                         class="sd-table-sub"
+                         style="margin-top:4px; color:#b91c1c; font-size:0.85em;"
+                         th:title="${product.moderationReason}">
+                        <i class="fas fa-info-circle"></i>
+                        <span th:text="${#strings.abbreviate(product.moderationReason, 60)}">Lý do</span>
+                    </div>
+                </td>
+                <td>
+                    <div class="vd-row-actions">
+                        <a th:href="@{/vendor/products/edit/{id}(id=${product.id})}" class="sd-btn sd-btn-secondary sd-btn-sm" title="Sửa">
+                            <i class="fas fa-pen"></i>
+                        </a>
+                        <form th:action="@{/vendor/products/delete/{id}(id=${product.id})}" method="post" class="sd-logout-form">
+                            <button type="submit" class="sd-btn sd-btn-danger sd-btn-sm" onclick="return confirm('Bạn có chắc muốn xóa sản phẩm này?')" title="Xóa">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </form>
+                    </div>
+                </td>
+            </tr>
+        </tbody>
             </table>
         </div>
     </div>

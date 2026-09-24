@@ -8,6 +8,7 @@ import com.ecommerce.cnj70.exception.BadRequestException;
 import com.ecommerce.cnj70.repository.ShopRepository;
 import com.ecommerce.cnj70.repository.UserRepository;
 import com.ecommerce.cnj70.service.VendorService;
+import com.ecommerce.cnj70.service.VoucherApplicationGateway;
 import com.ecommerce.cnj70.service.VoucherService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -40,6 +41,7 @@ import java.util.Map;
 public class VoucherController {
     
     private final VoucherService voucherService;
+    private final VoucherApplicationGateway voucherApplicationGateway;
     private final VendorService vendorService;
     private final UserRepository userRepository;
     private final ShopRepository shopRepository;
@@ -496,7 +498,13 @@ public class VoucherController {
     }
     
     /**
-     * Áp dụng voucher khi đặt hàng (từ form POST)
+     * Áp dụng voucher khi đặt hàng (từ form POST).
+     *
+     * <p>Phase 4B — atomic voucher consumption through
+     * {@link VoucherApplicationGateway#reserveVoucher}. The voucher is only
+     * consumed if and when the order is successfully created. If the order
+     * creation fails (Phase 5 / Order Backend owns), the caller MUST call
+     * {@code releaseVoucher} to roll back the usedCount increment.</p>
      */
     @PostMapping("/checkout/place-order")
     public String placeOrderWithVoucher(@RequestParam(required = false) String voucherCode,
@@ -505,9 +513,18 @@ public class VoucherController {
         if (voucherCode != null && !voucherCode.isBlank()) {
             try {
                 Voucher voucher = voucherService.validateForCheckout(voucherCode, null, null);
-                // Tăng used count sau khi đặt hàng thành công
-                voucherService.incrementUsed(voucher.getId());
-                redirectAttributes.addFlashAttribute("success", "Đặt hàng thành công! Voucher đã được sử dụng.");
+
+                // Phase 4B — atomic, race-safe increment via gateway.
+                // Order Backend (Phase 5) will own the full reserve/release
+                // lifecycle including rollback on order failure.
+                String orderRef = "ORDER_PLACEHOLDER";
+                boolean reserved = voucherApplicationGateway.reserveVoucher(voucher.getId(), orderRef);
+                if (!reserved) {
+                    redirectAttributes.addFlashAttribute("warning",
+                            "Voucher '" + voucher.getCode() + "' đã hết lượt hoặc bị vô hiệu hóa trước khi đặt hàng.");
+                } else {
+                    redirectAttributes.addFlashAttribute("success", "Đặt hàng thành công! Voucher đã được sử dụng.");
+                }
             } catch (Exception e) {
                 redirectAttributes.addFlashAttribute("warning", "Voucher không hợp lệ: " + e.getMessage());
             }

@@ -16,10 +16,15 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
+import java.time.LocalDateTime;
 import java.util.Map;
 
 /**
  * TASK #24 — AdminShopService với AuditLog integration.
+ *
+ * Sau merge feature/vendors-module: signature gộp reason + adminUsername,
+ * vừa set fields lên Shop (deactivationReason/rejectionReason/actionBy/actionAt),
+ * vừa ghi AuditLog với adminUsername làm actor.
  */
 @Slf4j
 @Service
@@ -55,6 +60,8 @@ public class AdminShopServiceImpl implements AdminShopService {
                 .orElseThrow(() -> new ResourceNotFoundException("Shop", "id", id));
     }
 
+    // ===== approveShop =====
+
     @Override
     public void approveShop(String id) {
         approveShop(id, null, null);
@@ -71,6 +78,7 @@ public class AdminShopServiceImpl implements AdminShopService {
         }
 
         shop.setStatus(ShopStatus.APPROVED);
+        shop.setRejectionReason(null);
         shopRepository.save(shop);
 
         // ===== TASK #24: AuditLog =====
@@ -91,6 +99,8 @@ public class AdminShopServiceImpl implements AdminShopService {
         log.info("AdminShopService.approveShop: shop {} approved (was {})", id, beforeStatus);
     }
 
+    // ===== activateShop =====
+
     @Override
     public void activateShop(String id) {
         activateShop(id, null, null);
@@ -105,6 +115,7 @@ public class AdminShopServiceImpl implements AdminShopService {
         }
 
         shop.setActive(true);
+        shop.setDeactivationReason(null);
         shopRepository.save(shop);
 
         if (actorId != null || actorUsername != null) {
@@ -122,13 +133,15 @@ public class AdminShopServiceImpl implements AdminShopService {
         log.info("AdminShopService.activateShop: shop {} activated", id);
     }
 
+    // ===== deactivateShop =====
+
     @Override
     public void deactivateShop(String id) {
         deactivateShop(id, null, null);
     }
 
     @Override
-    public void deactivateShop(String id, String actorId, String actorUsername) {
+    public void deactivateShop(String id, String reason, String adminUsername) {
         Shop shop = getShopById(id);
 
         if (!shop.isActive()) {
@@ -136,30 +149,37 @@ public class AdminShopServiceImpl implements AdminShopService {
         }
 
         shop.setActive(false);
+        shop.setDeactivationReason(StringUtils.hasText(reason) ? reason : null);
+        shop.setActionBy(adminUsername);
+        shop.setActionAt(LocalDateTime.now());
         shopRepository.save(shop);
 
-        if (actorId != null || actorUsername != null) {
+        if (adminUsername != null || reason != null) {
             auditLogService.logWarning(
                     AuditAction.SHOP_SUSPENDED,
                     "SHOP",
                     id,
-                    actorId,
-                    actorUsername,
+                    null,
+                    adminUsername,
                     "ADMIN",
-                    "Admin ngừng hoạt động shop: " + shop.getShopName()
+                    "Admin ngừng hoạt động shop: " + shop.getShopName() +
+                            (reason != null ? " - Lý do: " + reason : "")
             );
         }
 
-        log.info("AdminShopService.deactivateShop: shop {} deactivated", id);
+        log.info("AdminShopService.deactivateShop: shop {} deactivated by {} - reason: {}",
+                id, adminUsername, reason);
     }
+
+    // ===== rejectShop =====
 
     @Override
     public void rejectShop(String id) {
-        rejectShop(id, null, null, null);
+        rejectShop(id, null, null);
     }
 
     @Override
-    public void rejectShop(String id, String actorId, String actorUsername, String reason) {
+    public void rejectShop(String id, String reason, String adminUsername) {
         Shop shop = getShopById(id);
         ShopStatus beforeStatus = shop.getStatus();
 
@@ -169,22 +189,25 @@ public class AdminShopServiceImpl implements AdminShopService {
         }
 
         shop.setStatus(ShopStatus.REJECTED);
+        shop.setRejectionReason(StringUtils.hasText(reason) ? reason : null);
+        shop.setActionBy(adminUsername);
+        shop.setActionAt(LocalDateTime.now());
         shopRepository.save(shop);
 
-        // ===== TASK #24: AuditLog (WARNING vì reject là tác động lớn) =====
-        if (actorId != null || actorUsername != null) {
+        if (adminUsername != null || reason != null) {
             auditLogService.logWarning(
                     AuditAction.SHOP_REJECTED,
                     "SHOP",
                     id,
-                    actorId,
-                    actorUsername,
+                    null,
+                    adminUsername,
                     "ADMIN",
                     "Admin từ chối shop: " + shop.getShopName() +
-                            (reason != null ? ". Lý do: " + reason : "")
+                            (reason != null ? " - Lý do: " + reason : "")
             );
         }
 
-        log.info("AdminShopService.rejectShop: shop {} rejected (was {})", id, beforeStatus);
+        log.info("AdminShopService.rejectShop: shop {} rejected by {} - reason: {}",
+                id, adminUsername, reason);
     }
 }

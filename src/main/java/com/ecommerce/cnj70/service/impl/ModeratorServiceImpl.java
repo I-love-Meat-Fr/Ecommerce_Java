@@ -52,9 +52,10 @@ public class ModeratorServiceImpl implements ModeratorService {
     @Override
     public Page<Shop> getShopsByKycStatusPaged(KycStatus status, Pageable pageable) {
         if (status == null) {
-            // Return all shops with KYC issues (PENDING_PROVIDER + KYC_REJECTED)
+            // Return all shops with KYC issues (PENDING_THIRD_PARTY + PENDING_ADMIN + THIRD_PARTY_REJECTED)
             return shopRepository.findByKycStatusIn(
-                    List.of(KycStatus.PENDING_PROVIDER, KycStatus.KYC_REJECTED),
+                    List.of(KycStatus.PENDING_THIRD_PARTY, KycStatus.PENDING_ADMIN,
+                            KycStatus.THIRD_PARTY_REJECTED),
                     pageable
             );
         }

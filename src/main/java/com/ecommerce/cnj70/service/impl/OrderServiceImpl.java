@@ -5,11 +5,15 @@ import com.ecommerce.cnj70.dto.request.CheckoutReq;
 import com.ecommerce.cnj70.enums.DiscountType;
 import com.ecommerce.cnj70.enums.OrderStatus;
 import com.ecommerce.cnj70.enums.PaymentMethod;
+import com.ecommerce.cnj70.enums.ProductStatus;
+import com.ecommerce.cnj70.enums.ShippingStatus;
+import com.ecommerce.cnj70.enums.ShopStatus;
 import com.ecommerce.cnj70.exception.BadRequestException;
 import com.ecommerce.cnj70.exception.ResourceNotFoundException;
 import com.ecommerce.cnj70.repository.CartRepository;
 import com.ecommerce.cnj70.repository.OrderRepository;
 import com.ecommerce.cnj70.repository.ProductRepository;
+import com.ecommerce.cnj70.repository.ShopRepository;
 import com.ecommerce.cnj70.repository.UserRepository;
 import com.ecommerce.cnj70.service.CartService;
 import com.ecommerce.cnj70.service.OrderService;
@@ -22,6 +26,7 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -39,6 +44,7 @@ public class OrderServiceImpl implements OrderService {
     private final UserRepository userRepository;
     private final ProductRepository productRepository;
     private final CartRepository cartRepository;
+    private final ShopRepository shopRepository;
     private final CartService cartService;
     private final VoucherService voucherService;
 
@@ -59,7 +65,7 @@ public class OrderServiceImpl implements OrderService {
         // Nếu request.items rỗng/null -> checkout toàn bộ Cart
         // Nếu có items -> chỉ checkout các productId trong items (partial)
         Set<String> requestedIds = new HashSet<>();
-        Map<String, Integer> requestedQty = new java.util.HashMap<>();
+        Map<String, Integer> requestedQty = new HashMap<>();
         if (request.getItems() != null && !request.getItems().isEmpty()) {
             for (CheckoutReq.CheckoutItemReq it : request.getItems()) {
                 if (it.getProductId() == null || it.getProductId().isBlank()) {
@@ -85,8 +91,8 @@ public class OrderServiceImpl implements OrderService {
             throw new BadRequestException("Không có sản phẩm hợp lệ trong giỏ hàng để thanh toán");
         }
 
-        // ===== TASK #8: validate Product + stock =====
         List<Order.OrderItem> orderItems = new ArrayList<>();
+        Map<String, String> shopNames = new HashMap<>();
         BigDecimal subtotal = BigDecimal.ZERO;
 
         for (Cart.CartItem cartItem : itemsToCheckout) {
@@ -103,6 +109,26 @@ public class OrderServiceImpl implements OrderService {
                 throw new BadRequestException("Số lượng mua phải > 0 cho sản phẩm " + product.getName());
             }
 
+            // ===== TASK #16 (vendors-module): validate product status + shop active/verified =====
+            if (product.getStatus() != null && product.getStatus() != ProductStatus.ACTIVE) {
+                throw new BadRequestException(String.format(
+                        "Sản phẩm '%s' không thể mua (trạng thái: %s).",
+                        product.getName(), product.getStatus()));
+            }
+
+            Shop shop = shopRepository.findById(product.getShopId())
+                    .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy cửa hàng: " + product.getShopId()));
+            if (!shop.isActive()) {
+                throw new BadRequestException(String.format(
+                        "Cửa hàng '%s' hiện không hoạt động. Không thể đặt hàng.",
+                        shop.getShopName()));
+            }
+            if (!shop.isVerified() || shop.getStatus() != ShopStatus.APPROVED) {
+                throw new BadRequestException(String.format(
+                        "Cửa hàng '%s' chưa được xác minh. Không thể đặt hàng.",
+                        shop.getShopName()));
+            }
+
             if (product.getStock() < buyQty) {
                 throw new BadRequestException(String.format(
                         "Sản phẩm '%s' không đủ hàng. Chỉ còn %d sản phẩm.",
@@ -113,6 +139,7 @@ public class OrderServiceImpl implements OrderService {
 
             Order.OrderItem orderItem = Order.OrderItem.builder()
                     .shopId(product.getShopId())
+                    .shopName(product.getShopName())
                     .productId(product.getId())
                     .productName(product.getName())
                     .imageUrl(product.getThumbnailUrl())
@@ -123,6 +150,7 @@ public class OrderServiceImpl implements OrderService {
 
             orderItems.add(orderItem);
             subtotal = subtotal.add(itemSubtotal);
+            shopNames.put(product.getShopId(), product.getShopName());
 
             // Trừ stock (sẽ rollback nếu có lỗi ở bước sau nhờ @Transactional)
             product.setStock(product.getStock() - buyQty);
@@ -159,6 +187,16 @@ public class OrderServiceImpl implements OrderService {
         String primaryShopId = itemsToCheckout.get(0).getShopId();
         String primaryShopName = itemsToCheckout.get(0).getShopName();
 
+        // ===== vendors-module: shippingByShop khởi tạo cho mỗi shop (sub-order) =====
+        Map<String, Order.SubOrderShipping> shippingByShop = new HashMap<>();
+        for (Map.Entry<String, String> entry : shopNames.entrySet()) {
+            shippingByShop.put(entry.getKey(), Order.SubOrderShipping.builder()
+                    .shopId(entry.getKey())
+                    .shopName(entry.getValue())
+                    .status(ShippingStatus.PENDING)
+                    .build());
+        }
+
         Order order = Order.builder()
                 .userId(userId)
                 .userName(user.getFullName())
@@ -178,6 +216,7 @@ public class OrderServiceImpl implements OrderService {
                 .paid(false)
                 .shopId(primaryShopId)
                 .shopName(primaryShopName)
+                .shippingByShop(shippingByShop)
                 .build();
 
         Order savedOrder = orderRepository.save(order);
@@ -356,5 +395,38 @@ public class OrderServiceImpl implements OrderService {
                 productRepository.save(product);
             }
         }
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public Order updateShippingStatus(String orderId, String shopId, ShippingStatus status,
+                                     String trackingNumber, String carrier, String note) {
+        Order order = getOrderById(orderId);
+
+        if (order.getShippingByShop() == null || !order.getShippingByShop().containsKey(shopId)) {
+            throw new BadRequestException("Đơn hàng không chứa sản phẩm của shop này");
+        }
+
+        Order.SubOrderShipping shipping = order.getShippingByShop().get(shopId);
+        shipping.setStatus(status);
+        if (trackingNumber != null && !trackingNumber.isBlank()) {
+            shipping.setTrackingNumber(trackingNumber);
+        }
+        if (carrier != null && !carrier.isBlank()) {
+            shipping.setCarrier(carrier);
+        }
+        if (note != null && !note.isBlank()) {
+            shipping.setNote(note);
+        }
+        shipping.setUpdatedAt(LocalDateTime.now());
+
+        if (status == ShippingStatus.DELIVERED) {
+            shipping.setDeliveredAt(LocalDateTime.now());
+        }
+        if (status == ShippingStatus.PICKED_UP || status == ShippingStatus.IN_TRANSIT) {
+            shipping.setShippedAt(LocalDateTime.now());
+        }
+
+        return orderRepository.save(order);
     }
 }

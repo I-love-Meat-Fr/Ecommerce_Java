@@ -10,12 +10,13 @@
     <div class="sd-page-head">
         <div class="sd-page-head-title">
             <h1>Chi tiết đánh giá</h1>
-            <p>Thông tin moderation. Admin chỉ xem và xóa đánh giá vi phạm.</p>
+            <p>Thông tin moderation. Admin xem và xóa đánh giá vi phạm.</p>
         </div>
         <div>
             <a th:href="@{/admin/reviews(page=${page}, size=${size}, q=${q}, rating=${rating})}"
                class="sd-btn sd-btn-secondary sd-btn-sm">
-                <i class="fas fa-arrow-left"></i> Quay lại danh sách
+                <i class="fas fa-arrow-left"></i>
+                <span>Quay lại danh sách</span>
             </a>
         </div>
     </div>

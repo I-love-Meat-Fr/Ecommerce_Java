@@ -45,4 +45,7 @@ public interface ShopRepository extends MongoRepository<Shop, String> {
     Page<Shop> findByKycStatus(KycStatus kycStatus, Pageable pageable);
 
     Page<Shop> findByKycStatusIn(List<KycStatus> kycStatuses, Pageable pageable);
+
+    // === Phase 4A — counts used by Admin Dashboard ===
+    long countByStatus(ShopStatus status);
 }

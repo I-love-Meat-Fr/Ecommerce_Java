@@ -1,5 +1,6 @@
 package com.ecommerce.cnj70.document;
 
+import com.ecommerce.cnj70.enums.ModerationStatus;
 import com.ecommerce.cnj70.enums.ProductStatus;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -65,6 +66,52 @@ public class Product {
 
     @Builder.Default
     private ProductStatus status = ProductStatus.DRAFT;
+
+    /**
+     * Phase 2A — Moderation workflow status. Orthogonal to {@link #status}.
+     * <p>
+     * Existing documents created before Phase 2A will have {@code null},
+     * which means "not in moderation pipeline" (treated as no-op for
+     * Moderator queue / actions). This preserves backward compatibility
+     * — Admin Product Management and the public-facing ProductStatus
+     * code paths are not affected.
+     */
+    @Indexed
+    private ModerationStatus moderationStatus;
+
+    /**
+     * Phase 2A — Moderator who most recently processed this product
+     * (Approve / Reject / Escalate). Set together with {@link #moderationStatus}.
+     */
+    private String moderationActorId;
+
+    /**
+     * Phase 2A — Reason supplied with the most recent moderation action.
+     * Required for REJECT and ESCALATE; null for APPROVE.
+     */
+    private String moderationReason;
+
+    /**
+     * Phase 2A — Timestamp of the most recent moderation action.
+     */
+    private java.time.LocalDateTime moderationAt;
+
+    /**
+     * Phase 3A — Admin who most recently enforced on this product
+     * (Suspend / Unhide). Set when Admin enforcement changes {@link #status}
+     * (e.g. ACTIVE → HIDDEN).
+     */
+    private String enforcementActorId;
+
+    /**
+     * Phase 3A — Reason supplied with the most recent enforcement action.
+     */
+    private String enforcementReason;
+
+    /**
+     * Phase 3A — Timestamp of the most recent enforcement action.
+     */
+    private java.time.LocalDateTime enforcementAt;
 
     @Builder.Default
     private double rating = 0.0;

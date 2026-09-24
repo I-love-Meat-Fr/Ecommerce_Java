@@ -42,6 +42,15 @@
                     <span class="nav-cart-badge" th:if="${cartCount != null and cartCount > 0}"
                         th:text="${cartCount}">0</span>
                 </a>
+                <!-- Seller CTA: chỉ hiện cho guest hoặc customer (không vendor) -->
+                <a th:href="@{/seller}"
+                   sec:authorize="!hasRole('VENDOR')"
+                   id="nav-seller"
+                   class="home-nav-link home-nav-link-seller">
+                    <i class="fas fa-store home-nav-icon"></i>
+                    <span>Bán hàng</span>
+                    <span class="home-nav-seller-pill">MỚI</span>
+                </a>
             </nav>
 
             <!-- Right: Actions -->
@@ -56,7 +65,7 @@
                     <a th:href="@{/orders}" class="home-icon-btn" title="Đơn hàng" id="orders-btn">
                         <i class="fas fa-receipt"></i>
                     </a>
-                    <a th:href="@{/vendor}" sec:authorize="hasRole('VENDOR')" class="home-icon-btn home-icon-btn-vendor"
+                    <a th:href="@{/vendor/dashboard}" sec:authorize="hasRole('VENDOR')" class="home-icon-btn home-icon-btn-vendor"
                         title="Quản lý Shop" id="vendor-btn">
                         <i class="fas fa-store"></i>
                         <span class="home-icon-label">Kênh người bán</span>
@@ -81,11 +90,14 @@
                             <a th:href="@{/cart}" class="home-dropdown-item">
                                 <i class="fas fa-shopping-cart"></i> Giỏ hàng
                             </a>
-                            <a th:href="@{/vendor}" sec:authorize="hasRole('VENDOR')" class="home-dropdown-item">
+                            <a th:href="@{/vendor/dashboard}" sec:authorize="hasRole('VENDOR')" class="home-dropdown-item">
                                 <i class="fas fa-store"></i> Kênh người bán
                             </a>
                             <a th:href="@{/admin/dashboard}" sec:authorize="hasRole('ADMIN')" class="home-dropdown-item">
                                 <i class="fas fa-shield-halved"></i> Trang quản trị
+                            </a>
+                            <a th:href="@{/moderator/dashboard}" sec:authorize="hasRole('MODERATOR')" class="home-dropdown-item">
+                                <i class="fas fa-user-shield"></i> Trang kiểm duyệt
                             </a>
                             <div class="home-user-dropdown-divider"></div>
                             <form th:action="@{/auth/logout}" method="post">
@@ -148,13 +160,22 @@
                     <span class="nav-cart-badge" th:if="${cartCount != null and cartCount > 0}"
                         th:text="${cartCount}">0</span>
                 </a>
+                <a th:href="@{/seller}"
+                   sec:authorize="!hasRole('VENDOR')"
+                   class="home-mobile-nav-link home-mobile-nav-link-seller">
+                    <i class="fas fa-store"></i> Trở thành người bán
+                    <span class="home-mobile-seller-pill">MỚI</span>
+                </a>
             </nav>
             <div sec:authorize="isAuthenticated()" class="home-mobile-auth">
-                <a th:href="@{/vendor}" sec:authorize="hasRole('VENDOR')" class="home-mobile-nav-link">
+                <a th:href="@{/vendor/dashboard}" sec:authorize="hasRole('VENDOR')" class="home-mobile-nav-link">
                     <i class="fas fa-store"></i> Kênh người bán
                 </a>
                 <a th:href="@{/admin/dashboard}" sec:authorize="hasRole('ADMIN')" class="home-mobile-nav-link">
                     <i class="fas fa-shield-halved"></i> Trang quản trị
+                </a>
+                <a th:href="@{/moderator/dashboard}" sec:authorize="hasRole('MODERATOR')" class="home-mobile-nav-link">
+                    <i class="fas fa-user-shield"></i> Trang kiểm duyệt
                 </a>
                 <form th:action="@{/auth/logout}" method="post">
                     <button type="submit" class="home-mobile-logout">

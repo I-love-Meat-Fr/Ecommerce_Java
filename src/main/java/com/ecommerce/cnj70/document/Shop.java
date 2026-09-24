@@ -43,9 +43,12 @@ public class Shop {
 
     // ===== TASK #16 KYC: KYC workflow status =====
     // Shop status (APPROVED/REJECTED/SUSPENDED) quản lý hoạt động bán hàng
-    // KycStatus quản lý trạng thái xác minh danh tính Vendor
+    // KycStatus quản lý trạng thái xác minh danh tính Vendor.
+    // Lưu ý: source-of-truth mới là KycProfile; Shop.kycStatus chỉ là
+    // denormalized mirror để backward-compatible với KycService/Moderator
+    // và các query cũ. Được sync bởi VendorKycService và AdminKycService.
     @Builder.Default
-    private KycStatus kycStatus = KycStatus.PENDING_KYC;
+    private KycStatus kycStatus = KycStatus.NOT_SUBMITTED;
 
     /**
      * Reference ID từ KYC provider (VNPT/FPT/MOCK).
@@ -71,6 +74,35 @@ public class Shop {
     private String encryptedCitizenId;
     private String encryptedTaxCode;
     private String encryptedBankAccount;
+
+    // ===== Admin Shop lifecycle audit (brought in by feature/vendors-module) =====
+    /** Lý do admin từ chối shop (khi status = REJECTED) */
+    private String rejectionReason;
+
+    /** Lý do admin ngừng hoạt động shop (khi active = false) */
+    private String deactivationReason;
+
+    /** Admin thực hiện từ chối / ngừng hoạt động */
+    private String actionBy;
+
+    /** Thời điểm admin thực hiện thao tác */
+    private LocalDateTime actionAt;
+
+    /**
+     * Phase 3A — Admin who most recently enforced on this shop
+     * (Suspend / Restrict / Reinstate).
+     */
+    private String enforcementActorId;
+
+    /**
+     * Phase 3A — Reason supplied with the most recent enforcement action.
+     */
+    private String enforcementReason;
+
+    /**
+     * Phase 3A — Timestamp of the most recent enforcement action.
+     */
+    private LocalDateTime enforcementAt;
 
     @CreatedDate
     private LocalDateTime createdAt;

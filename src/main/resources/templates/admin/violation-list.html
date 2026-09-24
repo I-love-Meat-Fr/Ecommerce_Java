@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/springsecurity6"
+      th:replace="~{layout/admin-layout :: layout(title='Quản lý vi phạm - CNJ70 Admin', content=~{::main-content}, scripts=~{::page-scripts})}">
+<head>
+    <title>Quản lý vi phạm - CNJ70 Admin</title>
+</head>
+<body>
+<main th:fragment="main-content">
+    <div class="sd-page-head">
+        <div class="sd-page-head-title">
+            <h1>Quản lý vi phạm</h1>
+            <p>Theo dõi và xử lý các cảnh báo, vi phạm của cửa hàng.</p>
+        </div>
+        <div class="sd-page-head-actions">
+            <a th:href="@{/admin/violations/create}" class="sd-btn sd-btn-primary sd-btn-sm">
+                <i class="fas fa-plus"></i> Tạo violation
+            </a>
+        </div>
+    </div>
+
+    <div th:if="${flashSuccess}" class="sd-alert sd-alert-success"><i class="fas fa-circle-check"></i><span th:text="${flashSuccess}"></span></div>
+    <div th:if="${flashError}" class="sd-alert sd-alert-danger"><i class="fas fa-triangle-exclamation"></i><span th:text="${flashError}"></span></div>
+
+    <div class="sd-card" style="margin-bottom:20px;">
+        <div class="sd-card-body">
+            <form th:action="@{/admin/violations}" method="get" class="vd-toolbar-form">
+                <input type="text" name="shopId" th:value="${shopId}" placeholder="Shop ID..."
+                       class="vd-toolbar-search"
+                       style="padding:8px 10px;border:1px solid var(--border,#e2e8f0);border-radius:6px;">
+                <select name="severity"
+                        style="padding:8px 10px;border:1px solid var(--border,#e2e8f0);border-radius:6px;">
+                    <option value="">Tất cả mức độ</option>
+                    <option th:each="s : ${severities}" th:value="${s.name()}" th:text="${s.name()}"
+                            th:selected="${severity == s.name()}">S</option>
+                </select>
+                <select name="type"
+                        style="padding:8px 10px;border:1px solid var(--border,#e2e8f0);border-radius:6px;">
+                    <option value="">Tất cả loại</option>
+                    <option th:each="t : ${types}" th:value="${t.name()}" th:text="${t.name()}"
+                            th:selected="${type == t.name()}">T</option>
+                </select>
+                <button type="submit" class="sd-btn sd-btn-primary sd-btn-sm"><i class="fas fa-search"></i> Lọc</button>
+                <a th:href="@{/admin/violations}" class="sd-btn sd-btn-secondary sd-btn-sm"><i class="fas fa-rotate-left"></i> Đặt lại</a>
+            </form>
+        </div>
+    </div>
+
+    <div class="sd-card">
+        <div class="sd-card-body sd-card-body-flush">
+            <div th:if="${#lists.isEmpty(violations)}" class="sd-empty">
+                <i class="fas fa-shield-halved"></i>
+                <h3>Chưa có violation nào</h3>
+                <p>Khi có vi phạm, danh sách sẽ hiển thị tại đây.</p>
+            </div>
+
+            <table th:unless="${#lists.isEmpty(violations)}" class="sd-table">
+                <thead>
+                    <tr>
+                        <th class="sd-col-stt">STT</th>
+                        <th>Ngày tạo</th>
+                        <th>Shop ID</th>
+                        <th>Loại</th>
+                        <th>Mức độ</th>
+                        <th>Lý do</th>
+                        <th>Trạng thái</th>
+                        <th style="text-align:right;">Thao tác</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr th:each="v, iter : ${violations}">
+                        <td class="sd-col-stt" th:text="${iter.count + page * size}">1</td>
+                        <td>
+                            <span th:text="${#temporals.format(v.createdAt, 'dd/MM/yyyy HH:mm')}">Ngày</span>
+                        </td>
+                        <td>
+                            <a th:href="@{/admin/shops/{id}(id=${v.shopId})}" style="color:var(--primary);font-family:ui-monospace,SFMono-Regular,Menlo,monospace;"
+                               th:text="${v.shopId}">shop-id</a>
+                        </td>
+                        <td>
+                            <span class="sd-badge"
+                                  th:classappend="${v.type.name() == 'WARNING' ? 'sd-badge-amber' :
+                                                  (v.type.name() == 'VIOLATION' ? 'sd-badge-orange' :
+                                                  (v.type.name() == 'BAN' ? 'sd-badge-red' : 'sd-badge-slate'))}"
+                                  th:text="${v.type.name()}">TYPE</span>
+                        </td>
+                        <td>
+                            <span class="sd-badge"
+                                  th:classappend="${v.severity.name() == 'LOW' ? 'sd-badge-slate' :
+                                                  (v.severity.name() == 'MEDIUM' ? 'sd-badge-amber' :
+                                                  (v.severity.name() == 'HIGH' ? 'sd-badge-orange' :
+                                                  (v.severity.name() == 'CRITICAL' ? 'sd-badge-red' : 'sd-badge-slate')))}"
+                                  th:text="${v.severity.name()}">SEVERITY</span>
+                        </td>
+                        <td>
+                            <span class="vd-row-name" th:text="${v.reason}">Lý do</span>
+                            <div th:if="${v.productName != null}" class="vd-row-sub" th:text="${v.productName}">SP</div>
+                        </td>
+                        <td>
+                            <span th:if="${v.resolvedAt == null}" class="sd-badge sd-badge-red">Chưa xử lý</span>
+                            <span th:if="${v.resolvedAt != null}" class="sd-badge sd-badge-green">Đã xử lý</span>
+                        </td>
+                        <td style="text-align:right;">
+                            <form th:if="${v.resolvedAt == null}"
+                                  th:action="@{/admin/violations/{id}/resolve(id=${v.id})}"
+                                  method="post" style="display:inline;"
+                                  onsubmit="return confirm('Đánh dấu violation này là đã xử lý?');">
+                                <input type="hidden" name="note" value="">
+                                <button type="submit" class="sd-btn sd-btn-primary sd-btn-sm">
+                                    <i class="fas fa-check"></i> Xử lý
+                                </button>
+                            </form>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <div th:if="${totalPages > 1}" style="display:flex;justify-content:center;gap:6px;padding:16px;">
+                <a th:if="${page > 0}"
+                   th:href="@{/admin/violations(page=${page - 1}, size=${size}, shopId=${shopId}, severity=${severity}, type=${type})}"
+                   class="sd-btn sd-btn-secondary sd-btn-sm">
+                    <i class="fas fa-chevron-left"></i> Trước
+                </a>
+                <span class="sd-badge sd-badge-slate">
+                    Trang <th:block th:text="${page + 1}"></th:block> / <th:block th:text="${totalPages}"></th:block>
+                </span>
+                <a th:if="${page + 1 < totalPages}"
+                   th:href="@{/admin/violations(page=${page + 1}, size=${size}, shopId=${shopId}, severity=${severity}, type=${type})}"
+                   class="sd-btn sd-btn-secondary sd-btn-sm">
+                    Sau <i class="fas fa-chevron-right"></i>
+                </a>
+            </div>
+        </div>
+    </div>
+
+</main>
+<th:block th:fragment="page-scripts"></th:block>
+</body>
+</html>

@@ -2,18 +2,24 @@ package com.ecommerce.cnj70.service.impl;
 
 import com.ecommerce.cnj70.document.Voucher;
 import com.ecommerce.cnj70.dto.request.VoucherFormReq;
+import com.ecommerce.cnj70.dto.moderation.AuditEvent;
 import com.ecommerce.cnj70.enums.DiscountType;
+import com.ecommerce.cnj70.enums.UserRole;
 import com.ecommerce.cnj70.enums.VoucherType;
 import com.ecommerce.cnj70.exception.BadRequestException;
+import com.ecommerce.cnj70.exception.ConflictException;
 import com.ecommerce.cnj70.exception.ResourceNotFoundException;
 import com.ecommerce.cnj70.repository.VoucherRepository;
+import com.ecommerce.cnj70.service.AuditEventWriter;
 import com.ecommerce.cnj70.service.VoucherService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
+import org.springframework.data.mongodb.core.query.Update;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
@@ -26,12 +32,43 @@ import java.util.stream.Collectors;
 /**
  * Implement VoucherService
  */
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class VoucherServiceImpl implements VoucherService {
 
     private final VoucherRepository voucherRepository;
     private final MongoTemplate mongoTemplate;
+    private final AuditEventWriter auditEventWriter;
+
+    /* === Phase 4B — Audit event helpers (read-only Audit seam) === */
+
+    private void emitAudit(String action, Voucher before, Voucher after, String reason, String actorId) {
+        try {
+            String beforeStr = before != null
+                    ? "code=" + before.getCode() + ";active=" + before.isActive()
+                            + ";used=" + before.getUsed() + ";quantity=" + before.getQuantity()
+                    : null;
+            String afterStr = after != null
+                    ? "code=" + after.getCode() + ";active=" + after.isActive()
+                            + ";used=" + after.getUsed() + ";quantity=" + after.getQuantity()
+                    : null;
+            AuditEvent ev = AuditEvent.builder()
+                    .actorId(actorId)
+                    .role(UserRole.ADMIN)
+                    .action("VOUCHER_" + action)
+                    .resourceType("VOUCHER")
+                    .resourceId(after != null ? after.getId() : (before != null ? before.getId() : null))
+                    .reason(reason)
+                    .before(beforeStr)
+                    .after(afterStr)
+                    .createdAt(LocalDateTime.now())
+                    .build();
+            auditEventWriter.write(ev);
+        } catch (Exception ex) {
+            log.warn("Audit emission failed for voucher action {}: {}", action, ex.getMessage());
+        }
+    }
     
     @Override
     public Voucher createVoucher(VoucherFormReq request, String shopId, String shopName, String createdBy) {
@@ -77,8 +114,9 @@ public class VoucherServiceImpl implements VoucherService {
     
     @Override
     public Voucher createWebVoucher(VoucherFormReq request, String createdBy) {
+        // Phase 4B — duplicate code → 409 Conflict (was 400 BadRequest).
         if (voucherRepository.existsByCode(request.getCode())) {
-            throw new BadRequestException("Mã voucher đã tồn tại");
+            throw new ConflictException("Mã voucher '" + request.getCode() + "' đã tồn tại trong hệ thống. Vui lòng chọn mã khác.");
         }
 
         if (request.getDiscountType() == DiscountType.PERCENT) {
@@ -87,7 +125,16 @@ public class VoucherServiceImpl implements VoucherService {
             }
         }
 
-        // Phase 11 — Bổ sung validation endDate >= startDate (thiếu trong source cũ)
+        if (request.getDiscountValue() == null
+                || request.getDiscountValue().compareTo(java.math.BigDecimal.ZERO) <= 0) {
+            throw new BadRequestException("Giá trị giảm phải lớn hơn 0");
+        }
+
+        if (request.getQuantity() <= 0) {
+            throw new BadRequestException("Tổng số lượt phải lớn hơn 0");
+        }
+
+        // Phase 11 — Bổ sung validation endDate >= startDate
         if (request.getEndDate() != null && request.getStartDate() != null
             && request.getEndDate().isBefore(request.getStartDate())) {
             throw new BadRequestException("Ngày kết thúc phải sau ngày bắt đầu");
@@ -112,7 +159,9 @@ public class VoucherServiceImpl implements VoucherService {
                 .createdBy(createdBy)
                 .build();
 
-        return voucherRepository.save(voucher);
+        Voucher saved = voucherRepository.save(voucher);
+        emitAudit("CREATED", null, saved, "Admin created WEB Voucher", createdBy);
+        return saved;
     }
     
     @Override
@@ -195,27 +244,34 @@ public class VoucherServiceImpl implements VoucherService {
     public Voucher activateWebVoucher(String voucherId) {
         Voucher voucher = getVoucherById(voucherId);
         requireWebVoucher(voucher);
+        Voucher before = cloneVoucher(voucher);
         voucher.setActive(true);
-        return voucherRepository.save(voucher);
+        Voucher saved = voucherRepository.save(voucher);
+        emitAudit("ACTIVATED", before, saved, "Admin activated WEB Voucher", before.getCreatedBy());
+        return saved;
     }
 
     @Override
     public Voucher deactivateWebVoucher(String voucherId) {
         Voucher voucher = getVoucherById(voucherId);
         requireWebVoucher(voucher);
+        Voucher before = cloneVoucher(voucher);
         voucher.setActive(false);
-        return voucherRepository.save(voucher);
+        Voucher saved = voucherRepository.save(voucher);
+        emitAudit("DEACTIVATED", before, saved, "Admin deactivated WEB Voucher", before.getCreatedBy());
+        return saved;
     }
 
     @Override
     public Voucher updateWebVoucher(String voucherId, VoucherFormReq request) {
         Voucher voucher = getVoucherById(voucherId);
         requireWebVoucher(voucher);
+        Voucher before = cloneVoucher(voucher);
 
-        // Phase 11 — Validate code (nếu đổi)
+        // Phase 4B — duplicate code → 409 Conflict
         if (request.getCode() != null && !request.getCode().equalsIgnoreCase(voucher.getCode())) {
             if (voucherRepository.existsByCode(request.getCode())) {
-                throw new BadRequestException("Mã voucher đã tồn tại");
+                throw new ConflictException("Mã voucher '" + request.getCode() + "' đã tồn tại trong hệ thống.");
             }
             voucher.setCode(request.getCode().toUpperCase());
         }
@@ -270,15 +326,43 @@ public class VoucherServiceImpl implements VoucherService {
         voucher.setShopId(null);
         voucher.setShopName(null);
 
-        return voucherRepository.save(voucher);
+        Voucher saved = voucherRepository.save(voucher);
+        emitAudit("UPDATED", before, saved, "Admin updated WEB Voucher", before.getCreatedBy());
+        return saved;
+    }
+
+    private Voucher cloneVoucher(Voucher src) {
+        return Voucher.builder()
+                .id(src.getId())
+                .code(src.getCode())
+                .name(src.getName())
+                .type(src.getType())
+                .shopId(src.getShopId())
+                .shopName(src.getShopName())
+                .productIds(src.getProductIds() != null ? new ArrayList<>(src.getProductIds()) : null)
+                .discountType(src.getDiscountType())
+                .discountValue(src.getDiscountValue())
+                .maxDiscountAmount(src.getMaxDiscountAmount())
+                .minOrderValue(src.getMinOrderValue())
+                .quantity(src.getQuantity())
+                .used(src.getUsed())
+                .startDate(src.getStartDate())
+                .endDate(src.getEndDate())
+                .active(src.isActive())
+                .createdBy(src.getCreatedBy())
+                .createdAt(src.getCreatedAt())
+                .updatedAt(src.getUpdatedAt())
+                .build();
     }
 
     @Override
     public void deleteWebVoucher(String voucherId) {
         Voucher voucher = getVoucherById(voucherId);
         requireWebVoucher(voucher);
+        Voucher before = cloneVoucher(voucher);
         voucher.setActive(false);
-        voucherRepository.save(voucher);
+        Voucher saved = voucherRepository.save(voucher);
+        emitAudit("DELETED", before, saved, "Admin soft-deleted WEB Voucher", before.getCreatedBy());
     }
     
     @Override
@@ -397,10 +481,63 @@ public class VoucherServiceImpl implements VoucherService {
     }
     
     @Override
+    @Deprecated
     public void incrementUsed(String voucherId) {
         Voucher voucher = getVoucherById(voucherId);
         voucher.setUsed(voucher.getUsed() + 1);
         voucherRepository.save(voucher);
+    }
+
+    /**
+     * Phase 4B — Atomic usedCount increment (race-safe).
+     *
+     * <p>Performs Mongo conditional update:
+     * {@code WHERE _id = ? AND active = true AND used < quantity SET used = used + 1}</p>
+     *
+     * <p>If matchedCount == 0, the voucher is either exhausted, deactivated,
+     * or doesn't exist. Caller MUST treat this as "voucher could not be applied".</p>
+     */
+    @Override
+    public boolean tryIncrementUsed(String voucherId) {
+        if (voucherId == null || voucherId.isBlank()) return false;
+        Query q = new Query(Criteria.where("_id").is(voucherId)
+                .and("active").is(true)
+                .andOperator(Criteria.where("$expr").is(
+                        new org.bson.Document("$lt",
+                                java.util.List.of("$used", "$quantity")))));
+        Update u = new Update().inc("used", 1);
+        var result = mongoTemplate.updateFirst(q, u, Voucher.class);
+        boolean ok = result.getModifiedCount() == 1L;
+        if (ok) {
+            log.info("Voucher {} used++ (atomic)", voucherId);
+        } else {
+            log.warn("Voucher {} atomic increment failed (exhausted/inactive/missing)", voucherId);
+        }
+        return ok;
+    }
+
+    /**
+     * Phase 4B — Atomic usedCount decrement (cancel/reversal seam).
+     *
+     * <p>Performs Mongo conditional update:
+     * {@code WHERE _id = ? AND used > 0 SET used = used - 1}</p>
+     */
+    @Override
+    public boolean tryDecrementUsed(String voucherId) {
+        if (voucherId == null || voucherId.isBlank()) return false;
+        Query q = new Query(Criteria.where("_id").is(voucherId)
+                .andOperator(Criteria.where("$expr").is(
+                        new org.bson.Document("$gt",
+                                java.util.List.of("$used", 0)))));
+        Update u = new Update().inc("used", -1);
+        var result = mongoTemplate.updateFirst(q, u, Voucher.class);
+        boolean ok = result.getModifiedCount() == 1L;
+        if (ok) {
+            log.info("Voucher {} used-- (atomic reversal)", voucherId);
+        } else {
+            log.warn("Voucher {} atomic decrement failed (already 0/missing)", voucherId);
+        }
+        return ok;
     }
     
     @Override

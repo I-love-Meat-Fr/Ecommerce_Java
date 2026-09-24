@@ -45,4 +45,14 @@ public interface VoucherRepository extends MongoRepository<Voucher, String> {
     Page<Voucher> findByType(VoucherType type, Pageable pageable);
 
     Page<Voucher> findByTypeAndActive(VoucherType type, boolean active, Pageable pageable);
+
+    // === Phase 4B — Atomic usedCount operations (race-safe) ===
+
+    /**
+     * Atomic increment used when {@code used < quantity}.
+     * Used by MongoTemplate.updateFirst() with conditional update.
+     * <p>Note: this is a derived Mongo query — actual atomic update is performed
+     * via {@code MongoTemplate.updateFirst()} in the service layer.</p>
+     */
+    long countByTypeAndActive(VoucherType type, boolean active);
 }

@@ -7,6 +7,7 @@ import com.ecommerce.cnj70.exception.BusinessException;
 import com.ecommerce.cnj70.exception.ResourceNotFoundException;
 import com.ecommerce.cnj70.repository.UserRepository;
 import com.ecommerce.cnj70.service.AdminShopService;
+import com.ecommerce.cnj70.security.CustomUserDetails;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -173,6 +174,7 @@ public class AdminShopController {
                                  @RequestParam(defaultValue = "5") int size,
                                  @RequestParam(required = false) String q,
                                  @RequestParam(required = false) String status,
+                                 @RequestParam(required = false) String reason,
                                  RedirectAttributes redirectAttributes) {
         Shop shop;
         try {
@@ -183,7 +185,11 @@ public class AdminShopController {
         }
 
         try {
-            adminShopService.deactivateShop(id, currentActorId(userDetails), currentActorId(userDetails));
+            // Signature mới (merge feature/admin + feature/vendors-module):
+            //   deactivateShop(id, reason, adminUsername) - vừa lưu reason/actionBy/actionAt
+            //   lên Shop, vừa ghi AuditLog SHOP_SUSPENDED với adminUsername làm actor.
+            String actorId = currentActorId(userDetails);
+            adminShopService.deactivateShop(id, reason, actorId);
             redirectAttributes.addFlashAttribute("flashSuccess",
                     "Đã ngừng hoạt động shop \"" + shop.getShopName() + "\"");
         } catch (BusinessException ex) {
@@ -217,7 +223,9 @@ public class AdminShopController {
         }
 
         try {
-            adminShopService.rejectShop(id, currentActorId(userDetails), currentActorId(userDetails), reason);
+            // Gộp cả reason + actorId/actorUsername.
+            String actorId = currentActorId(userDetails);
+            adminShopService.rejectShop(id, reason, actorId);
             redirectAttributes.addFlashAttribute("flashSuccess",
                     "Đã từ chối shop \"" + shop.getShopName() + "\"");
         } catch (BusinessException ex) {

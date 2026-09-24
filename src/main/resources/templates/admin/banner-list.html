@@ -204,6 +204,34 @@
     </div>
 </main>
 
-<th:block th:fragment="page-scripts"></th:block>
+<th:block th:fragment="page-scripts">
+    <script>
+        // Phase 4C — Confirmation + Double-submit protection for state-changing forms.
+        // Each publish/unpublish/delete form gets a one-shot guard.
+        (function () {
+            document.querySelectorAll('form[onsubmit]').forEach(function (f) {
+                f.addEventListener('submit', function (e) {
+                    var btn = f.querySelector('button[type="submit"]');
+                    if (!btn) return;
+                    if (btn.dataset.submitting === '1') {
+                        e.preventDefault();
+                        return false;
+                    }
+                    btn.dataset.submitting = '1';
+                    btn.disabled = true;
+                    btn.style.opacity = '0.6';
+                    btn.style.pointerEvents = 'none';
+                    // Re-enable after 5s in case the redirect fails (network etc.)
+                    setTimeout(function () {
+                        btn.disabled = false;
+                        btn.dataset.submitting = '0';
+                        btn.style.opacity = '';
+                        btn.style.pointerEvents = '';
+                    }, 5000);
+                });
+            });
+        })();
+    </script>
+</th:block>
 </body>
 </html>

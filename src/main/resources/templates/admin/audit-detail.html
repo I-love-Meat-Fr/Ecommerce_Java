@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/springsecurity6"
+      th:replace="~{layout/admin-layout :: layout(title='Audit Detail - CNJ70 Admin', content=~{::main-content}, scripts=~{::page-scripts})}">
+<head>
+    <title>Audit Detail - CNJ70 Admin</title>
+</head>
+<body>
+<main th:fragment="main-content">
+    <div class="sd-page-head">
+        <div class="sd-page-head-title">
+            <h1><i class="fas fa-clipboard-list"></i> Audit Log Detail</h1>
+            <p>Chi tiết một entry audit log — READ ONLY.</p>
+        </div>
+        <div class="sd-page-head-actions">
+            <a th:href="@{/admin/audit(page=${page}, size=${size}, role=${roleFilter}, actorId=${actorId}, resourceType=${resourceType}, resourceId=${resourceId}, from=${from}, to=${to})}"
+               class="sd-btn sd-btn-secondary sd-btn-sm">
+                <i class="fas fa-arrow-left"></i>
+                <span>Quay lại danh sách</span>
+            </a>
+        </div>
+    </div>
+
+    <!-- Status badges row -->
+    <div class="sd-card" style="margin-bottom:20px;">
+        <div class="sd-card-body" style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
+            <span class="sd-badge sd-badge-slate" th:text="'ID: ' + ${entry.id}">#id</span>
+            <span class="sd-badge sd-badge-blue" th:text="${entry.action}">ACTION</span>
+            <span th:if="${entry.severity != null}" class="sd-badge sd-badge-slate" th:text="${entry.severity}">—</span>
+        </div>
+    </div>
+
+    <!-- Actor & Action -->
+    <div class="sd-card" style="margin-bottom:20px;">
+        <div class="sd-card-head">
+            <div>
+                <h3><i class="fas fa-user-shield"></i> Actor &amp; Action</h3>
+                <p>Thông tin người thực hiện và hành động</p>
+            </div>
+        </div>
+        <div class="sd-card-body">
+            <div class="sd-detail-grid">
+                <div class="sd-detail-item">
+                    <div class="sd-detail-label">Actor</div>
+                    <div class="sd-detail-value" th:text="${entry.actorEmail}">—</div>
+                </div>
+                <div class="sd-detail-item">
+                    <div class="sd-detail-label">Actor ID</div>
+                    <div class="sd-detail-value sd-mono" th:text="${entry.actorId}">id</div>
+                </div>
+                <div class="sd-detail-item">
+                    <div class="sd-detail-label">Role</div>
+                    <div class="sd-detail-value">
+                        <span class="sd-badge sd-badge-slate" th:text="${entry.role}">ADMIN</span>
+                    </div>
+                </div>
+                <div class="sd-detail-item">
+                    <div class="sd-detail-label">Action</div>
+                    <div class="sd-detail-value">
+                        <span class="sd-badge sd-badge-blue" th:text="${entry.action}">ACTION</span>
+                    </div>
+                </div>
+                <div class="sd-detail-item">
+                    <div class="sd-detail-label">Severity</div>
+                    <div class="sd-detail-value" th:text="${entry.severity != null ? entry.severity : '—'}">—</div>
+                </div>
+                <div class="sd-detail-item" style="grid-column:1/-1;">
+                    <div class="sd-detail-label">Reason</div>
+                    <div class="sd-detail-value" th:text="${entry.reason != null ? entry.reason : '—'}">—</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Resource -->
+    <div class="sd-card" style="margin-bottom:20px;">
+        <div class="sd-card-head">
+            <div>
+                <h3><i class="fas fa-cube"></i> Resource</h3>
+                <p>Thông tin resource bị tác động</p>
+            </div>
+        </div>
+        <div class="sd-card-body">
+            <div class="sd-detail-grid">
+                <div class="sd-detail-item">
+                    <div class="sd-detail-label">Resource Type</div>
+                    <div class="sd-detail-value">
+                        <span class="sd-badge sd-badge-blue" th:text="${entry.resourceType}">TYPE</span>
+                    </div>
+                </div>
+                <div class="sd-detail-item">
+                    <div class="sd-detail-label">Resource ID</div>
+                    <div class="sd-detail-value sd-mono" th:text="${entry.resourceId}">id</div>
+                </div>
+                <div class="sd-detail-item">
+                    <div class="sd-detail-label">State Before</div>
+                    <div class="sd-detail-value" th:text="${entry.before != null ? entry.before : '—'}">—</div>
+                </div>
+                <div class="sd-detail-item">
+                    <div class="sd-detail-label">State After</div>
+                    <div class="sd-detail-value" th:text="${entry.after != null ? entry.after : '—'}">—</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Timestamp & IP -->
+    <div class="sd-card" style="margin-bottom:20px;">
+        <div class="sd-card-head">
+            <div>
+                <h3><i class="fas fa-clock"></i> Timestamp &amp; IP</h3>
+                <p>Thời gian và địa chỉ IP</p>
+            </div>
+        </div>
+        <div class="sd-card-body">
+            <div class="sd-detail-grid">
+                <div class="sd-detail-item">
+                    <div class="sd-detail-label">Timestamp</div>
+                    <div class="sd-detail-value" th:text="${entry.createdAt != null} ? ${#temporals.format(entry.createdAt, 'yyyy-MM-dd HH:mm:ss')} : '—'">—</div>
+                </div>
+                <div class="sd-detail-item">
+                    <div class="sd-detail-label">IP Address</div>
+                    <div class="sd-detail-value sd-mono" th:text="${entry.ip != null ? entry.ip : '—'}">—</div>
+                </div>
+            </div>
+            <p class="sd-text-muted" style="font-size:13px;margin-top:12px;">
+                <i class="fas fa-info-circle"></i>
+                IP là địa chỉ server-side, không phải dữ liệu cá nhân.
+                Không log PII (CCCD, tài khoản ngân hàng) trong audit.
+            </p>
+        </div>
+    </div>
+</main>
+<th:block th:fragment="page-scripts"></th:block>
+</body>
+</html>
