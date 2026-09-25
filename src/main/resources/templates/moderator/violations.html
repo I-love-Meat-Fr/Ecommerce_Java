@@ -1,117 +1,135 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org"
-      xmlns:sec="http://www.thymeleaf.org/extras/spring-security6"
-      th:replace="~{layout/moderator-layout :: layout(title='Violations - Moderator CNJ70', content=~{::main-content}, scripts=~{::page-scripts})}">
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security6"
+    th:replace="~{layout/moderator-layout :: layout(title='Violations - Moderator CNJ70', content=~{::main-content}, scripts=~{::page-scripts})}">
+
 <head>
     <title>Violations - Moderator CNJ70</title>
 </head>
+
 <body>
-<main th:fragment="main-content">
-    <div class="sd-page-head">
-        <div class="sd-page-head-title">
-            <h1><i class="fas fa-gavel"></i> Vi phạm nền tảng</h1>
-            <p>Danh sách các vi phạm (Violation) do hệ thống ghi nhận, sắp xếp theo thời gian tạo.</p>
+    <main th:fragment="main-content">
+        <div class="sd-page-head">
+            <div class="sd-page-head-title">
+                <h1><i class="fas fa-gavel"></i> Vi phạm nền tảng</h1>
+                <p>Danh sách các vi phạm (Violation) do hệ thống ghi nhận, sắp xếp theo thời gian tạo.</p>
+            </div>
+            <div class="sd-page-head-meta">
+                <span class="sd-page-head-meta-label">Tổng vi phạm</span>
+                <span class="sd-page-head-meta-value" th:text="${totalItems}">0</span>
+            </div>
         </div>
-        <div class="sd-page-head-meta">
-            <span class="sd-page-head-meta-label">Tổng vi phạm</span>
-            <span class="sd-page-head-meta-value" th:text="${totalItems}">0</span>
-        </div>
-    </div>
 
-    <div class="sd-card" style="margin-bottom: 16px;">
-        <div class="sd-card-body">
-            <form th:action="@{/moderator/violations}" method="get" class="sd-toolbar-form">
-                <div class="sd-toolbar-row">
-                    <div class="sd-form-group" style="min-width: 180px;">
-                        <label class="sd-form-label">Mức độ</label>
-                        <select name="severity" class="sd-form-control">
-                            <option value="">Tất cả</option>
-                            <option value="LOW" th:selected="${severity == 'LOW'}">LOW</option>
-                            <option value="MEDIUM" th:selected="${severity == 'MEDIUM'}">MEDIUM</option>
-                            <option value="HIGH" th:selected="${severity == 'HIGH'}">HIGH</option>
-                            <option value="CRITICAL" th:selected="${severity == 'CRITICAL'}">CRITICAL</option>
-                        </select>
-                    </div>
-                    <div class="sd-form-group" style="min-width: 180px;">
-                        <label class="sd-form-label">Loại</label>
-                        <select name="type" class="sd-form-control">
-                            <option value="">Tất cả</option>
-                            <option value="WARNING" th:selected="${type == 'WARNING'}">WARNING</option>
-                            <option value="SPAM" th:selected="${type == 'SPAM'}">SPAM</option>
-                            <option value="FAKE_REVIEW" th:selected="${type == 'FAKE_REVIEW'}">FAKE_REVIEW</option>
-                            <option value="COPYRIGHT" th:selected="${type == 'COPYRIGHT'}">COPYRIGHT</option>
-                        </select>
-                    </div>
-                    <div class="sd-form-group" style="display: flex; gap: 8px; align-self: end;">
-                        <button type="submit" class="sd-btn sd-btn-primary">
-                            <i class="fas fa-filter"></i> Lọc
-                        </button>
-                        <a th:href="@{/moderator/violations}" class="sd-btn sd-btn-secondary">
-                            <i class="fas fa-redo"></i> Đặt lại
-                        </a>
-                    </div>
-                </div>
-            </form>
+        <div class="sd-card sd-toolbar" style="margin-bottom:20px;">
+            <div class="sd-card-body">
+                <form th:action="@{/moderator/violations}" method="get" class="sd-toolbar-form">
+                    <input type="hidden" name="size" th:value="${size}" />
+                    <input type="text" name="shopId" th:value="${shopId}"
+                           placeholder="Tìm kiếm theo Shop ID..."
+                           class="sd-input sd-toolbar-search"
+                           style="padding:8px 10px;border:1px solid var(--border,#e2e8f0);border-radius:6px;" />
+                    <select name="severity" class="sd-select sd-toolbar-select"
+                            style="padding:8px 10px;border:1px solid var(--border,#e2e8f0);border-radius:6px;">
+                        <option value="">Tất cả mức độ</option>
+                        <option th:each="s : ${severities}" th:value="${s.name()}" th:text="${s.name()}"
+                                th:selected="${severity == s.name()}">S</option>
+                    </select>
+                    <select name="type" class="sd-select sd-toolbar-select"
+                            style="padding:8px 10px;border:1px solid var(--border,#e2e8f0);border-radius:6px;">
+                        <option value="">Tất cả loại</option>
+                        <option th:each="t : ${types}" th:value="${t.name()}" th:text="${t.name()}"
+                                th:selected="${type == t.name()}">T</option>
+                    </select>
+                    <button type="submit" class="sd-btn sd-btn-primary sd-btn-sm sd-toolbar-btn">
+                        <i class="fas fa-filter"></i> Lọc
+                    </button>
+                    <a th:href="@{/moderator/violations(page=0, size=${size})}"
+                       class="sd-btn sd-btn-secondary sd-btn-sm sd-toolbar-btn">
+                        <i class="fas fa-rotate-left"></i> Đặt lại
+                    </a>
+                </form>
+            </div>
         </div>
-    </div>
 
-    <div class="sd-card">
-        <div class="sd-card-body sd-card-body-flush">
-            <table class="sd-table" th:if="${not #lists.isEmpty(violations)}">
-                <thead>
-                    <tr>
-                        <th>Thời gian</th>
-                        <th>Shop</th>
-                        <th>Mức độ</th>
-                        <th>Loại</th>
-                        <th>Lý do</th>
-                        <th>Hành động</th>
-                        <th>Trạng thái</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr th:each="v : ${violations}">
-                        <td class="sd-table-sub"
-                            th:text="${v.createdAt != null ? #temporals.format(v.createdAt, 'dd/MM/yyyy HH:mm') : '—'}">—</td>
-                        <td>
-                            <div class="sd-table-title" th:text="${v.shopId != null ? v.shopId : '—'}">—</div>
-                        </td>
-                        <td>
-                            <span class="sd-badge"
-                                  th:classappend="${v.severity != null and v.severity.name() == 'CRITICAL'} ? 'sd-badge-red'
+        <div class="sd-card">
+            <div class="sd-card-body sd-card-body-flush">
+                <table class="sd-table" th:if="${not #lists.isEmpty(violations)}">
+                    <thead>
+                        <tr>
+                            <th>Thời gian</th>
+                            <th>Shop</th>
+                            <th>Mức độ</th>
+                            <th>Loại</th>
+                            <th>Lý do</th>
+                            <th>Hành động</th>
+                            <th>Trạng thái</th>
+                            <th style="text-align:right;">Thao tác</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr th:each="v : ${violations}">
+                            <td class="sd-table-sub"
+                                th:text="${v.createdAt != null ? #temporals.format(v.createdAt, 'dd/MM/yyyy HH:mm') : '—'}">
+                                —</td>
+                            <td>
+                                <div class="sd-table-title" th:text="${v.shopId != null ? v.shopId : '—'}">—</div>
+                            </td>
+                            <td>
+                                <span class="sd-badge" th:classappend="${v.severity != null and v.severity.name() == 'CRITICAL'} ? 'sd-badge-red'
                                                   : (${v.severity != null and v.severity.name() == 'HIGH'} ? 'sd-badge-red'
                                                   : (${v.severity != null and v.severity.name() == 'MEDIUM'} ? 'sd-badge-amber'
                                                   : 'sd-badge-slate'))"
-                                  th:text="${v.severity != null ? v.severity.name() : '—'}">SEV</span>
-                        </td>
-                        <td>
-                            <span class="sd-badge sd-badge-slate" th:text="${v.type != null ? v.type.name() : '—'}">TYPE</span>
-                        </td>
-                        <td class="sd-table-sub" th:text="${v.reason != null ? v.reason : '—'}">—</td>
-                        <td class="sd-table-sub"
-                            th:text="${v.createdBy != null ? v.createdBy : '—'}">—</td>
-                        <td>
-                            <span th:if="${v.resolvedAt == null}" class="sd-badge sd-badge-amber">
-                                <i class="fas fa-clock"></i> Đang xử lý
-                            </span>
-                            <span th:unless="${v.resolvedAt == null}" class="sd-badge sd-badge-green">
-                                <i class="fas fa-check"></i> Đã xử lý
-                            </span>
-                        </td>
-                    </tr>
-                </tbody>
-            </table>
+                                    th:text="${v.severity != null ? v.severity.name() : '—'}">SEV</span>
+                            </td>
+                            <td>
+                                <span class="sd-badge sd-badge-slate"
+                                    th:text="${v.type != null ? v.type.name() : '—'}">TYPE</span>
+                            </td>
+                            <td class="sd-table-sub" th:text="${v.reason != null ? v.reason : '—'}">—</td>
+                            <td class="sd-table-sub" th:text="${v.createdBy != null ? v.createdBy : '—'}">—</td>
+                            <td>
+                                <span th:if="${v.resolvedAt == null}" class="sd-badge sd-badge-amber">
+                                    <i class="fas fa-clock"></i> Đang xử lý
+                                </span>
+                                <span th:unless="${v.resolvedAt == null}" class="sd-badge sd-badge-green">
+                                    <i class="fas fa-circle-check"></i> Đã xử lý
+                                </span>
+                            </td>
+                            <td style="text-align:right;">
+                                <a th:href="@{/moderator/violations/{id}(id=${v.id})}"
+                                    class="sd-btn sd-btn-secondary sd-btn-sm">
+                                    <i class="fas fa-eye"></i> Xem
+                                </a>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
 
-            <div th:if="${#lists.isEmpty(violations)}" style="padding: 40px;">
-                <div class="sd-empty">
-                    <i class="fas fa-gavel"></i>
+                <div th:if="${#lists.isEmpty(violations)}" class="sd-empty">
+                    <i class="fas fa-shield-halved"></i>
                     <h3>Chưa có vi phạm nào</h3>
-                    <p>Các vi phạm do hệ thống phát hiện sẽ hiện ở đây.</p>
+                    <p>Hệ thống chưa ghi nhận vi phạm nào.</p>
+                </div>
+
+                <div th:if="${totalPages > 1}" style="display:flex;justify-content:center;gap:6px;padding:16px;">
+                    <a th:if="${hasPrev}"
+                        th:href="@{/moderator/violations(page=${page - 1}, size=${size}, shopId=${shopId}, severity=${severity}, type=${type})}"
+                        class="sd-btn sd-btn-secondary sd-btn-sm">
+                        <i class="fas fa-chevron-left"></i> Trước
+                    </a>
+                    <span class="sd-badge sd-badge-slate">
+                        Trang <th:block th:text="${page + 1}"></th:block> / <th:block th:text="${totalPages}">
+                        </th:block>
+                    </span>
+                    <a th:if="${hasNext}"
+                        th:href="@{/moderator/violations(page=${page + 1}, size=${size}, shopId=${shopId}, severity=${severity}, type=${type})}"
+                        class="sd-btn sd-btn-secondary sd-btn-sm">
+                        Sau <i class="fas fa-chevron-right"></i>
+                    </a>
                 </div>
             </div>
         </div>
-    </div>
-</main>
-<th:block th:fragment="page-scripts"></th:block>
+    </main>
+    <th:block th:fragment="page-scripts"></th:block>
 </body>
+
 </html>

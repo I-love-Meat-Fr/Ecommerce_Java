@@ -54,7 +54,7 @@ import java.util.List;
 @RequiredArgsConstructor
 public class ModeratorReportCaseController {
 
-    private static final int DEFAULT_PAGE_SIZE = 20;
+    private static final int DEFAULT_PAGE_SIZE = 10;
 
     private final ModeratorReportCaseService service;
 
@@ -62,7 +62,7 @@ public class ModeratorReportCaseController {
 
     @GetMapping
     public String list(@RequestParam(defaultValue = "0") int page,
-                       @RequestParam(defaultValue = "20") int size,
+                       @RequestParam(defaultValue = "10") int size,
                        @RequestParam(required = false) ReportCaseStatus status,
                        @RequestParam(required = false) ReportReason reason,
                        @RequestParam(required = false) ReportCaseResourceType resourceType,
@@ -101,7 +101,7 @@ public class ModeratorReportCaseController {
     @GetMapping("/{id}")
     public String detail(@PathVariable String id,
                          @RequestParam(defaultValue = "0") int page,
-                         @RequestParam(defaultValue = "20") int size,
+                         @RequestParam(defaultValue = "10") int size,
                          @RequestParam(required = false) String status,
                          @RequestParam(required = false) String reason,
                          @RequestParam(required = false) String resourceType,
@@ -127,7 +127,7 @@ public class ModeratorReportCaseController {
     @PostMapping("/{id}/claim")
     public String claim(@PathVariable String id,
                         @RequestParam(defaultValue = "0") int page,
-                        @RequestParam(defaultValue = "20") int size,
+                        @RequestParam(defaultValue = "10") int size,
                         @RequestParam(required = false) String status,
                         @RequestParam(required = false) String reason,
                         @RequestParam(required = false) String resourceType,
@@ -155,7 +155,7 @@ public class ModeratorReportCaseController {
     public String approve(@PathVariable String id,
                           @Valid @org.springframework.web.bind.annotation.ModelAttribute ReportCaseActionReq body,
                           @RequestParam(defaultValue = "0") int page,
-                          @RequestParam(defaultValue = "20") int size,
+                          @RequestParam(defaultValue = "10") int size,
                           @RequestParam(required = false) String status,
                           @RequestParam(required = false) String reason,
                           @RequestParam(required = false) String resourceType,
@@ -186,7 +186,7 @@ public class ModeratorReportCaseController {
     public String reject(@PathVariable String id,
                          @Valid @org.springframework.web.bind.annotation.ModelAttribute ReportCaseActionReq body,
                          @RequestParam(defaultValue = "0") int page,
-                         @RequestParam(defaultValue = "20") int size,
+                         @RequestParam(defaultValue = "10") int size,
                          @RequestParam(required = false) String status,
                          @RequestParam(required = false) String reason,
                          @RequestParam(required = false) String resourceType,
@@ -217,7 +217,7 @@ public class ModeratorReportCaseController {
     public String escalate(@PathVariable String id,
                            @Valid @org.springframework.web.bind.annotation.ModelAttribute ReportCaseActionReq body,
                            @RequestParam(defaultValue = "0") int page,
-                           @RequestParam(defaultValue = "20") int size,
+                           @RequestParam(defaultValue = "10") int size,
                            @RequestParam(required = false) String status,
                            @RequestParam(required = false) String reason,
                            @RequestParam(required = false) String resourceType,
@@ -265,3 +265,4 @@ public class ModeratorReportCaseController {
         return out;
     }
 }
+

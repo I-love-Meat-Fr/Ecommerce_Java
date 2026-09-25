@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/springsecurity6"
+      th:replace="~{layout/moderator-layout :: layout(title='Violation Detail - Moderator CNJ70', content=~{::main-content}, scripts=~{::page-scripts})}">
+<head>
+    <title>Violation Detail - Moderator CNJ70</title>
+</head>
+<body>
+<main th:fragment="main-content">
+    <div th:if="${error}" class="sd-alert sd-alert-danger" style="margin-bottom:20px;">
+        <i class="fas fa-triangle-exclamation"></i>
+        <span th:text="${error}">Lỗi</span>
+        <a th:href="@{/moderator/violations}" class="sd-btn sd-btn-secondary sd-btn-sm" style="margin-left:auto;">
+            <i class="fas fa-arrow-left"></i> Quay lại danh sách
+        </a>
+    </div>
+
+    <div th:unless="${v != null}" class="sd-card">
+        <div class="sd-card-body" style="text-align:center;padding:40px 20px;">
+            <i class="fas fa-exclamation-circle" style="font-size:48px;color:var(--text-muted,#94a3b8);margin-bottom:16px;display:block;"></i>
+            <h3 th:text="${error} ?: 'Lỗi: Không tìm thấy violation'">Lỗi: Không tìm thấy violation</h3>
+            <p style="color:var(--text-muted,#64748b);margin:8px 0 16px;">Violation này có thể đã bị xóa hoặc không tồn tại.</p>
+            <a th:href="@{/moderator/violations}" class="sd-btn sd-btn-primary sd-btn-sm">
+                <i class="fas fa-arrow-left"></i> Quay lại danh sách
+            </a>
+        </div>
+    </div>
+
+    <div th:if="${v != null}">
+        <div class="sd-page-head">
+            <div class="sd-page-head-title">
+                <h1><i class="fas fa-exclamation-circle"></i> Violation Detail</h1>
+                <p>Thông tin chi tiết về vi phạm — READ ONLY (Moderator).</p>
+            </div>
+            <div class="sd-page-head-actions">
+                <a th:href="@{/moderator/violations(page=${page}, size=${size}, severity=${severity}, type=${type})}"
+                   class="sd-btn sd-btn-secondary sd-btn-sm">
+                    <i class="fas fa-arrow-left"></i> Quay lại danh sách
+                </a>
+            </div>
+        </div>
+
+        <div class="sd-card" style="margin-bottom:20px;">
+            <div class="sd-card-body" style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
+                <span class="sd-badge sd-badge-slate" th:text="'ID: ' + ${v.id}">#id</span>
+                <span class="sd-badge"
+                      th:classappend="${v.severity == 'CRITICAL'} ? 'sd-badge-red'
+                                      : (${v.severity == 'HIGH'} ? 'sd-badge-amber'
+                                      : (${v.severity == 'MEDIUM'} ? 'sd-badge-warning'
+                                      : 'sd-badge-slate'))"
+                      th:text="${v.severity}">HIGH</span>
+                <span class="sd-badge"
+                      th:classappend="${v.status == 'OPEN'} ? 'sd-badge-amber'
+                                      : (${v.status == 'RESOLVED'} ? 'sd-badge-green'
+                                      : 'sd-badge-sky')"
+                      th:text="${v.status}">OPEN</span>
+                <span class="sd-badge sd-badge-blue" th:text="${v.resourceType}">SHOP</span>
+            </div>
+        </div>
+
+        <div class="sd-card" style="margin-bottom:20px;">
+            <div class="sd-card-head">
+                <div>
+                    <h3><i class="fas fa-info-circle"></i> Violation Information</h3>
+                    <p>Thông tin cơ bản về violation</p>
+                </div>
+            </div>
+            <div class="sd-card-body">
+                <div class="sd-detail-grid">
+                    <div class="sd-detail-item">
+                        <div class="sd-detail-label">Violation ID</div>
+                        <div class="sd-detail-value sd-mono" th:text="${v.id}">id</div>
+                    </div>
+                    <div class="sd-detail-item">
+                        <div class="sd-detail-label">Policy Code</div>
+                        <div class="sd-detail-value" th:text="${v.policyCode}">POLICY</div>
+                    </div>
+                    <div class="sd-detail-item">
+                        <div class="sd-detail-label">Severity</div>
+                        <div class="sd-detail-value" th:text="${v.severity}">HIGH</div>
+                    </div>
+                    <div class="sd-detail-item">
+                        <div class="sd-detail-label">Status</div>
+                        <div class="sd-detail-value" th:text="${v.status}">OPEN</div>
+                    </div>
+                    <div class="sd-detail-item">
+                        <div class="sd-detail-label">Action</div>
+                        <div class="sd-detail-value">
+                            <span class="sd-badge sd-badge-slate" th:text="${v.action}">WARN</span>
+                        </div>
+                    </div>
+                    <div class="sd-detail-item">
+                        <div class="sd-detail-label">Source</div>
+                        <div class="sd-detail-value" th:text="${v.source} ?: '—'">—</div>
+                    </div>
+                    <div class="sd-detail-item" style="grid-column:1/-1;">
+                        <div class="sd-detail-label">Description</div>
+                        <div class="sd-detail-value" th:text="${v.description} ?: '—'">—</div>
+                    </div>
+                    <div class="sd-detail-item">
+                        <div class="sd-detail-label">Created At</div>
+                        <div class="sd-detail-value" th:text="${v.createdAt != null} ? ${#temporals.format(v.createdAt, 'yyyy-MM-dd HH:mm:ss')} : '—'">—</div>
+                    </div>
+                    <div class="sd-detail-item">
+                        <div class="sd-detail-label">Resolved At</div>
+                        <div class="sd-detail-value" th:text="${v.resolvedAt != null} ? ${#temporals.format(v.resolvedAt, 'yyyy-MM-dd HH:mm:ss')} : '—'">—</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="sd-card" style="margin-bottom:20px;">
+            <div class="sd-card-head">
+                <div>
+                    <h3><i class="fas fa-store"></i> Vendor / Shop</h3>
+                    <p>Context liên quan đến resource</p>
+                </div>
+            </div>
+            <div class="sd-card-body">
+                <div class="sd-detail-grid">
+                    <div class="sd-detail-item">
+                        <div class="sd-detail-label">Vendor</div>
+                        <div class="sd-detail-value">
+                            <span th:text="${v.vendorName}">name</span>
+                            <span class="sd-table-sub sd-mono" th:text="' (' + ${v.vendorId} + ')'">id</span>
+                        </div>
+                    </div>
+                    <div class="sd-detail-item">
+                        <div class="sd-detail-label">Shop</div>
+                        <div class="sd-detail-value">
+                            <span th:text="${v.shopName} ?: '—'">—</span>
+                            <span th:if="${v.shopId}" class="sd-table-sub sd-mono" th:text="' (' + ${v.shopId} + ')'">id</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</main>
+<th:block th:fragment="page-scripts"></th:block>
+</body>
+</html>
