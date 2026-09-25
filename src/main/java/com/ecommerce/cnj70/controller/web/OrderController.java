@@ -58,6 +58,15 @@ public class OrderController {
         }
 
         User dbUser = userRepository.findById(user.getId()).orElse(null);
+        // Defensive: nếu JWT còn valid nhưng user đã bị xóa khỏi DB (vd: DB reset,
+        // admin xóa user), buộc logout + redirect về login với thông báo rõ ràng.
+        // Trước đây method này tiếp tục render với user=null khiến lỗi "Không tìm thấy
+        // người dùng" chỉ bùng ra ở POST /checkout — UX rất tệ.
+        if (dbUser == null) {
+            invalidateSession(session);
+            return "redirect:/auth/login?expired=true";
+        }
+
         Cart cart = cartService.getCartByUserId(user.getId());
 
         // ===== Validate cart trước khi cho Checkout =====
@@ -123,8 +132,17 @@ public class OrderController {
             return "redirect:/auth/login";
         }
 
-        // Reload cart and user data for re-render
+        // Defensive: trước khi gọi OrderService.createOrder (vốn load lại user từ DB),
+        // check trực tiếp để fail-fast với thông báo thân thiện.
+        // Trường hợp phổ biến: JWT cookie còn hạn nhưng user đã bị xóa khỏi DB
+        // (vd: DB reset, admin xóa user). Trước đây OrderServiceImpl throw
+        // ResourceNotFoundException → GlobalExceptionHandler → 404 page với message
+        // "Không tìm thấy người dùng" — gây hiểu nhầm cho user rằng checkout bị lỗi.
         User dbUser = userRepository.findById(user.getId()).orElse(null);
+        if (dbUser == null) {
+            invalidateSession(session);
+            return "redirect:/auth/login?expired=true";
+        }
         Cart cart = cartService.getCartByUserId(user.getId());
 
         // ===== Validate cart trước khi tạo Order (defense-in-depth) =====
@@ -267,16 +285,29 @@ public class OrderController {
                             .errors(List.of("Vui lòng đăng nhập để tiếp tục thanh toán."))
                             .build());
         }
+        // Defensive: nếu JWT cookie còn hạn nhưng user bị xóa khỏi DB (admin xóa, DB reset),
+        // JwtAuthenticationFilter vẫn pass vì load user qua email... nhưng có thể fail
+        // trong một số race condition. Pre-check tại đây để fail-fast với response rõ ràng
+        // thay vì để OrderServiceImpl ném 404.
+        if (!userRepository.existsById(user.getId())) {
+            return ResponseEntity.status(401).body(
+                    CheckoutValidationRes.builder()
+                            .valid(false)
+                            .changed(false)
+                            .errors(List.of("Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại."))
+                            .build());
+        }
         // voucherCode từ query param có thể null → service tự xử lý
         CheckoutValidationRes result = orderService.validateCheckout(user.getId(), voucherCode);
         return ResponseEntity.ok(result);
     }
 
     @GetMapping("/orders")
-    public String orderHistoryPage(@AuthenticationPrincipal CustomUserDetails user, Model model) {
-        if (user == null) {
-            return "redirect:/auth/login";
-        }
+    public String orderHistoryPage(@AuthenticationPrincipal CustomUserDetails user,
+                                   HttpSession session,
+                                   Model model) {
+        String redirect = requireValidUser(user, session);
+        if (redirect != null) return redirect;
 
         List<Order> orders = orderService.getOrdersByUserId(user.getId());
         List<OrderHistoryRes> orderHistory = orders.stream()
@@ -302,11 +333,11 @@ public class OrderController {
      */
     @GetMapping("/orders/{id}")
     public String orderDetailPage(@AuthenticationPrincipal CustomUserDetails user,
+                                  HttpSession session,
                                   @PathVariable String id,
                                   Model model) {
-        if (user == null) {
-            return "redirect:/auth/login";
-        }
+        String redirect = requireValidUser(user, session);
+        if (redirect != null) return redirect;
 
         // Service.getOrderByIdForCustomer đã enforce ownership tại service layer
         // (throws UnauthorizedException nếu order không thuộc customer).
@@ -432,5 +463,46 @@ public class OrderController {
         if (session == null) return null;
         Object attr = session.getAttribute(SESSION_APPLIED_VOUCHER);
         return (attr instanceof CartController.AppliedVoucher av) ? av : null;
+    }
+
+    /**
+     * Invalidate HTTP session + clear JWT cookie khi phát hiện user không còn tồn tại
+     * trong database (vd: DB reset, admin xóa user trong khi JWT cookie còn hạn).
+     * Buộc browser phải đăng nhập lại để tránh các lỗi "Không tìm thấy người dùng"
+     * lặp lại ở các flow khác.
+     */
+    private void invalidateSession(HttpSession session) {
+        if (session != null) {
+            try {
+                session.invalidate();
+            } catch (IllegalStateException ignored) {
+                // session đã bị invalidate trước đó — bỏ qua
+            }
+        }
+    }
+
+    /**
+     * Kiểm tra user còn hợp lệ không (có trong DB). Trả về redirect URL nếu KHÔNG hợp lệ,
+     * hoặc {@code null} nếu OK. Dùng ở đầu mỗi handler để fail-fast với thông báo thân thiện.
+     *
+     * <p>Tình huống bảo vệ:</p>
+     * <ul>
+     *   <li>JWT cookie còn hạn nhưng user bị xóa khỏi DB (admin xóa, DB reset, ...)</li>
+     *   <li>User có status != ACTIVE nhưng JwtAuthenticationFilter vẫn pass (race)</li>
+     * </ul>
+     *
+     * <p>Khi phát hiện không hợp lệ: invalidate session để Spring Security dọn dẹp,
+     * redirect về {@code /auth/login?expired=true} để trang login hiển thị banner cảnh báo.</p>
+     */
+    private String requireValidUser(CustomUserDetails user, HttpSession session) {
+        if (user == null) {
+            return "redirect:/auth/login";
+        }
+        User dbUser = userRepository.findById(user.getId()).orElse(null);
+        if (dbUser == null) {
+            invalidateSession(session);
+            return "redirect:/auth/login?expired=true";
+        }
+        return null;
     }
 }

@@ -115,6 +115,23 @@
                         </button>
                     </div>
 
+                    <!-- Phiên đăng nhập đã hết hạn hoặc tài khoản đã bị xóa khỏi hệ thống.
+                         Xảy ra khi: JWT cookie còn hạn nhưng user bị xóa khỏi DB (admin xóa,
+                         DB reset) → JwtAuthenticationFilter vẫn pass nhưng OrderController
+                         check dbUser == null → redirect về đây kèm ?expired=true. -->
+                    <div th:if="${param.expired}" class="auth-alert auth-alert-warning">
+                        <div class="auth-alert-icon">
+                            <i class="fas fa-clock"></i>
+                        </div>
+                        <div class="auth-alert-content">
+                            Phiên đăng nhập đã hết hạn hoặc tài khoản không còn tồn tại.
+                            Vui lòng đăng nhập lại để tiếp tục.
+                        </div>
+                        <button class="auth-alert-close" onclick="this.parentElement.remove()">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+
                     <form th:action="@{/auth/login}" method="post" class="auth-form" id="loginForm">
                         <div class="form-group-modern">
                             <label for="email" class="form-label">
