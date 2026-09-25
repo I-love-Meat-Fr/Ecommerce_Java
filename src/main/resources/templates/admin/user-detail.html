@@ -20,6 +20,20 @@
         </div>
     </div>
 
+    <div class="sd-card" th:if="${flashSuccess}" style="margin-bottom:16px;">
+        <div class="sd-card-body" style="background:#ecfdf5;border-left:4px solid #10b981;padding:12px 16px;">
+            <i class="fas fa-check-circle" style="color:#10b981;"></i>
+            <span th:text="${flashSuccess}" style="margin-left:8px;color:#065f46;">Thành công</span>
+        </div>
+    </div>
+
+    <div class="sd-card" th:if="${flashError}" style="margin-bottom:16px;">
+        <div class="sd-card-body" style="background:#fef2f2;border-left:4px solid #ef4444;padding:12px 16px;">
+            <i class="fas fa-exclamation-circle" style="color:#ef4444;"></i>
+            <span th:text="${flashError}" style="margin-left:8px;color:#991b1b;">Lỗi</span>
+        </div>
+    </div>
+
     <div class="sd-card">
         <div class="sd-card-head">
             <div>
@@ -37,7 +51,7 @@
                     <div class="sd-detail-value sd-mono" th:text="${user.id}">—</div>
                 </div>
                 <div class="sd-detail-item">
-                    <div class="sd-detail-label">Email</div>
+                    <div class="sd-detail-label">Email (Username)</div>
                     <div class="sd-detail-value" th:text="${user.email}">—</div>
                 </div>
                 <div class="sd-detail-item">
@@ -71,6 +85,22 @@
                     <div class="sd-detail-value sd-mono" th:text="${user.shopId} ?: '—'">—</div>
                 </div>
                 <div class="sd-detail-item">
+                    <div class="sd-detail-label">KYC Status</div>
+                    <div class="sd-detail-value">
+                        <span class="sd-badge"
+                              th:classappend="${user.kycStatus != null and user.kycStatus.name() == 'APPROVED' ? 'sd-badge-green' : (user.kycStatus != null and user.kycStatus.name() == 'REJECTED' ? 'sd-badge-red' : 'sd-badge-amber')}"
+                              th:text="${user.kycStatus != null ? user.kycStatus : 'NOT_SUBMITTED'}">NOT_SUBMITTED</span>
+                    </div>
+                </div>
+                <div class="sd-detail-item">
+                    <div class="sd-detail-label">Last Login</div>
+                    <div class="sd-detail-value" th:text="'Chưa ghi nhận'">—</div>
+                </div>
+                <div class="sd-detail-item">
+                    <div class="sd-detail-label">Violation Count</div>
+                    <div class="sd-detail-value">0</div>
+                </div>
+                <div class="sd-detail-item">
                     <div class="sd-detail-label">Ngày tạo</div>
                     <div class="sd-detail-value" th:text="${user.createdAt} ?: '—'">—</div>
                 </div>
@@ -86,11 +116,14 @@
         <div class="sd-card-head">
             <div>
                 <h3><i class="fas fa-shield-halved"></i> Thao tác tài khoản</h3>
-                <p>Khóa hoặc mở khóa tài khoản này</p>
+                <p>Khóa, mở khóa hoặc đổi trạng thái tài khoản này</p>
             </div>
         </div>
         <div class="sd-card-body">
             <div class="sd-action-row">
+                <a th:href="@{/admin/users/{id}/edit(id=${user.id})}" class="sd-btn sd-btn-secondary sd-btn-sm">
+                    <i class="fas fa-pen"></i> Sửa trạng thái
+                </a>
                 <form th:if="${user.status.name() == 'ACTIVE' or user.status.name() == 'UNVERIFIED'}"
                       th:action="@{/admin/users/{id}/lock(id=${user.id})}" method="post"
                       style="display:inline;">

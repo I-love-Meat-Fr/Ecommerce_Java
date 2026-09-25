@@ -245,6 +245,9 @@ class VendorServiceTest {
         User noShop = TestFixtures.userVendor("v-6", "v6@cnj70.com", KycStatus.APPROVED, null);
         UserDetails ud = TestFixtures.customUserDetails(noShop);
         when(userRepository.findByEmail("v6@cnj70.com")).thenReturn(Optional.of(noShop));
+        // Catch block needs empty-list stubs (code tries to stream null without these)
+        when(productRepository.findByShopId(any())).thenReturn(java.util.Collections.emptyList());
+        when(orderRepository.findByShopIdOrderByCreatedAtDesc(any())).thenReturn(java.util.Collections.emptyList());
 
         VendorDashboardRes stats = vendorService.getDashboardStats(ud);
 

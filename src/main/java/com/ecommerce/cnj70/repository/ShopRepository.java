@@ -1,6 +1,7 @@
 package com.ecommerce.cnj70.repository;
 
 import com.ecommerce.cnj70.document.Shop;
+import com.ecommerce.cnj70.enums.KycStatus;
 import com.ecommerce.cnj70.enums.ShopStatus;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -34,4 +35,17 @@ public interface ShopRepository extends MongoRepository<Shop, String> {
 
     Page<Shop> findByStatusAndShopNameContainingIgnoreCase(
             ShopStatus status, String shopName, Pageable pageable);
+
+    // === TASK #18 KYC Callback: find shop by provider referenceId ===
+    Optional<Shop> findByKycReferenceId(String kycReferenceId);
+
+    // ===== TASK #15/#18: KYC Queue for Moderator =====
+    List<Shop> findByKycStatus(KycStatus kycStatus);
+
+    Page<Shop> findByKycStatus(KycStatus kycStatus, Pageable pageable);
+
+    Page<Shop> findByKycStatusIn(List<KycStatus> kycStatuses, Pageable pageable);
+
+    // === Phase 4A — counts used by Admin Dashboard ===
+    long countByStatus(ShopStatus status);
 }

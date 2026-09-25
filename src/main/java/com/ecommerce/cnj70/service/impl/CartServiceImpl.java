@@ -11,6 +11,7 @@ import org.springframework.stereotype.Service;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Optional;
 
 @Service
@@ -94,6 +95,27 @@ public class CartServiceImpl implements CartService {
         cart.setUpdatedAt(LocalDateTime.now());
         return cartRepository.save(cart);
     }
+
+    /**
+     * Lưu appliedVoucherCode lên Cart (persisted trong MongoDB).
+     * Đảm bảo giữ voucher xuyên qua mọi request thay vì dựa vào HttpSession (không
+     * đáng tin dưới SessionCreationPolicy.STATELESS).
+     */
+    @Override
+    public Cart setAppliedVoucherCode(String userId, String code) {
+        Cart cart = getCartByUserId(userId);
+        cart.setAppliedVoucherCode(code);
+        cart.setUpdatedAt(LocalDateTime.now());
+        return cartRepository.save(cart);
+    }
+
+    @Override
+    public String getAppliedVoucherCode(String userId) {
+        if (userId == null) return null;
+        return cartRepository.findByUserId(userId)
+                .map(Cart::getAppliedVoucherCode)
+                .orElse(null);
+    }
     
     @Override
     public int countItems(String userId) {
@@ -118,6 +140,23 @@ public class CartServiceImpl implements CartService {
         cart.setItems(new ArrayList<>());
         cart.setUpdatedAt(LocalDateTime.now());
         cartRepository.save(cart);
+    }
+
+    /**
+     * TASK #14 — Partial checkout cleanup.
+     * Xóa chỉ những CartItem có productId nằm trong {@code productIds}, giữ nguyên các item còn lại.
+     * - productIds null hoặc rỗng → không xóa gì, trả Cart hiện tại.
+     * - Tự save và cập nhật updatedAt.
+     */
+    @Override
+    public Cart removeItems(String userId, Collection<String> productIds) {
+        if (productIds == null || productIds.isEmpty()) {
+            return getCartByUserId(userId);
+        }
+        Cart cart = getCartByUserId(userId);
+        cart.getItems().removeIf(item -> productIds.contains(item.getProductId()));
+        cart.setUpdatedAt(LocalDateTime.now());
+        return cartRepository.save(cart);
     }
     
     private Cart createEmptyCart(String userId) {

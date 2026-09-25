@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Xung đột - CNJ70</title>
+    <link rel="stylesheet" th:href="@{/css/home.css}">
+</head>
+<body>
+<div class="error-page">
+    <h1>409 - Xung đột dữ liệu</h1>
+    <p th:text="${error}">Trạng thái dữ liệu không cho phép thực hiện thao tác này.</p>
+    <a th:href="@{/moderator/queue}" class="sd-btn sd-btn-primary">Quay lại hàng đợi</a>
+</div>
+</body>
+</html>

@@ -9,6 +9,7 @@ import com.ecommerce.cnj70.exception.ResourceNotFoundException;
 import com.ecommerce.cnj70.repository.VoucherRepository;
 import com.ecommerce.cnj70.service.VoucherService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.mongodb.core.MongoTemplate;
@@ -26,6 +27,7 @@ import java.util.stream.Collectors;
 /**
  * Implement VoucherService
  */
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class VoucherServiceImpl implements VoucherService {
@@ -283,8 +285,38 @@ public class VoucherServiceImpl implements VoucherService {
     
     @Override
     public Voucher getVoucherById(String id) {
-        return voucherRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy voucher"));
+        if (id == null || id.isBlank()) {
+            throw new ResourceNotFoundException("Không tìm thấy voucher");
+        }
+        // Phase 5 fix + Phase 1 hotfix: Hỗ trợ CẢ 2 kiểu _id (String lẫn ObjectId).
+        // Nhiều bản ghi voucher trong DB có _id là ObjectId (24 hex) do insert
+        // bằng Compass / script / Spring Data. Nếu chỉ tìm bằng String thì miss →
+        // trả null → ném ResourceNotFoundException("Không tìm thấy voucher").
+        // Fix: thử String trước, fallback ObjectId nếu id là hex 24 ký tự.
+        org.bson.Document raw = mongoTemplate.getCollection("vouchers")
+                .find(new org.bson.Document("_id", id))
+                .first();
+        if (raw == null && id.length() == 24 && id.matches("[0-9a-fA-F]+")) {
+            org.bson.types.ObjectId oid = new org.bson.types.ObjectId(id);
+            raw = mongoTemplate.getCollection("vouchers")
+                    .find(new org.bson.Document("_id", oid))
+                    .first();
+            if (raw != null) {
+                raw.put("_id", id);
+            }
+        }
+        if (raw == null) {
+            throw new ResourceNotFoundException("Không tìm thấy voucher");
+        }
+        // Ensure _class is set so MappingMongoConverter reads as Voucher.
+        if (!raw.containsKey("_class")) {
+            raw.put("_class", Voucher.class.getName());
+        }
+        Voucher voucher = mongoTemplate.getConverter().read(Voucher.class, raw);
+        if (voucher.getId() == null) {
+            voucher.setId(id);
+        }
+        return voucher;
     }
     
     @Override
@@ -300,7 +332,17 @@ public class VoucherServiceImpl implements VoucherService {
     
     @Override
     public List<Voucher> getWebVouchers() {
-        return voucherRepository.findByType(VoucherType.WEB);
+        // Phase 1 hotfix — Dùng MongoTemplate để match CẢ 2 kiểu:
+        //   1. type = "WEB" (enum được persist đúng)
+        //   2. type IS NULL (data cũ import từ script ngoài chưa có field)
+        // Tránh việc admin thấy trắng bảng dù DB có hàng chục voucher.
+        Criteria criteria = new Criteria().orOperator(
+                Criteria.where("type").is("WEB"),
+                Criteria.where("type").is(VoucherType.WEB.name()),
+                Criteria.where("type").exists(false),
+                Criteria.where("type").is(null)
+        );
+        return mongoTemplate.find(Query.query(criteria), Voucher.class);
     }
 
     @Override
@@ -309,28 +351,46 @@ public class VoucherServiceImpl implements VoucherService {
         boolean hasQ = StringUtils.hasText(q);
         boolean hasActive = (active != null);
 
+        // Build baseCriteria: type=WEB OR type missing OR type null
+        Criteria typeCriteria = new Criteria().orOperator(
+                Criteria.where("type").is("WEB"),
+                Criteria.where("type").is(VoucherType.WEB.name()),
+                Criteria.where("type").exists(false),
+                Criteria.where("type").is(null)
+        );
+
         if (!hasQ && !hasActive) {
-            return voucherRepository.findByType(VoucherType.WEB, pageable);
+            Query query = Query.query(typeCriteria).with(pageable);
+            long total = mongoTemplate.count(Query.query(typeCriteria), Voucher.class);
+            List<Voucher> content = mongoTemplate.find(query, Voucher.class);
+            return new PageImpl<>(content, pageable, total);
         }
 
         if (hasQ && !hasActive) {
-            return searchWebVouchers(q.trim(), null, pageable);
+            return searchWebVouchers(q.trim(), null, pageable, typeCriteria);
         }
 
         if (!hasQ && hasActive) {
-            return voucherRepository.findByTypeAndActive(VoucherType.WEB, active, pageable);
+            Criteria combined = new Criteria().andOperator(
+                    typeCriteria,
+                    Criteria.where("active").is(active)
+            );
+            Query query = Query.query(combined).with(pageable);
+            long total = mongoTemplate.count(Query.query(combined), Voucher.class);
+            List<Voucher> content = mongoTemplate.find(query, Voucher.class);
+            return new PageImpl<>(content, pageable, total);
         }
 
         // search + filter
-        return searchWebVouchers(q.trim(), active, pageable);
+        return searchWebVouchers(q.trim(), active, pageable, typeCriteria);
     }
 
     /**
      * Tìm WEB Voucher theo keyword (code/name) kết hợp optional active.
-     * Dùng MongoTemplate vì cần AND logic giữa type=WEB + search criteria.
+     * Dùng MongoTemplate vì cần AND logic giữa type=WEB (fallback) + search criteria.
      */
     private org.springframework.data.domain.Page<Voucher> searchWebVouchers(
-            String q, Boolean active, Pageable pageable) {
+            String q, Boolean active, Pageable pageable, Criteria typeCriteria) {
         Pattern codePattern = Pattern.compile(Pattern.quote(q), Pattern.CASE_INSENSITIVE);
         Pattern namePattern = Pattern.compile(Pattern.quote(q), Pattern.CASE_INSENSITIVE);
 
@@ -340,7 +400,7 @@ public class VoucherServiceImpl implements VoucherService {
         );
 
         Criteria baseCriteria = new Criteria().andOperator(
-                Criteria.where("type").is("WEB"),
+                typeCriteria,
                 searchOr
         );
 
@@ -373,10 +433,19 @@ public class VoucherServiceImpl implements VoucherService {
 
     @Override
     public List<Voucher> getAvailableWebVouchersForCustomer() {
-        // Phase 12: Chỉ trả WEB Voucher khả dụng cho Customer website.
-        // Lọc: type=WEB, active=true, còn hạn, còn lượt.
-        // SHOP Voucher KHÔNG hiển thị trên website công khai.
-        return voucherRepository.findByTypeAndActiveTrue(VoucherType.WEB).stream()
+        // Phase 12 + Phase 1 hotfix: Chỉ trả WEB Voucher khả dụng cho Customer website.
+        // Match CẢ type=WEB (enum persist đúng) và type=null (data cũ).
+        Criteria typeCriteria = new Criteria().orOperator(
+                Criteria.where("type").is("WEB"),
+                Criteria.where("type").is(VoucherType.WEB.name()),
+                Criteria.where("type").exists(false),
+                Criteria.where("type").is(null)
+        );
+        Criteria criteria = new Criteria().andOperator(
+                typeCriteria,
+                Criteria.where("active").is(true)
+        );
+        return mongoTemplate.find(Query.query(criteria), Voucher.class).stream()
                 .filter(Voucher::isAvailable)
                 .collect(Collectors.toList());
     }
@@ -401,6 +470,45 @@ public class VoucherServiceImpl implements VoucherService {
         Voucher voucher = getVoucherById(voucherId);
         voucher.setUsed(voucher.getUsed() + 1);
         voucherRepository.save(voucher);
+    }
+
+    @Override
+    public boolean tryIncrementUsed(String voucherId) {
+        if (voucherId == null) return false;
+        org.springframework.data.mongodb.core.query.Query q = new org.springframework.data.mongodb.core.query.Query(
+                org.springframework.data.mongodb.core.query.Criteria.where("_id").is(voucherId)
+                        .and("active").is(true)
+                        .andOperator(org.springframework.data.mongodb.core.query.Criteria.where("$expr").is(
+                                new org.bson.Document("$lt",
+                                        java.util.List.of("$used", "$quantity"))))
+        );
+        org.springframework.data.mongodb.core.query.Update u = new org.springframework.data.mongodb.core.query.Update()
+                .inc("used", 1);
+        var result = mongoTemplate.updateFirst(q, u, Voucher.class);
+        if (result.getMatchedCount() == 0L) {
+            log.debug("tryIncrementUsed: voucher {} exhausted/inactive/missing", voucherId);
+            return false;
+        }
+        return true;
+    }
+
+    @Override
+    public boolean tryDecrementUsed(String voucherId) {
+        if (voucherId == null) return false;
+        org.springframework.data.mongodb.core.query.Query q = new org.springframework.data.mongodb.core.query.Query(
+                org.springframework.data.mongodb.core.query.Criteria.where("_id").is(voucherId)
+                        .andOperator(org.springframework.data.mongodb.core.query.Criteria.where("$expr").is(
+                                new org.bson.Document("$gt",
+                                        java.util.List.of("$used", 0))))
+        );
+        org.springframework.data.mongodb.core.query.Update u = new org.springframework.data.mongodb.core.query.Update()
+                .inc("used", -1);
+        var result = mongoTemplate.updateFirst(q, u, Voucher.class);
+        if (result.getMatchedCount() == 0L) {
+            log.debug("tryDecrementUsed: voucher {} already at 0 / missing", voucherId);
+            return false;
+        }
+        return true;
     }
     
     @Override

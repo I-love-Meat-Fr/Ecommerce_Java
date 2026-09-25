@@ -1,6 +1,7 @@
 package com.ecommerce.cnj70.service.impl;
 
 import com.ecommerce.cnj70.document.KycProfile;
+import com.ecommerce.cnj70.document.Shop;
 import com.ecommerce.cnj70.document.User;
 import com.ecommerce.cnj70.dto.request.KycFormReq;
 import com.ecommerce.cnj70.dto.response.KycStatusRes;
@@ -8,6 +9,7 @@ import com.ecommerce.cnj70.enums.KycStatus;
 import com.ecommerce.cnj70.exception.BadRequestException;
 import com.ecommerce.cnj70.exception.UnauthorizedException;
 import com.ecommerce.cnj70.repository.KycProfileRepository;
+import com.ecommerce.cnj70.repository.ShopRepository;
 import com.ecommerce.cnj70.repository.UserRepository;
 import com.ecommerce.cnj70.service.VendorKycService;
 import lombok.RequiredArgsConstructor;
@@ -27,6 +29,7 @@ public class VendorKycServiceImpl implements VendorKycService {
     private final KycProfileRepository kycProfileRepository;
     private final ThirdPartyKycVerifier thirdPartyKycVerifier;
     private final StorageService storageService;
+    private final ShopRepository shopRepository;
 
     @Override
     public User getCurrentVendor(UserDetails userDetails) {
@@ -124,6 +127,18 @@ public class VendorKycServiceImpl implements VendorKycService {
         // Đồng bộ kycStatus trên User (denormalized)
         vendor.setKycStatus(KycStatus.PENDING_THIRD_PARTY);
         userRepository.save(vendor);
+
+        // Phase 1 — Đồng bộ Shop.kycStatus (denormalized mirror cho Moderator queue)
+        // Source of truth là KycProfile.status; Shop.kycStatus giữ mirror để
+        // ShopRepository.findByKycStatus() (dùng bởi ModeratorServiceImpl.getShopsByKycStatusPaged)
+        // không trả về dữ liệu stale.
+        if (vendor.getShopId() != null) {
+            shopRepository.findById(vendor.getShopId()).ifPresent(shop -> {
+                shop.setKycStatus(KycStatus.PENDING_THIRD_PARTY);
+                shop.setKycSubmittedAt(LocalDateTime.now());
+                shopRepository.save(shop);
+            });
+        }
 
         // Gọi 3rd-party để xác minh
         try {

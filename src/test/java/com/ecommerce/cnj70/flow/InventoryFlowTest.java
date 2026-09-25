@@ -33,6 +33,7 @@ import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 /**
@@ -67,7 +68,8 @@ class InventoryFlowTest {
                 Optional.of(TestFixtures.shop(inv.getArgument(0), "owner",
                         com.ecommerce.cnj70.enums.ShopStatus.APPROVED, true)));
         orderService = new OrderServiceImpl(orderRepository, userRepository,
-                productRepository, cartRepository, shopRepository, cartService);
+                productRepository, cartRepository, shopRepository, cartService,
+                mock(com.ecommerce.cnj70.service.VoucherService.class));
     }
 
     @Test

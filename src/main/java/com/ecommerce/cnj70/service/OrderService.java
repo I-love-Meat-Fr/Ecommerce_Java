@@ -13,6 +13,12 @@ public interface OrderService {
 
     Order getOrderById(String id);
 
+    /**
+     * Ownership-checked fetch. Returns the order only when it belongs to the given
+     * customerId; throws otherwise (defense against IDOR).
+     */
+    Order getOrderByIdForCustomer(String orderId, String customerId);
+
     List<Order> getOrdersByUserId(String userId);
 
     List<Order> getOrdersByShopId(String shopId);
@@ -22,9 +28,35 @@ public interface OrderService {
     void cancelOrder(String orderId);
 
     /**
-     * Cập nhật shipping status của 1 shop trong đơn hàng (sub-order).
-     * Vendor gọi method này để cập nhật trạng thái vận chuyển phần của mình.
+     * Cập nhật trạng thái vận chuyển cho phần của shop trong Order.
+     * Mỗi shop có trạng thái vận chuyển riêng trong {@code Order.shippingByShop}.
+     *
+     * @param orderId        id của Order
+     * @param shopId         shop cập nhật (key trong shippingByShop)
+     * @param status         trạng thái vận chuyển mới
+     * @param trackingNumber số vận đơn (optional)
+     * @param carrier        đơn vị vận chuyển (optional)
+     * @param note           ghi chú (optional)
+     * @return Order sau khi cập nhật
      */
     Order updateShippingStatus(String orderId, String shopId, ShippingStatus status,
                                String trackingNumber, String carrier, String note);
+
+    /**
+     * TASK #14/#20/#21 — Kiểm tra Customer đã mua và ĐÃ NHẬN được Product chưa.
+     * Điều kiện: Order có productId của user VÀ trạng thái DELIVERED.
+     * Chỉ khi đã giao hàng thành công (DELIVERED) mới cho phép Review.
+     *
+     * @return true nếu Order đã DELIVERED và chứa productId
+     */
+    boolean hasUserReceivedProduct(String userId, String productId);
+
+    /**
+     * TASK #21 (legacy) — Kiểm tra Customer đã mua Product chưa (không tính CANCELLED).
+     * Dùng để hiển thị trạng thái mua hàng (chưa giao = vẫn hiển thị "đã mua").
+     * KHÔNG dùng cho Review validation — dùng hasUserReceivedProduct thay thế.
+     *
+     * @return true nếu Order không CANCELLED và chứa productId
+     */
+    boolean hasUserPurchasedProduct(String userId, String productId);
 }

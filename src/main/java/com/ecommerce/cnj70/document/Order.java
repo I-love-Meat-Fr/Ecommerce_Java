@@ -50,6 +50,29 @@ public class Order {
 
     private BigDecimal totalAmount;
 
+    /**
+     * Số tiền được giảm bởi voucher (server-calculated).
+     * 0 nếu không áp dụng voucher.
+     */
+    @Builder.Default
+    private BigDecimal discount = BigDecimal.ZERO;
+
+    /**
+     * ID voucher đã áp dụng (nếu có). Null = không có voucher.
+     * Lưu riêng để truy vết + tránh trùng sử dụng.
+     */
+    private String voucherId;
+
+    /**
+     * Mã voucher đã áp dụng (snapshot lúc checkout, không đổi khi voucher bị sửa).
+     */
+    private String voucherCode;
+
+    /**
+     * Tên voucher (snapshot để hiển thị trong Order history).
+     */
+    private String voucherName;
+
     @Builder.Default
     private OrderStatus status = OrderStatus.PENDING;
 

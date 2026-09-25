@@ -235,7 +235,8 @@ class GuardTest {
                     mock(ProductRepository.class),
                     mock(CartRepository.class),
                     mock(ShopRepository.class),
-                    mock(CartService.class));
+                    mock(CartService.class),
+                    mock(com.ecommerce.cnj70.service.VoucherService.class));
 
             // Verify ownership check: vendor A có quyền update order này
             orderService.updateOrderStatus("o-1", com.ecommerce.cnj70.enums.OrderStatus.PREPARING);
@@ -273,7 +274,8 @@ class GuardTest {
                     mock(ProductRepository.class),
                     mock(CartRepository.class),
                     mock(ShopRepository.class),
-                    mock(CartService.class));
+                    mock(CartService.class),
+                    mock(com.ecommerce.cnj70.service.VoucherService.class));
 
             // Vendor B getOrdersByShopId → trả về empty (vì order chỉ có item shop-A)
             java.util.List<Order> shopBOrders = orderService.getOrdersByShopId("shop-B");

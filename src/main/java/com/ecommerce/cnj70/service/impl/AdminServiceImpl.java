@@ -1,14 +1,22 @@
 package com.ecommerce.cnj70.service.impl;
 
+import com.ecommerce.cnj70.document.Escalation;
 import com.ecommerce.cnj70.document.Order;
+import com.ecommerce.cnj70.document.Violation;
 import com.ecommerce.cnj70.dto.response.AdminDashboardRes;
 import com.ecommerce.cnj70.dto.response.AdminDashboardRes.DailyMetric;
+import com.ecommerce.cnj70.enums.ModerationStatus;
 import com.ecommerce.cnj70.enums.OrderStatus;
+import com.ecommerce.cnj70.enums.ShopStatus;
+import com.ecommerce.cnj70.repository.EscalationRepository;
 import com.ecommerce.cnj70.repository.OrderRepository;
 import com.ecommerce.cnj70.repository.ProductRepository;
+import com.ecommerce.cnj70.repository.ReviewRepository;
 import com.ecommerce.cnj70.repository.ShopRepository;
 import com.ecommerce.cnj70.repository.UserRepository;
+import com.ecommerce.cnj70.repository.ViolationRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
@@ -18,11 +26,14 @@ import java.time.YearMonth;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Set;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class AdminServiceImpl implements com.ecommerce.cnj70.service.AdminService {
@@ -31,6 +42,28 @@ public class AdminServiceImpl implements com.ecommerce.cnj70.service.AdminServic
     private final ShopRepository shopRepository;
     private final ProductRepository productRepository;
     private final OrderRepository orderRepository;
+    private final ReviewRepository reviewRepository;
+    private final EscalationRepository escalationRepository;
+    private final ViolationRepository violationRepository;
+    private final com.ecommerce.cnj70.service.AdminDashboardMetricsGateway metricsGateway;
+
+    /**
+     * Phase 4A — pending moderation statuses (Phase 2A/2B contract).
+     * Reuses existing {@link ModerationStatus} enum without modifying it.
+     */
+    private static final Set<ModerationStatus> PENDING_MODERATION_STATUSES = Set.of(
+            ModerationStatus.PENDING_MANUAL,
+            ModerationStatus.AUTO_PASSED,
+            ModerationStatus.AUTO_REJECTED
+    );
+
+    /**
+     * Phase 4A — open Escalation statuses (Phase 3A inner enum).
+     */
+    private static final Set<Escalation.Status> OPEN_ESCALATION_STATUSES = Set.of(
+            Escalation.Status.PENDING,
+            Escalation.Status.IN_REVIEW
+    );
 
     @Override
     public AdminDashboardRes getDashboardStats() {
@@ -39,12 +72,12 @@ public class AdminServiceImpl implements com.ecommerce.cnj70.service.AdminServic
 
     @Override
     public AdminDashboardRes getDashboardStatsByPeriod(String period) {
-        long totalUsers = userRepository.count();
-        long totalShops = shopRepository.count();
-        long totalProducts = productRepository.count();
-        long totalOrders = orderRepository.count();
+        long totalUsers = safeCount(userRepository);
+        long totalShops = safeCount(shopRepository);
+        long totalProducts = safeCount(productRepository);
+        long totalOrders = safeCount(orderRepository);
 
-        List<Order> allOrders = orderRepository.findAll();
+        List<Order> allOrders = safeFindAllOrders();
 
         List<Order> recentOrders = allOrders.stream()
                 .sorted((a, b) -> {
@@ -61,16 +94,123 @@ public class AdminServiceImpl implements com.ecommerce.cnj70.service.AdminServic
 
         List<AdminDashboardRes.RecentActivity> activities = buildRecentActivities(recentOrders);
 
+        // Phase 4A — Financial: GMV (DELIVERED total amount, all-time) distinct from Platform Revenue.
+        // Per Phase 4A §10–11: Order Total ≠ Platform Revenue. Platform Revenue must come from
+        // a real Finance backend (commission/fee). When unavailable (null from gateway), the
+        // metric MUST be null — NEVER fall back to GMV/periodRevenue. The UI uses
+        // MetricAvailability.platformRevenue to render N/A.
+        BigDecimal gmv = sumDeliveredRevenue(allOrders, o -> true);
+        BigDecimal platformRevenue = metricsGateway.getPlatformRevenue(); // null until Finance contract
+
+        // Phase 4A — Compliance / Risk counters
+        long pendingModeration = countPendingModeration();
+        long openEscalation = safeCountByStatusIn(escalationRepository, OPEN_ESCALATION_STATUSES);
+        long openViolation = countActiveViolations();
+        long suspendedShops = safeCountByStatus(shopRepository, ShopStatus.SUSPENDED)
+                + safeCountByStatus(shopRepository, ShopStatus.RESTRICTED);
+
+        Long pendingKyc = metricsGateway.countPendingKyc();
+        BigDecimal vendorSales = metricsGateway.getVendorSales();
+        BigDecimal vendorPayable = metricsGateway.getVendorPayable();
+        BigDecimal refund = metricsGateway.getRefund();
+
+        AdminDashboardRes.MetricAvailability av = metricsGateway.getAvailability();
+
+        // Phase 4A §43 / §48 — Dashboard values shown to Admin
+        // CRITICAL: platformRevenue is null until Finance backend is wired.
+        // Do NOT fall back to periodRevenue/GMV — that would conflate Order Sales with Platform Revenue.
         return AdminDashboardRes.builder()
                 .totalUsers(totalUsers)
                 .totalShops(totalShops)
                 .totalProducts(totalProducts)
                 .totalOrders(totalOrders)
-                .totalPlatformRevenue(periodRevenue)
+                .gmv(gmv)
+                .platformRevenue(platformRevenue) // null when Finance not wired → UI shows N/A
+                .vendorSales(vendorSales)
+                .vendorPayable(vendorPayable)
+                .refund(refund)
+                .pendingKyc(pendingKyc)
+                .pendingModeration(pendingModeration)
+                .openEscalation(openEscalation)
+                .openViolation(openViolation)
+                .suspendedShops(suspendedShops)
                 .recentActivities(activities)
                 .revenueTrend(revenueTrend)
+                .availability(av != null
+                        ? av
+                        : AdminDashboardRes.MetricAvailability.builder()
+                                .kyc(false).vendorSales(false)
+                                .vendorPayable(false).refund(false).platformRevenue(false).build())
                 .build();
     }
+
+    /* === Phase 4A — defensive count helpers (graceful degradation) === */
+
+    private long safeCount(org.springframework.data.repository.CrudRepository<?, ?> repo) {
+        try {
+            return repo.count();
+        } catch (Exception ex) {
+            log.warn("Count failed (likely empty / unavailable collection): {}", ex.getMessage());
+            return 0L;
+        }
+    }
+
+    private long safeCountByStatus(ShopRepository repo, ShopStatus status) {
+        try {
+            return repo.countByStatus(status);
+        } catch (Exception ex) {
+            log.warn("countByStatus({}) failed: {}", status, ex.getMessage());
+            return 0L;
+        }
+    }
+
+    private long safeCountByStatusIn(EscalationRepository repo, Set<Escalation.Status> statuses) {
+        try {
+            return repo.countByStatusIn(statuses);
+        } catch (Exception ex) {
+            log.warn("escalation countByStatusIn failed: {}", ex.getMessage());
+            return 0L;
+        }
+    }
+
+    /**
+     * Count active violations: resolvedAt IS NULL.
+     * Violation domain model uses resolvedAt == null to represent open/active state.
+     * ViolationStatus enum (Phase 3C) is NOT persisted on Violation document.
+     *
+     * <p>Phase 1: chuyển sang repository count để tối ưu — trước đây dùng
+     * {@code findAll().stream().filter(...).count()} gây load toàn bộ collection
+     * vào memory.</p>
+     */
+    private long countActiveViolations() {
+        try {
+            return violationRepository.countByResolvedAtIsNull();
+        } catch (Exception ex) {
+            log.warn("Active violations count failed: {}", ex.getMessage());
+            return 0L;
+        }
+    }
+
+    private List<Order> safeFindAllOrders() {
+        try {
+            return orderRepository.findAll();
+        } catch (Exception ex) {
+            log.warn("Order findAll failed (likely empty / unavailable collection): {}", ex.getMessage());
+            return Collections.emptyList();
+        }
+    }
+
+    private long countPendingModeration() {
+        try {
+            return productRepository.countByModerationStatusIn(PENDING_MODERATION_STATUSES)
+                    + reviewRepository.countByPipelineModerationStatusIn(PENDING_MODERATION_STATUSES);
+        } catch (Exception ex) {
+            log.warn("Pending moderation count failed: {}", ex.getMessage());
+            return 0L;
+        }
+    }
+
+    /* === Existing revenue / period / trend logic (preserved) === */
 
     /**
      * Normalize period to a known uppercase token. Anything unknown → WEEK (default).

@@ -106,6 +106,18 @@ public interface VoucherService {
      * Tăng số lượt đã sử dụng voucher
      */
     void incrementUsed(String voucherId);
+
+    /**
+     * Atomically reserve a usage slot. Returns true if reserved (used < quantity),
+     * false if voucher is exhausted, inactive, or missing.
+     */
+    boolean tryIncrementUsed(String voucherId);
+
+    /**
+     * Atomically release a usage slot. Returns true if a slot was actually freed,
+     * false if voucher is already at zero or missing.
+     */
+    boolean tryDecrementUsed(String voucherId);
     
     /**
      * Kiểm tra voucher có khả dụng không

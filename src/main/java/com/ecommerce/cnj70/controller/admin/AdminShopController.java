@@ -13,7 +13,9 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -35,6 +37,15 @@ public class AdminShopController {
 
     private final AdminShopService adminShopService;
     private final UserRepository userRepository;
+    /**
+     * Phase 4 — dùng để raw-fetch User document với {@code _id} String
+     * (cùng pattern với AdminUserServiceImpl#getUserById ở Phase 3).
+     */
+    private final MongoTemplate mongoTemplate;
+
+    private String currentActorId(UserDetails user) {
+        return user != null ? user.getUsername() : null;
+    }
 
     @GetMapping
     public String shopList(@RequestParam(defaultValue = "0") int page,
@@ -78,7 +89,20 @@ public class AdminShopController {
 
         User owner = null;
         if (shop.getOwnerId() != null && !shop.getOwnerId().isBlank()) {
-            owner = userRepository.findById(shop.getOwnerId()).orElse(null);
+            // Phase 4 — raw Document fetch (xem lý do trong field comment bên trên).
+            org.bson.Document rawOwner = mongoTemplate.getCollection("users")
+                    .find(new org.bson.Document("_id", shop.getOwnerId()))
+                    .first();
+            if (rawOwner != null) {
+                if (!rawOwner.containsKey("_class")) {
+                    rawOwner.put("_class", User.class.getName());
+                }
+                rawOwner.put("_id", shop.getOwnerId());
+                owner = mongoTemplate.getConverter().read(User.class, rawOwner);
+                if (owner.getId() == null) {
+                    owner.setId(shop.getOwnerId());
+                }
+            }
         }
 
         model.addAttribute("shop", shop);
@@ -92,6 +116,7 @@ public class AdminShopController {
 
     @PostMapping("/{id}/approve")
     public String approveShop(@PathVariable String id,
+                              @AuthenticationPrincipal UserDetails userDetails,
                               @RequestParam(defaultValue = "0") int page,
                               @RequestParam(defaultValue = "5") int size,
                               @RequestParam(required = false) String q,
@@ -110,7 +135,8 @@ public class AdminShopController {
                     "Shop \"" + shop.getShopName() + "\" đã được duyệt trước đó");
         } else {
             try {
-                adminShopService.approveShop(id);
+                // TASK #24: truyền actor vào audit log
+                adminShopService.approveShop(id, currentActorId(userDetails), currentActorId(userDetails));
                 redirectAttributes.addFlashAttribute("flashSuccess",
                         "Đã duyệt shop \"" + shop.getShopName() + "\" thành công");
             } catch (BusinessException ex) {
@@ -129,6 +155,7 @@ public class AdminShopController {
 
     @PostMapping("/{id}/activate")
     public String activateShop(@PathVariable String id,
+                                @AuthenticationPrincipal UserDetails userDetails,
                                 @RequestParam(defaultValue = "0") int page,
                                 @RequestParam(defaultValue = "5") int size,
                                 @RequestParam(required = false) String q,
@@ -143,7 +170,7 @@ public class AdminShopController {
         }
 
         try {
-            adminShopService.activateShop(id);
+            adminShopService.activateShop(id, currentActorId(userDetails), currentActorId(userDetails));
             redirectAttributes.addFlashAttribute("flashSuccess",
                     "Đã kích hoạt shop \"" + shop.getShopName() + "\"");
         } catch (BusinessException ex) {
@@ -161,12 +188,12 @@ public class AdminShopController {
 
     @PostMapping("/{id}/deactivate")
     public String deactivateShop(@PathVariable String id,
+                                 @AuthenticationPrincipal UserDetails userDetails,
                                  @RequestParam(defaultValue = "0") int page,
                                  @RequestParam(defaultValue = "5") int size,
                                  @RequestParam(required = false) String q,
                                  @RequestParam(required = false) String status,
                                  @RequestParam(required = false) String reason,
-                                 @AuthenticationPrincipal CustomUserDetails admin,
                                  RedirectAttributes redirectAttributes) {
         Shop shop;
         try {
@@ -177,8 +204,11 @@ public class AdminShopController {
         }
 
         try {
-            String adminUsername = admin != null ? admin.getUsername() : "system";
-            adminShopService.deactivateShop(id, reason, adminUsername);
+            // Signature mới (merge feature/admin + feature/vendors-module):
+            //   deactivateShop(id, reason, adminUsername) - vừa lưu reason/actionBy/actionAt
+            //   lên Shop, vừa ghi AuditLog SHOP_SUSPENDED với adminUsername làm actor.
+            String actorId = currentActorId(userDetails);
+            adminShopService.deactivateShop(id, reason, actorId);
             redirectAttributes.addFlashAttribute("flashSuccess",
                     "Đã ngừng hoạt động shop \"" + shop.getShopName() + "\"");
         } catch (BusinessException ex) {
@@ -196,12 +226,12 @@ public class AdminShopController {
 
     @PostMapping("/{id}/reject")
     public String rejectShop(@PathVariable String id,
+                             @AuthenticationPrincipal UserDetails userDetails,
                              @RequestParam(defaultValue = "0") int page,
                              @RequestParam(defaultValue = "5") int size,
                              @RequestParam(required = false) String q,
                              @RequestParam(required = false) String status,
                              @RequestParam(required = false) String reason,
-                             @AuthenticationPrincipal CustomUserDetails admin,
                              RedirectAttributes redirectAttributes) {
         Shop shop;
         try {
@@ -212,8 +242,9 @@ public class AdminShopController {
         }
 
         try {
-            String adminUsername = admin != null ? admin.getUsername() : "system";
-            adminShopService.rejectShop(id, reason, adminUsername);
+            // Gộp cả reason + actorId/actorUsername.
+            String actorId = currentActorId(userDetails);
+            adminShopService.rejectShop(id, reason, actorId);
             redirectAttributes.addFlashAttribute("flashSuccess",
                     "Đã từ chối shop \"" + shop.getShopName() + "\"");
         } catch (BusinessException ex) {

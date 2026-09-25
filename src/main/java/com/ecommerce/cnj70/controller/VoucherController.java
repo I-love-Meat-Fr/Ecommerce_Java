@@ -8,6 +8,7 @@ import com.ecommerce.cnj70.exception.BadRequestException;
 import com.ecommerce.cnj70.repository.ShopRepository;
 import com.ecommerce.cnj70.repository.UserRepository;
 import com.ecommerce.cnj70.service.VendorService;
+import com.ecommerce.cnj70.service.VoucherApplicationGateway;
 import com.ecommerce.cnj70.service.VoucherService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -40,6 +41,7 @@ import java.util.Map;
 public class VoucherController {
     
     private final VoucherService voucherService;
+    private final VoucherApplicationGateway voucherApplicationGateway;
     private final VendorService vendorService;
     private final UserRepository userRepository;
     private final ShopRepository shopRepository;
@@ -76,6 +78,7 @@ public class VoucherController {
             
             return "vendor/voucher-list";
         } catch (BadRequestException e) {
+            redirectAttributes.addFlashAttribute("flashError", e.getMessage());
             redirectAttributes.addFlashAttribute("error", e.getMessage());
             return "redirect:/vendor/shop";
         }
@@ -98,6 +101,7 @@ public class VoucherController {
             
             return "vendor/voucher-create";
         } catch (BadRequestException e) {
+            redirectAttributes.addFlashAttribute("flashError", e.getMessage());
             redirectAttributes.addFlashAttribute("error", e.getMessage());
             return "redirect:/vendor/shop";
         }
@@ -116,10 +120,12 @@ public class VoucherController {
             User vendor = vendorService.getCurrentVendor(user);
             
             Voucher voucher = voucherService.createVoucher(form, shop.getId(), shop.getShopName(), vendor.getId());
-            
+
+            redirectAttributes.addFlashAttribute("flashSuccess", "Tạo voucher thành công!");
             redirectAttributes.addFlashAttribute("success", "Tạo voucher thành công!");
             return "redirect:/vendor/vouchers";
         } catch (BadRequestException e) {
+            redirectAttributes.addFlashAttribute("flashError", e.getMessage());
             redirectAttributes.addFlashAttribute("error", e.getMessage());
             redirectAttributes.addFlashAttribute("voucherForm", form);
             return "redirect:/vendor/vouchers/create";
@@ -139,6 +145,7 @@ public class VoucherController {
             // Validate ownership
             String shopId = vendorService.getShopIdFromUser(user);
             if (!shopId.equals(voucher.getShopId())) {
+                redirectAttributes.addFlashAttribute("flashError", "Bạn không có quyền sửa voucher này");
                 redirectAttributes.addFlashAttribute("error", "Bạn không có quyền sửa voucher này");
                 return "redirect:/vendor/vouchers";
             }
@@ -180,15 +187,18 @@ public class VoucherController {
             // Validate ownership
             String shopId = vendorService.getShopIdFromUser(user);
             if (!shopId.equals(voucher.getShopId())) {
+                redirectAttributes.addFlashAttribute("flashError", "Bạn không có quyền sửa voucher này");
                 redirectAttributes.addFlashAttribute("error", "Bạn không có quyền sửa voucher này");
                 return "redirect:/vendor/vouchers";
             }
             
             voucherService.updateVoucher(id, form);
+            redirectAttributes.addFlashAttribute("flashSuccess", "Cập nhật voucher thành công!");
             redirectAttributes.addFlashAttribute("success", "Cập nhật voucher thành công!");
-            
+
             return "redirect:/vendor/vouchers";
         } catch (BadRequestException e) {
+            redirectAttributes.addFlashAttribute("flashError", e.getMessage());
             redirectAttributes.addFlashAttribute("error", e.getMessage());
             redirectAttributes.addFlashAttribute("voucherForm", form);
             return "redirect:/vendor/vouchers/edit/" + id;
@@ -208,15 +218,18 @@ public class VoucherController {
             // Validate ownership
             String shopId = vendorService.getShopIdFromUser(user);
             if (!shopId.equals(voucher.getShopId())) {
+                redirectAttributes.addFlashAttribute("flashError", "Bạn không có quyền xóa voucher này");
                 redirectAttributes.addFlashAttribute("error", "Bạn không có quyền xóa voucher này");
                 return "redirect:/vendor/vouchers";
             }
             
             voucherService.deleteVoucher(id);
+            redirectAttributes.addFlashAttribute("flashSuccess", "Xóa voucher thành công!");
             redirectAttributes.addFlashAttribute("success", "Xóa voucher thành công!");
-            
+
             return "redirect:/vendor/vouchers";
         } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("flashError", e.getMessage());
             redirectAttributes.addFlashAttribute("error", e.getMessage());
             return "redirect:/vendor/vouchers";
         }
@@ -295,12 +308,24 @@ public class VoucherController {
                                     BindingResult result,
                                     RedirectAttributes redirectAttributes) {
         try {
-            User admin = vendorService.getCurrentVendor(user);
+            // ===== BUG FIX: Lấy admin qua userRepository thay vì vendorService =====
+            // vendorService.getCurrentVendor(user) chỉ là findByEmail nhưng tên method gây
+            // hiểu lầm và có thể fail khi user null / không có trong DB → 500.
+            String email = user != null ? user.getUsername() : null;
+            if (email == null || email.isBlank()) {
+                throw new BadRequestException("Không xác định được admin hiện tại");
+            }
+            User admin = userRepository.findByEmail(email)
+                    .orElseThrow(() -> new BadRequestException(
+                            "Không tìm thấy admin hiện tại trong hệ thống"));
             voucherService.createWebVoucher(form, admin.getId());
 
+            // Phase 1 — use both keys (flashSuccess + success) so template upgrades don't break older consumers.
+            redirectAttributes.addFlashAttribute("flashSuccess", "Tạo voucher thành công!");
             redirectAttributes.addFlashAttribute("success", "Tạo voucher thành công!");
             return "redirect:/admin/vouchers";
         } catch (BadRequestException e) {
+            redirectAttributes.addFlashAttribute("flashError", e.getMessage());
             redirectAttributes.addFlashAttribute("error", e.getMessage());
             redirectAttributes.addFlashAttribute("voucherForm", form);
             return "redirect:/admin/vouchers/create";
@@ -325,6 +350,8 @@ public class VoucherController {
 
             // Guard: chỉ cho phép edit WEB Voucher
             if (voucher.getType() != com.ecommerce.cnj70.enums.VoucherType.WEB) {
+                redirectAttributes.addFlashAttribute("flashError",
+                        "Admin không được phép chỉnh sửa Voucher SHOP. Voucher này thuộc về Vendor.");
                 redirectAttributes.addFlashAttribute("error",
                         "Admin không được phép chỉnh sửa Voucher SHOP. Voucher này thuộc về Vendor.");
                 return "redirect:/admin/vouchers";
@@ -366,11 +393,13 @@ public class VoucherController {
                                    RedirectAttributes redirectAttributes) {
         try {
             voucherService.updateWebVoucher(id, form);
+            redirectAttributes.addFlashAttribute("flashSuccess", "Cập nhật voucher thành công!");
             redirectAttributes.addFlashAttribute("success", "Cập nhật voucher thành công!");
             return "redirect:/admin/vouchers?page=" + page + "&size=" + size
                     + (q != null && !q.isBlank() ? "&q=" + q : "")
                     + (active != null && !active.isBlank() ? "&active=" + active : "");
         } catch (BadRequestException e) {
+            redirectAttributes.addFlashAttribute("flashError", e.getMessage());
             redirectAttributes.addFlashAttribute("error", e.getMessage());
             redirectAttributes.addFlashAttribute("voucherForm", form);
             return "redirect:/admin/vouchers/edit/" + id + "?page=" + page + "&size=" + size
@@ -394,11 +423,13 @@ public class VoucherController {
                                     RedirectAttributes redirectAttributes) {
         try {
             voucherService.deleteWebVoucher(id);
+            redirectAttributes.addFlashAttribute("flashSuccess", "Đã xóa (tạm dừng) voucher thành công!");
             redirectAttributes.addFlashAttribute("success", "Đã xóa (tạm dừng) voucher thành công!");
             return "redirect:/admin/vouchers?page=" + page + "&size=" + size
                     + (q != null && !q.isBlank() ? "&q=" + q : "")
                     + (active != null && !active.isBlank() ? "&active=" + active : "");
         } catch (BadRequestException e) {
+            redirectAttributes.addFlashAttribute("flashError", e.getMessage());
             redirectAttributes.addFlashAttribute("error", e.getMessage());
             return "redirect:/admin/vouchers";
         }
@@ -419,11 +450,13 @@ public class VoucherController {
                                        RedirectAttributes redirectAttributes) {
         try {
             voucherService.activateWebVoucher(id);
+            redirectAttributes.addFlashAttribute("flashSuccess", "Đã kích hoạt voucher!");
             redirectAttributes.addFlashAttribute("success", "Đã kích hoạt voucher!");
             return "redirect:/admin/vouchers?page=" + page + "&size=" + size
                     + (q != null && !q.isBlank() ? "&q=" + q : "")
                     + (active != null && !active.isBlank() ? "&active=" + active : "");
         } catch (BadRequestException e) {
+            redirectAttributes.addFlashAttribute("flashError", e.getMessage());
             redirectAttributes.addFlashAttribute("error", e.getMessage());
             return "redirect:/admin/vouchers";
         }
@@ -442,11 +475,13 @@ public class VoucherController {
                                          RedirectAttributes redirectAttributes) {
         try {
             voucherService.deactivateWebVoucher(id);
+            redirectAttributes.addFlashAttribute("flashSuccess", "Đã tạm dừng voucher!");
             redirectAttributes.addFlashAttribute("success", "Đã tạm dừng voucher!");
             return "redirect:/admin/vouchers?page=" + page + "&size=" + size
                     + (q != null && !q.isBlank() ? "&q=" + q : "")
                     + (active != null && !active.isBlank() ? "&active=" + active : "");
         } catch (BadRequestException e) {
+            redirectAttributes.addFlashAttribute("flashError", e.getMessage());
             redirectAttributes.addFlashAttribute("error", e.getMessage());
             return "redirect:/admin/vouchers";
         }
@@ -496,7 +531,13 @@ public class VoucherController {
     }
     
     /**
-     * Áp dụng voucher khi đặt hàng (từ form POST)
+     * Áp dụng voucher khi đặt hàng (từ form POST).
+     *
+     * <p>Phase 4B — atomic voucher consumption through
+     * {@link VoucherApplicationGateway#reserveVoucher}. The voucher is only
+     * consumed if and when the order is successfully created. If the order
+     * creation fails (Phase 5 / Order Backend owns), the caller MUST call
+     * {@code releaseVoucher} to roll back the usedCount increment.</p>
      */
     @PostMapping("/checkout/place-order")
     public String placeOrderWithVoucher(@RequestParam(required = false) String voucherCode,
@@ -505,9 +546,18 @@ public class VoucherController {
         if (voucherCode != null && !voucherCode.isBlank()) {
             try {
                 Voucher voucher = voucherService.validateForCheckout(voucherCode, null, null);
-                // Tăng used count sau khi đặt hàng thành công
-                voucherService.incrementUsed(voucher.getId());
-                redirectAttributes.addFlashAttribute("success", "Đặt hàng thành công! Voucher đã được sử dụng.");
+
+                // Phase 4B — atomic, race-safe increment via gateway.
+                // Order Backend (Phase 5) will own the full reserve/release
+                // lifecycle including rollback on order failure.
+                String orderRef = "ORDER_PLACEHOLDER";
+                boolean reserved = voucherApplicationGateway.reserveVoucher(voucher.getId(), orderRef);
+                if (!reserved) {
+                    redirectAttributes.addFlashAttribute("warning",
+                            "Voucher '" + voucher.getCode() + "' đã hết lượt hoặc bị vô hiệu hóa trước khi đặt hàng.");
+                } else {
+                    redirectAttributes.addFlashAttribute("success", "Đặt hàng thành công! Voucher đã được sử dụng.");
+                }
             } catch (Exception e) {
                 redirectAttributes.addFlashAttribute("warning", "Voucher không hợp lệ: " + e.getMessage());
             }

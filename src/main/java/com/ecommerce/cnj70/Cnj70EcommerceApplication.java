@@ -1,5 +1,6 @@
 package com.ecommerce.cnj70;
 
+import com.ecommerce.cnj70.config.DotenvInitializer;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
@@ -14,6 +15,8 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 public class Cnj70EcommerceApplication {
 
     public static void main(String[] args) {
-        SpringApplication.run(Cnj70EcommerceApplication.class, args);
+        SpringApplication app = new SpringApplication(Cnj70EcommerceApplication.class);
+        app.addInitializers(new DotenvInitializer());
+        app.run(args);
     }
 }

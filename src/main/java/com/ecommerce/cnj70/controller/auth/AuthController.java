@@ -57,6 +57,10 @@ public class AuthController {
             String redirectUrl = "redirect:/home";
             if ("ADMIN".equals(user.getRole())) {
                 redirectUrl = "redirect:/admin/dashboard";
+            } else if ("MODERATOR".equals(user.getRole())) {
+                redirectUrl = "redirect:/moderator/dashboard";
+            } else if ("VENDOR".equals(user.getRole())) {
+                redirectUrl = "redirect:/vendor/dashboard";
             }
             return redirectUrl;
         } catch (Exception e) {

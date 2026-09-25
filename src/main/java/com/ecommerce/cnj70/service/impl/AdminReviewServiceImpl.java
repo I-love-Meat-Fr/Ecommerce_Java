@@ -7,6 +7,7 @@ import com.ecommerce.cnj70.repository.ReviewRepository;
 import com.ecommerce.cnj70.service.AdminReviewService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.bson.Document;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
@@ -90,9 +91,29 @@ public class AdminReviewServiceImpl implements AdminReviewService {
         if (!StringUtils.hasText(id)) {
             throw new BadRequestException("ID đánh giá không hợp lệ");
         }
-        return reviewRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException(
-                        "Không tìm thấy đánh giá với ID: " + id));
+        // Phase 6 + Phase 3 fix: Hỗ trợ CẢ 2 kiểu _id (String lẫn ObjectId).
+        // KHÔNG ép raw.put("_id", id) vì sẽ làm save() insert document mới
+        // khi DB lưu _id là ObjectId → duplicate key error (E11000).
+        Document raw = mongoTemplate.getCollection("reviews")
+                .find(new Document("_id", id))
+                .first();
+        if (raw == null && id.length() == 24 && id.matches("[0-9a-fA-F]+")) {
+            org.bson.types.ObjectId oid = new org.bson.types.ObjectId(id);
+            raw = mongoTemplate.getCollection("reviews")
+                    .find(new Document("_id", oid))
+                    .first();
+        }
+        if (raw == null) {
+            throw new ResourceNotFoundException("Không tìm thấy đánh giá với ID: " + id);
+        }
+        if (!raw.containsKey("_class")) {
+            raw.put("_class", Review.class.getName());
+        }
+        Review review = mongoTemplate.getConverter().read(Review.class, raw);
+        if (review.getId() == null) {
+            review.setId(id);
+        }
+        return review;
     }
 
     @Override
@@ -102,10 +123,35 @@ public class AdminReviewServiceImpl implements AdminReviewService {
         // LOCK 4: KHÔNG đụng Product.rating / reviewCount — chờ Contract.
         Review review = getReviewById(id);
 
-        reviewRepository.deleteById(review.getId());
+        // Phase 3 critical fix: atomic delete dùng native _id (ObjectId hoặc String)
+        // để tránh silent miss khi DB lưu _id là ObjectId.
+        Object nativeId = resolveIdForQuery(id);
+        long deleted = mongoTemplate.getCollection("reviews")
+                .deleteOne(new Document("_id", nativeId))
+                .getDeletedCount();
+        if (deleted == 0) {
+            log.warn("AdminReviewService.deleteReview: atomic delete not matched, falling back to repo");
+            reviewRepository.deleteById(review.getId());
+        }
         log.info("AdminReviewService.deleteReview: removed id={} productId={}",
                 review.getId(), review.getProductId());
         // Side effects (Product.rating/reviewCount update, Customer visibility update)
         // bị BỎ QUA theo LOCK 4 và LOCK 5 — chờ Business Contract.
+    }
+
+    /**
+     * Phase 3 critical fix: trả về _id dạng native (ObjectId hoặc String) để
+     * Mongo query match đúng document trong DB.
+     */
+    private Object resolveIdForQuery(String id) {
+        if (id.length() == 24 && id.matches("[0-9a-fA-F]+")) {
+            Document raw = mongoTemplate.getCollection("reviews")
+                    .find(new Document("_id", new org.bson.types.ObjectId(id)))
+                    .first();
+            if (raw != null) {
+                return new org.bson.types.ObjectId(id);
+            }
+        }
+        return id;
     }
 }

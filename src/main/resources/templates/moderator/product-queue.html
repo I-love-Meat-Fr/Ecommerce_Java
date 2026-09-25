@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/springsecurity6"
+      th:replace="~{layout/moderator-layout :: layout(title='Product Queue - CNJ70 Moderator', content=~{::main-content}, scripts=~{::page-scripts})}">
+<head>
+    <title>Product Queue - CNJ70 Moderator</title>
+</head>
+<body>
+<main th:fragment="main-content">
+    <div class="sd-page-head">
+        <div class="sd-page-head-title">
+            <h1><i class="fas fa-list-check"></i> Hàng đợi sản phẩm</h1>
+            <p>Danh sách sản phẩm chờ Moderator xử lý.</p>
+        </div>
+        <div class="sd-page-head-meta">
+            <span class="sd-page-head-meta-label">Tổng sản phẩm</span>
+            <span class="sd-page-head-meta-value" th:text="${totalItems}">0</span>
+        </div>
+    </div>
+
+    <div class="sd-card sd-toolbar" style="margin-bottom:20px;">
+        <div class="sd-card-body">
+            <form th:action="@{/moderator/queue}" method="get" class="sd-toolbar-form">
+                <input type="hidden" name="size" th:value="${size}" />
+                <input type="text" name="q" th:value="${q}"
+                       placeholder="Tìm theo tên sản phẩm..."
+                       class="sd-input sd-toolbar-search"
+                       style="padding:8px 10px;border:1px solid var(--border,#e2e8f0);border-radius:6px;" />
+                <select name="status" class="sd-select sd-toolbar-select"
+                        style="padding:8px 10px;border:1px solid var(--border,#e2e8f0);border-radius:6px;">
+                    <option value="">Tất cả trạng thái kiểm duyệt</option>
+                    <option th:each="s : ${statuses}"
+                            th:value="${s.name()}"
+                            th:text="${s.name() == 'PENDING_MANUAL' ? 'Chờ Moderator' :
+                                          (s.name() == 'AUTO_PASSED' ? 'Auto: Đạt' :
+                                          (s.name() == 'AUTO_REJECTED' ? 'Auto: Từ chối' : s.name()))}"
+                            th:selected="${status == s.name()}"></option>
+                </select>
+                <button type="submit" class="sd-btn sd-btn-primary sd-btn-sm sd-toolbar-btn">
+                    <i class="fas fa-search"></i> Lọc
+                </button>
+                <a th:href="@{/moderator/queue(page=0, size=${size})}"
+                   class="sd-btn sd-btn-secondary sd-btn-sm sd-toolbar-btn">
+                    <i class="fas fa-rotate-left"></i> Đặt lại
+                </a>
+            </form>
+        </div>
+    </div>
+
+    <div class="sd-card" th:if="${(q != null and !#strings.isEmpty(q)) or (status != null and !#strings.isEmpty(status))}"
+         style="margin-bottom:16px;">
+        <div class="sd-card-body" style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+            <i class="fas fa-filter"></i>
+            <span>Đang lọc theo:</span>
+            <span th:if="${q != null and !#strings.isEmpty(q)}" class="sd-badge sd-badge-slate">
+                Từ khóa: <span th:text="${q}">keyword</span>
+            </span>
+            <span th:if="${status != null and !#strings.isEmpty(status)}" class="sd-badge sd-badge-blue">
+                Trạng thái: <span th:text="${status}"></span>
+            </span>
+            <a th:href="@{/moderator/queue(page=0, size=${size})}"
+               class="sd-btn sd-btn-secondary sd-btn-sm" style="margin-left:auto;">
+                <i class="fas fa-times"></i> Bỏ lọc
+            </a>
+            <span style="color:var(--text-muted);font-size:13px;">
+                <span th:text="${totalItems}">0</span> kết quả
+            </span>
+        </div>
+    </div>
+
+    <div class="sd-card">
+        <div class="sd-card-body sd-card-body-flush">
+            <table class="sd-table">
+                <thead>
+                    <tr>
+                        <th class="sd-col-stt">STT</th>
+                        <th>Sản phẩm</th>
+                        <th>Shop / Vendor</th>
+                        <th>Danh mục</th>
+                        <th>Giá</th>
+                        <th>Moderation</th>
+                        <th>Auto Result</th>
+                        <th>Ngày tạo</th>
+                        <th style="text-align:right;">Thao tác</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr th:if="${#lists.isEmpty(items)}">
+                        <td colspan="9">
+                            <div class="sd-empty">
+                                <i class="fas fa-box-open"></i>
+                                <h3 th:if="${(q != null and !#strings.isEmpty(q)) or (status != null and !#strings.isEmpty(status))}">Không tìm thấy sản phẩm</h3>
+                                <h3 th:unless="${(q != null and !#strings.isEmpty(q)) or (status != null and !#strings.isEmpty(status))}">Chưa có sản phẩm nào trong hàng đợi</h3>
+                                <p>Hiện không có sản phẩm nào cần Moderator xử lý.</p>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr th:each="item, iter : ${items}">
+                        <td class="sd-col-stt" th:text="${page * size + iter.count}">1</td>
+                        <td>
+                            <div class="sd-table-title" th:text="${item.productName}">Tên SP</div>
+                            <div class="sd-table-sub sd-mono" th:text="${item.productId}">id</div>
+                        </td>
+                        <td>
+                            <div class="sd-table-title" th:text="${item.shopName != null ? item.shopName : '—'}">Shop</div>
+                            <div class="sd-table-sub" th:text="${item.vendorName != null ? item.vendorName : '—'}">Vendor</div>
+                        </td>
+                        <td>
+                            <span class="sd-table-sub" th:text="${item.categoryName != null ? item.categoryName : '—'}">Cat</span>
+                        </td>
+                        <td>
+                            <span th:text="${item.price != null ? #numbers.formatDecimal(item.price, 0, 'COMMA', 0, 'POINT') + ' đ' : '—'}">0 đ</span>
+                        </td>
+                        <td>
+                            <span class="sd-badge"
+                                  th:classappend="${item.moderationStatus.name() == 'PENDING_MANUAL' ? 'sd-badge-warning' :
+                                                  (item.moderationStatus.name() == 'AUTO_PASSED' ? 'sd-badge-green' :
+                                                  (item.moderationStatus.name() == 'AUTO_REJECTED' ? 'sd-badge-danger' : 'sd-badge-blue'))}"
+                                  th:text="${item.moderationStatus.name() == 'PENDING_MANUAL' ? 'Chờ Moderator' :
+                                            (item.moderationStatus.name() == 'AUTO_PASSED' ? 'Auto: Đạt' :
+                                            (item.moderationStatus.name() == 'AUTO_REJECTED' ? 'Auto: Từ chối' : item.moderationStatus.name()))}">PENDING_MANUAL</span>
+                        </td>
+                        <td>
+                            <span th:if="${item.autoModerationResult == null}" class="sd-badge sd-badge-slate">
+                                Chưa có
+                            </span>
+                            <span th:if="${item.autoModerationResult != null}" class="sd-badge sd-badge-blue"
+                                  th:text="${item.autoModerationResult.status.name()}">AUTO_PASSED</span>
+                        </td>
+                        <td>
+                            <span class="sd-table-sub" th:text="${item.createdAt != null ? #temporals.format(item.createdAt, 'dd/MM/yyyy HH:mm') : '—'}">—</span>
+                        </td>
+                        <td style="text-align:right; white-space:nowrap;">
+                            <a th:href="@{/moderator/products/{id}(id=${item.productId}, page=${page}, size=${size}, q=${q}, status=${status})}"
+                               class="sd-btn sd-btn-primary sd-btn-sm">
+                                <i class="fas fa-eye"></i> Xem
+                            </a>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="sd-card-body" th:if="${totalPages > 0}"
+             style="display:flex;justify-content:center;border-top:1px solid var(--border,#e2e8f0);">
+            <nav class="sd-pagination" aria-label="Phân trang">
+                <a th:if="${hasPrev}"
+                   th:href="@{/moderator/queue(page=${page - 1}, size=${size}, q=${q}, status=${status})}"
+                   class="sd-page-link">
+                    <i class="fas fa-chevron-left"></i> Trước
+                </a>
+                <span th:unless="${hasPrev}" class="sd-page-link sd-page-disabled">
+                    <i class="fas fa-chevron-left"></i> Trước
+                </span>
+
+                <th:block th:each="i : ${pageNumbers}" th:if="${i == page}">
+                    <span class="sd-page-link sd-page-active" th:text="${i + 1}">1</span>
+                </th:block>
+                <th:block th:each="i : ${pageNumbers}" th:unless="${i == page}">
+                    <a th:href="@{/moderator/queue(page=${i}, size=${size}, q=${q}, status=${status})}"
+                       class="sd-page-link" th:text="${i + 1}">1</a>
+                </th:block>
+
+                <a th:if="${hasNext}"
+                   th:href="@{/moderator/queue(page=${page + 1}, size=${size}, q=${q}, status=${status})}"
+                   class="sd-page-link">
+                    Sau <i class="fas fa-chevron-right"></i>
+                </a>
+                <span th:unless="${hasNext}" class="sd-page-link sd-page-disabled">
+                    Sau <i class="fas fa-chevron-right"></i>
+                </span>
+            </nav>
+        </div>
+    </div>
+</main>
+<th:block th:fragment="page-scripts"></th:block>
+</body>
+</html>

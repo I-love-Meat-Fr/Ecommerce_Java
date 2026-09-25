@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/springsecurity6"
+      th:replace="~{layout/moderator-layout :: layout(title='Report Cases - CNJ70 Moderator', content=~{::main-content}, scripts=~{::page-scripts})}">
+<head>
+    <title>Report Cases - CNJ70 Moderator</title>
+</head>
+<body>
+<main th:fragment="main-content">
+    <div class="sd-page-head">
+        <div class="sd-page-head-title">
+            <h1><i class="fas fa-flag"></i> Report Cases</h1>
+            <p>Cases đang chờ Moderator xử lý.</p>
+        </div>
+        <div class="sd-page-head-meta">
+            <span class="sd-page-head-meta-label">Tổng cases</span>
+            <span class="sd-page-head-meta-value" th:text="${totalItems}">0</span>
+        </div>
+    </div>
+
+    <div class="sd-card sd-toolbar" style="margin-bottom:20px;">
+        <div class="sd-card-body">
+            <form th:action="@{/moderator/cases}" method="get" class="sd-toolbar-form">
+                <input type="hidden" name="size" th:value="${size}" />
+                <select name="status" class="sd-select sd-toolbar-select"
+                        style="padding:8px 10px;border:1px solid var(--border,#e2e8f0);border-radius:6px;">
+                    <option value="">Tất cả trạng thái</option>
+                    <option th:each="s : ${statusChoices}"
+                            th:value="${s.name()}"
+                            th:text="${s.name() == 'OPEN' ? 'Đang mở' :
+                                          (s.name() == 'IN_REVIEW' ? 'Đang xem xét' :
+                                          (s.name() == 'APPROVED' ? 'Đã duyệt' :
+                                          (s.name() == 'REJECTED' ? 'Đã từ chối' :
+                                          (s.name() == 'ESCALATED' ? 'Leo thang' : s.name()))))}"
+                            th:selected="${statusFilter == s.name()}"></option>
+                </select>
+                <select name="reason" class="sd-select sd-toolbar-select"
+                        style="padding:8px 10px;border:1px solid var(--border,#e2e8f0);border-radius:6px;">
+                    <option value="">Tất cả lý do</option>
+                    <option th:each="r : ${reasonChoices}"
+                            th:value="${r.name()}"
+                            th:text="${r.name()}"
+                            th:selected="${reasonFilter == r.name()}"></option>
+                </select>
+                <select name="resourceType" class="sd-select sd-toolbar-select"
+                        style="padding:8px 10px;border:1px solid var(--border,#e2e8f0);border-radius:6px;">
+                    <option value="">Tất cả resource</option>
+                    <option th:each="rt : ${resourceTypeChoices}"
+                            th:value="${rt.name()}"
+                            th:text="${rt.name() == 'PRODUCT' ? 'Sản phẩm' :
+                                          (rt.name() == 'REVIEW' ? 'Đánh giá' :
+                                          (rt.name() == 'SHOP' ? 'Shop' : rt.name()))}"
+                            th:selected="${resourceTypeFilter == rt.name()}"></option>
+                </select>
+                <button type="submit" class="sd-btn sd-btn-primary sd-btn-sm sd-toolbar-btn">
+                    <i class="fas fa-filter"></i> Lọc
+                </button>
+                <a th:href="@{/moderator/cases(page=0, size=${size})}"
+                   class="sd-btn sd-btn-secondary sd-btn-sm sd-toolbar-btn">
+                    <i class="fas fa-rotate-left"></i> Đặt lại
+                </a>
+            </form>
+        </div>
+    </div>
+
+    <div class="sd-card" th:if="${(statusFilter != null and !#strings.isEmpty(statusFilter))
+                                  or (reasonFilter != null and !#strings.isEmpty(reasonFilter))
+                                  or (resourceTypeFilter != null and !#strings.isEmpty(resourceTypeFilter))}"
+         style="margin-bottom:16px;">
+        <div class="sd-card-body" style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+            <i class="fas fa-filter"></i>
+            <span>Đang lọc theo:</span>
+            <span th:if="${statusFilter != null and !#strings.isEmpty(statusFilter)}" class="sd-badge sd-badge-blue">
+                Trạng thái: <span th:text="${statusFilter}"></span>
+            </span>
+            <span th:if="${reasonFilter != null and !#strings.isEmpty(reasonFilter)}" class="sd-badge sd-badge-blue">
+                Lý do: <span th:text="${reasonFilter}"></span>
+            </span>
+            <span th:if="${resourceTypeFilter != null and !#strings.isEmpty(resourceTypeFilter)}" class="sd-badge sd-badge-blue">
+                Resource: <span th:text="${resourceTypeFilter}"></span>
+            </span>
+            <a th:href="@{/moderator/cases(page=0, size=${size})}"
+               class="sd-btn sd-btn-secondary sd-btn-sm" style="margin-left:auto;">
+                <i class="fas fa-times"></i> Bỏ lọc
+            </a>
+            <span style="color:var(--text-muted);font-size:13px;">
+                <span th:text="${totalItems}">0</span> kết quả
+            </span>
+        </div>
+    </div>
+
+    <div class="sd-card">
+        <div class="sd-card-body sd-card-body-flush">
+            <table class="sd-table">
+                <thead>
+                    <tr>
+                        <th class="sd-col-stt">STT</th>
+                        <th>Case ID</th>
+                        <th>Resource</th>
+                        <th>Reporter</th>
+                        <th>Lý do</th>
+                        <th>Mức độ</th>
+                        <th>Trạng thái</th>
+                        <th>Vendor / Shop</th>
+                        <th>Assigned</th>
+                        <th>Evidence</th>
+                        <th>Ngày tạo</th>
+                        <th style="text-align:right;">Thao tác</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr th:if="${#lists.isEmpty(items)}">
+                        <td colspan="12">
+                            <div class="sd-empty">
+                                <i class="fas fa-inbox"></i>
+                                <h3 th:if="${(statusFilter != null and !#strings.isEmpty(statusFilter))
+                                              or (reasonFilter != null and !#strings.isEmpty(reasonFilter))
+                                              or (resourceTypeFilter != null and !#strings.isEmpty(resourceTypeFilter))}">Không tìm thấy case</h3>
+                                <h3 th:unless="${(statusFilter != null and !#strings.isEmpty(statusFilter))
+                                              or (reasonFilter != null and !#strings.isEmpty(reasonFilter))
+                                              or (resourceTypeFilter != null and !#strings.isEmpty(resourceTypeFilter))}">Chưa có case nào trong queue</h3>
+                                <p>ReportCase sẽ xuất hiện khi khách hàng hoặc hệ thống báo cáo.</p>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr th:each="item, iter : ${items}">
+                        <td class="sd-col-stt" th:text="${page * size + iter.count}">1</td>
+                        <td>
+                            <div class="sd-table-sub sd-mono" th:text="${item.caseId}">caseId</div>
+                        </td>
+                        <td>
+                            <div class="sd-table-title"
+                                 th:text="${item.resourceName != null ? item.resourceName : '(deleted)'}">name</div>
+                            <div class="sd-table-sub">
+                                <span class="sd-badge sd-badge-slate" th:text="${item.resourceType}">TYPE</span>
+                                <span class="sd-mono" th:text="${item.resourceId}">id</span>
+                            </div>
+                        </td>
+                        <td>
+                            <div class="sd-table-title" th:text="${item.reporterName != null ? item.reporterName : 'SYSTEM'}">name</div>
+                            <div class="sd-table-sub sd-mono" th:text="${item.reporterId}">id</div>
+                        </td>
+                        <td>
+                            <span class="sd-badge sd-badge-blue" th:text="${item.reason}">REASON</span>
+                        </td>
+                        <td>
+                            <span class="sd-badge"
+                                  th:classappend="${item.severity != null and item.severity.name() == 'CRITICAL'} ? 'sd-badge-red'
+                                                  : (${item.severity != null and item.severity.name() == 'HIGH'} ? 'sd-badge-amber'
+                                                  : (${item.severity != null and item.severity.name() == 'MEDIUM'} ? 'sd-badge-warning'
+                                                  : (${item.severity != null and item.severity.name() == 'LOW'} ? 'sd-badge-sky'
+                                                  : 'sd-badge-slate')))"
+                                  th:text="${item.severity != null ? item.severity.name() : '—'}">HIGH</span>
+                        </td>
+                        <td>
+                            <span class="sd-badge"
+                                  th:classappend="${item.status.name() == 'OPEN'} ? 'sd-badge-amber'
+                                                  : (${item.status.name() == 'IN_REVIEW'} ? 'sd-badge-sky'
+                                                  : (${item.status.name() == 'APPROVED'} ? 'sd-badge-green'
+                                                  : (${item.status.name() == 'REJECTED'} ? 'sd-badge-slate'
+                                                  : 'sd-badge-red')))"
+                                  th:text="${item.status.name()}">OPEN</span>
+                        </td>
+                        <td>
+                            <div class="sd-table-sub" th:text="${item.vendorName != null ? item.vendorName : '—'}">vendor</div>
+                            <div class="sd-table-sub" th:text="${item.shopName}">shop</div>
+                        </td>
+                        <td class="sd-table-sub" th:text="${item.assignedModeratorEmail != null ? item.assignedModeratorEmail : '—'}">—</td>
+                        <td>
+                            <span class="sd-badge sd-badge-sky" th:text="${item.evidenceCount}">0</span>
+                        </td>
+                        <td class="sd-table-sub"
+                            th:text="${item.createdAt != null ? #temporals.format(item.createdAt, 'dd/MM/yyyy HH:mm') : '—'}">—</td>
+                        <td style="text-align:right; white-space:nowrap;">
+                            <a th:href="@{/moderator/cases/{id}(id=${item.caseId}, page=${page}, size=${size}, status=${statusFilter}, reason=${reasonFilter}, resourceType=${resourceTypeFilter})}"
+                               class="sd-btn sd-btn-primary sd-btn-sm">
+                                <i class="fas fa-eye"></i> Chi tiết
+                            </a>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="sd-card-body" th:if="${totalPages > 0}"
+             style="display:flex;justify-content:center;border-top:1px solid var(--border,#e2e8f0);">
+            <nav class="sd-pagination" aria-label="Phân trang">
+                <a th:if="${hasPrev}"
+                   th:href="@{/moderator/cases(page=${page - 1}, size=${size}, status=${statusFilter}, reason=${reasonFilter}, resourceType=${resourceTypeFilter})}"
+                   class="sd-page-link">
+                    <i class="fas fa-chevron-left"></i> Trước
+                </a>
+                <span th:unless="${hasPrev}" class="sd-page-link sd-page-disabled">
+                    <i class="fas fa-chevron-left"></i> Trước
+                </span>
+
+                <th:block th:each="i : ${pageNumbers}" th:if="${i == page}">
+                    <span class="sd-page-link sd-page-active" th:text="${i + 1}">1</span>
+                </th:block>
+                <th:block th:each="i : ${pageNumbers}" th:unless="${i == page}">
+                    <a th:href="@{/moderator/cases(page=${i}, size=${size}, status=${statusFilter}, reason=${reasonFilter}, resourceType=${resourceTypeFilter})}"
+                       class="sd-page-link" th:text="${i + 1}">1</a>
+                </th:block>
+
+                <a th:if="${hasNext}"
+                   th:href="@{/moderator/cases(page=${page + 1}, size=${size}, status=${statusFilter}, reason=${reasonFilter}, resourceType=${resourceTypeFilter})}"
+                   class="sd-page-link">
+                    Sau <i class="fas fa-chevron-right"></i>
+                </a>
+                <span th:unless="${hasNext}" class="sd-page-link sd-page-disabled">
+                    Sau <i class="fas fa-chevron-right"></i>
+                </span>
+            </nav>
+        </div>
+    </div>
+</main>
+<th:block th:fragment="page-scripts"></th:block>
+</body>
+</html>

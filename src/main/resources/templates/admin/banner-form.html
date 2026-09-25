@@ -43,6 +43,7 @@
                 <label class="sd-form-label">Tiêu đề <span style="color:#ef4444">*</span></label>
                 <input type="text" th:field="*{title}"
                        class="sd-input"
+                       maxlength="200"
                        style="width:100%;padding:8px 10px;border:1px solid var(--border,#e2e8f0);border-radius:6px;"
                        placeholder="Ví dụ: MEGA SALE - Giảm đến 50%" required />
             </div>
@@ -50,6 +51,7 @@
             <div class="sd-form-row" style="grid-column: span 2;">
                 <label class="sd-form-label">Mô tả</label>
                 <textarea th:field="*{description}" rows="3"
+                          maxlength="1000"
                           class="sd-input"
                           style="width:100%;padding:8px 10px;border:1px solid var(--border,#e2e8f0);border-radius:6px;"
                           placeholder="Mô tả ngắn về banner (hiển thị dưới tiêu đề)"></textarea>
@@ -101,8 +103,12 @@
                 <label class="sd-form-label">Link khi click</label>
                 <input type="text" th:field="*{link}"
                        class="sd-input"
+                       maxlength="2048"
+                       pattern="^(?!javascript:|data:|vbscript:).*"
+                       title="Không hỗ trợ scheme javascript:, data:, vbscript:"
                        style="width:100%;padding:8px 10px;border:1px solid var(--border,#e2e8f0);border-radius:6px;"
                        placeholder="/products hoặc /vouchers hoặc URL đầy đủ" />
+                <small style="color:#64748b;font-size:12px;">Phase 4C §31 — Scheme nguy hiểm (javascript:, data:, vbscript:) bị backend từ chối.</small>
             </div>
 
             <div class="sd-form-row">
@@ -180,6 +186,35 @@
     </form>
 </main>
 
-<th:block th:fragment="page-scripts"></th:block>
+<th:block th:fragment="page-scripts">
+    <script>
+        // Phase 4C — Double-submit protection for create/update form.
+        (function () {
+            var form = document.querySelector('form.sd-card');
+            if (!form) return;
+            form.addEventListener('submit', function () {
+                var btn = form.querySelector('button[type="submit"]');
+                if (!btn) return;
+                if (btn.dataset.submitting === '1') {
+                    btn.disabled = true;
+                    return;
+                }
+                btn.dataset.submitting = '1';
+                btn.disabled = true;
+                btn.style.opacity = '0.6';
+                btn.style.pointerEvents = 'none';
+                var orig = btn.innerHTML;
+                btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Đang xử lý...';
+                setTimeout(function () {
+                    btn.disabled = false;
+                    btn.dataset.submitting = '0';
+                    btn.style.opacity = '';
+                    btn.style.pointerEvents = '';
+                    btn.innerHTML = orig;
+                }, 8000);
+            });
+        })();
+    </script>
+</th:block>
 </body>
 </html>

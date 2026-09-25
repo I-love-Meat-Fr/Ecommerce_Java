@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security6"
+      th:replace="~{layout/moderator-layout :: layout(title='Review Detail - Moderator', content=~{::main-content}, scripts=~{::page-scripts})}">
+<head>
+    <title>Review Detail - Moderator CNJ70</title>
+</head>
+<body>
+<main th:fragment="main-content">
+    <!-- Flash messages -->
+    <div th:if="${flashSuccess}" class="auth-alert auth-alert-success" style="margin: 0 2rem 1rem;">
+        <div class="auth-alert-icon"><i class="fas fa-check-circle"></i></div>
+        <div class="auth-alert-content" th:text="${flashSuccess}">OK</div>
+    </div>
+    <div th:if="${flashError}" class="auth-alert auth-alert-error" style="margin: 0 2rem 1rem;">
+        <div th:if="${flashError}" class="auth-alert-icon"><i class="fas fa-exclamation-circle"></i></div>
+        <div class="auth-alert-content" th:text="${flashError}">Error</div>
+    </div>
+
+    <!-- Breadcrumb -->
+    <div style="margin-bottom:16px;">
+        <a th:href="@{/moderator/reviews(page=${page}, size=${size}, moderationStatus=${moderationStatus}, rating=${rating}, q=${q})}"
+           class="sd-btn sd-btn-secondary sd-btn-sm">
+            <i class="fas fa-arrow-left"></i> Quay lại Queue
+        </a>
+    </div>
+
+    <div style="display:grid;grid-template-columns:2fr 1fr;gap:24px;" class="review-detail-grid">
+        <!-- Main Content -->
+        <div>
+            <!-- Review Info Card -->
+            <div class="sd-card">
+                <div class="sd-card-header">
+                    <h2 class="sd-card-title">
+                        <i class="fas fa-comment-dots"></i>
+                        Chi tiết Review
+                    </h2>
+                    <span th:if="${ctx.pipelineModerationStatus != null and ctx.pipelineModerationStatus.name() == 'PENDING_MANUAL'}" class="sd-badge sd-badge-warning">
+                        <i class="fas fa-hourglass-half"></i> Chờ Moderator
+                    </span>
+                    <span th:if="${ctx.pipelineModerationStatus != null and ctx.pipelineModerationStatus.name() == 'APPROVED'}" class="sd-badge sd-badge-success">
+                        <i class="fas fa-check"></i> Approved
+                    </span>
+                    <span th:if="${ctx.pipelineModerationStatus != null and ctx.pipelineModerationStatus.name() == 'REJECTED'}" class="sd-badge sd-badge-danger">
+                        <i class="fas fa-times"></i> Rejected
+                    </span>
+                    <span th:if="${ctx.pipelineModerationStatus != null and ctx.pipelineModerationStatus.name() == 'ESCALATED'}" class="sd-badge sd-badge-red">
+                        <i class="fas fa-arrow-up"></i> Escalated
+                    </span>
+                </div>
+                <div class="sd-card-body">
+                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:24px;">
+                        <div>
+                            <label class="sd-form-label">Review ID</label>
+                            <code style="font-size:12px;" th:text="${ctx.reviewId}">id</code>
+                        </div>
+                        <div>
+                            <label class="sd-form-label">Ngày tạo</label>
+                            <span th:if="${ctx.createdAt != null}"
+                                  th:text="${#temporals.format(ctx.createdAt, 'dd/MM/yyyy HH:mm:ss')}">—</span>
+                            <span th:unless="${ctx.createdAt != null}">—</span>
+                        </div>
+                        <div>
+                            <label class="sd-form-label">Customer ID</label>
+                            <code th:text="${ctx.customerId}">id</code>
+                        </div>
+                        <div>
+                            <label class="sd-form-label">Customer</label>
+                            <span th:text="${ctx.customerName != null ? ctx.customerName : 'Ẩn danh'}">User</span>
+                        </div>
+                        <div>
+                            <label class="sd-form-label">Product</label>
+                            <span th:text="${ctx.productName != null ? ctx.productName : '(deleted)'}">Product</span>
+                            <span class="sd-mono" style="font-size:11px;color:#64748b;" th:text="' · ' + ${ctx.productId}">id</span>
+                        </div>
+                        <div>
+                            <label class="sd-form-label">Rating</label>
+                            <span class="sd-badge sd-badge-warning" style="font-size:16px;">
+                                <span th:text="${ctx.rating}">5</span> <i class="fas fa-star"></i>
+                            </span>
+                        </div>
+                    </div>
+
+                    <div style="margin-bottom:24px;">
+                        <label class="sd-form-label">Nội dung đánh giá</label>
+                        <div style="background:#f8fafc;padding:16px;border-radius:8px;border:1px solid var(--border,#e2e8f0);">
+                            <p th:text="${ctx.comment != null ? ctx.comment : ''}" style="margin:0;white-space:pre-wrap;">Comment</p>
+                        </div>
+                    </div>
+
+                    <!-- Verified purchase (integration seam) -->
+                    <div th:if="${ctx.verifiedPurchase != null}" style="background:#ecfdf5;padding:16px;border-radius:8px;border:1px solid #a7f3d0;margin-bottom:24px;">
+                        <label class="sd-form-label" style="color:#047857;">Verified Purchase</label>
+                        <div>
+                            <strong>Đã mua hàng:</strong>
+                            <span th:text="${ctx.verifiedPurchase.verified() ? 'YES' : 'NO'}">—</span>
+                        </div>
+                        <div th:if="${ctx.verifiedPurchase.orderId() != null}">
+                            <strong>Order:</strong> <span th:text="${ctx.verifiedPurchase.orderId()}">—</span>
+                        </div>
+                        <div th:if="${ctx.verifiedPurchase.deliveredAt() != null}">
+                            <strong>Delivered at:</strong> <span th:text="${ctx.verifiedPurchase.deliveredAt()}">—</span>
+                        </div>
+                    </div>
+
+                    <!-- Hidden state (orthogonal to pipelineModerationStatus) -->
+                    <div th:if="${ctx.hidden}" style="background:#fff7ed;padding:16px;border-radius:8px;border:1px solid #fed7aa;margin-bottom:24px;">
+                        <label class="sd-form-label" style="color:#c2410c;">Đã ẩn (Hidden)</label>
+                        <div th:if="${ctx.hiddenReason != null}">
+                            <strong>Lý do:</strong> <span th:text="${ctx.hiddenReason}">reason</span>
+                        </div>
+                    </div>
+
+                    <!-- Actions — only show if pipeline is in PENDING_MANUAL (workable) -->
+                    <div th:if="${ctx.pipelineModerationStatus != null and ctx.pipelineModerationStatus.name() == 'PENDING_MANUAL'}"
+                         style="display:flex;gap:12px;flex-wrap:wrap;">
+                        <!-- Approve -->
+                        <form th:action="@{/moderator/reviews/{id}/approve(id=${ctx.reviewId}, page=${page}, size=${size}, moderationStatus=${moderationStatus}, rating=${rating}, q=${q})}"
+                              method="post" onsubmit="return confirm('Duyệt review này?');">
+                            <button type="submit" class="sd-btn sd-btn-success">
+                                <i class="fas fa-check"></i> Approve
+                            </button>
+                        </form>
+
+                        <!-- Reject (reason required) -->
+                        <details>
+                            <summary class="sd-btn sd-btn-danger" style="cursor:pointer; list-style:none;">
+                                <i class="fas fa-times"></i> Reject
+                            </summary>
+                            <form th:action="@{/moderator/reviews/{id}/reject(id=${ctx.reviewId}, page=${page}, size=${size}, moderationStatus=${moderationStatus}, rating=${rating}, q=${q})}"
+                                  method="post"
+                                  style="margin-top:0.5rem; display:flex; gap:8px; align-items:start; flex-wrap:wrap;">
+                                <textarea name="reason" required minlength="3"
+                                          placeholder="Lý do từ chối (bắt buộc)"
+                                          style="flex:1;min-width:260px;min-height:60px;padding:8px;border:1px solid var(--border,#e2e8f0);border-radius:6px;"></textarea>
+                                <button type="submit" class="sd-btn sd-btn-danger"
+                                        onclick="return confirm('Từ chối review này?');">
+                                    <i class="fas fa-times"></i> Xác nhận Reject
+                                </button>
+                            </form>
+                        </details>
+
+                        <!-- Hide (reason required) -->
+                        <details>
+                            <summary class="sd-btn sd-btn-warning" style="cursor:pointer; list-style:none;">
+                                <i class="fas fa-eye-slash"></i> Hide
+                            </summary>
+                            <form th:action="@{/moderator/reviews/{id}/hide(id=${ctx.reviewId}, page=${page}, size=${size}, moderationStatus=${moderationStatus}, rating=${rating}, q=${q})}"
+                                  method="post"
+                                  style="margin-top:0.5rem; display:flex; gap:8px; align-items:start; flex-wrap:wrap;">
+                                <textarea name="reason" required minlength="3"
+                                          placeholder="Lý do ẩn review (bắt buộc)"
+                                          style="flex:1;min-width:260px;min-height:60px;padding:8px;border:1px solid var(--border,#e2e8f0);border-radius:6px;"></textarea>
+                                <button type="submit" class="sd-btn sd-btn-warning"
+                                        onclick="return confirm('Ẩn review này?');">
+                                    <i class="fas fa-eye-slash"></i> Xác nhận Hide
+                                </button>
+                            </form>
+                        </details>
+
+                        <!-- Escalate (reason required) -->
+                        <details>
+                            <summary class="sd-btn sd-btn-secondary" style="cursor:pointer; list-style:none;">
+                                <i class="fas fa-arrow-up"></i> Escalate
+                            </summary>
+                            <form th:action="@{/moderator/reviews/{id}/escalate(id=${ctx.reviewId}, page=${page}, size=${size}, moderationStatus=${moderationStatus}, rating=${rating}, q=${q})}"
+                                  method="post"
+                                  style="margin-top:0.5rem; display:flex; gap:8px; align-items:start; flex-wrap:wrap;">
+                                <textarea name="reason" required minlength="3"
+                                          placeholder="Lý do leo thang (bắt buộc)"
+                                          style="flex:1;min-width:260px;min-height:60px;padding:8px;border:1px solid var(--border,#e2e8f0);border-radius:6px;"></textarea>
+                                <button type="submit" class="sd-btn sd-btn-secondary"
+                                        onclick="return confirm('Leo thang review này?');">
+                                    <i class="fas fa-arrow-up"></i> Xác nhận Escalate
+                                </button>
+                            </form>
+                        </details>
+                    </div>
+
+                    <!-- Unhide action — orthogonal to pipelineModerationStatus -->
+                    <div th:if="${ctx.hidden}"
+                         style="margin-top:0.5rem;">
+                        <form th:action="@{/moderator/reviews/{id}/unhide(id=${ctx.reviewId}, page=${page}, size=${size}, moderationStatus=${moderationStatus}, rating=${rating}, q=${q})}"
+                              method="post" onsubmit="return confirm('Khôi phục review này?');">
+                            <button type="submit" class="sd-btn sd-btn-success">
+                                <i class="fas fa-eye"></i> Unhide
+                            </button>
+                        </form>
+                    </div>
+
+                    <!-- Final-state notice -->
+                    <div th:if="${ctx.pipelineModerationStatus != null and (ctx.pipelineModerationStatus.name() == 'APPROVED' or ctx.pipelineModerationStatus.name() == 'REJECTED' or ctx.pipelineModerationStatus.name() == 'ESCALATED')}"
+                         style="background:#f1f5f9;padding:16px;border-radius:8px;border:1px solid #cbd5e1;">
+                        <strong>Trạng thái cuối:</strong>
+                        <span th:text="${ctx.pipelineModerationStatus.name()}">—</span>
+                        <p style="margin:0.5rem 0 0;color:#64748b;">Không thể xử lý tiếp trên pipeline.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Sidebar -->
+        <div>
+            <!-- Shop / Vendor context -->
+            <div class="sd-card" style="margin-bottom:16px;">
+                <div class="sd-card-header">
+                    <h3 class="sd-card-title">
+                        <i class="fas fa-store"></i>
+                        Shop / Vendor
+                    </h3>
+                </div>
+                <div class="sd-card-body">
+                    <table class="sd-table">
+                        <tbody>
+                            <tr><th>Shop</th><td th:text="${ctx.shopName != null ? ctx.shopName : '—'}">—</td></tr>
+                            <tr><th>Vendor</th><td th:text="${ctx.vendorName != null ? ctx.vendorName : '—'}">—</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Report Info (integration seam) -->
+            <div class="sd-card" th:if="${ctx.reportSummary != null and ctx.reportSummary.reportCount() > 0}">
+                <div class="sd-card-header">
+                    <h3 class="sd-card-title">
+                        <i class="fas fa-flag" style="color:#ef4444;"></i>
+                        Báo cáo vi phạm
+                    </h3>
+                </div>
+                <div class="sd-card-body">
+                    <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px;">
+                        <div style="font-size:32px;font-weight:700;color:#ef4444;"
+                             th:text="${ctx.reportSummary.reportCount()}">0</div>
+                        <div style="font-size:13px;color:#64748b;">lượt report</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Violation context (integration seam) -->
+            <div class="sd-card" th:if="${ctx.violationContext != null and ctx.violationContext.status() != null and ctx.violationContext.status() != 'NOT_AVAILABLE'}">
+                <div class="sd-card-header">
+                    <h3 class="sd-card-title">
+                        <i class="fas fa-triangle-exclamation" style="color:#f59e0b;"></i>
+                        Violation tích lũy
+                    </h3>
+                </div>
+                <div class="sd-card-body">
+                    <div>
+                        <strong>Severity:</strong>
+                        <span th:text="${ctx.violationContext.severity() != null ? ctx.violationContext.severity() : '—'}">—</span>
+                    </div>
+                    <div>
+                        <strong>Reason:</strong>
+                        <span th:text="${ctx.violationContext.reason() != null ? ctx.violationContext.reason() : '—'}">—</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <style>
+        @media (max-width: 900px) {
+            .review-detail-grid {
+                grid-template-columns: 1fr !important;
+            }
+        }
+    </style>
+</main>
+
+<th:block th:fragment="page-scripts"></th:block>
+</body>
+</html>

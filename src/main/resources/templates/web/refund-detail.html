@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleath.org/extras/springsecurity6"
+      th:replace="~{layout/web-layout :: layout(title='Chi tiết hoàn tiền - CNJ70 Shop', content=~{::main-content}, scripts=~{::page-scripts}, pageStyles=~{::page-styles})}">
+<head>
+    <title>Chi tiết hoàn tiền - CNJ70 Shop</title>
+    <th:block th:fragment="page-styles">
+        <link rel="stylesheet" th:href="@{/css/refund.css}">
+    </th:block>
+</head>
+<body>
+<main th:fragment="main-content" class="refund-page">
+
+    <!-- Hero -->
+    <section class="refund-hero">
+        <div class="container">
+            <nav class="refund-breadcrumb">
+                <a th:href="@{/home}"><i class="fas fa-home"></i> Trang chủ</a>
+                <i class="fas fa-chevron-right"></i>
+                <a th:href="@{/refunds}">Yêu cầu hoàn tiền</a>
+                <i class="fas fa-chevron-right"></i>
+                <span th:text="${refund.id}">ID</span>
+            </nav>
+            <div class="refund-hero-inner">
+                <div class="refund-hero-left">
+                    <span class="refund-hero-tag">
+                        <i class="fas fa-wallet"></i> Chi tiết hoàn tiền
+                    </span>
+                    <h1>
+                        Yêu cầu hoàn tiền
+                        <span class="teal-word" th:text="'#' + ${refund.id}">#ID</span>
+                    </h1>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Body -->
+    <section class="refund-section">
+        <div class="container">
+
+            <!-- Error state -->
+            <div th:if="${error != null}" class="refund-empty">
+                <div class="refund-empty-inner">
+                    <div class="refund-empty-icon">
+                        <i class="fas fa-exclamation-triangle"></i>
+                    </div>
+                    <h3>Không thể tải thông tin</h3>
+                    <p th:text="${error}">Error message</p>
+                    <a th:href="@{/refunds}" class="refund-empty-btn">
+                        <i class="fas fa-arrow-left"></i> Quay lại
+                    </a>
+                </div>
+            </div>
+
+            <!-- Content -->
+            <div th:if="${error == null}" class="refund-detail-layout">
+
+                <!-- Main content -->
+                <div class="refund-detail-main">
+
+                    <!-- Status banner -->
+                    <div class="refund-status-banner" th:attr="data-status=${refund.status.name()}">
+                        <div class="refund-status-banner-icon">
+                            <i class="fas"
+                               th:classappend="${
+                                   refund.status.name() == 'REQUESTED' ? 'fa-hourglass-half' :
+                                   refund.status.name() == 'PROCESSING' ? 'fa-sync-alt' :
+                                   refund.status.name() == 'SUCCEEDED' ? 'fa-check-circle' :
+                                   refund.status.name() == 'FAILED' ? 'fa-times-circle' :
+                                   refund.status.name() == 'CANCELLED' ? 'fa-ban' :
+                                   'fa-folder'
+                               }"></i>
+                        </div>
+                        <div class="refund-status-banner-content">
+                            <span class="refund-status-banner-label">Trạng thái hoàn tiền</span>
+                            <h2 th:text="${statusLabel}">Status</h2>
+                            <p class="refund-status-banner-sub"
+                               th:text="${
+                                   refund.status.name() == 'REQUESTED' ? 'Yêu cầu của bạn đang chờ được xử lý' :
+                                   refund.status.name() == 'PROCESSING' ? 'Đơn vị thanh toán đang xử lý yêu cầu' :
+                                   refund.status.name() == 'SUCCEEDED' ? 'Tiền đã được hoàn vào tài khoản của bạn' :
+                                   refund.status.name() == 'FAILED' ? 'Yêu cầu hoàn tiền không thành công' :
+                                   refund.status.name() == 'CANCELLED' ? 'Yêu cầu đã bị hủy bỏ' :
+                                   'Đang chờ xử lý'
+                               }">Description</p>
+                        </div>
+                    </div>
+
+                    <!-- Amount card -->
+                    <div class="refund-detail-card">
+                        <div class="refund-detail-card-header">
+                            <h3><i class="fas fa-coins"></i> Số tiền hoàn tiền</h3>
+                        </div>
+                        <div class="refund-detail-card-body">
+                            <div class="refund-amount-grid">
+                                <div class="refund-amount-item">
+                                    <span class="refund-amount-label">Số tiền yêu cầu</span>
+                                    <span class="refund-amount-value" th:text="${refund.declaredAmount} + ' đ'">0đ</span>
+                                    <small class="refund-amount-note">Số tiền bạn đề xuất ban đầu</small>
+                                </div>
+                                <div class="refund-amount-item" th:if="${refund.settledAmount != null}">
+                                    <span class="refund-amount-label">Số tiền thực nhận</span>
+                                    <span class="refund-amount-value success" th:text="${refund.settledAmount} + ' đ'">0đ</span>
+                                    <small class="refund-amount-note">Số tiền thực tế được hoàn</small>
+                                </div>
+                                <div class="refund-amount-item" th:if="${refund.settledAmount == null and refund.status.name() == 'PROCESSING'}">
+                                    <span class="refund-amount-label">Số tiền thực nhận</span>
+                                    <span class="refund-amount-value" style="color: var(--muted);">Đang chờ...</span>
+                                    <small class="refund-amount-note">Sẽ được cập nhật khi hoàn tiền thành công</small>
+                                </div>
+                            </div>
+
+                            <!-- Provider info -->
+                            <div class="refund-provider-info" th:if="${refund.provider != null or refund.providerTransactionId != null}">
+                                <div class="refund-provider-row" th:if="${refund.provider != null}">
+                                    <span>Đơn vị xử lý</span>
+                                    <strong th:text="${refund.provider}">Provider</strong>
+                                </div>
+                                <div class="refund-provider-row" th:if="${refund.providerTransactionId != null}">
+                                    <span>Mã giao dịch</span>
+                                    <strong th:text="${refund.providerTransactionId}">TXN-ID</strong>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Result card (Success) -->
+                    <div th:if="${refund.status.name() == 'SUCCEEDED'}" class="refund-detail-card refund-result-card success">
+                        <div class="refund-detail-card-header">
+                            <h3><i class="fas fa-check-circle"></i> Kết quả xử lý</h3>
+                        </div>
+                        <div class="refund-detail-card-body">
+                            <div class="refund-result-icon">
+                                <i class="fas fa-check"></i>
+                            </div>
+                            <p class="refund-result-text">
+                                Yêu cầu hoàn tiền của bạn đã được xử lý thành công.
+                                <span th:if="${refund.settledAmount != null}">
+                                    Số tiền <strong th:text="${refund.settledAmount} + ' đ'">0đ</strong>
+                                    đã được hoàn vào tài khoản của bạn.
+                                </span>
+                                <span th:if="${refund.settledAt != null}">
+                                    Thời gian hoàn tiền: <strong th:text="${#temporals.format(refund.settledAt, 'dd/MM/yyyy HH:mm')}">Date</strong>
+                                </span>
+                            </p>
+                        </div>
+                    </div>
+
+                    <!-- Result card (Failed) -->
+                    <div th:if="${refund.status.name() == 'FAILED'}" class="refund-detail-card refund-result-card failed">
+                        <div class="refund-detail-card-header">
+                            <h3><i class="fas fa-times-circle"></i> Kết quả xử lý</h3>
+                        </div>
+                        <div class="refund-detail-card-body">
+                            <div class="refund-result-icon">
+                                <i class="fas fa-times"></i>
+                            </div>
+                            <p class="refund-result-text">
+                                Yêu cầu hoàn tiền không thành công.
+                                <span th:if="${refund.providerMessage != null}">
+                                    Lý do: <strong th:text="${refund.providerMessage}">Error message</strong>
+                                </span>
+                                <span th:if="${refund.providerMessage == null}">
+                                    Vui lòng liên hệ bộ phận hỗ trợ để được giúp đỡ.
+                                </span>
+                            </p>
+                        </div>
+                    </div>
+
+                    <!-- Result card (Cancelled) -->
+                    <div th:if="${refund.status.name() == 'CANCELLED'}" class="refund-detail-card refund-result-card">
+                        <div class="refund-detail-card-header">
+                            <h3><i class="fas fa-ban"></i> Kết quả xử lý</h3>
+                        </div>
+                        <div class="refund-detail-card-body">
+                            <div class="refund-result-icon" style="background: var(--bg-alt); color: var(--muted);">
+                                <i class="fas fa-ban"></i>
+                            </div>
+                            <p class="refund-result-text">
+                                Yêu cầu hoàn tiền đã bị hủy bỏ.
+                                Nếu bạn cần hỗ trợ, vui lòng liên hệ bộ phận chăm sóc khách hàng.
+                            </p>
+                        </div>
+                    </div>
+
+                    <!-- Timeline -->
+                    <div class="refund-timeline-card">
+                        <h3><i class="fas fa-history"></i> Lịch sử xử lý</h3>
+                        <ul class="refund-timeline">
+                            <li th:each="event, iter : ${timeline}"
+                                th:classappend="${event.completed ? 'completed' : 'current'}">
+                                <div class="refund-timeline-icon">
+                                    <i th:class="${event.icon}"></i>
+                                </div>
+                                <div class="refund-timeline-body">
+                                    <strong th:text="${event.title}">Title</strong>
+                                    <p th:text="${event.description}">Description</p>
+                                    <small th:if="${event.timestamp != null}"
+                                           th:text="${#temporals.format(event.timestamp, 'dd/MM/yyyy HH:mm')}">Date</small>
+                                </div>
+                            </li>
+                        </ul>
+                    </div>
+
+                </div>
+
+                <!-- Sidebar -->
+                <div class="refund-detail-side">
+
+                    <!-- Info card -->
+                    <div class="refund-info-card">
+                        <h3><i class="fas fa-info-circle"></i> Thông tin yêu cầu</h3>
+                        <ul class="refund-info-list">
+                            <li>
+                                <span>Mã yêu cầu</span>
+                                <code th:text="${refund.id}">ID</code>
+                            </li>
+                            <li th:if="${refund.orderId != null}">
+                                <span>Mã đơn hàng</span>
+                                <code th:text="${refund.orderId}">OID</code>
+                            </li>
+                            <li th:if="${refund.complaintId != null}">
+                                <span>Mã khiếu nại</span>
+                                <code th:text="${refund.complaintId}">CID</code>
+                            </li>
+                            <li th:if="${refund.returnId != null}">
+                                <span>Mã trả hàng</span>
+                                <code th:text="${refund.returnId}">RID</code>
+                            </li>
+                            <li>
+                                <span>Ngày tạo</span>
+                                <strong th:if="${refund.createdAt != null}"
+                                        th:text="${#temporals.format(refund.createdAt, 'dd/MM/yyyy HH:mm')}">Date</strong>
+                            </li>
+                            <li th:if="${refund.updatedAt != null}">
+                                <span>Cập nhật lần cuối</span>
+                                <strong th:text="${#temporals.format(refund.updatedAt, 'dd/MM/yyyy HH:mm')}">Date</strong>
+                            </li>
+                            <li th:if="${refund.requestedByRole != null}">
+                                <span>Người yêu cầu</span>
+                                <strong th:text="${refund.requestedByRole}">Role</strong>
+                            </li>
+                        </ul>
+                    </div>
+
+                    <!-- Back button -->
+                    <a th:href="@{/refunds}" class="refund-card-detail-btn" style="text-align: center;">
+                        <i class="fas fa-arrow-left"></i>
+                        Quay lại danh sách
+                    </a>
+
+                </div>
+            </div>
+
+        </div>
+    </section>
+
+</main>
+
+<th:block th:fragment="page-scripts">
+    <script th:src="@{/js/home.js}" defer></script>
+</th:block>
+</body>
+</html>

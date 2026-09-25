@@ -8,6 +8,7 @@ import com.ecommerce.cnj70.repository.ShopRepository;
 import com.ecommerce.cnj70.security.CustomUserDetails;
 import com.ecommerce.cnj70.service.ViolationService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -19,8 +20,12 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 
+@Slf4j
 @Controller
 @RequestMapping("/admin/violations")
 @RequiredArgsConstructor
@@ -115,6 +120,68 @@ public class AdminViolationController {
             redirectAttributes.addFlashAttribute("flashError", "Lỗi: " + e.getMessage());
         }
         return "redirect:/admin/violations";
+    }
+
+    @GetMapping("/{id}")
+    public String detail(@PathVariable String id,
+                         @RequestParam(defaultValue = "0") int page,
+                         @RequestParam(defaultValue = "10") int size,
+                         @RequestParam(required = false) String status,
+                         @RequestParam(required = false) String severity,
+                         @RequestParam(required = false) String resourceType,
+                         Model model) {
+        Violation v = null;
+        try {
+            v = violationService.getById(id);
+        } catch (Exception ex) {
+            log.warn("Admin violation detail lookup failed for id={}: {}", id, ex.getMessage());
+        }
+        if (v == null) {
+            model.addAttribute("error", "Không tìm thấy violation với ID: " + id);
+            model.addAttribute("page", page);
+            model.addAttribute("size", size);
+            model.addAttribute("status", status);
+            model.addAttribute("severity", severity);
+            model.addAttribute("resourceType", resourceType);
+            return "admin/violation-detail";
+        }
+        Map<String, Object> view = new HashMap<>();
+        view.put("id", v.getId());
+        view.put("severity", v.getSeverity() != null ? v.getSeverity().name() : null);
+        view.put("status", v.isActive() ? "OPEN" : "RESOLVED");
+        view.put("resourceType", "SHOP");
+        view.put("resourceId", v.getShopId());
+        view.put("vendorId", null);
+        view.put("vendorName", null);
+        view.put("shopId", v.getShopId());
+        view.put("shopName", null);
+        if (v.getShopId() != null) {
+            shopRepository.findById(v.getShopId()).ifPresent(shop -> {
+                view.put("shopName", shop.getShopName());
+                view.put("vendorId", shop.getOwnerId());
+                view.put("vendorName", shop.getOwnerId());
+            });
+        }
+        view.put("policyCode", v.getType() != null ? v.getType().name() : null);
+        view.put("violationCode", v.getType() != null ? v.getType().name() : null);
+        view.put("action", v.getSeverity() != null ? v.getSeverity().name() : null);
+        view.put("source", v.getCreatedBy());
+        view.put("description", v.getReason());
+        view.put("resolutionNote", v.getResolutionNote());
+        view.put("evidence", new ArrayList<>());
+        view.put("createdAt", v.getCreatedAt());
+        view.put("resolvedAt", v.getResolvedAt());
+        view.put("moderatorId", null);
+        view.put("moderatorEmail", null);
+        view.put("escalationId", null);
+
+        model.addAttribute("v", view);
+        model.addAttribute("page", page);
+        model.addAttribute("size", size);
+        model.addAttribute("status", status);
+        model.addAttribute("severity", severity);
+        model.addAttribute("resourceType", resourceType);
+        return "admin/violation-detail";
     }
 
     private static String emptyToNull(String s) {

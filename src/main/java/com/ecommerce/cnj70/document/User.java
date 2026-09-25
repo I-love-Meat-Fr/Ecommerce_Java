@@ -21,37 +21,83 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 @Document(collection = "users")
 public class User {
-    
+
     @Id
     private String id;
-    
+
     @Indexed(unique = true)
     private String email;
-    
+
     private String password;
-    
+
     private String fullName;
-    
+
     private String phone;
-    
+
     private String address;
-    
+
     private UserRole role;
-    
+
     @Builder.Default
     private AccountStatus status = AccountStatus.UNVERIFIED;
-    
+
     private String shopId;
-    
+
     private String avatarUrl;
-    
-    /** Trạng thái KYC (denormalized từ KycProfile để check nhanh) */
+
+    // ===== TASK #19 PII Security: AES-256-GCM encrypted fields =====
+    // Lưu dạng Base64(iv || ciphertext || authTag). KHÔNG lưu plaintext.
+    // Giải mã chỉ trong KycService/Admin service khi cần hiển thị.
+    private String encryptedCitizenId;    // CCCD/CMND
+    private String encryptedTaxCode;       // Mã số thuế (nếu có)
+    private String encryptedBankAccount;   // Số tài khoản ngân hàng
+
+    // ===== TASK #22: Terms + Privacy acceptance tracking =====
+
+    /** Thời điểm User accept Điều khoản sử dụng. Null = chưa accept. */
+    private LocalDateTime acceptedTermsAt;
+
+    /** Version của Terms đã accept (tăng mỗi khi Admin update Terms). */
+    private Integer acceptedTermsVersion;
+
+    /** Thời điểm User accept Chính sách bảo mật. */
+    private LocalDateTime acceptedPrivacyAt;
+
+    /** Version của Privacy đã accept. */
+    private Integer acceptedPrivacyVersion;
+
+    /**
+     * User đã opt-in nhận email marketing hay chưa.
+     * - null = chưa quyết định (legacy users)
+     * - true = đã opt-in
+     * - false = đã opt-out (mặc định)
+     */
+    private Boolean marketingOptIn;
+
+    // ===== KycProfile (denormalized từ KycProfile để check nhanh) =====
+    /** Trạng thái KYC (đồng bộ từ KycProfile.status bởi VendorKycService/ThirdPartyKycVerifier/AdminKycService). */
     @Builder.Default
     private KycStatus kycStatus = KycStatus.NOT_SUBMITTED;
-    
+
+    /**
+     * Phase 3A — Admin who most recently enforced on this user
+     * (Ban / Reinstate).
+     */
+    private String enforcementActorId;
+
+    /**
+     * Phase 3A — Reason supplied with the most recent enforcement action.
+     */
+    private String enforcementReason;
+
+    /**
+     * Phase 3A — Timestamp of the most recent enforcement action.
+     */
+    private LocalDateTime enforcementAt;
+
     @CreatedDate
     private LocalDateTime createdAt;
-    
+
     @LastModifiedDate
     private LocalDateTime updatedAt;
 
@@ -60,4 +106,3 @@ public class User {
         return kycStatus == KycStatus.APPROVED;
     }
 }
-

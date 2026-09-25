@@ -18,5 +18,13 @@ public interface AdminUserService {
 
     void unlockUser(String id);
 
+    /**
+     * Phase 3 §3.7 — Edit User Status.
+     * Cho phép Admin/Moderator đổi status giữa ACTIVE / LOCKED / UNVERIFIED
+     * (AccountStatus enum hiện có). Có self-action protection, validation
+     * transition, và AuditLog.
+     */
+    void updateUserStatus(String id, AccountStatus newStatus, String currentUserId);
+
     AccountStatus getCurrentStatus(String id);
 }

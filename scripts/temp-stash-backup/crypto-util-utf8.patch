@@ -1,0 +1,125 @@
+diff --git a/src/main/java/com/ecommerce/cnj70/util/CryptoUtil.java b/src/main/java/com/ecommerce/cnj70/util/CryptoUtil.java
+index b34968e..c79729f 100644
+--- a/src/main/java/com/ecommerce/cnj70/util/CryptoUtil.java
++++ b/src/main/java/com/ecommerce/cnj70/util/CryptoUtil.java
+@@ -1,6 +1,8 @@
+ package com.ecommerce.cnj70.util;
+ 
++import io.github.cdimascio.dotenv.Dotenv;
+ import lombok.extern.slf4j.Slf4j;
++import org.springframework.core.env.Environment;
+ import org.springframework.stereotype.Component;
+ 
+ import javax.crypto.Cipher;
+@@ -41,9 +43,13 @@ public class CryptoUtil {
+     private final SecretKey secretKey;
+     private final SecureRandom secureRandom;
+ 
+-    public CryptoUtil() {
++    /**
++     * Constructor c├│ tham sß╗æ - Spring sß║╜ tß╗▒ inject Environment.
++     * Giß╗» fallback no-arg cho unit test c┼⌐ (nß║┐u c├│) d├╣ng trß╗▒c tiß║┐p.
++     */
++    public CryptoUtil(Environment environment) {
+         this.secureRandom = new SecureRandom();
+-        this.secretKey = loadKey();
++        this.secretKey = loadKey(environment);
+     }
+ 
+     /**
+@@ -130,18 +136,89 @@ public class CryptoUtil {
+ 
+     /**
+      * Load AES-256 key tß╗½ environment variable.
++     * Thß╗⌐ tß╗▒ ╞░u ti├¬n (an to├án - chß╗ë ─æß╗ìc, kh├┤ng ghi/derive):
++     *   1. JVM system property (System.getProperty) - cho ph├⌐p truyß╗ün -Denryption_key=...
++     *   2. Spring Environment (bao gß╗ôm MapPropertySource "dotenv" tß╗½ DotenvInitializer
++     *      + application.yml ${ENCRYPTION_KEY:...})
++     *   3. Direct Dotenv load tß╗½ file .env (fallback ─æß╗Öc lß║¡p - kh├┤ng phß╗Ñ thuß╗Öc Initializer)
++     *   4. OS environment variable (System.getenv)
+      * Key phß║úi l├á Base64-encoded 32-byte key.
++     * Nß║┐u kh├┤ng t├¼m thß║Ñy ß╗ƒ bß║Ñt kß╗│ nguß╗ôn n├áo ΓåÆ throw IllegalStateException
++     * ─æß╗â bß║úo vß╗ç PII (kh├┤ng tß╗▒ sinh key, kh├┤ng default).
+      */
+-    private SecretKey loadKey() {
++    private SecretKey loadKey(Environment environment) {
++        String keyBase64 = resolveKey(environment);
++        return buildKey(keyBase64);
++    }
++
++    private String resolveKey(Environment environment) {
++        // 1. JVM system property (╞░u ti├¬n cao nhß║Ñt - cho ph├⌐p -D override)
+         String keyBase64 = System.getProperty(ENV_KEY);
++        if (keyBase64 != null && !keyBase64.isBlank()) {
++            log.info("ENCRYPTION_KEY resolved from JVM system property");
++            return keyBase64;
++        }
+ 
+-        if (keyBase64 == null || keyBase64.isBlank()) {
+-            log.error("ENCRYPTION_KEY environment variable is not set. PII encryption disabled.");
+-            throw new IllegalStateException(
+-                    "ENCRYPTION_KEY env variable is required for PII encryption. " +
+-                    "Generate one with: openssl rand -base64 32");
++        // 2. Spring Environment - bao gß╗ôm cß║ú .env (qua DotenvInitializer MapPropertySource)
++        //    v├á application.yml ${ENCRYPTION_KEY:...}
++        if (environment != null) {
++            keyBase64 = environment.getProperty(ENV_KEY);
++            if (keyBase64 != null && !keyBase64.isBlank()) {
++                log.info("ENCRYPTION_KEY resolved from Spring Environment (likely .env via DotenvInitializer)");
++                return keyBase64;
++            }
++        }
++
++        // 3. Direct Dotenv load (fallback ─æß╗Öc lß║¡p - ─æß╗ìc trß╗▒c tiß║┐p tß╗½ file .env nß║┐u
++        //    DotenvInitializer ch╞░a populate Environment, hoß║╖c CryptoUtil ─æ╞░ß╗úc khß╗ƒi tß║ío
++        //    tr╞░ß╗¢c/sau DotenvInitializer theo thß╗⌐ tß╗▒ bß║Ñt kß╗│).
++        try {
++            Dotenv dotenv = Dotenv.configure()
++                    .ignoreIfMalformed()
++                    .ignoreIfMissing()
++                    .load();
++            keyBase64 = dotenv.get(ENV_KEY);
++            if (keyBase64 != null && !keyBase64.isBlank()) {
++                log.info("ENCRYPTION_KEY resolved from direct Dotenv (.env file)");
++                // ─Éß╗ông thß╗¥i set v├áo JVM property + Spring Environment cho c├íc lß║ºn tra cß╗⌐u sau
++                System.setProperty(ENV_KEY, keyBase64);
++                if (environment instanceof org.springframework.core.env.ConfigurableEnvironment ce) {
++                    if (!ce.getPropertySources().contains("dotenv-direct")) {
++                        java.util.Map<String, Object> map = new java.util.HashMap<>();
++                        map.put(ENV_KEY, keyBase64);
++                        ce.getPropertySources().addFirst(
++                                new org.springframework.core.env.MapPropertySource("dotenv-direct", map));
++                    }
++                }
++                return keyBase64;
++            }
++        } catch (Exception e) {
++            log.warn("Direct Dotenv load failed in CryptoUtil: {}", e.getMessage());
+         }
+ 
++        // 4. OS environment variable (cuß╗æi c├╣ng)
++        try {
++            keyBase64 = System.getenv(ENV_KEY);
++            if (keyBase64 != null && !keyBase64.isBlank()) {
++                log.info("ENCRYPTION_KEY resolved from OS environment variable");
++                return keyBase64;
++            }
++        } catch (SecurityException ignored) {
++            // SecurityManager cß║Ñm getenv() - bß╗Å qua
++        }
++
++        log.error("ENCRYPTION_KEY is not set in any source: " +
++                "JVM system property (-D...), Spring Environment (.env via DotenvInitializer or application.yml), " +
++                "direct .env file (Dotenv), or OS environment variable.");
++        throw new IllegalStateException(
++                "ENCRYPTION_KEY is required for PII encryption. " +
++                "Set it via one of: " +
++                "(1) export ENCRYPTION_KEY=\"$(openssl rand -base64 32)\", " +
++                "(2) th├¬m d├▓ng ENCRYPTION_KEY=... v├áo file .env ß╗ƒ th╞░ mß╗Ñc gß╗æc project, " +
++                "(3) th├¬m ENCRYPTION_KEY=... v├áo application.yml (chß╗ë d├╣ng cho dev/test).");
++    }
++
++    private SecretKey buildKey(String keyBase64) {
+         try {
+             byte[] keyBytes = Base64.getDecoder().decode(keyBase64);
+ 

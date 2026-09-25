@@ -1,32 +1,51 @@
 package com.ecommerce.cnj70.service.impl;
 
 import com.ecommerce.cnj70.document.Category;
+import com.ecommerce.cnj70.document.ModerationHistory;
 import com.ecommerce.cnj70.document.Product;
 import com.ecommerce.cnj70.document.ProductSpecification;
 import com.ecommerce.cnj70.document.ProductVariant;
+import com.ecommerce.cnj70.dto.moderation.AuditEvent;
+import com.ecommerce.cnj70.dto.moderation.AutoModerationResult;
 import com.ecommerce.cnj70.dto.request.ProductFormReq;
+import com.ecommerce.cnj70.enums.AutoModerationStatus;
+import com.ecommerce.cnj70.enums.ModerationAction;
+import com.ecommerce.cnj70.enums.ModerationStatus;
 import com.ecommerce.cnj70.enums.ProductStatus;
+import com.ecommerce.cnj70.enums.UserRole;
 import com.ecommerce.cnj70.exception.BadRequestException;
 import com.ecommerce.cnj70.exception.ResourceNotFoundException;
+import com.ecommerce.cnj70.exception.UnauthorizedException;
 import com.ecommerce.cnj70.repository.CategoryRepository;
+import com.ecommerce.cnj70.repository.ModerationHistoryRepository;
 import com.ecommerce.cnj70.repository.ProductRepository;
+import com.ecommerce.cnj70.service.AutoModerationResultProvider;
+import com.ecommerce.cnj70.service.AuditEventWriter;
 import com.ecommerce.cnj70.service.ProductService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class ProductServiceImpl implements ProductService {
 
     private final ProductRepository productRepository;
     private final CategoryRepository categoryRepository;
+    private final ModerationHistoryRepository historyRepository;
+    private final AutoModerationResultProvider autoModerationResultProvider;
+    private final AuditEventWriter auditEventWriter;
 
     @Override
     @Transactional
@@ -63,19 +82,75 @@ public class ProductServiceImpl implements ProductService {
                 .shopId(shopId)
                 .shopName(shopName)
                 .status(request.getStatus() != null ? request.getStatus() : ProductStatus.ACTIVE)
+                // Phase 2 §13 — mọi Product mới phải vào Moderation queue.
+                // Auto Moderation contract sẽ (khi wire vào real backend) nâng cấp
+                // thành AUTO_PASSED / AUTO_REJECTED; nếu không có backend thật
+                // thì giữ PENDING_MANUAL và Moderator xử lý thủ công.
+                .moderationStatus(ModerationStatus.PENDING_MANUAL)
                 .build();
 
         if (product.getImageUrls() != null && !product.getImageUrls().isEmpty()) {
             product.setThumbnailUrl(product.getImageUrls().get(0));
         }
 
-        return productRepository.save(product);
+        Product saved = productRepository.save(product);
+
+        // Phase 2 §13 + §57 — thử lấy Auto Moderation result (best-effort).
+        // Nếu không có real backend (NoopAutoModerationResultProvider) → Optional.empty()
+        // và Product giữ PENDING_MANUAL. KHÔNG fake production data.
+        try {
+            Optional<AutoModerationResult> auto = autoModerationResultProvider.getResult(saved.getId());
+            if (auto.isPresent()) {
+                AutoModerationResult result = auto.get();
+                ModerationStatus next = mapAutoStatus(result);
+                saved.setModerationStatus(next);
+                saved.setModerationReason(result.getReason());
+                saved.setModerationAt(result.getCheckedAt() != null ? result.getCheckedAt() : LocalDateTime.now());
+                saved = productRepository.save(saved);
+            }
+        } catch (RuntimeException ex) {
+            log.warn("AutoModeration lookup failed for productId={}: {}", saved.getId(), ex.getMessage());
+        }
+
+        // Phase 2 §13 — emit History + Audit khi Product submit vào queue
+        recordSubmissionHistory(saved);
+        emitSubmissionAudit(saved);
+
+        return saved;
+    }
+
+    /**
+     * Map AutoModerationResult.status sang Product.moderationStatus.
+     * AutoModerationStatus hiện có: AUTO_PASSED / AUTO_REJECTED / PENDING_MANUAL.
+     * Các giá trị APPROVED/REJECTED của ModerationStatus không suy ra từ AutoModerationStatus
+     * (Auto engine chỉ quyết định pass/reject/manual-review).
+     */
+    private static ModerationStatus mapAutoStatus(AutoModerationResult result) {
+        if (result == null || result.getStatus() == null) {
+            return ModerationStatus.PENDING_MANUAL;
+        }
+        AutoModerationStatus s = result.getStatus();
+        switch (s) {
+            case AUTO_PASSED:
+                return ModerationStatus.AUTO_PASSED;
+            case AUTO_REJECTED:
+                return ModerationStatus.AUTO_REJECTED;
+            case PENDING_MANUAL:
+            default:
+                return ModerationStatus.PENDING_MANUAL;
+        }
     }
 
     @Override
     @Transactional
     public Product updateProduct(String id, ProductFormReq request) {
         Product product = getProductById(id);
+
+        // Phase 2 §47 — Backend ownership guard (defense-in-depth).
+        // VendorService.validateProductOwnership() được controller gọi trước,
+        // nhưng service cũng enforce để phòng khi controller bypass (API trực tiếp,
+        // internal call, batch job).
+        enforceOwnership(product);
 
         if (request.getName() != null && !request.getName().isBlank()) {
             product.setName(request.getName());
@@ -132,7 +207,65 @@ public class ProductServiceImpl implements ProductService {
             product.setStatus(request.getStatus());
         }
 
+        // Phase 2 §13 (Resubmit flow) — Khi vendor sửa Product đang REJECTED,
+        // đưa vào lại Moderation queue. APPROVED/ESCALATED giữ nguyên (không tự ý chuyển).
+        boolean shouldResubmit = product.getModerationStatus() == ModerationStatus.REJECTED;
+        if (shouldResubmit) {
+            product.setModerationStatus(ModerationStatus.PENDING_MANUAL);
+            product.setModerationReason(null);
+            product.setModerationAt(null);
+            product.setModerationActorId(null);
+            log.info("Product resubmitted to moderator queue: productId={}", product.getId());
+        }
+
         return productRepository.save(product);
+    }
+
+    /**
+     * Phase 2 §13 — Ghi ModerationHistory khi Product submit vào queue lần đầu.
+     */
+    private void recordSubmissionHistory(Product product) {
+        try {
+            ModerationHistory history = ModerationHistory.builder()
+                    .resourceType("PRODUCT")
+                    .resourceId(product.getId())
+                    .resourceName(product.getName())
+                    .action(ModerationAction.APPROVE) // marker = "submission" trước khi có action enum riêng
+                    .beforeStatus(null)
+                    .afterStatus(ModerationStatus.PENDING_MANUAL)
+                    .reason("Vendor tạo Product mới")
+                    .moderatorRole(UserRole.VENDOR)
+                    .moderatorEmail(product.getShopId())
+                    .build();
+            historyRepository.save(history);
+        } catch (RuntimeException ex) {
+            log.warn("Failed to record submission history for productId={}: {}",
+                    product.getId(), ex.getMessage());
+        }
+    }
+
+    /**
+     * Phase 2 §13 — Emit AuditEvent khi Product được submit vào Moderation queue.
+     */
+    private void emitSubmissionAudit(Product product) {
+        try {
+            AuditEvent event = AuditEvent.builder()
+                    .actorId(product.getShopId())
+                    .actorEmail(product.getShopId())
+                    .role(UserRole.VENDOR)
+                    .action("PRODUCT_SUBMIT")
+                    .resourceType("PRODUCT")
+                    .resourceId(product.getId())
+                    .before("DRAFT")
+                    .after(ModerationStatus.PENDING_MANUAL.name())
+                    .reason("Vendor submit Product vào Moderation queue")
+                    .createdAt(LocalDateTime.now())
+                    .build();
+            auditEventWriter.write(event);
+        } catch (RuntimeException ex) {
+            log.warn("Failed to emit submission audit for productId={}: {}",
+                    product.getId(), ex.getMessage());
+        }
     }
 
     private List<ProductSpecification> sanitizeSpecifications(List<ProductSpecification> specs) {
@@ -188,11 +321,50 @@ public class ProductServiceImpl implements ProductService {
     public void deleteProduct(String id) {
         Product product = getProductById(id);
 
+        // Phase 2 §47 — Backend ownership guard (defense-in-depth)
+        enforceOwnership(product);
+
         if (product.getStatus() == ProductStatus.HIDDEN) {
             throw new BadRequestException("Sản phẩm đã bị xóa trước đó");
         }
 
         productRepository.deleteById(id);
+    }
+
+    /**
+     * Phase 2 §47 — Backend ownership guard. Kiểm tra Product.shopId khớp với
+     * Shop của user hiện tại. Nếu ADMIN/MODERATOR đăng nhập → bypass (theo
+     * permission matrix Phase 2 §49). Nếu customer/anonymous → luôn DENY.
+     *
+     * <p>Không throw exception khi authentication không phải VENDOR — chỉ khi
+     * VENDOR đang cố truy cập Product của shop khác (IDOR).</p>
+     */
+    private void enforceOwnership(Product product) {
+        var auth = SecurityContextHolder.getContext().getAuthentication();
+        if (auth == null) return;
+        boolean isPrivileged = auth.getAuthorities().stream()
+                .anyMatch(a -> "ROLE_ADMIN".equals(a.getAuthority())
+                            || "ROLE_MODERATOR".equals(a.getAuthority()));
+        if (isPrivileged) return;
+
+        // Vendor path: chỉ sửa Product của chính shop mình
+        String currentShopId = resolveCurrentShopId(auth);
+        if (currentShopId == null) {
+            throw new UnauthorizedException(
+                    "Vui lòng đăng nhập với tài khoản Vendor để thao tác Product");
+        }
+        if (!currentShopId.equals(product.getShopId())) {
+            throw new UnauthorizedException(
+                    "Bạn không có quyền thao tác sản phẩm của Shop khác");
+        }
+    }
+
+    private String resolveCurrentShopId(org.springframework.security.core.Authentication auth) {
+        Object principal = auth.getPrincipal();
+        if (principal instanceof com.ecommerce.cnj70.security.CustomUserDetails cud) {
+            return cud.getShopId();
+        }
+        return null;
     }
 
     @Override

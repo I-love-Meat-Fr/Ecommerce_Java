@@ -54,7 +54,8 @@ class OrderIsolationTest {
         when(orderRepository.save(any(Order.class))).thenAnswer(inv -> inv.getArgument(0));
         when(productRepository.save(any(Product.class))).thenAnswer(inv -> inv.getArgument(0));
         orderService = new OrderServiceImpl(orderRepository, mock(com.ecommerce.cnj70.repository.UserRepository.class),
-                productRepository, mock(com.ecommerce.cnj70.repository.CartRepository.class), shopRepository, cartService);
+                productRepository, mock(com.ecommerce.cnj70.repository.CartRepository.class), shopRepository, cartService,
+                mock(com.ecommerce.cnj70.service.VoucherService.class));
     }
 
     @Test

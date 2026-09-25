@@ -1,0 +1,19 @@
+<div class="sd-topbar" th:fragment="topbar" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleath.org/extras/spring-security6">
+    <button class="sd-topbar-toggle" id="sidebarToggle" aria-label="Toggle sidebar">
+        <i class="fas fa-bars"></i>
+    </button>
+
+    <div class="sd-topbar-title">
+        <span class="sd-topbar-title-text">Moderator Panel</span>
+    </div>
+
+    <div class="sd-topbar-actions">
+        <div class="sd-topbar-user">
+            <div class="sd-topbar-avatar" sec:authentication="name">M</div>
+            <div class="sd-topbar-user-info">
+                <div class="sd-topbar-user-name" sec:authentication="name">Moderator</div>
+                <div class="sd-topbar-user-role">Moderator</div>
+            </div>
+        </div>
+    </div>
+</div>

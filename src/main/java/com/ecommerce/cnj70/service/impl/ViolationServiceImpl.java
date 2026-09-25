@@ -8,8 +8,10 @@ import com.ecommerce.cnj70.repository.ViolationRepository;
 import com.ecommerce.cnj70.service.ViolationService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.bson.Document;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
@@ -22,6 +24,7 @@ import java.util.List;
 public class ViolationServiceImpl implements ViolationService {
 
     private final ViolationRepository violationRepository;
+    private final MongoTemplate mongoTemplate;
 
     @Override
     public Page<Violation> getViolationsByShopId(String shopId, Pageable pageable) {
@@ -34,6 +37,24 @@ public class ViolationServiceImpl implements ViolationService {
         boolean hasSeverity = severity != null;
         boolean hasType = type != null;
 
+        // Filter composition rules (Phase 2 Fix BUG-V1):
+        //   - hasShop + hasSeverity + hasType → all three
+        //   - hasShop + hasSeverity            → shop + severity
+        //   - hasShop + hasType                → shop + type
+        //   - hasShop only                     → shop
+        //   - hasSeverity + hasType            → severity + type
+        //   - hasSeverity only                 → severity
+        //   - hasType only                     → type
+        //   - none                             → all
+        if (hasShop && hasSeverity && hasType) {
+            // Repository has no (shop + severity + type) combo —
+            // narrow by (shop + severity) then filter type in memory (small set, OK).
+            Page<Violation> narrowed = violationRepository.findByShopIdAndSeverity(shopId, severity, pageable);
+            List<Violation> filtered = narrowed.getContent().stream()
+                    .filter(v -> v.getType() == type)
+                    .toList();
+            return new org.springframework.data.domain.PageImpl<>(filtered, pageable, filtered.size());
+        }
         if (hasShop && hasSeverity) {
             return violationRepository.findByShopIdAndSeverity(shopId, severity, pageable);
         }
@@ -42,6 +63,15 @@ public class ViolationServiceImpl implements ViolationService {
         }
         if (hasShop) {
             return violationRepository.findByShopId(shopId, pageable);
+        }
+        if (hasSeverity && hasType) {
+            return violationRepository.findBySeverityAndType(severity, type, pageable);
+        }
+        if (hasSeverity) {
+            return violationRepository.findBySeverity(severity, pageable);
+        }
+        if (hasType) {
+            return violationRepository.findByType(type, pageable);
         }
         return violationRepository.findAll(pageable);
     }
@@ -88,7 +118,32 @@ public class ViolationServiceImpl implements ViolationService {
 
     @Override
     public Violation getById(String violationId) {
-        return violationRepository.findById(violationId)
-                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy violation"));
+        if (!StringUtils.hasText(violationId)) {
+            throw new ResourceNotFoundException("Violation ID không hợp lệ");
+        }
+        // Phase 6 fix: handle BOTH String _id and ObjectId _id storage. MongoDB
+        // Spring Data lưu _id kiểu ObjectId cho String @Id fields nếu chuỗi
+        // hợp lệ 24-hex. Phải thử cả hai dạng khi lookup.
+        org.bson.Document raw = null;
+        // First try String _id (legacy)
+        raw = mongoTemplate.getCollection("violations")
+                .find(new Document("_id", violationId))
+                .first();
+        if (raw == null && org.bson.types.ObjectId.isValid(violationId)) {
+            try {
+                raw = mongoTemplate.getCollection("violations")
+                        .find(new Document("_id", new org.bson.types.ObjectId(violationId)))
+                        .first();
+            } catch (IllegalArgumentException ignored) {
+                // not a valid ObjectId, leave raw == null
+            }
+        }
+        if (raw == null) {
+            throw new ResourceNotFoundException("Không tìm thấy violation");
+        }
+        if (!raw.containsKey("_class")) {
+            raw.put("_class", Violation.class.getName());
+        }
+        return mongoTemplate.getConverter().read(Violation.class, raw);
     }
 }
