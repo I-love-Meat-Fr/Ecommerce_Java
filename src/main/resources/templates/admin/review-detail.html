@@ -21,6 +21,16 @@
         </div>
     </div>
 
+    <!-- Flash Messages -->
+    <div th:if="${flashSuccess != null}" class="sd-alert sd-alert-success" style="margin-bottom:16px;">
+        <i class="fas fa-circle-check"></i>
+        <span th:text="${flashSuccess}">flashSuccess</span>
+    </div>
+    <div th:if="${flashError != null}" class="sd-alert sd-alert-error" style="margin-bottom:16px;">
+        <i class="fas fa-circle-exclamation"></i>
+        <span th:text="${flashError}">flashError</span>
+    </div>
+
     <div class="sd-card" style="margin-bottom:16px;">
         <div class="sd-card-body">
             <div style="display:flex;gap:16px;align-items:flex-start;margin-bottom:16px;flex-wrap:wrap;">
@@ -45,6 +55,9 @@
                         <span class="sd-badge sd-badge-blue">
                             Review ID: <span th:text="${review.id}">id</span>
                         </span>
+                        <span class="sd-badge"
+                              th:classappend="${review.hidden ? 'sd-badge-slate' : 'sd-badge-green'}"
+                              th:text="${review.hidden ? 'Đã ẩn' : 'Hiển thị'}">status</span>
                     </div>
                 </div>
             </div>
@@ -80,6 +93,21 @@
 
         <div class="sd-card-body"
              style="border-top:1px solid var(--border,#e2e8f0);display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end;">
+            <form th:if="${!review.hidden}"
+                  th:action="@{/admin/reviews/{id}/hide(id=${review.id}, page=${page}, size=${size}, q=${q}, rating=${rating})}"
+                  method="post"
+                  onsubmit="return confirm('Ẩn đánh giá này khỏi hiển thị công khai?');">
+                <button type="submit" class="sd-btn sd-btn-warning">
+                    <i class="fas fa-eye-slash"></i> Ẩn đánh giá
+                </button>
+            </form>
+            <form th:if="${review.hidden}"
+                  th:action="@{/admin/reviews/{id}/restore(id=${review.id}, page=${page}, size=${size}, q=${q}, rating=${rating})}"
+                  method="post">
+                <button type="submit" class="sd-btn sd-btn-primary">
+                    <i class="fas fa-eye"></i> Hiện đánh giá
+                </button>
+            </form>
             <form th:action="@{/admin/reviews/{id}/delete(id=${review.id}, page=${page}, size=${size}, q=${q}, rating=${rating})}"
                   method="post"
                   onsubmit="return confirm('Xóa đánh giá vi phạm này? Hành động không thể hoàn tác.');">

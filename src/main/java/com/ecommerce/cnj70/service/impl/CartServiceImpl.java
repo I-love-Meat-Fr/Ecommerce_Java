@@ -95,6 +95,27 @@ public class CartServiceImpl implements CartService {
         cart.setUpdatedAt(LocalDateTime.now());
         return cartRepository.save(cart);
     }
+
+    /**
+     * Lưu appliedVoucherCode lên Cart (persisted trong MongoDB).
+     * Đảm bảo giữ voucher xuyên qua mọi request thay vì dựa vào HttpSession (không
+     * đáng tin dưới SessionCreationPolicy.STATELESS).
+     */
+    @Override
+    public Cart setAppliedVoucherCode(String userId, String code) {
+        Cart cart = getCartByUserId(userId);
+        cart.setAppliedVoucherCode(code);
+        cart.setUpdatedAt(LocalDateTime.now());
+        return cartRepository.save(cart);
+    }
+
+    @Override
+    public String getAppliedVoucherCode(String userId) {
+        if (userId == null) return null;
+        return cartRepository.findByUserId(userId)
+                .map(Cart::getAppliedVoucherCode)
+                .orElse(null);
+    }
     
     @Override
     public int countItems(String userId) {

@@ -36,6 +36,10 @@ import com.ecommerce.cnj70.service.impl.ThirdPartyKycVerifier;
 import com.ecommerce.cnj70.service.impl.VendorKycServiceImpl;
 import com.ecommerce.cnj70.service.impl.VendorServiceImpl;
 import com.ecommerce.cnj70.support.TestFixtures;
+import com.mongodb.client.FindIterable;
+import com.mongodb.client.MongoCollection;
+import org.bson.Document;
+import org.bson.conversions.Bson;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -44,6 +48,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.junit.jupiter.MockitoSettings;
 import org.mockito.quality.Strictness;
+import org.springframework.data.mongodb.core.MongoTemplate;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
@@ -52,7 +57,10 @@ import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.atLeastOnce;
+import static org.mockito.Mockito.lenient;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -86,6 +94,8 @@ class VendorFlowE2ETest {
     @Mock private KycProfileRepository kycProfileRepository;
     @Mock private ThirdPartyKycVerifier thirdPartyKycVerifier;
     @Mock private StorageService storageService;
+    @Mock private MongoTemplate mongoTemplate;
+    @Mock private MongoCollection<Document> mongoCollection;
 
     private VendorService vendorService;
     private VendorKycService kycService;
@@ -108,9 +118,9 @@ class VendorFlowE2ETest {
         kycService = new VendorKycServiceImpl(userRepository, kycProfileRepository,
                 thirdPartyKycVerifier, storageService, shopRepository);
 
-        adminKycService = new AdminKycServiceImpl(kycProfileRepository, userRepository);
+        adminKycService = new AdminKycServiceImpl(kycProfileRepository, userRepository, mongoTemplate);
 
-        adminShopService = new AdminShopServiceImpl(shopRepository, mock(com.ecommerce.cnj70.service.AuditLogService.class));
+        adminShopService = new AdminShopServiceImpl(shopRepository, mock(com.ecommerce.cnj70.service.AuditLogService.class), mongoTemplate);
 
         productService = new ProductServiceImpl(productRepository,
                 mock(com.ecommerce.cnj70.repository.CategoryRepository.class),
@@ -153,6 +163,30 @@ class VendorFlowE2ETest {
             return p;
         });
         when(cartRepository.save(any(Cart.class))).thenAnswer(inv -> inv.getArgument(0));
+
+        // Phase 4 — stub raw Document query path cho AdminShopServiceImpl#getShopById.
+        // Mặc định trả null (no shop); các bước cụ thể trong test sẽ override khi cần.
+        FindIterable<Document> emptyFind = mock(FindIterable.class);
+        lenient().when(emptyFind.first()).thenReturn(null);
+        lenient().when(mongoCollection.find(any(Bson.class))).thenReturn(emptyFind);
+        lenient().when(mongoTemplate.getCollection("shops")).thenReturn(mongoCollection);
+        lenient().when(mongoTemplate.getCollection("kyc_profiles")).thenReturn(mongoCollection);
+        lenient().when(mongoTemplate.getCollection("users")).thenReturn(mongoCollection);
+        lenient().when(mongoTemplate.getConverter()).thenReturn(
+                mock(org.springframework.data.mongodb.core.convert.MongoConverter.class));
+    }
+
+    @SuppressWarnings("unchecked")
+    private void stubRawGetShopById(Shop shop) {
+        Document raw = new Document("_id", shop.getId())
+                .append("shopName", shop.getShopName() != null ? shop.getShopName() : "")
+                .append("status", shop.getStatus() != null ? shop.getStatus().name() : null)
+                .append("active", shop.isActive())
+                .append("ownerId", shop.getOwnerId() != null ? shop.getOwnerId() : "");
+        FindIterable<Document> findIterable = mock(FindIterable.class);
+        lenient().when(findIterable.first()).thenReturn(raw);
+        lenient().when(mongoCollection.find(any(Bson.class))).thenReturn(findIterable);
+        lenient().when(mongoTemplate.getConverter().read(eq(Shop.class), eq(raw))).thenReturn(shop);
     }
 
     @Test
@@ -185,7 +219,7 @@ class VendorFlowE2ETest {
         assertThat(vendor.getShopId()).isEqualTo(createdShop.getId());
 
         // ===== BƯỚC 5: Admin approve shop =====
-        when(shopRepository.findById(createdShop.getId())).thenReturn(Optional.of(createdShop));
+        stubRawGetShopById(createdShop);
         adminShopService.approveShop(createdShop.getId());
         assertThat(createdShop.getStatus()).isEqualTo(ShopStatus.APPROVED);
 

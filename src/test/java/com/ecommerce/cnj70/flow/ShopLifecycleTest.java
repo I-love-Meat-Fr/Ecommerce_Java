@@ -8,6 +8,10 @@ import com.ecommerce.cnj70.service.AdminShopService;
 import com.ecommerce.cnj70.service.AuditLogService;
 import com.ecommerce.cnj70.service.impl.AdminShopServiceImpl;
 import com.ecommerce.cnj70.support.TestFixtures;
+import com.mongodb.client.FindIterable;
+import com.mongodb.client.MongoCollection;
+import org.bson.Document;
+import org.bson.conversions.Bson;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -17,12 +21,14 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.junit.jupiter.MockitoSettings;
 import org.mockito.quality.Strictness;
-
-import java.util.Optional;
+import org.springframework.data.mongodb.core.MongoTemplate;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.lenient;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 /**
@@ -38,19 +44,42 @@ class ShopLifecycleTest {
 
     @Mock private ShopRepository shopRepository;
     @Mock private AuditLogService auditLogService;
+    @Mock private MongoTemplate mongoTemplate;
+    @Mock private MongoCollection<Document> mongoCollection;
 
     @InjectMocks private AdminShopServiceImpl adminShopService;
+
+    @SuppressWarnings("unchecked")
+    private void stubRawGetShopById(Shop shop) {
+        Document raw = new Document("_id", shop.getId())
+                .append("shopName", shop.getShopName() != null ? shop.getShopName() : "")
+                .append("status", shop.getStatus() != null ? shop.getStatus().name() : null)
+                .append("active", shop.isActive());
+
+        FindIterable<Document> findIterable = mock(FindIterable.class);
+        lenient().when(findIterable.first()).thenReturn(raw);
+        lenient().when(mongoCollection.find(any(Bson.class))).thenReturn(findIterable);
+        lenient().when(mongoTemplate.getCollection("shops")).thenReturn(mongoCollection);
+        lenient().when(mongoTemplate.getConverter()).thenReturn(
+                mock(org.springframework.data.mongodb.core.convert.MongoConverter.class));
+        lenient().when(mongoTemplate.getConverter().read(eq(Shop.class), eq(raw))).thenReturn(shop);
+    }
 
     @BeforeEach
     void setUp() {
         when(shopRepository.save(any(Shop.class))).thenAnswer(inv -> inv.getArgument(0));
+        // Default: raw Document query trả null (cho tests notFound).
+        FindIterable<Document> emptyFind = mock(FindIterable.class);
+        lenient().when(emptyFind.first()).thenReturn(null);
+        lenient().when(mongoCollection.find(any(Bson.class))).thenReturn(emptyFind);
+        lenient().when(mongoTemplate.getCollection("shops")).thenReturn(mongoCollection);
     }
 
     @Test
     @DisplayName("PENDING → APPROVED (admin duyệt)")
     void pendingToApproved() {
         Shop shop = TestFixtures.pendingShop("shop-1", "v-1");
-        when(shopRepository.findById("shop-1")).thenReturn(Optional.of(shop));
+        stubRawGetShopById(shop);
 
         adminShopService.approveShop("shop-1");
 
@@ -62,7 +91,7 @@ class ShopLifecycleTest {
     @DisplayName("PENDING → REJECTED (admin từ chối với lý do)")
     void pendingToRejected() {
         Shop shop = TestFixtures.pendingShop("shop-1", "v-1");
-        when(shopRepository.findById("shop-1")).thenReturn(Optional.of(shop));
+        stubRawGetShopById(shop);
 
         adminShopService.rejectShop("shop-1", "Vi phạm điều khoản sử dụng", "admin@cnj70.com");
 
@@ -74,7 +103,7 @@ class ShopLifecycleTest {
     @DisplayName("APPROVED active → APPROVED inactive (admin deactivate với lý do)")
     void activeToInactive() {
         Shop shop = TestFixtures.approvedActiveShop("shop-1", "v-1");
-        when(shopRepository.findById("shop-1")).thenReturn(Optional.of(shop));
+        stubRawGetShopById(shop);
 
         adminShopService.deactivateShop("shop-1", "Bán sản phẩm cấm", "admin@cnj70.com");
 
@@ -88,7 +117,7 @@ class ShopLifecycleTest {
     void inactiveToActive() {
         Shop shop = TestFixtures.approvedActiveShop("shop-1", "v-1");
         shop.setActive(false);
-        when(shopRepository.findById("shop-1")).thenReturn(Optional.of(shop));
+        stubRawGetShopById(shop);
 
         adminShopService.activateShop("shop-1");
 
@@ -100,7 +129,7 @@ class ShopLifecycleTest {
     @DisplayName("Idempotent: approve lần 2 → không throw")
     void approveTwice_idempotent() {
         Shop shop = TestFixtures.approvedActiveShop("shop-1", "v-1");
-        when(shopRepository.findById("shop-1")).thenReturn(Optional.of(shop));
+        stubRawGetShopById(shop);
 
         adminShopService.approveShop("shop-1"); // approved
         adminShopService.approveShop("shop-1"); // no-op
@@ -113,7 +142,7 @@ class ShopLifecycleTest {
     void deactivateAlreadyInactive_throws() {
         Shop shop = TestFixtures.approvedActiveShop("shop-1", "v-1");
         shop.setActive(false);
-        when(shopRepository.findById("shop-1")).thenReturn(Optional.of(shop));
+        stubRawGetShopById(shop);
 
         assertThatThrownBy(() -> adminShopService.deactivateShop("shop-1", "test", "admin"))
                 .isInstanceOf(BusinessException.class)
@@ -125,7 +154,7 @@ class ShopLifecycleTest {
     void adminRejectsButNoReasonSaved_currentBehavior() {
         // AdminShopService đã lưu lý do và admin username vào Shop document
         Shop shop = TestFixtures.pendingShop("shop-1", "v-1");
-        when(shopRepository.findById("shop-1")).thenReturn(Optional.of(shop));
+        stubRawGetShopById(shop);
 
         adminShopService.rejectShop("shop-1", "Sai thông tin CCCD", "admin@cnj70.com");
 
@@ -138,7 +167,7 @@ class ShopLifecycleTest {
     @DisplayName("Activate shop đã active → throw BusinessException")
     void activateAlreadyActive_throws() {
         Shop shop = TestFixtures.approvedActiveShop("shop-1", "v-1");
-        when(shopRepository.findById("shop-1")).thenReturn(Optional.of(shop));
+        stubRawGetShopById(shop);
 
         assertThatThrownBy(() -> adminShopService.activateShop("shop-1"))
                 .isInstanceOf(BusinessException.class)

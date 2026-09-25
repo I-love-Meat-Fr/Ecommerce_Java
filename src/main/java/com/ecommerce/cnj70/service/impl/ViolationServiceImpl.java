@@ -8,8 +8,10 @@ import com.ecommerce.cnj70.repository.ViolationRepository;
 import com.ecommerce.cnj70.service.ViolationService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.bson.Document;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
@@ -22,6 +24,7 @@ import java.util.List;
 public class ViolationServiceImpl implements ViolationService {
 
     private final ViolationRepository violationRepository;
+    private final MongoTemplate mongoTemplate;
 
     @Override
     public Page<Violation> getViolationsByShopId(String shopId, Pageable pageable) {
@@ -88,7 +91,20 @@ public class ViolationServiceImpl implements ViolationService {
 
     @Override
     public Violation getById(String violationId) {
-        return violationRepository.findById(violationId)
-                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy violation"));
+        if (!StringUtils.hasText(violationId)) {
+            throw new ResourceNotFoundException("Violation ID không hợp lệ");
+        }
+        // Phase 6 fix: String _id retrieval — same pattern as Phase 5 fix.
+        // Use raw mongoTemplate query for reliable String _id lookup.
+        Document raw = mongoTemplate.getCollection("violations")
+                .find(new Document("_id", violationId))
+                .first();
+        if (raw == null) {
+            throw new ResourceNotFoundException("Không tìm thấy violation");
+        }
+        if (!raw.containsKey("_class")) {
+            raw.put("_class", Violation.class.getName());
+        }
+        return mongoTemplate.getConverter().read(Violation.class, raw);
     }
 }

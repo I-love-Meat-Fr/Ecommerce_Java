@@ -7,8 +7,10 @@ import com.ecommerce.cnj70.repository.AuditLogEntryRepository;
 import com.ecommerce.cnj70.service.AdminAuditLogService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.bson.Document;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
@@ -31,6 +33,7 @@ import java.util.Collections;
 public class AdminAuditLogServiceImpl implements AdminAuditLogService {
 
     private final AuditLogEntryRepository auditLogRepository;
+    private final MongoTemplate mongoTemplate;
 
     @Override
     public Page<AuditLogEntry> listAll(Pageable pageable) {
@@ -99,8 +102,21 @@ public class AdminAuditLogServiceImpl implements AdminAuditLogService {
 
     @Override
     public AuditLogEntry getDetail(String id) {
-        return auditLogRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException(
-                        "Không tìm thấy AuditLog với ID: " + id));
+        if (!StringUtils.hasText(id)) {
+            throw new ResourceNotFoundException("AuditLog ID không hợp lệ");
+        }
+        // Phase 7 fix: String _id retrieval — same pattern as Phase 4/5/6 fix.
+        // Use raw mongoTemplate query for reliable String _id lookup.
+        Document raw = mongoTemplate.getCollection("audit_logs")
+                .find(new Document("_id", id))
+                .first();
+        if (raw == null) {
+            throw new ResourceNotFoundException(
+                    "Không tìm thấy AuditLog với ID: " + id);
+        }
+        if (!raw.containsKey("_class")) {
+            raw.put("_class", AuditLogEntry.class.getName());
+        }
+        return mongoTemplate.getConverter().read(AuditLogEntry.class, raw);
     }
 }

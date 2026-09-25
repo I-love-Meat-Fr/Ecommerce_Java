@@ -65,8 +65,36 @@ public class AdminCategoryServiceImpl implements AdminCategoryService {
         if (!StringUtils.hasText(id)) {
             throw new BusinessException("ID danh mục không hợp lệ");
         }
-        return categoryRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Category", "id", id));
+        // Phase 1 hotfix — Hỗ trợ CẢ 2 kiểu _id (String lẫn ObjectId).
+        // Khi document được tạo thông qua MongoDB driver (vd qua Compass / script
+        // ngoài Spring Data), _id có thể là ObjectId thay vì String. Nếu chỉ
+        // query bằng String thì KHÔNG match → trả null → báo "not found".
+        // Fix: thử String trước, nếu không có thì thử ObjectId (nếu id là hex 24).
+        org.bson.Document raw = mongoTemplate.getCollection("categories")
+                .find(new org.bson.Document("_id", id))
+                .first();
+        if (raw == null && id.length() == 24 && id.matches("[0-9a-fA-F]+")) {
+            org.bson.types.ObjectId oid = new org.bson.types.ObjectId(id);
+            raw = mongoTemplate.getCollection("categories")
+                    .find(new org.bson.Document("_id", oid))
+                    .first();
+            if (raw != null) {
+                // Normalize id về String để đồng bộ với Java field.
+                raw.put("_id", id);
+            }
+        }
+        if (raw == null) {
+            throw new ResourceNotFoundException("Category", "id", id);
+        }
+        if (!raw.containsKey("_class")) {
+            raw.put("_class", Category.class.getName());
+        }
+        raw.put("_id", id);
+        Category category = mongoTemplate.getConverter().read(Category.class, raw);
+        if (category.getId() == null) {
+            category.setId(id);
+        }
+        return category;
     }
 
     @Override

@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/springsecurity6"
+      th:replace="~{layout/web-layout :: layout(title='Chi tiết báo cáo - CNJ70 Shop', content=~{::main-content}, scripts=~{::page-scripts}, pageStyles=~{::page-styles})}">
+<head>
+    <title>Chi tiết báo cáo - CNJ70 Shop</title>
+    <th:block th:fragment="page-styles">
+        <link rel="stylesheet" th:href="@{/css/report.css}">
+    </th:block>
+</head>
+<body>
+<main th:fragment="main-content" class="rpt-page rpt-detail-page">
+
+    <!-- Hero -->
+    <section class="rpt-hero">
+        <div class="container">
+            <nav class="rpt-breadcrumb">
+                <a th:href="@{/home}"><i class="fas fa-home"></i> Trang chủ</a>
+                <i class="fas fa-chevron-right"></i>
+                <a th:href="@{/reports}">Báo cáo của tôi</a>
+                <i class="fas fa-chevron-right"></i>
+                <span>Chi tiết</span>
+            </nav>
+            <div class="rpt-hero-inner">
+                <div class="rpt-hero-left">
+                    <span class="rpt-hero-tag">
+                        <i class="fas fa-shield-halved"></i>
+                        <span th:text="${statusLabel != null ? statusLabel : 'Chi tiết'}">Status</span>
+                    </span>
+                    <h1>
+                        Báo cáo
+                        <span class="teal-word" th:if="${report != null and report.id != null}" th:text="'#' + ${report.id}">#ID</span>
+                    </h1>
+                    <p th:if="${report != null}">
+                        <span th:text="${targetTypeLabel}">Target</span>
+                        <span>•</span>
+                        <span th:text="${reasonLabel}">Reason</span>
+                    </p>
+                </div>
+                <div class="rpt-hero-right" th:if="${report != null}">
+                    <a th:href="@{/reports}" class="rpt-hero-cta rpt-hero-cta-ghost">
+                        <i class="fas fa-arrow-left"></i>
+                        <span>Quay lại</span>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Body -->
+    <section class="rpt-section">
+        <div class="container">
+
+            <!-- Error state -->
+            <div th:if="${error}" class="rpt-alert rpt-alert-error">
+                <i class="fas fa-exclamation-circle"></i>
+                <div>
+                    <strong>Không thể tải báo cáo.</strong>
+                    <p style="margin: 4px 0 0 0;" th:text="${error}">Error</p>
+                </div>
+            </div>
+
+            <!-- Detail content -->
+            <div th:if="${report != null}" class="rpt-detail-layout">
+
+                <!-- Main column -->
+                <div class="rpt-detail-main">
+
+                    <!-- ============== Status banner ============== -->
+                    <div class="rpt-status-banner" th:attr="data-status=${report.status.name()}">
+                        <div class="rpt-status-banner-icon">
+                            <i class="fas"
+                               th:classappend="${
+                                   report.status.name() == 'PENDING' ? 'fa-hourglass-half' :
+                                   report.status.name() == 'OPEN' ? 'fa-folder-open' :
+                                   report.status.name() == 'IN_REVIEW' ? 'fa-magnifying-glass' :
+                                   report.status.name() == 'RESOLVED' ? 'fa-check-circle' :
+                                   report.status.name() == 'APPROVED' ? 'fa-thumbs-up' :
+                                   report.status.name() == 'REJECTED' ? 'fa-times-circle' :
+                                   report.status.name() == 'ESCALATED' ? 'fa-level-up-alt' :
+                                   'fa-flag'
+                               }"></i>
+                        </div>
+                        <div class="rpt-status-banner-body">
+                            <span class="rpt-status-banner-label">Trạng thái hiện tại</span>
+                            <h2 th:text="${statusLabel}">Status</h2>
+                            <p class="rpt-status-banner-sub">
+                                <i class="fas fa-hashtag"></i>
+                                Mã case: <code th:text="${report.id}">ID</code>
+                            </p>
+                        </div>
+                    </div>
+
+                    <!-- ============== Reason + Description card ============== -->
+                    <div class="rpt-detail-card">
+                        <header class="rpt-detail-card-header">
+                            <h3><i class="fas fa-exclamation-triangle"></i> Lý do & Mô tả</h3>
+                            <span class="rpt-detail-card-meta" th:if="${report.createdAt != null}">
+                                <i class="far fa-calendar-alt"></i>
+                                <span th:text="${#temporals.format(report.createdAt, 'dd/MM/yyyy HH:mm')}">Date</span>
+                            </span>
+                        </header>
+                        <div class="rpt-detail-card-body">
+                            <div class="rpt-detail-row">
+                                <span class="rpt-detail-row-label">Lý do báo cáo</span>
+                                <strong th:text="${reasonLabel}">Reason</strong>
+                            </div>
+                            <div class="rpt-detail-row" th:if="${report.description != null and not #strings.isEmpty(report.description)}">
+                                <span class="rpt-detail-row-label">Mô tả</span>
+                                <p class="rpt-description-text" th:text="${report.description}">Description</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- ============== Target card ============== -->
+                    <div class="rpt-detail-card" th:if="${targetSnapshot != null or report.targetSnapshot != null}">
+                        <header class="rpt-detail-card-header">
+                            <h3><i class="fas fa-bullseye"></i> Đối tượng bị báo cáo</h3>
+                            <span class="rpt-detail-card-meta" th:text="${targetTypeLabel}">Target type</span>
+                        </header>
+                        <div class="rpt-detail-card-body">
+
+                            <!-- Product snapshot (fresh) -->
+                            <div th:if="${targetSnapshot != null and targetSnapshot instanceof T(com.ecommerce.cnj70.document.Product)}"
+                                 class="rpt-target-card rpt-target-card-detail">
+                                <div class="rpt-target-icon"><i class="fas fa-box"></i></div>
+                                <div class="rpt-target-info">
+                                    <span class="rpt-target-label">Sản phẩm</span>
+                                    <strong th:text="${targetSnapshot.name}">Product name</strong>
+                                    <code th:text="'#' + ${targetSnapshot.id}">#id</code>
+                                </div>
+                                <div class="rpt-target-price" th:if="${targetSnapshot.price != null}">
+                                    <span th:text="${@money.format(targetSnapshot.price)}">0đ</span>
+                                </div>
+                                <a th:href="@{/products/{id}(id=${targetSnapshot.id})}" class="rpt-target-link">
+                                    <i class="fas fa-external-link-alt"></i> Mở sản phẩm
+                                </a>
+                            </div>
+
+                            <!-- Review snapshot (fresh) -->
+                            <div th:if="${targetSnapshot != null and targetSnapshot instanceof T(com.ecommerce.cnj70.document.Review)}"
+                                 class="rpt-target-card rpt-target-card-detail">
+                                <div class="rpt-target-icon"><i class="fas fa-comment-dots"></i></div>
+                                <div class="rpt-target-info">
+                                    <span class="rpt-target-label">Đánh giá</span>
+                                    <strong th:text="${targetSnapshot.userName != null ? targetSnapshot.userName : 'Người dùng'}">User</strong>
+                                    <div class="rpt-target-stars" th:if="${targetSnapshot.rating != null}">
+                                        <th:block th:each="i : ${#numbers.sequence(1, 5)}">
+                                            <i class="fas fa-star" th:classappend="${i <= targetSnapshot.rating ? 'filled' : ''}"></i>
+                                        </th:block>
+                                    </div>
+                                    <small class="rpt-target-comment" th:text="${targetSnapshot.comment}">Comment</small>
+                                </div>
+                            </div>
+
+                            <!-- Fallback: targetSnapshot string (target đã bị xóa) -->
+                            <div th:if="${targetSnapshot == null and report.targetSnapshot != null and not #strings.isEmpty(report.targetSnapshot)}"
+                                 class="rpt-target-card rpt-target-card-deleted">
+                                <div class="rpt-target-icon"><i class="fas fa-archive"></i></div>
+                                <div class="rpt-target-info">
+                                    <span class="rpt-target-label">Snapshot tại thời điểm báo cáo</span>
+                                    <small th:text="${report.targetSnapshot}">Snapshot</small>
+                                </div>
+                            </div>
+
+                            <!-- Target id row -->
+                            <div class="rpt-detail-row" style="margin-top: 12px;">
+                                <span class="rpt-detail-row-label">Mã đối tượng</span>
+                                <code th:text="'#' + ${report.targetId}">#id</code>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- ============== Evidence card ============== -->
+                    <div class="rpt-detail-card" th:if="${report.evidence != null and not #lists.isEmpty(report.evidence)}">
+                        <header class="rpt-detail-card-header">
+                            <h3><i class="fas fa-paperclip"></i> Bằng chứng đính kèm</h3>
+                            <span class="rpt-detail-card-meta">
+                                <span th:text="${#lists.size(report.evidence)} + ' file'">0 file</span>
+                            </span>
+                        </header>
+                        <div class="rpt-detail-card-body">
+                            <div class="rpt-evidence-grid">
+                                <th:block th:each="ev : ${report.evidence}">
+                                    <a th:href="${ev}" target="_blank" class="rpt-evidence-tile">
+                                        <img th:if="${#strings.contains(ev, '.jpg') or #strings.contains(ev, '.jpeg') or #strings.contains(ev, '.png') or #strings.contains(ev, '.webp')}"
+                                             th:src="${ev}" alt="evidence">
+                                        <div th:unless="${#strings.contains(ev, '.jpg') or #strings.contains(ev, '.jpeg') or #strings.contains(ev, '.png') or #strings.contains(ev, '.webp')}"
+                                             class="rpt-evidence-tile-icon">
+                                            <i class="fas fa-file-pdf"></i>
+                                        </div>
+                                        <span class="rpt-evidence-tile-label">
+                                            <i class="fas fa-search-plus"></i> Mở
+                                        </span>
+                                    </a>
+                                </th:block>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- ============== Decision card (nếu đã xử lý) ============== -->
+                    <div class="rpt-detail-card rpt-detail-card-success"
+                         th:if="${report.status.name() == 'RESOLVED' or report.status.name() == 'APPROVED'}">
+                        <header class="rpt-detail-card-header">
+                            <h3><i class="fas fa-check-circle"></i> Kết quả xử lý</h3>
+                            <span class="rpt-status" data-status="RESOLVED">Đã duyệt / An toàn</span>
+                        </header>
+                        <div class="rpt-detail-card-body">
+                            <p class="rpt-decision-text" th:text="${report.decisionReason != null ? report.decisionReason : 'Moderator đã xác nhận nội dung an toàn và không vi phạm.'}">
+                                Decision reason
+                            </p>
+                            <div class="rpt-detail-row" th:if="${report.resolvedAt != null}">
+                                <span class="rpt-detail-row-label">Thời điểm xử lý</span>
+                                <strong th:text="${#temporals.format(report.resolvedAt, 'dd/MM/yyyy HH:mm')}">Date</strong>
+                            </div>
+                            <div class="rpt-detail-row" th:if="${report.note != null and not #strings.isEmpty(report.note)}">
+                                <span class="rpt-detail-row-label">Ghi chú</span>
+                                <p th:text="${report.note}">Note</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="rpt-detail-card rpt-detail-card-danger"
+                         th:if="${report.status.name() == 'REJECTED'}">
+                        <header class="rpt-detail-card-header">
+                            <h3><i class="fas fa-times-circle"></i> Kết quả xử lý</h3>
+                            <span class="rpt-status" data-status="REJECTED">Bị từ chối</span>
+                        </header>
+                        <div class="rpt-detail-card-body">
+                            <p class="rpt-decision-text" th:text="${report.decisionReason != null ? report.decisionReason : 'Moderator đã xem xét và từ chối báo cáo này.'}">
+                                Decision reason
+                            </p>
+                            <div class="rpt-detail-row" th:if="${report.resolvedAt != null}">
+                                <span class="rpt-detail-row-label">Thời điểm xử lý</span>
+                                <strong th:text="${#temporals.format(report.resolvedAt, 'dd/MM/yyyy HH:mm')}">Date</strong>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="rpt-detail-card rpt-detail-card-warning"
+                         th:if="${report.status.name() == 'ESCALATED'}">
+                        <header class="rpt-detail-card-header">
+                            <h3><i class="fas fa-level-up-alt"></i> Đã chuyển lên Admin</h3>
+                            <span class="rpt-status" data-status="ESCALATED">Đang chờ Admin</span>
+                        </header>
+                        <div class="rpt-detail-card-body">
+                            <p class="rpt-decision-text">
+                                Moderator đã chuyển báo cáo này lên cấp Admin để xem xét do vi phạm nghiêm trọng.
+                                Bạn sẽ nhận được thông báo khi Admin ra quyết định cuối cùng.
+                            </p>
+                            <p class="rpt-decision-text" th:if="${report.decisionReason != null}"
+                               th:text="${report.decisionReason}">Reason</p>
+                            <div class="rpt-detail-row" th:if="${report.resolvedAt != null}">
+                                <span class="rpt-detail-row-label">Thời điểm chuyển</span>
+                                <strong th:text="${#temporals.format(report.resolvedAt, 'dd/MM/yyyy HH:mm')}">Date</strong>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+
+                <!-- Side: Timeline + Meta -->
+                <aside class="rpt-detail-side">
+                    <div class="rpt-timeline-card">
+                        <h3><i class="fas fa-stream"></i> Tiến trình xử lý</h3>
+                        <ul class="rpt-timeline">
+                            <li th:each="ev : ${timeline}" class="completed">
+                                <span class="rpt-timeline-icon"><i th:classappend="${ev.icon}"></i></span>
+                                <div class="rpt-timeline-body">
+                                    <strong th:text="${ev.title}">Title</strong>
+                                    <p th:text="${ev.description}">Description</p>
+                                    <small th:if="${ev.timestamp != null}"
+                                           th:text="${#temporals.format(ev.timestamp, 'dd/MM/yyyy HH:mm')}">Date</small>
+                                </div>
+                            </li>
+                        </ul>
+                    </div>
+
+                    <div class="rpt-meta-card">
+                        <h3><i class="fas fa-info-circle"></i> Thông tin case</h3>
+                        <div class="rpt-meta-row">
+                            <i class="fas fa-hashtag"></i>
+                            <div>
+                                <span>Mã case</span>
+                                <strong th:text="${report.id}">ID</strong>
+                            </div>
+                        </div>
+                        <div class="rpt-meta-row">
+                            <i class="fas fa-bullseye"></i>
+                            <div>
+                                <span>Loại đối tượng</span>
+                                <strong th:text="${targetTypeLabel}">Target</strong>
+                            </div>
+                        </div>
+                        <div class="rpt-meta-row">
+                            <i class="fas fa-tag"></i>
+                            <div>
+                                <span>Mã đối tượng</span>
+                                <strong th:text="${report.targetId}">targetId</strong>
+                            </div>
+                        </div>
+                        <div class="rpt-meta-row">
+                            <i class="fas fa-flag"></i>
+                            <div>
+                                <span>Nguồn báo cáo</span>
+                                <strong th:text="${report.source != null ? report.source : 'USER'}">USER</strong>
+                            </div>
+                        </div>
+                        <div class="rpt-meta-row" th:if="${report.assignedAt != null}">
+                            <i class="fas fa-user-check"></i>
+                            <div>
+                                <span>Thời điểm Moderator nhận</span>
+                                <strong th:text="${#temporals.format(report.assignedAt, 'dd/MM/yyyy HH:mm')}">Date</strong>
+                            </div>
+                        </div>
+                    </div>
+                </aside>
+            </div>
+
+        </div>
+    </section>
+
+    <!-- Toast "Đã tạo báo cáo" -->
+    <div th:if="${showCreatedToast}" class="rpt-toast" id="rpt-toast-created">
+        <i class="fas fa-check-circle"></i>
+        <span>Đã gửi báo cáo. Mã case của bạn đã sẵn sàng theo dõi.</span>
+    </div>
+</main>
+
+<th:block th:fragment="page-scripts">
+    <script th:inline="none">
+        (function() {
+            const toast = document.getElementById('rpt-toast-created');
+            if (toast) {
+                setTimeout(function() { toast.classList.add('fade-out'); }, 4000);
+                setTimeout(function() {
+                    if (toast && toast.parentNode) toast.parentNode.removeChild(toast);
+                }, 4400);
+            }
+        })();
+    </script>
+</th:block>
+</body>
+</html>

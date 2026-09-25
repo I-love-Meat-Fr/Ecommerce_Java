@@ -47,12 +47,14 @@ import java.util.Map;
  * trong service.</p>
  */
 @Slf4j
-@RestController
-@RequestMapping("/complaints")
-@RequiredArgsConstructor
+// Intentionally NOT a @RestController — original legacy REST endpoints have been
+// moved to {@link ComplaintApiController} under /api/complaints.
+// This class is retained for reference only; Spring must not register it as a bean.
+@SuppressWarnings("unused")
+@Deprecated
 public class ComplaintController {
 
-    private final ComplaintService complaintService;
+    private ComplaintService complaintService;
 
     // =========== Customer (Level 0) ===========
 

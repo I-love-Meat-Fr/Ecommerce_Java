@@ -13,7 +13,7 @@ import org.springframework.stereotype.Component;
 /**
  * Phase 3B — MongoDB AuditEventWriter.
  *
- * <p>Persists {@link AuditEvent} to the {@code audit_log} collection
+ * <p>Persists {@link AuditEvent} to the {@code audit_logs} collection
  * via {@link AuditLogEntryRepository}. This implementation is active
  * when the {@code audit-log} profile is enabled.</p>
  *

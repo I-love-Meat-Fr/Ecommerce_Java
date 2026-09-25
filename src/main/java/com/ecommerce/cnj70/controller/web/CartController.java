@@ -56,8 +56,11 @@ public class CartController {
                         LinkedHashMap::new,
                         Collectors.toList()));
 
-        // Apply persisted voucher (nếu có) để hiển thị đúng summary
-        AppliedVoucher applied = readAppliedVoucher(session);
+        // Apply persisted voucher (nếu có). State đọc từ Cart document trong MongoDB (KHÔNG
+        // từ HttpSession vì app chạy SessionCreationPolicy.STATELESS) - đảm bảo voucher
+        // được giữ xuyên qua add/update/remove qty. Nếu code còn trên Cart nhưng voucher
+        // bị xóa/hết hạn -> clear code trên Cart để khỏi hiển thị sai.
+        AppliedVoucher applied = readAppliedVoucher(user.getId());
         BigDecimal discount = BigDecimal.ZERO;
         BigDecimal finalTotal = cartTotal.add(SHIPPING_FEE);
         if (applied != null) {
@@ -68,12 +71,17 @@ public class CartController {
                 if (finalTotal.compareTo(BigDecimal.ZERO) < 0) {
                     finalTotal = BigDecimal.ZERO;
                 }
-                // Cập nhật session với voucher mới nhất (tên/used/etc có thể đã đổi)
                 applied = new AppliedVoucher(fresh.getCode(), fresh.getId(), fresh.getName(), discount, finalTotal);
-                session.setAttribute(SESSION_APPLIED_VOUCHER, applied);
+                // Mirror sang session cho OrderController.checkout() còn đọc được
+                if (session != null) {
+                    session.setAttribute(SESSION_APPLIED_VOUCHER, applied);
+                }
             } catch (Exception e) {
-                // Voucher đã bị xóa/hết hạn -> clear session
-                session.removeAttribute(SESSION_APPLIED_VOUCHER);
+                // Voucher đã bị xóa/hết hạn -> clear persisted code trên Cart + session
+                cartService.setAppliedVoucherCode(user.getId(), null);
+                if (session != null) {
+                    session.removeAttribute(SESSION_APPLIED_VOUCHER);
+                }
                 applied = null;
             }
         }
@@ -215,7 +223,10 @@ public class CartController {
                 finalTotal = BigDecimal.ZERO;
             }
 
-            // Lưu vào session để Checkout/Order dùng tiếp (TASK #13)
+            // Lưu vào Cart document (MongoDB) là nguồn chính - persist qua mọi request.
+            cartService.setAppliedVoucherCode(user.getId(), voucher.getCode());
+
+            // Mirror sang session để OrderController.checkout() còn đọc được (legacy code path)
             session.setAttribute(SESSION_APPLIED_VOUCHER,
                     new AppliedVoucher(voucher.getCode(), voucher.getId(), voucher.getName(), discount, finalTotal));
 
@@ -263,9 +274,9 @@ public class CartController {
             return ResponseEntity.status(401).body(response);
         }
 
-        session.removeAttribute(SESSION_APPLIED_VOUCHER);
-
         Cart cart = cartService.getCartByUserId(user.getId());
+        cartService.setAppliedVoucherCode(user.getId(), null);
+        session.removeAttribute(SESSION_APPLIED_VOUCHER);
         BigDecimal cartSubtotal = cartService.calculateTotal(cart);
         BigDecimal finalTotal = cartSubtotal.add(SHIPPING_FEE);
 
@@ -305,13 +316,15 @@ public class CartController {
     }
 
     /**
-     * Đọc AppliedVoucher từ session.
+     * Đọc AppliedVoucher (cached sub-document) từ Cart document trong MongoDB.
+     * Cart.appliedVoucherCode giữ mã voucher; voucher object + discount/finalTotal được
+     * tính lại fresh mỗi lần (không cache) để khỏi bị stale.
      */
-    @SuppressWarnings("unchecked")
-    private AppliedVoucher readAppliedVoucher(HttpSession session) {
-        if (session == null) return null;
-        Object attr = session.getAttribute(SESSION_APPLIED_VOUCHER);
-        return (attr instanceof AppliedVoucher av) ? av : null;
+    private AppliedVoucher readAppliedVoucher(String userId) {
+        if (userId == null) return null;
+        String code = cartService.getAppliedVoucherCode(userId);
+        if (code == null || code.isBlank()) return null;
+        return new AppliedVoucher(code, null, null, BigDecimal.ZERO, BigDecimal.ZERO);
     }
 
     /**
@@ -319,31 +332,41 @@ public class CartController {
      * Nếu subtotal đổi làm voucher không còn hợp lệ (vd: < minOrderValue), clear session.
      */
     private void reEvaluateVoucher(HttpSession session, String userId) {
-        AppliedVoucher applied = readAppliedVoucher(session);
-        if (applied == null) return;
+        // Đọc applied code từ Cart document (persisted) thay vì HttpSession.
+        String appliedCode = cartService.getAppliedVoucherCode(userId);
+        if (appliedCode == null || appliedCode.isBlank()) {
+            if (session != null) session.removeAttribute(SESSION_APPLIED_VOUCHER);
+            return;
+        }
         try {
-            Voucher fresh = voucherService.getVoucherByCode(applied.code);
+            Voucher fresh = voucherService.getVoucherByCode(appliedCode);
             Cart cart = cartService.getCartByUserId(userId);
             BigDecimal subtotal = cartService.calculateTotal(cart).add(SHIPPING_FEE);
             if (subtotal.signum() <= 0) {
-                session.removeAttribute(SESSION_APPLIED_VOUCHER);
+                cartService.setAppliedVoucherCode(userId, null);
+                if (session != null) session.removeAttribute(SESSION_APPLIED_VOUCHER);
                 return;
             }
             BigDecimal discount = computeDiscount(fresh, subtotal);
             if (discount.signum() <= 0) {
                 // không đủ điều kiện nữa (vd: subtotal < minOrderValue) -> clear
-                session.removeAttribute(SESSION_APPLIED_VOUCHER);
+                cartService.setAppliedVoucherCode(userId, null);
+                if (session != null) session.removeAttribute(SESSION_APPLIED_VOUCHER);
                 return;
             }
             BigDecimal finalTotal = subtotal.subtract(discount);
             if (finalTotal.compareTo(BigDecimal.ZERO) < 0) {
                 finalTotal = BigDecimal.ZERO;
             }
-            session.setAttribute(SESSION_APPLIED_VOUCHER,
-                    new AppliedVoucher(fresh.getCode(), fresh.getId(), fresh.getName(), discount, finalTotal));
+            // Mirror lên session để OrderController.checkout() còn đọc được
+            if (session != null) {
+                session.setAttribute(SESSION_APPLIED_VOUCHER,
+                        new AppliedVoucher(fresh.getCode(), fresh.getId(), fresh.getName(), discount, finalTotal));
+            }
         } catch (Exception e) {
-            // Voucher không còn khả dụng -> clear
-            session.removeAttribute(SESSION_APPLIED_VOUCHER);
+            // Voucher không còn khả dụng -> clear persisted code trên Cart + session
+            cartService.setAppliedVoucherCode(userId, null);
+            if (session != null) session.removeAttribute(SESSION_APPLIED_VOUCHER);
         }
     }
 

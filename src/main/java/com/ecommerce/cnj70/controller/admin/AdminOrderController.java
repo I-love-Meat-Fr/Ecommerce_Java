@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -66,7 +67,8 @@ public class AdminOrderController {
                               @RequestParam(defaultValue = "5") int size,
                               @RequestParam(required = false) String q,
                               @RequestParam(required = false) String status,
-                              Model model) {
+                              Model model,
+                              RedirectAttributes redirectAttributes) {
         try {
             Order order = adminOrderService.getOrderById(id);
             AdminOrderRes orderRes = adminOrderService.toAdminOrderRes(order);
@@ -78,8 +80,17 @@ public class AdminOrderController {
             model.addAttribute("status", status == null ? "" : status);
             return "admin/order-detail";
         } catch (Exception ex) {
-            model.addAttribute("error", ex.getMessage());
-            return "redirect:/admin/orders";
+            // Phase 2 fix (BUG-14.1): dùng RedirectAttributes.addFlashAttribute thay vì
+            // Model.addAttribute khi redirect — Model bị Spring discard khi return "redirect:".
+            redirectAttributes.addFlashAttribute("flashError", ex.getMessage());
+            String redirectUrl = "/admin/orders?page=" + page + "&size=" + size;
+            if (q != null && !q.isBlank()) {
+                redirectUrl += "&q=" + q;
+            }
+            if (status != null && !status.isBlank()) {
+                redirectUrl += "&status=" + status;
+            }
+            return "redirect:" + redirectUrl;
         }
     }
 

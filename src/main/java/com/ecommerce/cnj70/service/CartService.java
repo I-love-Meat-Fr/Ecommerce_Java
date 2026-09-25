@@ -16,6 +16,19 @@ public interface CartService {
     Cart removeFromCart(String userId, String productId);
 
     /**
+     * Persist applied voucher code on Cart (MongoDB).
+     * @param userId  current user
+     * @param code    voucher code (non-null, non-blank), hoặc null để clear
+     * @return Cart đã được save với appliedVoucherCode
+     */
+    Cart setAppliedVoucherCode(String userId, String code);
+
+    /**
+     * Lấy applied voucher code (có thể null) từ Cart hiện tại của user.
+     */
+    String getAppliedVoucherCode(String userId);
+
+    /**
      * Remove một tập productIds khỏi Cart.
      * Dùng cho TASK #14 — partial checkout: chỉ xóa items user đã mua,
      * giữ lại các item còn lại trong Cart.

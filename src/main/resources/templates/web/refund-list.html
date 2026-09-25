@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/springsecurity6"
+      th:replace="~{layout/web-layout :: layout(title='Yêu cầu hoàn tiền - CNJ70 Shop', content=~{::main-content}, scripts=~{::page-scripts}, pageStyles=~{::page-styles})}">
+<head>
+    <title>Yêu cầu hoàn tiền - CNJ70 Shop</title>
+    <th:block th:fragment="page-styles">
+        <link rel="stylesheet" th:href="@{/css/refund.css}">
+    </th:block>
+</head>
+<body>
+<main th:fragment="main-content" class="refund-page">
+
+    <!-- Hero -->
+    <section class="refund-hero">
+        <div class="container">
+            <nav class="refund-breadcrumb">
+                <a th:href="@{/home}"><i class="fas fa-home"></i> Trang chủ</a>
+                <i class="fas fa-chevron-right"></i>
+                <span>Yêu cầu hoàn tiền</span>
+            </nav>
+            <div class="refund-hero-inner">
+                <div class="refund-hero-left">
+                    <span class="refund-hero-tag">
+                        <i class="fas fa-wallet"></i> Trung tâm hoàn tiền
+                    </span>
+                    <h1>
+                        Yêu cầu hoàn tiền & trả hàng
+                        <span class="teal-word" th:if="${totalRefunds + totalReturns > 0}"
+                              th:text="'(' + ${totalRefunds + totalReturns} + ')'">(0)</span>
+                    </h1>
+                    <p>Theo dõi và quản lý tất cả yêu cầu hoàn tiền và trả hàng của bạn.</p>
+                </div>
+                <div class="refund-hero-stats">
+                    <div class="refund-stat-card">
+                        <i class="fas fa-clock"></i>
+                        <div class="refund-stat-number" th:text="${pendingCount}">0</div>
+                        <div class="refund-stat-label">Đang xử lý</div>
+                    </div>
+                    <div class="refund-stat-card success">
+                        <i class="fas fa-check-circle"></i>
+                        <div class="refund-stat-number" th:text="${successCount}">0</div>
+                        <div class="refund-stat-label">Thành công</div>
+                    </div>
+                    <div class="refund-stat-card danger">
+                        <i class="fas fa-times-circle"></i>
+                        <div class="refund-stat-number" th:text="${failedCount}">0</div>
+                        <div class="refund-stat-label">Thất bại</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Body -->
+    <section class="refund-section">
+        <div class="container">
+
+            <!-- Type filter tabs -->
+            <div class="refund-filter-bar">
+                <a th:href="@{/refunds}"
+                   th:classappend="${activeType == 'ALL' ? 'active' : ''}"
+                   class="refund-filter-tab">
+                    <i class="fas fa-list-ul"></i>
+                    <span>Tất cả</span>
+                    <span class="refund-filter-count" th:text="${totalRefunds + totalReturns}">0</span>
+                </a>
+                <a th:href="@{/refunds(type='REFUND')}"
+                   th:classappend="${activeType == 'REFUND' ? 'active' : ''}"
+                   class="refund-filter-tab">
+                    <i class="fas fa-money-bill-wave"></i>
+                    <span>Hoàn tiền</span>
+                    <span class="refund-filter-count" th:text="${totalRefunds}">0</span>
+                </a>
+                <a th:href="@{/refunds(type='RETURN')}"
+                   th:classappend="${activeType == 'RETURN' ? 'active' : ''}"
+                   class="refund-filter-tab">
+                    <i class="fas fa-undo"></i>
+                    <span>Trả hàng</span>
+                    <span class="refund-filter-count" th:text="${totalReturns}">0</span>
+                </a>
+            </div>
+
+            <!-- Empty state -->
+            <div th:if="${#lists.isEmpty(refunds) and #lists.isEmpty(returns)}" class="refund-empty">
+                <div class="refund-empty-inner">
+                    <div class="refund-empty-icon">
+                        <i class="fas fa-wallet"></i>
+                    </div>
+                    <h3>Chưa có yêu cầu nào</h3>
+                    <p>Bạn chưa có yêu cầu hoàn tiền hoặc trả hàng nào. Nếu có vấn đề với đơn hàng, hãy tạo khiếu nại để được hỗ trợ.</p>
+                    <a th:href="@{/complaints/new}" class="refund-empty-btn">
+                        <i class="fas fa-shield-halved"></i> Tạo khiếu nại
+                    </a>
+                </div>
+            </div>
+
+            <!-- Refund cards -->
+            <div th:if="${not #lists.isEmpty(refunds)}" class="refund-list">
+                <article th:each="r : ${refunds}" class="refund-card">
+                    <header class="refund-card-header">
+                        <div class="refund-card-type REFUND">
+                            <i class="fas fa-money-bill-wave"></i>
+                            <span>Hoàn tiền</span>
+                        </div>
+                        <div class="refund-card-id">
+                            <i class="fas fa-hashtag"></i>
+                            <span th:text="${r.id}">REFUND-ID</span>
+                        </div>
+                        <span class="refund-status"
+                              th:classappend="${r.status.name()}"
+                              th:attr="data-status=${r.status.name()}">
+                            <i class="fas"
+                               th:classappend="${
+                                   r.status.name() == 'REQUESTED' ? 'fa-hourglass-half' :
+                                   r.status.name() == 'PROCESSING' ? 'fa-sync-alt' :
+                                   r.status.name() == 'SUCCEEDED' ? 'fa-check-circle' :
+                                   r.status.name() == 'FAILED' ? 'fa-times-circle' :
+                                   r.status.name() == 'CANCELLED' ? 'fa-ban' :
+                                   'fa-folder'
+                               }"></i>
+                            <span th:text="${refundStatusLabels.get(r.status)} ?: ${r.status}">Status</span>
+                        </span>
+                    </header>
+
+                    <div class="refund-card-body">
+                        <div class="refund-card-row">
+                            <div class="refund-card-info">
+                                <div class="refund-card-order" th:if="${r.orderId != null}">
+                                    <i class="fas fa-receipt"></i>
+                                    <span>Đơn hàng: </span>
+                                    <code th:text="${r.orderId}">OID</code>
+                                </div>
+                                <div class="refund-card-amount" th:if="${r.declaredAmount != null}">
+                                    <i class="fas fa-coins"></i>
+                                    <span>Số tiền: </span>
+                                    <strong th:text="${r.declaredAmount} + ' đ'">0đ</strong>
+                                </div>
+                                <div class="refund-card-amount" th:if="${r.settledAmount != null and r.status.name() == 'SUCCEEDED'}">
+                                    <i class="fas fa-hand-holding-usd"></i>
+                                    <span>Đã nhận: </span>
+                                    <strong class="success" th:text="${r.settledAmount} + ' đ'">0đ</strong>
+                                </div>
+                            </div>
+                            <div class="refund-card-date">
+                                <i class="far fa-calendar-alt"></i>
+                                <span th:text="${#temporals.format(r.createdAt, 'dd/MM/yyyy HH:mm')}">Date</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <footer class="refund-card-footer">
+                        <div class="refund-card-result" th:if="${r.status.name() == 'SUCCEEDED' and r.settledAmount != null}">
+                            <i class="fas fa-check-circle"></i>
+                            <span>Đã hoàn tiền thành công</span>
+                        </div>
+                        <div class="refund-card-result failed" th:if="${r.status.name() == 'FAILED'}">
+                            <i class="fas fa-times-circle"></i>
+                            <span th:text="${r.providerMessage != null ? r.providerMessage : 'Hoàn tiền thất bại'}">Thất bại</span>
+                        </div>
+                        <div class="refund-card-result" th:if="${r.status.name() == 'REQUESTED' or r.status.name() == 'PROCESSING'}">
+                            <i class="fas fa-clock"></i>
+                            <span>Đang xử lý</span>
+                        </div>
+                        <div class="refund-card-result" th:if="${r.status.name() == 'CANCELLED'}">
+                            <i class="fas fa-ban"></i>
+                            <span>Đã hủy</span>
+                        </div>
+                        <a th:href="@{/refunds/{id}(id=${r.id})}" class="refund-card-detail-btn">
+                            Xem chi tiết
+                            <i class="fas fa-arrow-right"></i>
+                        </a>
+                    </footer>
+                </article>
+            </div>
+
+            <!-- Return cards -->
+            <div th:if="${not #lists.isEmpty(returns)}" class="refund-list" style="margin-top: 16px;">
+                <article th:each="ret : ${returns}" class="refund-card">
+                    <header class="refund-card-header">
+                        <div class="refund-card-type RETURN">
+                            <i class="fas fa-undo"></i>
+                            <span>Trả hàng</span>
+                        </div>
+                        <div class="refund-card-id">
+                            <i class="fas fa-hashtag"></i>
+                            <span th:text="${ret.id}">RETURN-ID</span>
+                        </div>
+                        <span class="refund-status"
+                              th:classappend="${ret.status.name()}"
+                              th:attr="data-status=${ret.status.name()}">
+                            <i class="fas"
+                               th:classappend="${
+                                   ret.status.name() == 'REQUESTED' ? 'fa-hourglass-half' :
+                                   ret.status.name() == 'APPROVED' ? 'fa-check' :
+                                   ret.status.name() == 'IN_TRANSIT' ? 'fa-truck' :
+                                   ret.status.name() == 'RECEIVED' ? 'fa-box-open' :
+                                   ret.status.name() == 'COMPLETED' ? 'fa-flag-checkered' :
+                                   ret.status.name() == 'REJECTED' ? 'fa-times-circle' :
+                                   ret.status.name() == 'CANCELLED' ? 'fa-ban' :
+                                   'fa-folder'
+                               }"></i>
+                            <span th:text="${returnStatusLabels.get(ret.status)} ?: ${ret.status}">Status</span>
+                        </span>
+                    </header>
+
+                    <div class="refund-card-body">
+                        <div class="refund-card-row">
+                            <div class="refund-card-info">
+                                <div class="refund-card-shop" th:if="${ret.shopName != null}">
+                                    <i class="fas fa-store"></i>
+                                    <span th:text="${ret.shopName}">Shop Name</span>
+                                </div>
+                                <div class="refund-card-order" th:if="${ret.orderId != null}">
+                                    <i class="fas fa-receipt"></i>
+                                    <span>Đơn hàng: </span>
+                                    <code th:text="${ret.orderId}">OID</code>
+                                </div>
+                                <div class="refund-card-amount" th:if="${ret.declaredAmount != null}">
+                                    <i class="fas fa-coins"></i>
+                                    <span>Hoàn tiền dự kiến: </span>
+                                    <strong th:text="${ret.declaredAmount} + ' đ'">0đ</strong>
+                                </div>
+                            </div>
+                            <div class="refund-card-date">
+                                <i class="far fa-calendar-alt"></i>
+                                <span th:text="${#temporals.format(ret.createdAt, 'dd/MM/yyyy HH:mm')}">Date</span>
+                            </div>
+                        </div>
+
+                        <div class="refund-card-reason" th:if="${ret.reason != null and not ret.reason.isBlank()}">
+                            <i class="fas fa-tag"></i>
+                            <span th:text="${ret.reason}">Lý do trả hàng</span>
+                        </div>
+                    </div>
+
+                    <footer class="refund-card-footer">
+                        <div class="refund-card-result" th:if="${ret.status.name() == 'COMPLETED'}">
+                            <i class="fas fa-check-circle"></i>
+                            <span>Trả hàng hoàn tất</span>
+                        </div>
+                        <div class="refund-card-result failed" th:if="${ret.status.name() == 'REJECTED'}">
+                            <i class="fas fa-times-circle"></i>
+                            <span>Yêu cầu bị từ chối</span>
+                        </div>
+                        <div class="refund-card-result" th:if="${ret.status.name() == 'CANCELLED'}">
+                            <i class="fas fa-ban"></i>
+                            <span>Đã hủy</span>
+                        </div>
+                        <div class="refund-card-result" th:if="${ret.refundId != null and ret.status.name() == 'COMPLETED'}">
+                            <i class="fas fa-link"></i>
+                            <span>Refund: </span>
+                            <code th:text="${ret.refundId}">REFUND-ID</code>
+                        </div>
+                        <a th:href="@{/returns/{id}(id=${ret.id})}" class="refund-card-detail-btn">
+                            Xem chi tiết
+                            <i class="fas fa-arrow-right"></i>
+                        </a>
+                    </footer>
+                </article>
+            </div>
+
+        </div>
+    </section>
+
+</main>
+
+<th:block th:fragment="page-scripts">
+    <script th:src="@{/js/home.js}" defer></script>
+    <script th:inline="none">
+        // Animate cards on scroll
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach((entry, idx) => {
+                if (entry.isIntersecting) {
+                    entry.target.style.animation = `refundFadeIn 0.35s ease ${idx * 0.04}s forwards`;
+                    observer.unobserve(entry.target);
+                }
+            });
+        }, { threshold: 0.05 });
+
+        document.querySelectorAll('.refund-card').forEach(card => observer.observe(card));
+    </script>
+</th:block>
+</body>
+</html>

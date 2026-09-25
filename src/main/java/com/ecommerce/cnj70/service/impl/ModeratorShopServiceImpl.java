@@ -72,6 +72,7 @@ public class ModeratorShopServiceImpl implements ModeratorShopService {
     private final UserRepository userRepository;
     private final ModerationHistoryRepository historyRepository;
     private final AuditEventWriter auditEventWriter;
+    private final org.springframework.data.mongodb.core.MongoTemplate mongoTemplate;
 
     // ======================== QUEUE ========================
 
@@ -135,8 +136,7 @@ public class ModeratorShopServiceImpl implements ModeratorShopService {
         if (!StringUtils.hasText(shopId)) {
             throw new BadRequestException("Shop ID không hợp lệ");
         }
-        Shop shop = shopRepository.findById(shopId)
-                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy shop với ID: " + shopId));
+        Shop shop = loadAndGuard(shopId);
 
         User owner = (shop.getOwnerId() != null)
                 ? userRepository.findById(shop.getOwnerId()).orElse(null)
@@ -175,10 +175,20 @@ public class ModeratorShopServiceImpl implements ModeratorShopService {
                     "Chỉ có thể duyệt shop đang ở trạng thái PENDING (hiện tại=" + before + ")");
         }
 
+        // Phase 4 fix — atomic update via raw collection to avoid E11000 duplicate key
+        // on shopName that occurs when shopRepository.save() treats the entity as a
+        // new insert (because entity._id is String but DB _id is ObjectId or vice versa).
+        Object nativeId = shop.getId();
+        org.bson.Document updateDoc = new org.bson.Document()
+                .append("$set", new org.bson.Document()
+                        .append("status", ShopStatus.APPROVED.name())
+                        .append("active", true)
+                        .append("updatedAt", java.util.Date.from(java.time.LocalDateTime.now()
+                                .atZone(java.time.ZoneId.systemDefault()).toInstant())));
+        mongoTemplate.getCollection("shops").updateOne(
+                new org.bson.Document("_id", nativeId), updateDoc);
         shop.setStatus(ShopStatus.APPROVED);
         shop.setActive(true);
-        // Preserve enforcement metadata — Moderator approval does not erase Admin enforcement
-        shopRepository.save(shop);
 
         ShopModerationDecision decision = ShopModerationDecision.builder()
                 .shopId(shopId)
@@ -217,13 +227,24 @@ public class ModeratorShopServiceImpl implements ModeratorShopService {
                     "Chỉ có thể suspend shop ở trạng thái APPROVED hoặc RESTRICTED (hiện tại=" + before + ")");
         }
 
+        // Phase 4 fix — atomic update via raw collection to avoid E11000.
+        Object nativeId = shop.getId();
+        LocalDateTime now = LocalDateTime.now();
+        org.bson.Document updateDoc = new org.bson.Document()
+                .append("$set", new org.bson.Document()
+                        .append("status", ShopStatus.SUSPENDED.name())
+                        .append("active", false)
+                        .append("enforcementActorId", moderator.getId())
+                        .append("enforcementReason", reason)
+                        .append("enforcementAt", java.util.Date.from(now.atZone(java.time.ZoneId.systemDefault()).toInstant()))
+                        .append("updatedAt", java.util.Date.from(now.atZone(java.time.ZoneId.systemDefault()).toInstant())));
+        mongoTemplate.getCollection("shops").updateOne(
+                new org.bson.Document("_id", nativeId), updateDoc);
         shop.setStatus(ShopStatus.SUSPENDED);
         shop.setActive(false);
-        // Moderator records their own enforcement metadata
         shop.setEnforcementActorId(moderator.getId());
         shop.setEnforcementReason(reason);
-        shop.setEnforcementAt(LocalDateTime.now());
-        shopRepository.save(shop);
+        shop.setEnforcementAt(now);
 
         ShopModerationDecision decision = ShopModerationDecision.builder()
                 .shopId(shopId)
@@ -234,7 +255,7 @@ public class ModeratorShopServiceImpl implements ModeratorShopService {
                 .reason(reason)
                 .moderatorId(moderator.getId())
                 .moderatorEmail(moderator.getUsername())
-                .decidedAt(LocalDateTime.now())
+                .decidedAt(now)
                 .message("Đã suspend shop \"" + shop.getShopName() + "\"")
                 .build();
 
@@ -263,12 +284,23 @@ public class ModeratorShopServiceImpl implements ModeratorShopService {
                     "Chỉ có thể restore shop ở trạng thái SUSPENDED hoặc RESTRICTED (hiện tại=" + before + ")");
         }
 
+        Object nativeId = shop.getId();
+        LocalDateTime now = LocalDateTime.now();
+        org.bson.Document updateDoc = new org.bson.Document()
+                .append("$set", new org.bson.Document()
+                        .append("status", ShopStatus.APPROVED.name())
+                        .append("active", true)
+                        .append("enforcementActorId", moderator.getId())
+                        .append("enforcementReason", reason)
+                        .append("enforcementAt", java.util.Date.from(now.atZone(java.time.ZoneId.systemDefault()).toInstant()))
+                        .append("updatedAt", java.util.Date.from(now.atZone(java.time.ZoneId.systemDefault()).toInstant())));
+        mongoTemplate.getCollection("shops").updateOne(
+                new org.bson.Document("_id", nativeId), updateDoc);
         shop.setStatus(ShopStatus.APPROVED);
         shop.setActive(true);
         shop.setEnforcementActorId(moderator.getId());
         shop.setEnforcementReason(reason);
-        shop.setEnforcementAt(LocalDateTime.now());
-        shopRepository.save(shop);
+        shop.setEnforcementAt(now);
 
         ShopModerationDecision decision = ShopModerationDecision.builder()
                 .shopId(shopId)
@@ -279,7 +311,7 @@ public class ModeratorShopServiceImpl implements ModeratorShopService {
                 .reason(reason)
                 .moderatorId(moderator.getId())
                 .moderatorEmail(moderator.getUsername())
-                .decidedAt(LocalDateTime.now())
+                .decidedAt(now)
                 .message("Đã restore shop \"" + shop.getShopName() + "\" về APPROVED")
                 .build();
 
@@ -308,12 +340,23 @@ public class ModeratorShopServiceImpl implements ModeratorShopService {
                     "Chỉ có thể restrict shop ở trạng thái APPROVED (hiện tại=" + before + ")");
         }
 
+        Object nativeId = shop.getId();
+        LocalDateTime now = LocalDateTime.now();
+        org.bson.Document updateDoc = new org.bson.Document()
+                .append("$set", new org.bson.Document()
+                        .append("status", ShopStatus.RESTRICTED.name())
+                        .append("active", true)
+                        .append("enforcementActorId", moderator.getId())
+                        .append("enforcementReason", reason)
+                        .append("enforcementAt", java.util.Date.from(now.atZone(java.time.ZoneId.systemDefault()).toInstant()))
+                        .append("updatedAt", java.util.Date.from(now.atZone(java.time.ZoneId.systemDefault()).toInstant())));
+        mongoTemplate.getCollection("shops").updateOne(
+                new org.bson.Document("_id", nativeId), updateDoc);
         shop.setStatus(ShopStatus.RESTRICTED);
         shop.setActive(true);
         shop.setEnforcementActorId(moderator.getId());
         shop.setEnforcementReason(reason);
-        shop.setEnforcementAt(LocalDateTime.now());
-        shopRepository.save(shop);
+        shop.setEnforcementAt(now);
 
         ShopModerationDecision decision = ShopModerationDecision.builder()
                 .shopId(shopId)
@@ -324,7 +367,7 @@ public class ModeratorShopServiceImpl implements ModeratorShopService {
                 .reason(reason)
                 .moderatorId(moderator.getId())
                 .moderatorEmail(moderator.getUsername())
-                .decidedAt(LocalDateTime.now())
+                .decidedAt(now)
                 .message("Đã restrict shop \"" + shop.getShopName() + "\"")
                 .build();
 
@@ -342,8 +385,39 @@ public class ModeratorShopServiceImpl implements ModeratorShopService {
         if (!StringUtils.hasText(shopId)) {
             throw new BadRequestException("Shop ID không hợp lệ");
         }
-        return shopRepository.findById(shopId)
-                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy shop với ID: " + shopId));
+        // Phase 4 fix: support BOTH String _id and ObjectId _id.
+        // Bug history: shopRepository.findById(String) silently fails to match a
+        // String _id stored in MongoDB because Spring Data's query translator
+        // sends `{"id": "<hex>"}` (Java field name) instead of `{"_id": "<hex>"}`.
+        // Workaround: query the collection directly via MongoTemplate. String
+        // lookup FIRST (matches AdminShopServiceImpl.getShopById), then ObjectId.
+        Shop shop = shopRepository.findById(shopId).orElse(null);
+        if (shop == null) {
+            org.bson.Document raw = mongoTemplate.getCollection("shops")
+                    .find(new org.bson.Document("_id", shopId))
+                    .first();
+            if (raw == null && shopId.length() == 24 && shopId.matches("[0-9a-fA-F]+")) {
+                org.bson.types.ObjectId oid = new org.bson.types.ObjectId(shopId);
+                raw = mongoTemplate.getCollection("shops")
+                        .find(new org.bson.Document("_id", oid))
+                        .first();
+            }
+            if (raw != null) {
+                if (!raw.containsKey("_class")) {
+                    raw.put("_class", Shop.class.getName());
+                }
+                shop = mongoTemplate.getConverter().read(Shop.class, raw);
+                if (shop.getId() == null) {
+                    shop.setId(raw.get("_id") instanceof org.bson.types.ObjectId
+                            ? raw.get("_id").toString()
+                            : (String) raw.get("_id"));
+                }
+            }
+        }
+        if (shop == null) {
+            throw new ResourceNotFoundException("Không tìm thấy shop với ID: " + shopId);
+        }
+        return shop;
     }
 
     private static void validateReason(String reason) {

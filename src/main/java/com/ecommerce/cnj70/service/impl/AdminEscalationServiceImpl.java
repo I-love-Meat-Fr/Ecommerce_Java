@@ -31,9 +31,11 @@ import com.ecommerce.cnj70.service.AdminEscalationService;
 import com.ecommerce.cnj70.service.AuditEventWriter;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.bson.Document;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
@@ -82,6 +84,7 @@ public class AdminEscalationServiceImpl implements AdminEscalationService {
     private final UserRepository userRepository;
     private final ModerationHistoryRepository historyRepository;
     private final AuditEventWriter auditEventWriter;
+    private final MongoTemplate mongoTemplate;
 
     // ======================== QUEUE ========================
 
@@ -417,9 +420,19 @@ public class AdminEscalationServiceImpl implements AdminEscalationService {
         if (!StringUtils.hasText(escalationId)) {
             throw new BadRequestException("Escalation ID không hợp lệ");
         }
-        return escalationRepository.findById(escalationId)
-                .orElseThrow(() -> new ResourceNotFoundException(
-                        "Không tìm thấy Escalation với ID: " + escalationId));
+        // Phase 6 fix: String _id retrieval — same pattern as Phase 5 fix.
+        // Use raw mongoTemplate query for reliable String _id lookup.
+        Document raw = mongoTemplate.getCollection("escalations")
+                .find(new Document("_id", escalationId))
+                .first();
+        if (raw == null) {
+            throw new ResourceNotFoundException(
+                    "Không tìm thấy Escalation với ID: " + escalationId);
+        }
+        if (!raw.containsKey("_class")) {
+            raw.put("_class", Escalation.class.getName());
+        }
+        return mongoTemplate.getConverter().read(Escalation.class, raw);
     }
 
     private static void validateReason(String reason) {

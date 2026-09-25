@@ -37,4 +37,14 @@ public interface ModeratorService {
      * Lấy danh sách Shop theo KYC status (phân trang).
      */
     Page<Shop> getShopsByKycStatusPaged(KycStatus status, Pageable pageable);
+
+    /**
+     * Moderator duyệt KYC Shop (chuyển từ PENDING_THIRD_PARTY / PENDING_ADMIN / THIRD_PARTY_REJECTED → APPROVED).
+     */
+    Shop approveKyc(String shopId, String moderatorEmail, String note);
+
+    /**
+     * Moderator từ chối KYC Shop (chuyển sang ADMIN_REJECTED).
+     */
+    Shop rejectKyc(String shopId, String moderatorEmail, String note);
 }

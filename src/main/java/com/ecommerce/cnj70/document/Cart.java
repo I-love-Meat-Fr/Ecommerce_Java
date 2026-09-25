@@ -28,7 +28,9 @@ public class Cart {
     
     @Builder.Default
     private List<CartItem> items = new ArrayList<>();
-    
+
+    private String appliedVoucherCode;
+
     private LocalDateTime updatedAt;
     
     @Data

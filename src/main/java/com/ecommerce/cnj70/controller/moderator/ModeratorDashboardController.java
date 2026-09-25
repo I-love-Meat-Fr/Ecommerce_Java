@@ -1,7 +1,11 @@
 package com.ecommerce.cnj70.controller.moderator;
 
 import com.ecommerce.cnj70.document.ModerationHistory;
+import com.ecommerce.cnj70.document.Violation;
+import com.ecommerce.cnj70.enums.ViolationSeverity;
+import com.ecommerce.cnj70.enums.ViolationType;
 import com.ecommerce.cnj70.repository.ModerationHistoryRepository;
+import com.ecommerce.cnj70.service.ViolationService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -49,12 +53,41 @@ import org.springframework.web.bind.annotation.RequestParam;
 public class ModeratorDashboardController {
 
     private final ModerationHistoryRepository historyRepository;
+    private final ViolationService violationService;
 
     // Dashboard moved to ModeratorController — DO NOT add /moderator/dashboard here
 
     @GetMapping("/moderator/violations")
-    public String violations(Model model) {
-        model.addAttribute("title", "Violations - CNJ70");
+    public String violations(@RequestParam(defaultValue = "0") int page,
+                             @RequestParam(defaultValue = "20") int size,
+                             @RequestParam(required = false) String severity,
+                             @RequestParam(required = false) String type,
+                             Model model) {
+        int safeSize = (size <= 0) ? 20 : Math.min(size, 50);
+        int safePage = Math.max(page, 0);
+        Pageable pageable = PageRequest.of(safePage, safeSize);
+
+        ViolationSeverity sev = null;
+        if (severity != null && !severity.isBlank() && !"ALL".equalsIgnoreCase(severity)) {
+            try { sev = ViolationSeverity.valueOf(severity); } catch (Exception ignored) {}
+        }
+        ViolationType vt = null;
+        if (type != null && !type.isBlank() && !"ALL".equalsIgnoreCase(type)) {
+            try { vt = ViolationType.valueOf(type); } catch (Exception ignored) {}
+        }
+
+        Page<Violation> result = violationService.listViolations(null, sev, vt, pageable);
+
+        model.addAttribute("violations", result.getContent());
+        model.addAttribute("page", result.getNumber());
+        model.addAttribute("size", result.getSize());
+        model.addAttribute("totalPages", result.getTotalPages());
+        model.addAttribute("totalItems", result.getTotalElements());
+        model.addAttribute("hasNext", result.hasNext());
+        model.addAttribute("hasPrev", result.hasPrevious());
+        model.addAttribute("severity", severity != null ? severity : "");
+        model.addAttribute("type", type != null ? type : "");
+
         return "moderator/violations";
     }
 

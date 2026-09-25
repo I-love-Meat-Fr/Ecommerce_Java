@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/springsecurity6"
+      th:replace="~{layout/admin-layout :: layout(title='Sửa trạng thái người dùng - CNJ70 Admin', content=~{::main-content}, scripts=~{::page-scripts})}">
+<head>
+    <title>Sửa trạng thái người dùng - CNJ70 Admin</title>
+</head>
+<body>
+<main th:fragment="main-content">
+    <div class="sd-page-head">
+        <div class="sd-page-head-title">
+            <h1>Sửa trạng thái người dùng</h1>
+            <p>Đổi trạng thái tài khoản giữa ACTIVE / LOCKED / UNVERIFIED.</p>
+        </div>
+        <div class="sd-page-head-actions">
+            <a th:href="@{/admin/users/{id}(id=${user.id})}" class="sd-btn sd-btn-secondary sd-btn-sm">
+                <i class="fas fa-arrow-left"></i>
+                <span>Quay lại chi tiết</span>
+            </a>
+        </div>
+    </div>
+
+    <div class="sd-card" th:if="${flashError}" style="margin-bottom:16px;">
+        <div class="sd-card-body" style="background:#fef2f2;border-left:4px solid #ef4444;padding:12px 16px;">
+            <i class="fas fa-exclamation-circle" style="color:#ef4444;"></i>
+            <span th:text="${flashError}" style="margin-left:8px;color:#991b1b;">Lỗi</span>
+        </div>
+    </div>
+
+    <div class="sd-card">
+        <div class="sd-card-head">
+            <div>
+                <h3><i class="fas fa-user-edit"></i> Đổi trạng thái cho <span th:text="${user.fullName} ?: user.email">user</span></h3>
+                <p>Email: <span th:text="${user.email}" class="sd-mono">email</span> · Role: <span th:text="${user.role}">CUSTOMER</span> · Trạng thái hiện tại: <strong th:text="${user.status}">ACTIVE</strong></p>
+            </div>
+        </div>
+        <div class="sd-card-body">
+            <form th:action="@{/admin/users/{id}/edit(id=${user.id})}" method="post">
+                <div class="form-group-modern" style="margin-bottom:16px;">
+                    <label for="status" style="display:block;margin-bottom:8px;font-weight:500;">Trạng thái mới</label>
+                    <select id="status" name="status" class="sd-select"
+                            style="padding:8px 10px;border:1px solid var(--border,#e2e8f0);border-radius:6px;width:100%;max-width:300px;">
+                        <option th:each="s : ${statuses}"
+                                th:value="${s.name()}"
+                                th:text="${s.name() == 'ACTIVE' ? 'Hoạt động' : (s.name() == 'LOCKED' ? 'Đã khóa' : (s.name() == 'UNVERIFIED' ? 'Chưa xác thực' : s.name()))}"
+                                th:selected="${user.status == s}">ACTIVE</option>
+                    </select>
+                </div>
+                <div class="sd-action-row" style="display:flex;gap:8px;">
+                    <button type="submit" class="sd-btn sd-btn-primary sd-btn-sm">
+                        <i class="fas fa-save"></i> Lưu
+                    </button>
+                    <a th:href="@{/admin/users/{id}(id=${user.id})}" class="sd-btn sd-btn-secondary sd-btn-sm">
+                        <i class="fas fa-times"></i> Hủy
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+</main>
+
+<th:block th:fragment="page-scripts"></th:block>
+</body>
+</html>

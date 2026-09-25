@@ -152,8 +152,7 @@ public class ModeratorProductServiceImpl implements ModeratorProductService {
         if (!StringUtils.hasText(productId)) {
             throw new BadRequestException("Product ID không hợp lệ");
         }
-        Product product = productRepository.findById(productId)
-                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy sản phẩm với ID: " + productId));
+        Product product = loadAndGuard(productId);
 
         // Shop context
         Shop shop = (product.getShopId() != null)
@@ -202,12 +201,27 @@ public class ModeratorProductServiceImpl implements ModeratorProductService {
                     "Sản phẩm đã ở trạng thái cuối hoặc không thể duyệt (status=" + before + ")");
         }
 
+        LocalDateTime now = LocalDateTime.now();
+        // Phase 4 fix: use atomic MongoDB updateOne to avoid Spring Data save() inserting
+        // a duplicate ObjectId document when native _id is String. The native _id type
+        // is preserved here.
+        Object nativeId = resolveNativeId("products", product.getId());
+        org.bson.Document updateDoc = new org.bson.Document()
+                .append("$set", new org.bson.Document()
+                        .append("moderationStatus", ModerationStatus.APPROVED.name())
+                        .append("status", ProductStatus.ACTIVE.name())
+                        .append("moderationActorId", moderator.getId())
+                        .append("moderationAt", java.util.Date.from(now.atZone(java.time.ZoneId.systemDefault()).toInstant()))
+                        .append("moderationReason", null)
+                        .append("updatedAt", java.util.Date.from(now.atZone(java.time.ZoneId.systemDefault()).toInstant())));
+        org.bson.Document filter = new org.bson.Document("_id", nativeId);
+        mongoTemplate.getCollection("products").updateOne(filter, updateDoc);
+        // Refresh the in-memory product for downstream history/audit
         product.setModerationStatus(ModerationStatus.APPROVED);
-        product.setStatus(ProductStatus.ACTIVE); // mapping rule (Phase 2A §10)
+        product.setStatus(ProductStatus.ACTIVE);
         product.setModerationActorId(moderator.getId());
-        product.setModerationAt(LocalDateTime.now());
+        product.setModerationAt(now);
         product.setModerationReason(null);
-        productRepository.save(product);
 
         ModerationDecision decision = ModerationDecision.builder()
                 .productId(productId)
@@ -215,7 +229,7 @@ public class ModeratorProductServiceImpl implements ModeratorProductService {
                 .newStatus(ModerationStatus.APPROVED)
                 .moderatorId(moderator.getId())
                 .moderatorEmail(moderator.getUsername())
-                .decidedAt(LocalDateTime.now())
+                .decidedAt(now)
                 .message("Đã duyệt sản phẩm \"" + product.getName() + "\"")
                 .build();
 
@@ -243,12 +257,22 @@ public class ModeratorProductServiceImpl implements ModeratorProductService {
                     "Sản phẩm đã ở trạng thái cuối hoặc không thể từ chối (status=" + before + ")");
         }
 
+        LocalDateTime now = LocalDateTime.now();
+        Object nativeId = resolveNativeId("products", product.getId());
+        org.bson.Document updateDoc = new org.bson.Document()
+                .append("$set", new org.bson.Document()
+                        .append("moderationStatus", ModerationStatus.REJECTED.name())
+                        .append("status", ProductStatus.HIDDEN.name())
+                        .append("moderationActorId", moderator.getId())
+                        .append("moderationAt", java.util.Date.from(now.atZone(java.time.ZoneId.systemDefault()).toInstant()))
+                        .append("moderationReason", reason)
+                        .append("updatedAt", java.util.Date.from(now.atZone(java.time.ZoneId.systemDefault()).toInstant())));
+        mongoTemplate.getCollection("products").updateOne(new org.bson.Document("_id", nativeId), updateDoc);
         product.setModerationStatus(ModerationStatus.REJECTED);
-        product.setStatus(ProductStatus.HIDDEN); // mapping rule (Phase 2A §10)
+        product.setStatus(ProductStatus.HIDDEN);
         product.setModerationActorId(moderator.getId());
-        product.setModerationAt(LocalDateTime.now());
+        product.setModerationAt(now);
         product.setModerationReason(reason);
-        productRepository.save(product);
 
         // Phase 2 §28 — Reject → Violation consistency.
         // Khi Moderator REJECT một Product, tạo Violation document để Admin
@@ -280,7 +304,7 @@ public class ModeratorProductServiceImpl implements ModeratorProductService {
                 .reason(reason)
                 .moderatorId(moderator.getId())
                 .moderatorEmail(moderator.getUsername())
-                .decidedAt(LocalDateTime.now())
+                .decidedAt(now)
                 .message("Đã từ chối sản phẩm \"" + product.getName() + "\"")
                 .build();
 
@@ -308,12 +332,22 @@ public class ModeratorProductServiceImpl implements ModeratorProductService {
                     "Sản phẩm đã ở trạng thái cuối hoặc không thể leo thang (status=" + before + ")");
         }
 
+        LocalDateTime now = LocalDateTime.now();
+        Object nativeId = resolveNativeId("products", product.getId());
+        org.bson.Document updateDoc = new org.bson.Document()
+                .append("$set", new org.bson.Document()
+                        .append("moderationStatus", ModerationStatus.ESCALATED.name())
+                        .append("status", ProductStatus.HIDDEN.name())
+                        .append("moderationActorId", moderator.getId())
+                        .append("moderationAt", java.util.Date.from(now.atZone(java.time.ZoneId.systemDefault()).toInstant()))
+                        .append("moderationReason", reason)
+                        .append("updatedAt", java.util.Date.from(now.atZone(java.time.ZoneId.systemDefault()).toInstant())));
+        mongoTemplate.getCollection("products").updateOne(new org.bson.Document("_id", nativeId), updateDoc);
         product.setModerationStatus(ModerationStatus.ESCALATED);
-        product.setStatus(ProductStatus.HIDDEN); // mapping rule (Phase 2A §10) — admin will enforce
+        product.setStatus(ProductStatus.HIDDEN);
         product.setModerationActorId(moderator.getId());
-        product.setModerationAt(LocalDateTime.now());
+        product.setModerationAt(now);
         product.setModerationReason(reason);
-        productRepository.save(product);
 
         ModerationDecision decision = ModerationDecision.builder()
                 .productId(productId)
@@ -322,7 +356,7 @@ public class ModeratorProductServiceImpl implements ModeratorProductService {
                 .reason(reason)
                 .moderatorId(moderator.getId())
                 .moderatorEmail(moderator.getUsername())
-                .decidedAt(LocalDateTime.now())
+                .decidedAt(now)
                 .message("Đã leo thang sản phẩm \"" + product.getName() + "\" lên Admin")
                 .build();
 
@@ -340,14 +374,78 @@ public class ModeratorProductServiceImpl implements ModeratorProductService {
         if (!StringUtils.hasText(productId)) {
             throw new BadRequestException("Product ID không hợp lệ");
         }
-        return productRepository.findById(productId)
-                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy sản phẩm với ID: " + productId));
+        // Phase 4 fix: support BOTH String _id and ObjectId _id.
+        // Bug history: productRepository.findById(String) silently fails to match a
+        // String _id stored in MongoDB because Spring Data's query translator
+        // sends `{"id": "<hex>"}` (Java field name) instead of `{"_id": "<hex>"}`.
+        // Workaround: query the collection directly via MongoTemplate. String
+        // lookup FIRST (matches AdminProductServiceImpl pattern), then ObjectId.
+        Product product = productRepository.findById(productId).orElse(null);
+        if (product == null) {
+            org.bson.Document raw = mongoTemplate.getCollection("products")
+                    .find(new org.bson.Document("_id", productId))
+                    .first();
+            if (raw == null && productId.length() == 24 && productId.matches("[0-9a-fA-F]+")) {
+                org.bson.types.ObjectId oid = new org.bson.types.ObjectId(productId);
+                raw = mongoTemplate.getCollection("products")
+                        .find(new org.bson.Document("_id", oid))
+                        .first();
+            }
+            if (raw != null) {
+                if (!raw.containsKey("_class")) {
+                    raw.put("_class", Product.class.getName());
+                }
+                product = mongoTemplate.getConverter().read(Product.class, raw);
+                if (product.getId() == null) {
+                    product.setId(raw.get("_id") instanceof org.bson.types.ObjectId
+                            ? raw.get("_id").toString()
+                            : (String) raw.get("_id"));
+                }
+            }
+        }
+        if (product == null) {
+            throw new ResourceNotFoundException("Không tìm thấy sản phẩm với ID: " + productId);
+        }
+        return product;
     }
 
     private static void validateReason(String reason) {
         if (reason == null || reason.isBlank()) {
             throw new BadRequestException("Reason is required and must not be blank");
         }
+    }
+
+    /**
+     * Phase 4 fix: resolve the native {@code _id} value of a MongoDB document so that
+     * the subsequent {@code updateOne(_id, ...)} filter matches the actual stored type
+     * (String or ObjectId). When Spring Data's {@code repository.save()} is given an
+     * entity whose Java {@code @Id} field is a String, but the document in MongoDB was
+     * written with a String {@code _id}, save() generates a new ObjectId insert and
+     * leaves the original untouched — producing duplicate rows.
+     */
+    private Object resolveNativeId(String collectionName, String idHint) {
+        if (idHint == null) {
+            throw new BadRequestException("ID không hợp lệ");
+        }
+        // Try String first (matches our seed data convention).
+        org.bson.Document raw = mongoTemplate.getCollection(collectionName)
+                .find(new org.bson.Document("_id", idHint))
+                .projection(new org.bson.Document("_id", 1))
+                .first();
+        if (raw != null) {
+            return raw.get("_id");
+        }
+        // Fall back to ObjectId if it parses as 24 hex chars.
+        if (idHint.length() == 24 && idHint.matches("[0-9a-fA-F]+")) {
+            raw = mongoTemplate.getCollection(collectionName)
+                    .find(new org.bson.Document("_id", new org.bson.types.ObjectId(idHint)))
+                    .projection(new org.bson.Document("_id", 1))
+                    .first();
+            if (raw != null) {
+                return raw.get("_id");
+            }
+        }
+        throw new ResourceNotFoundException("Không tìm thấy document với ID: " + idHint);
     }
 
     private void recordHistory(Product product, ModerationDecision decision,
