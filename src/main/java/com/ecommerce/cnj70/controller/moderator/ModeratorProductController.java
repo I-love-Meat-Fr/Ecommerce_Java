@@ -85,6 +85,7 @@ public class ModeratorProductController {
         model.addAttribute("q", q == null ? "" : q);
         model.addAttribute("status", moderationFilter == null ? "" : moderationFilter.name());
         model.addAttribute("statuses", List.of(
+                ModerationStatus.PENDING_AUTO,
                 ModerationStatus.PENDING_MANUAL,
                 ModerationStatus.AUTO_PASSED,
                 ModerationStatus.AUTO_REJECTED));

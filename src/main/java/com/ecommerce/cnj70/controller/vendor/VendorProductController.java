@@ -182,6 +182,25 @@ public class VendorProductController {
         return "redirect:/vendor/products";
     }
 
+    /**
+     * Phase 4 — Resubmit endpoint: Vendor gửi lại Product bị REJECTED để Moderator xét lại.
+     * Endpoint riêng (không cần qua edit form). Trả về redirect về product-list kèm flash message.
+     */
+    @PostMapping("/{id}/resubmit")
+    public String resubmitProduct(@AuthenticationPrincipal CustomUserDetails user,
+                                  @PathVariable String id,
+                                  RedirectAttributes redirectAttributes) {
+        try {
+            vendorService.validateProductOwnership(id, user);
+            productService.resubmitProduct(id);
+            redirectAttributes.addFlashAttribute("success",
+                    "Đã gửi lại sản phẩm. Sản phẩm sẽ được Moderator kiểm tra lại.");
+        } catch (BadRequestException | ResourceNotFoundException e) {
+            redirectAttributes.addFlashAttribute("error", e.getMessage());
+        }
+        return "redirect:/vendor/products";
+    }
+
     @GetMapping("/categories")
     @ResponseBody
     public List<Category> getCategories() {

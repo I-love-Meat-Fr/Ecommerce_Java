@@ -82,11 +82,13 @@ public class ProductServiceImpl implements ProductService {
                 .shopId(shopId)
                 .shopName(shopName)
                 .status(request.getStatus() != null ? request.getStatus() : ProductStatus.ACTIVE)
-                // Phase 2 §13 — mọi Product mới phải vào Moderation queue.
-                // Auto Moderation contract sẽ (khi wire vào real backend) nâng cấp
-                // thành AUTO_PASSED / AUTO_REJECTED; nếu không có backend thật
-                // thì giữ PENDING_MANUAL và Moderator xử lý thủ công.
-                .moderationStatus(ModerationStatus.PENDING_MANUAL)
+                // Phase 4 — khi vendor tạo Product mới, Moderation status khởi tạo
+                // là PENDING_AUTO (đang chờ Auto Moderation engine trả kết quả).
+                // Khi engine có kết quả thì chuyển sang AUTO_PASSED / AUTO_REJECTED /
+                // PENDING_MANUAL (nếu engine không phản hồi). Phase 2A cũ dùng
+                // PENDING_MANUAL làm default; giờ phân biệt rõ hai trạng thái này
+                // để moderator biết sản phẩm đã qua auto check hay chưa.
+                .moderationStatus(ModerationStatus.PENDING_AUTO)
                 .build();
 
         if (product.getImageUrls() != null && !product.getImageUrls().isEmpty()) {
@@ -314,6 +316,53 @@ public class ProductServiceImpl implements ProductService {
                     .build());
         }
         return cleaned;
+    }
+
+    @Override
+    @Transactional
+    public Product resubmitProduct(String id) {
+        Product product = getProductById(id);
+        enforceOwnership(product);
+
+        if (product.getModerationStatus() != ModerationStatus.REJECTED) {
+            throw new BadRequestException(
+                    "Chỉ sản phẩm đang ở trạng thái BỊ TỪ CHỐI mới có thể gửi lại. "
+                            + "Hiện tại: " + product.getModerationStatus());
+        }
+
+        // Reset về PENDING_AUTO để Auto Moderation engine có thể chạy lại.
+        // Khi không có real backend thì PENDING_AUTO vẫn được liệt kê trong
+        // Moderator queue (xem QUEUE_STATUSES), nên Moderator vẫn xử lý được.
+        product.setModerationStatus(ModerationStatus.PENDING_AUTO);
+        product.setModerationReason(null);
+        product.setModerationAt(null);
+        product.setModerationActorId(null);
+
+        Product saved = productRepository.save(product);
+
+        // Best-effort: ghi audit + history để truy vết lịch sử resubmit
+        try {
+            AuditEvent event = AuditEvent.builder()
+                    .actorId(product.getShopId())
+                    .actorEmail(product.getShopId())
+                    .role(UserRole.VENDOR)
+                    .action("PRODUCT_RESUBMIT")
+                    .resourceType("PRODUCT")
+                    .resourceId(saved.getId())
+                    .before(ModerationStatus.REJECTED.name())
+                    .after(ModerationStatus.PENDING_AUTO.name())
+                    .reason("Vendor gửi lại sản phẩm đã bị từ chối")
+                    .createdAt(java.time.LocalDateTime.now())
+                    .build();
+            auditEventWriter.write(event);
+        } catch (RuntimeException ex) {
+            log.warn("Failed to emit resubmit audit for productId={}: {}",
+                    saved.getId(), ex.getMessage());
+        }
+
+        log.info("Product resubmitted by vendor: productId={} shopId={}",
+                saved.getId(), saved.getShopId());
+        return saved;
     }
 
     @Override

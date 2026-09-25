@@ -129,15 +129,17 @@
                           th:classappend="${product.moderationStatus.name() == 'APPROVED' ? 'sd-badge-green' :
                                           (product.moderationStatus.name() == 'REJECTED' ? 'sd-badge-red' :
                                           (product.moderationStatus.name() == 'PENDING_MANUAL' ? 'sd-badge-warning' :
+                                          (product.moderationStatus.name() == 'PENDING_AUTO' ? 'sd-badge-slate' :
                                           (product.moderationStatus.name() == 'AUTO_REJECTED' ? 'sd-badge-red' :
                                           (product.moderationStatus.name() == 'AUTO_PASSED' ? 'sd-badge-blue' :
-                                          (product.moderationStatus.name() == 'ESCALATED' ? 'sd-badge-slate' : 'sd-badge-slate')))))}"
-                          th:text="${product.moderationStatus.name() == 'PENDING_MANUAL' ? 'Chờ duyệt' :
+                                          (product.moderationStatus.name() == 'ESCALATED' ? 'sd-badge-slate' : 'sd-badge-slate'))))))}"
+                          th:text="${product.moderationStatus.name() == 'PENDING_AUTO' ? 'Chờ Auto' :
+                                   (product.moderationStatus.name() == 'PENDING_MANUAL' ? 'Chờ duyệt' :
                                    (product.moderationStatus.name() == 'AUTO_PASSED' ? 'Auto-passed' :
                                    (product.moderationStatus.name() == 'AUTO_REJECTED' ? 'Auto-rejected' :
                                    (product.moderationStatus.name() == 'APPROVED' ? 'Đã duyệt' :
                                    (product.moderationStatus.name() == 'REJECTED' ? 'Bị từ chối' :
-                                   (product.moderationStatus.name() == 'ESCALATED' ? 'Đã leo thang' : product.moderationStatus.name())))))}">
+                                   (product.moderationStatus.name() == 'ESCALATED' ? 'Đã leo thang' : product.moderationStatus.name()))))))}">
                         PENDING_MANUAL
                     </span>
                     <div th:if="${product.moderationStatus != null and product.moderationStatus.name() == 'REJECTED' and product.moderationReason != null}"
@@ -153,6 +155,16 @@
                         <a th:href="@{/vendor/products/edit/{id}(id=${product.id})}" class="sd-btn sd-btn-secondary sd-btn-sm" title="Sửa">
                             <i class="fas fa-pen"></i>
                         </a>
+                        <!-- Phase 4 — Resubmit button chỉ hiển thị khi product bị REJECTED -->
+                        <form th:if="${product.moderationStatus != null and product.moderationStatus.name() == 'REJECTED'}"
+                              th:action="@{/vendor/products/{id}/resubmit(id=${product.id})}"
+                              method="post"
+                              class="sd-logout-form"
+                              onsubmit="return confirm('Gửi lại sản phẩm này để Moderator kiểm tra?');">
+                            <button type="submit" class="sd-btn sd-btn-primary sd-btn-sm" title="Gửi lại để duyệt">
+                                <i class="fas fa-paper-plane"></i>
+                            </button>
+                        </form>
                         <form th:action="@{/vendor/products/delete/{id}(id=${product.id})}" method="post" class="sd-logout-form">
                             <button type="submit" class="sd-btn sd-btn-danger sd-btn-sm" onclick="return confirm('Bạn có chắc muốn xóa sản phẩm này?')" title="Xóa">
                                 <i class="fas fa-trash"></i>

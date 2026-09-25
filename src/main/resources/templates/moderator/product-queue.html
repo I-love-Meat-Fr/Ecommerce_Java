@@ -31,9 +31,10 @@
                     <option value="">Tất cả trạng thái kiểm duyệt</option>
                     <option th:each="s : ${statuses}"
                             th:value="${s.name()}"
-                            th:text="${s.name() == 'PENDING_MANUAL' ? 'Chờ Moderator' :
+                            th:text="${s.name() == 'PENDING_AUTO' ? 'Chờ Auto' :
+                                          (s.name() == 'PENDING_MANUAL' ? 'Chờ Moderator' :
                                           (s.name() == 'AUTO_PASSED' ? 'Auto: Đạt' :
-                                          (s.name() == 'AUTO_REJECTED' ? 'Auto: Từ chối' : s.name()))}"
+                                          (s.name() == 'AUTO_REJECTED' ? 'Auto: Từ chối' : s.name())))}"
                             th:selected="${status == s.name()}"></option>
                 </select>
                 <button type="submit" class="sd-btn sd-btn-primary sd-btn-sm sd-toolbar-btn">
@@ -113,12 +114,14 @@
                         </td>
                         <td>
                             <span class="sd-badge"
-                                  th:classappend="${item.moderationStatus.name() == 'PENDING_MANUAL' ? 'sd-badge-warning' :
+                                  th:classappend="${item.moderationStatus.name() == 'PENDING_AUTO' ? 'sd-badge-slate' :
+                                                  (item.moderationStatus.name() == 'PENDING_MANUAL' ? 'sd-badge-warning' :
                                                   (item.moderationStatus.name() == 'AUTO_PASSED' ? 'sd-badge-green' :
-                                                  (item.moderationStatus.name() == 'AUTO_REJECTED' ? 'sd-badge-danger' : 'sd-badge-blue'))}"
-                                  th:text="${item.moderationStatus.name() == 'PENDING_MANUAL' ? 'Chờ Moderator' :
+                                                  (item.moderationStatus.name() == 'AUTO_REJECTED' ? 'sd-badge-danger' : 'sd-badge-blue')))}"
+                                  th:text="${item.moderationStatus.name() == 'PENDING_AUTO' ? 'Chờ Auto' :
+                                            (item.moderationStatus.name() == 'PENDING_MANUAL' ? 'Chờ Moderator' :
                                             (item.moderationStatus.name() == 'AUTO_PASSED' ? 'Auto: Đạt' :
-                                            (item.moderationStatus.name() == 'AUTO_REJECTED' ? 'Auto: Từ chối' : item.moderationStatus.name()))}">PENDING_MANUAL</span>
+                                            (item.moderationStatus.name() == 'AUTO_REJECTED' ? 'Auto: Từ chối' : item.moderationStatus.name())))}">PENDING_MANUAL</span>
                         </td>
                         <td>
                             <span th:if="${item.autoModerationResult == null}" class="sd-badge sd-badge-slate">

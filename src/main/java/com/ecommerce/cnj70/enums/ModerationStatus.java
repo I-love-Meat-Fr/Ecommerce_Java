@@ -10,19 +10,21 @@ package com.ecommerce.cnj70.enums;
  *
  * <p>Mapping (Phase 2A §10):</p>
  * <pre>
- *   PENDING_MANUAL → moderator queue
- *   APPROVED       → ProductStatus = ACTIVE   (visible to customer)
- *   REJECTED       → ProductStatus = HIDDEN   (terminal for moderator)
- *   ESCALATED      → ProductStatus = HIDDEN   (admin will review)
- *
- *   AUTO_PASSED    → moderator queue (informational — backend of Tuan)
- *   AUTO_REJECTED  → moderator queue (informational — backend of Tuan)
+ *   PENDING_AUTO    → product just submitted, waiting on Auto Moderation engine
+ *   PENDING_MANUAL  → moderator queue
+ *   AUTO_PASSED     → auto engine passed; moderator may still inspect
+ *   AUTO_REJECTED   → auto engine flagged; moderator may still inspect
+ *   APPROVED        → moderator approved → ProductStatus = ACTIVE   (visible)
+ *   REJECTED        → moderator rejected → ProductStatus = HIDDEN   (terminal for moderator)
+ *   ESCALATED       → moderator escalated → ProductStatus = HIDDEN  (admin reviews)
  * </pre>
  *
  * <p>This enum does NOT replace {@link ProductStatus}. Existing code that
  * depends on {@code ProductStatus} continues to work without changes.</p>
  */
 public enum ModerationStatus {
+    /** Phase 4 — product just submitted; Auto Moderation engine has not returned a result yet. */
+    PENDING_AUTO,
     PENDING_MANUAL,
     AUTO_PASSED,
     AUTO_REJECTED,
