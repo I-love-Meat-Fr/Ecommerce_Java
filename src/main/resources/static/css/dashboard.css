@@ -1202,7 +1202,7 @@
 .sd-app .sd-form-control:focus {
     outline: none;
     border-color: var(--primary);
-    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15);
+    box-shadow: 0 0 0 3px rgba(15, 181, 176, 0.15);
 }
 
 .sd-app textarea.sd-form-control { height: auto; padding: 10px 12px; min-height: 96px; resize: vertical; }

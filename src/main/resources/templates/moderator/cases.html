@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security6"
+      th:replace="~{layout/moderator-layout :: layout(title='Report Cases - CNJ70', content=~{::main-content}, scripts=~{::page-scripts})}">
+<head>
+    <title>Report Cases - CNJ70</title>
+</head>
+<body>
+<main th:fragment="main-content">
+    <div class="dash-hero" style="padding: 1.5rem 2rem;">
+        <div class="dash-hero-content">
+            <div class="dash-greeting">
+                <h1>Report Cases</h1>
+                <p class="dash-greeting-sub">Xử lý các báo cáo vi phạm từ người dùng</p>
+            </div>
+        </div>
+    </div>
+    <div class="dash-card" style="margin: 0 2rem 2rem;">
+        <div class="dash-card-header">
+            <div class="dash-card-title-group">
+                <h3><i class="fas fa-flag"></i> Report Cases</h3>
+                <p>Phase 2C - Chức năng sẽ được triển khai sau</p>
+            </div>
+        </div>
+        <div class="dash-card-body">
+            <div class="dash-empty">
+                <div class="dash-empty-icon"><i class="fas fa-flag"></i></div>
+                <h3>Chưa có dữ liệu</h3>
+                <p>Backend ReportCase sẽ được triển khai trong Phase 2C</p>
+            </div>
+        </div>
+    </div>
+</main>
+<th:block th:fragment="page-scripts"></th:block>
+</body>
+</html>

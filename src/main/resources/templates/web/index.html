@@ -32,7 +32,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body class="home-page">
-    <div th:replace="fragments/web-header"></div>
+    <div th:replace="~{fragments/web-header}"></div>
 
     <main class="main-content">
 
@@ -440,13 +440,13 @@
                 <div class="home-voucher-grid" th:if="${not #lists.isEmpty(availableVouchers)}">
                     <a th:href="@{/vouchers}" class="home-voucher-card" th:each="v : ${availableVouchers}">
                         <div class="hv-left">
-                            <div class="hv-discount" th:if="${v.discountType.name() == 'PERCENT'}">
+                            <div class="hv-discount" th:if="${v.discountType != null and v.discountType.name() == 'PERCENT'}">
                                 <span th:text="${#numbers.formatDecimal(v.discountValue, 0, 'COMMA', 0, 'POINT')}">15</span><span>%</span>
                             </div>
-                            <div class="hv-discount" th:if="${v.discountType.name() == 'AMOUNT'}">
+                            <div class="hv-discount" th:if="${v.discountType != null and v.discountType.name() == 'AMOUNT'}">
                                 <span th:text="${@money.format(v.discountValue)}">50K</span>
                             </div>
-                            <div class="hv-type-badge" th:text="${v.type.name() == 'WEB'} ? 'Toàn sàn' : 'Shop ' + ${v.shopName}">WEB</div>
+                            <div class="hv-type-badge" th:text="${v.type != null and v.type.name() == 'WEB'} ? 'Toàn sàn' : 'Shop ' + ${v.shopName}">WEB</div>
                         </div>
                         <div class="hv-right">
                             <div class="hv-name" th:text="${v.name}">Tên voucher</div>

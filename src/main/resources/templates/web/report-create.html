@@ -1,0 +1,377 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/springsecurity6"
+      th:replace="~{layout/web-layout :: layout(title='Gửi báo cáo - CNJ70 Shop', content=~{::main-content}, scripts=~{::page-scripts}, pageStyles=~{::page-styles})}">
+<head>
+    <title>Gửi báo cáo - CNJ70 Shop</title>
+    <th:block th:fragment="page-styles">
+        <link rel="stylesheet" th:href="@{/css/report.css}">
+    </th:block>
+</head>
+<body>
+<main th:fragment="main-content" class="rpt-page rpt-create-page">
+
+    <!-- Hero -->
+    <section class="rpt-hero">
+        <div class="container">
+            <nav class="rpt-breadcrumb">
+                <a th:href="@{/home}"><i class="fas fa-home"></i> Trang chủ</a>
+                <i class="fas fa-chevron-right"></i>
+                <a th:href="@{/reports}">Báo cáo của tôi</a>
+                <i class="fas fa-chevron-right"></i>
+                <span>Gửi mới</span>
+            </nav>
+            <div class="rpt-hero-inner">
+                <div class="rpt-hero-left">
+                    <span class="rpt-hero-tag">
+                        <i class="fas fa-pen-to-square"></i> Gửi báo cáo vi phạm
+                    </span>
+                    <h1>Gửi báo cáo mới</h1>
+                    <p>Chọn lý do, mô tả chi tiết và đính kèm bằng chứng (hình ảnh/PDF) để đội ngũ kiểm duyệt xử lý nhanh nhất.</p>
+                </div>
+                <div class="rpt-hero-right">
+                    <a th:href="@{/reports}" class="rpt-hero-cta rpt-hero-cta-ghost">
+                        <i class="fas fa-arrow-left"></i>
+                        <span>Quay lại</span>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Body -->
+    <section class="rpt-section">
+        <div class="container">
+            <div class="rpt-create-layout">
+
+                <!-- Form column -->
+                <div class="rpt-form-col">
+                    <!-- Server-side error -->
+                    <div th:if="${error}" class="rpt-alert rpt-alert-error">
+                        <i class="fas fa-exclamation-circle"></i>
+                        <div>
+                            <strong>Không thể gửi báo cáo.</strong>
+                            <p style="margin: 4px 0 0 0;" th:text="${error}">Error</p>
+                        </div>
+                    </div>
+
+                    <!-- ============== STEP 0: Target (Review hoặc Product) ============== -->
+                    <section class="rpt-form-section" th:if="${targetSnapshot != null}">
+                        <header class="rpt-form-section-header">
+                            <span class="rpt-form-step"><i class="fas fa-bullseye"></i></span>
+                            <h3>Đối tượng bị báo cáo</h3>
+                        </header>
+
+                        <!-- Product target -->
+                        <div class="rpt-target-card" th:if="${targetType.name() == 'PRODUCT' and targetSnapshot != null}">
+                            <div class="rpt-target-icon"><i class="fas fa-box"></i></div>
+                            <div class="rpt-target-info">
+                                <span class="rpt-target-label">Sản phẩm</span>
+                                <strong th:text="${targetSnapshot.name}">Product name</strong>
+                                <code th:text="'#' + ${targetSnapshot.id}">#id</code>
+                            </div>
+                            <div class="rpt-target-price" th:if="${targetSnapshot.price != null}">
+                                <span th:text="${@money.format(targetSnapshot.price)}">0đ</span>
+                            </div>
+                        </div>
+
+                        <!-- Review target -->
+                        <div class="rpt-target-card" th:if="${targetType.name() == 'REVIEW' and targetSnapshot != null}">
+                            <div class="rpt-target-icon"><i class="fas fa-comment-dots"></i></div>
+                            <div class="rpt-target-info">
+                                <span class="rpt-target-label">Đánh giá</span>
+                                <strong th:text="${targetSnapshot.userName != null ? targetSnapshot.userName : 'Người dùng'}">User</strong>
+                                <div class="rpt-target-stars" th:if="${targetSnapshot.rating != null}">
+                                    <th:block th:each="i : ${#numbers.sequence(1, 5)}">
+                                        <i class="fas fa-star" th:classappend="${i <= targetSnapshot.rating ? 'filled' : ''}"></i>
+                                    </th:block>
+                                </div>
+                                <small class="rpt-target-comment"
+                                       th:text="${targetSnapshot.comment != null ? (targetSnapshot.comment.length() > 100 ? targetSnapshot.comment.substring(0, 100) + '…' : targetSnapshot.comment) : ''}">
+                                    Comment
+                                </small>
+                            </div>
+                        </div>
+                    </section>
+
+                    <!-- Nếu không có target → form không hợp lệ, hướng dẫn chọn -->
+                    <section class="rpt-form-section" th:if="${targetSnapshot == null}">
+                        <div class="rpt-alert rpt-alert-warning">
+                            <i class="fas fa-info-circle"></i>
+                            <div>
+                                <strong>Chưa chọn đối tượng báo cáo.</strong>
+                                <p style="margin: 4px 0 0 0;">Vui lòng dùng nút "Báo cáo" trên trang chi tiết sản phẩm hoặc trên một đánh giá cụ thể.</p>
+                            </div>
+                        </div>
+                        <div class="rpt-form-actions" style="margin-top: 12px;">
+                            <a th:href="@{/products}" class="rpt-btn-primary">
+                                <i class="fas fa-th-large"></i> Đi đến danh sách sản phẩm
+                            </a>
+                        </div>
+                    </section>
+
+                    <!-- Form submit -->
+                    <form th:if="${targetSnapshot != null and targetType != null}"
+                          th:action="@{/reports}"
+                          method="post"
+                          enctype="multipart/form-data"
+                          class="rpt-form"
+                          id="report-form"
+                          novalidate>
+
+                        <input type="hidden" name="targetType" th:value="${targetType.name()}">
+                        <input type="hidden" name="targetId" th:value="${targetId}">
+
+                        <!-- ============== STEP 1: Reason ============== -->
+                        <section class="rpt-form-section">
+                            <header class="rpt-form-section-header">
+                                <span class="rpt-form-step">1</span>
+                                <h3>Lý do báo cáo <span class="required-mark">*</span></h3>
+                            </header>
+
+                            <div class="rpt-form-field">
+                                <label for="reason">Chọn lý do phù hợp</label>
+                                <select id="reason" name="reason" required class="rpt-select"
+                                        th:attr="data-prefilled=${formReason != null ? formReason : ''}">
+                                    <option value="">-- Chọn lý do --</option>
+                                    <option th:each="r : ${reasons}"
+                                            th:value="${r.name()}"
+                                            th:text="${reasonLabels.get(r) ?: r.name()}">
+                                        Reason
+                                    </option>
+                                </select>
+                                <small class="rpt-field-hint">
+                                    <i class="fas fa-lightbulb"></i>
+                                    Mỗi lý do sẽ được ưu tiên xử lý bởi đội ngũ kiểm duyệt.
+                                </small>
+                            </div>
+                        </section>
+
+                        <!-- ============== STEP 2: Description ============== -->
+                        <section class="rpt-form-section">
+                            <header class="rpt-form-section-header">
+                                <span class="rpt-form-step">2</span>
+                                <h3>Mô tả chi tiết</h3>
+                            </header>
+
+                            <div class="rpt-form-field">
+                                <label for="description">Mô tả vấn đề bạn phát hiện</label>
+                                <textarea id="description"
+                                          name="description"
+                                          rows="5"
+                                          maxlength="2000"
+                                          class="rpt-textarea"
+                                          placeholder="Mô tả rõ vấn đề: nội dung vi phạm, vị trí xuất hiện, bằng chứng cụ thể (link, ID, ...)..."
+                                          th:text="${formDescription != null ? formDescription : ''}"></textarea>
+                                <div class="rpt-field-counter">
+                                    <span id="description-counter">0</span> / 2000 ký tự
+                                </div>
+                                <small class="rpt-field-hint">
+                                    <i class="fas fa-info-circle"></i>
+                                    Mô tả càng chi tiết, Moderator càng xử lý nhanh.
+                                </small>
+                            </div>
+                        </section>
+
+                        <!-- ============== STEP 3: Evidence ============== -->
+                        <section class="rpt-form-section">
+                            <header class="rpt-form-section-header">
+                                <span class="rpt-form-step">3</span>
+                                <h3>Bằng chứng <small>(khuyến nghị)</small></h3>
+                            </header>
+
+                            <div class="rpt-form-field">
+                                <label for="hình ảnh">Hình ảnh / PDF</label>
+                                <div class="rpt-file-drop" id="evidence-drop">
+                                    <input type="file" id="hình ảnh" name="evidence" multiple
+                                           accept=".jpg,.jpeg,.png,.pdf,image/jpeg,image/png,application/pdf"
+                                           class="rpt-file-input">
+                                    <div class="rpt-file-drop-content">
+                                        <i class="fas fa-cloud-arrow-up"></i>
+                                        <strong>Kéo thả file hoặc bấm để chọn</strong>
+                                        <small>Hỗ trợ: JPG, PNG, PDF. Tối đa 6 file, mỗi file ≤ 5MB.</small>
+                                    </div>
+                                </div>
+                                <ul id="evidence-preview" class="rpt-evidence-preview"></ul>
+                                <small class="rpt-field-hint">
+                                    <i class="fas fa-shield-halved"></i>
+                                    Ảnh chụp màn hình, bill, hóa đơn, hoặc bất kỳ bằng chứng nào giúp xác minh.
+                                </small>
+                            </div>
+                        </section>
+
+                        <!-- Submit -->
+                        <div class="rpt-form-actions">
+                            <a th:href="@{/reports}" class="rpt-btn-secondary">
+                                <i class="fas fa-times"></i> Hủy
+                            </a>
+                            <button type="submit" class="rpt-btn-primary" id="report-submit-btn">
+                                <i class="fas fa-paper-plane"></i> Gửi báo cáo
+                            </button>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- Side tips -->
+                <aside class="rpt-side-col">
+                    <div class="rpt-tips-card">
+                        <h3><i class="fas fa-lightbulb"></i> Mẹo gửi báo cáo hiệu quả</h3>
+                        <ul>
+                            <li><i class="fas fa-check"></i> Chọn đúng lý do — giúp Moderator xử lý nhanh hơn.</li>
+                            <li><i class="fas fa-check"></i> Mô tả ngắn gọn, đi thẳng vào vấn đề.</li>
+                            <li><i class="fas fa-check"></i> Đính kèm bằng chứng rõ ràng (ảnh/PDF).</li>
+                            <li><i class="fas fa-check"></i> Không gửi trùng lặp — hệ thống tự nhận diện case đang chờ.</li>
+                        </ul>
+                    </div>
+
+                    <div class="rpt-tips-card rpt-tips-card-soft">
+                        <h3><i class="fas fa-info-circle"></i> Quy trình xử lý</h3>
+                        <ol>
+                            <li>Bạn gửi báo cáo → hệ thống tạo mã case.</li>
+                            <li>Moderator nhận & xem xét bằng chứng.</li>
+                            <li>Quyết định: Duyệt / Từ chối / Chuyển Admin.</li>
+                            <li>Bạn nhận kết quả ngay tại trang chi tiết case.</li>
+                        </ol>
+                    </div>
+
+                    <div class="rpt-tips-card">
+                        <h3><i class="fas fa-shield-halved"></i> Cam kết</h3>
+                        <ul>
+                            <li><i class="fas fa-lock"></i> Báo cáo được bảo mật — chỉ Moderator/Admin xem.</li>
+                            <li><i class="fas fa-eye"></i> Bạn có thể theo dõi trạng thái mọi lúc.</li>
+                            <li><i class="fas fa-gavel"></i> Mọi quyết định đều có audit log.</li>
+                        </ul>
+                    </div>
+                </aside>
+
+            </div>
+        </div>
+    </section>
+</main>
+
+<th:block th:fragment="page-scripts">
+    <script th:inline="none">
+        // ===== Description counter =====
+        (function() {
+            const textarea = document.getElementById('description');
+            const counter = document.getElementById('description-counter');
+            if (textarea && counter) {
+                const update = () => counter.textContent = (textarea.value || '').length;
+                textarea.addEventListener('input', update);
+                update();
+            }
+        })();
+
+        // ===== Evidence preview =====
+        (function() {
+            const fileInput = document.getElementById('evidence');
+            const dropZone = document.getElementById('evidence-drop');
+            const previewList = document.getElementById('evidence-preview');
+            if (!fileInput || !previewList) return;
+
+            const MAX_FILES = 6;
+            const MAX_SIZE = 5 * 1024 * 1024;
+
+            function humanSize(bytes) {
+                if (bytes < 1024) return bytes + ' B';
+                if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+                return (bytes / (1024 * 1024)).toFixed(2) + ' MB';
+            }
+
+            function isImage(file) {
+                return file.type && file.type.indexOf('image/') === 0;
+            }
+
+            function renderPreviews(files) {
+                previewList.innerHTML = '';
+                Array.from(files).forEach((file, idx) => {
+                    const li = document.createElement('li');
+                    li.className = 'rpt-evidence-item';
+                    if (isImage(file)) {
+                        const img = document.createElement('img');
+                        img.src = URL.createObjectURL(file);
+                        img.alt = file.name;
+                        li.appendChild(img);
+                    } else {
+                        const icon = document.createElement('div');
+                        icon.className = 'rpt-evidence-icon';
+                        icon.innerHTML = '<i class="fas fa-file-pdf"></i>';
+                        li.appendChild(icon);
+                    }
+                    const meta = document.createElement('div');
+                    meta.className = 'rpt-evidence-meta';
+                    const name = document.createElement('strong');
+                    name.textContent = file.name;
+                    const size = document.createElement('small');
+                    size.textContent = humanSize(file.size);
+                    meta.appendChild(name);
+                    meta.appendChild(size);
+                    li.appendChild(meta);
+                    previewList.appendChild(li);
+                });
+            }
+
+            fileInput.addEventListener('change', function(e) {
+                const files = Array.from(e.target.files || []);
+                if (files.length > MAX_FILES) {
+                    alert('Chỉ được chọn tối đa ' + MAX_FILES + ' file.');
+                    fileInput.value = '';
+                    previewList.innerHTML = '';
+                    return;
+                }
+                for (const f of files) {
+                    if (f.size > MAX_SIZE) {
+                        alert('File "' + f.name + '" vượt quá 5MB.');
+                        fileInput.value = '';
+                        previewList.innerHTML = '';
+                        return;
+                    }
+                }
+                renderPreviews(files);
+            });
+
+            if (dropZone) {
+                ['dragenter', 'dragover'].forEach(evt =>
+                    dropZone.addEventListener(evt, function(e) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        dropZone.classList.add('is-drag');
+                    }));
+                ['dragleave', 'drop'].forEach(evt =>
+                    dropZone.addEventListener(evt, function(e) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        dropZone.classList.remove('is-drag');
+                    }));
+                dropZone.addEventListener('drop', function(e) {
+                    const dt = e.dataTransfer;
+                    if (!dt) return;
+                    fileInput.files = dt.files;
+                    fileInput.dispatchEvent(new Event('change', { bubbles: true }));
+                });
+            }
+        })();
+
+        // ===== Submit validation =====
+        (function() {
+            const form = document.getElementById('report-form');
+            if (!form) return;
+            const submitBtn = document.getElementById('report-submit-btn');
+            form.addEventListener('submit', function(e) {
+                const reasonSel = form.querySelector('select[name="reason"]');
+                if (!reasonSel || !reasonSel.value) {
+                    e.preventDefault();
+                    alert('Vui lòng chọn lý do báo cáo.');
+                    if (reasonSel) reasonSel.focus();
+                    return false;
+                }
+                if (submitBtn) {
+                    submitBtn.disabled = true;
+                    submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Đang gửi...';
+                }
+            });
+        })();
+    </script>
+</th:block>
+</body>
+</html>

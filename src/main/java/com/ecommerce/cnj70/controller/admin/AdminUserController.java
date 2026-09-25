@@ -4,6 +4,7 @@ import com.ecommerce.cnj70.document.User;
 import com.ecommerce.cnj70.enums.AccountStatus;
 import com.ecommerce.cnj70.enums.UserRole;
 import com.ecommerce.cnj70.exception.BusinessException;
+import com.ecommerce.cnj70.exception.ResourceNotFoundException;
 import com.ecommerce.cnj70.security.CustomUserDetails;
 import com.ecommerce.cnj70.service.AdminUserService;
 import lombok.RequiredArgsConstructor;
@@ -101,6 +102,44 @@ public class AdminUserController {
                     "Đã mở khóa tài khoản thành công");
         }
         return "redirect:/admin/users";
+    }
+
+    // ===== Phase 3 §3.7 — Edit User Status =====
+    @GetMapping("/admin/users/{id}/edit")
+    public String editUserStatus(@PathVariable String id, Model model,
+                                 RedirectAttributes redirectAttributes) {
+        User user;
+        try {
+            user = adminUserService.getUserById(id);
+        } catch (ResourceNotFoundException ex) {
+            redirectAttributes.addFlashAttribute("flashError", "Không tìm thấy người dùng");
+            return "redirect:/admin/users";
+        }
+        model.addAttribute("user", user);
+        model.addAttribute("statuses", AccountStatus.values());
+        return "admin/user-edit";
+    }
+
+    @PostMapping("/admin/users/{id}/edit")
+    public String updateUserStatus(@PathVariable String id,
+                                   @RequestParam("status") String statusRaw,
+                                   RedirectAttributes redirectAttributes) {
+        AccountStatus newStatus = parseStatus(statusRaw);
+        if (newStatus == null) {
+            redirectAttributes.addFlashAttribute("flashError",
+                    "Trạng thái không hợp lệ");
+            return "redirect:/admin/users/" + id + "/edit";
+        }
+        String currentUserId = currentUserId();
+        try {
+            adminUserService.updateUserStatus(id, newStatus, currentUserId);
+        } catch (BusinessException ex) {
+            redirectAttributes.addFlashAttribute("flashError", ex.getMessage());
+            return "redirect:/admin/users/" + id + "/edit";
+        }
+        redirectAttributes.addFlashAttribute("flashSuccess",
+                "Đã cập nhật trạng thái tài khoản thành công");
+        return "redirect:/admin/users/" + id;
     }
 
     private String currentUserId() {

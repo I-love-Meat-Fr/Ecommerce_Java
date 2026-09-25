@@ -1,0 +1,414 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/springsecurity6"
+      th:replace="~{layout/moderator-layout :: layout(title='ReportCase Detail - CNJ70 Moderator', content=~{::main-content}, scripts=~{::page-scripts})}">
+<head>
+    <title>ReportCase Detail - CNJ70 Moderator</title>
+</head>
+<body>
+<main th:fragment="main-content">
+    <div class="sd-page-head">
+        <div class="sd-page-head-title">
+            <h1><i class="fas fa-flag"></i> ReportCase Detail</h1>
+            <p>ReportCase moderation context.</p>
+        </div>
+        <div class="sd-page-head-actions">
+            <a th:href="@{/moderator/cases(page=${page}, size=${size}, status=${status}, reason=${reason}, resourceType=${resourceType})}"
+               class="sd-btn sd-btn-secondary sd-btn-sm">
+                <i class="fas fa-arrow-left"></i>
+                <span>Quay lại danh sách</span>
+            </a>
+        </div>
+    </div>
+
+    <!-- Status badges row -->
+    <div class="sd-card" style="margin-bottom:20px;">
+        <div class="sd-card-body" style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
+            <span class="sd-badge sd-badge-slate" th:text="'ID: ' + ${ctx.caseId}">#id</span>
+            <span class="sd-badge"
+                  th:classappend="${ctx.status.name() == 'OPEN'} ? 'sd-badge-amber'
+                                  : (${ctx.status.name() == 'IN_REVIEW'} ? 'sd-badge-sky'
+                                  : (${ctx.status.name() == 'APPROVED'} ? 'sd-badge-green'
+                                  : (${ctx.status.name() == 'REJECTED'} ? 'sd-badge-slate'
+                                  : 'sd-badge-red')))"
+                  th:text="${ctx.status.name()}">OPEN</span>
+            <span class="sd-badge sd-badge-blue" th:text="${ctx.resourceType}">PRODUCT</span>
+        </div>
+    </div>
+
+    <!-- Case Overview -->
+    <div class="sd-card" style="margin-bottom:20px;">
+        <div class="sd-card-head">
+            <div>
+                <h3><i class="fas fa-info-circle"></i> Case Overview</h3>
+                <p>Thông tin tổng quan</p>
+            </div>
+        </div>
+        <div class="sd-card-body">
+            <div class="sd-detail-grid">
+                <div class="sd-detail-item">
+                    <div class="sd-detail-label">Resource Type</div>
+                    <div class="sd-detail-value">
+                        <span class="sd-badge sd-badge-blue" th:text="${ctx.resourceType}">PRODUCT</span>
+                    </div>
+                </div>
+                <div class="sd-detail-item">
+                    <div class="sd-detail-label">Resource ID</div>
+                    <div class="sd-detail-value sd-mono" th:text="${ctx.resourceId}">id</div>
+                </div>
+                <div class="sd-detail-item">
+                    <div class="sd-detail-label">Resource Name</div>
+                    <div class="sd-detail-value" th:text="${ctx.resourceName != null ? ctx.resourceName : '(deleted)'}">—</div>
+                </div>
+                <div class="sd-detail-item">
+                    <div class="sd-detail-label">Reason</div>
+                    <div class="sd-detail-value">
+                        <span class="sd-badge sd-badge-blue" th:text="${ctx.reason}">REASON</span>
+                    </div>
+                </div>
+                <div class="sd-detail-item" style="grid-column:1/-1;">
+                    <div class="sd-detail-label">Description</div>
+                    <div class="sd-detail-value" style="background:#f9fafb;border:1px solid #e5e7eb;padding:12px;border-radius:6px;"
+                         th:text="${ctx.description != null ? ctx.description : '(no description)'}">—</div>
+                </div>
+                <div class="sd-detail-item">
+                    <div class="sd-detail-label">Severity</div>
+                    <div class="sd-detail-value">
+                        <span class="sd-badge"
+                              th:classappend="${ctx.escalationSeverity != null and ctx.escalationSeverity.name() == 'CRITICAL'} ? 'sd-badge-red'
+                                              : (${ctx.escalationSeverity != null and ctx.escalationSeverity.name() == 'HIGH'} ? 'sd-badge-amber'
+                                              : (${ctx.escalationSeverity != null and ctx.escalationSeverity.name() == 'MEDIUM'} ? 'sd-badge-warning'
+                                              : (${ctx.escalationSeverity != null and ctx.escalationSeverity.name() == 'LOW'} ? 'sd-badge-sky'
+                                              : 'sd-badge-slate')))"
+                              th:text="${ctx.escalationSeverity != null ? ctx.escalationSeverity.name() : '—'}">HIGH</span>
+                    </div>
+                </div>
+                <div class="sd-detail-item">
+                    <div class="sd-detail-label">Auto Moderation</div>
+                    <div class="sd-detail-value">
+                        <span class="sd-badge sd-badge-sky" th:text="${ctx.autoModerationStatus != null ? ctx.autoModerationStatus : 'NOT_AVAILABLE'}">—</span>
+                        <span class="sd-badge sd-badge-amber" th:each="f : ${ctx.autoFlags}" th:text="${f}" style="margin-left:4px;">F</span>
+                    </div>
+                </div>
+                <div class="sd-detail-item">
+                    <div class="sd-detail-label">Created At</div>
+                    <div class="sd-detail-value" th:text="${ctx.createdAt != null ? #temporals.format(ctx.createdAt, 'yyyy-MM-dd HH:mm:ss') : '—'}">—</div>
+                </div>
+                <div class="sd-detail-item">
+                    <div class="sd-detail-label">Updated At</div>
+                    <div class="sd-detail-value" th:text="${ctx.updatedAt != null ? #temporals.format(ctx.updatedAt, 'yyyy-MM-dd HH:mm:ss') : '—'}">—</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Reporter -->
+    <div class="sd-card" style="margin-bottom:20px;">
+        <div class="sd-card-head">
+            <div>
+                <h3><i class="fas fa-user"></i> Reporter</h3>
+                <p>Người báo cáo</p>
+            </div>
+        </div>
+        <div class="sd-card-body">
+            <div class="sd-detail-grid">
+                <div class="sd-detail-item">
+                    <div class="sd-detail-label">Reporter ID</div>
+                    <div class="sd-detail-value sd-mono" th:text="${ctx.reporterId != null ? ctx.reporterId : 'SYSTEM'}">—</div>
+                </div>
+                <div class="sd-detail-item">
+                    <div class="sd-detail-label">Name</div>
+                    <div class="sd-detail-value" th:text="${ctx.reporterName != null ? ctx.reporterName : '—'}">—</div>
+                </div>
+                <div class="sd-detail-item">
+                    <div class="sd-detail-label">Email</div>
+                    <div class="sd-detail-value" th:text="${ctx.reporterEmail != null ? ctx.reporterEmail : '—'}">—</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Resource / Shop / Vendor -->
+    <div class="sd-card" style="margin-bottom:20px;">
+        <div class="sd-card-head">
+            <div>
+                <h3><i class="fas fa-store"></i> Resource / Shop / Vendor</h3>
+                <p>Context liên quan đến resource bị report</p>
+            </div>
+        </div>
+        <div class="sd-card-body">
+            <div class="sd-detail-grid">
+                <div class="sd-detail-item">
+                    <div class="sd-detail-label">Vendor ID</div>
+                    <div class="sd-detail-value sd-mono" th:text="${ctx.vendorId}">—</div>
+                </div>
+                <div class="sd-detail-item">
+                    <div class="sd-detail-label">Vendor Name</div>
+                    <div class="sd-detail-value" th:text="${ctx.vendorName != null ? ctx.vendorName : '—'}">—</div>
+                </div>
+                <div class="sd-detail-item">
+                    <div class="sd-detail-label">Shop ID</div>
+                    <div class="sd-detail-value sd-mono" th:text="${ctx.shopId}">—</div>
+                </div>
+                <div class="sd-detail-item">
+                    <div class="sd-detail-label">Shop Name</div>
+                    <div class="sd-detail-value" th:text="${ctx.shopName != null ? ctx.shopName : '—'}">—</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Evidence -->
+    <div class="sd-card" style="margin-bottom:20px;">
+        <div class="sd-card-head">
+            <div>
+                <h3><i class="fas fa-paperclip"></i> Evidence <span class="sd-badge sd-badge-slate">READ-ONLY</span></h3>
+                <p>Evidence is read-only. Moderator cannot modify it.</p>
+            </div>
+        </div>
+        <div class="sd-card-body">
+            <div th:if="${#lists.isEmpty(ctx.evidence)}">
+                <span class="sd-badge sd-badge-slate">No evidence attached</span>
+            </div>
+            <div th:each="ev : ${ctx.evidence}"
+                 style="background:#f9fafb;border:1px solid #e5e7eb;padding:10px 12px;border-radius:6px;margin-bottom:8px;">
+                <div>
+                    <span class="sd-badge sd-badge-sky" th:text="${ev.type}">TYPE</span>
+                    <code th:text="${ev.value}">value</code>
+                </div>
+                <div class="sd-table-sub" th:if="${ev.submittedBy != null}">
+                    Submitted by <span th:text="${ev.submittedBy}"></span>
+                    at <span th:text="${ev.submittedAt != null ? #temporals.format(ev.submittedAt, 'dd/MM/yyyy HH:mm') : '—'}"></span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Vendor History -->
+    <div class="sd-card" style="margin-bottom:20px;">
+        <div class="sd-card-head">
+            <div>
+                <h3><i class="fas fa-clock-rotate-left"></i> Vendor History <span class="sd-badge sd-badge-slate">SNAPSHOT</span></h3>
+                <p>Snapshot lịch sử của vendor</p>
+            </div>
+        </div>
+        <div class="sd-card-body">
+            <div class="sd-detail-grid">
+                <div class="sd-detail-item">
+                    <div class="sd-detail-label">Total Cases</div>
+                    <div class="sd-detail-value">
+                        <span class="sd-badge sd-badge-sky" th:text="${ctx.vendorTotalCases}">0</span>
+                    </div>
+                </div>
+                <div class="sd-detail-item">
+                    <div class="sd-detail-label">Open Cases</div>
+                    <div class="sd-detail-value">
+                        <span class="sd-badge sd-badge-amber" th:text="${ctx.vendorOpenCases}">0</span>
+                    </div>
+                </div>
+                <div class="sd-detail-item">
+                    <div class="sd-detail-label">Escalated Cases</div>
+                    <div class="sd-detail-value">
+                        <span class="sd-badge sd-badge-red" th:text="${ctx.vendorEscalatedCases}">0</span>
+                    </div>
+                </div>
+                <div class="sd-detail-item" style="grid-column:1/-1;">
+                    <p class="sd-text-muted" style="font-size:13px;margin:0;">
+                        <i class="fas fa-info-circle"></i>
+                        Severity is NOT auto-derived from history. Decisions remain based on evidence + policy.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Previous Cases -->
+    <div class="sd-card" style="margin-bottom:20px;">
+        <div class="sd-card-head">
+            <div>
+                <h3><i class="fas fa-history"></i> Previous Cases (same resource)</h3>
+                <p>Các case trước trên cùng resource</p>
+            </div>
+        </div>
+        <div class="sd-card-body">
+            <div th:if="${#lists.isEmpty(ctx.previousCases)}">
+                <span class="sd-badge sd-badge-slate">No previous cases</span>
+            </div>
+            <div th:unless="${#lists.isEmpty(ctx.previousCases)}" class="sd-card-body-flush">
+                <table class="sd-table">
+                    <thead>
+                        <tr>
+                            <th>Case ID</th>
+                            <th>Reason</th>
+                            <th>Status</th>
+                            <th>Severity</th>
+                            <th>Created</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr th:each="p : ${ctx.previousCases}">
+                            <td>
+                                <a th:href="@{/moderator/cases/{id}(id=${p.caseId}, page=${page}, size=${size}, status=${status}, reason=${reason}, resourceType=${resourceType})}"
+                                   class="sd-link sd-mono" th:text="${p.caseId}">id</a>
+                            </td>
+                            <td><span class="sd-badge sd-badge-blue" th:text="${p.reason}">REASON</span></td>
+                            <td>
+                                <span class="sd-badge"
+                                      th:classappend="${p.status.name() == 'APPROVED'} ? 'sd-badge-green'
+                                                      : (${p.status.name() == 'REJECTED'} ? 'sd-badge-slate'
+                                                      : (${p.status.name() == 'ESCALATED'} ? 'sd-badge-red'
+                                                      : 'sd-badge-amber'))"
+                                      th:text="${p.status.name()}">OPEN</span>
+                            </td>
+                            <td th:text="${p.severity != null ? p.severity.name() : '—'}">—</td>
+                            <td class="sd-table-sub"
+                                th:text="${p.createdAt != null ? #temporals.format(p.createdAt, 'dd/MM/yyyy HH:mm') : '—'}">—</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Decision (if final) -->
+    <div class="sd-card" th:if="${ctx.status.name() == 'APPROVED' or ctx.status.name() == 'REJECTED' or ctx.status.name() == 'ESCALATED'}"
+         style="margin-bottom:20px;">
+        <div class="sd-card-head">
+            <div>
+                <h3><i class="fas fa-gavel"></i> Decision</h3>
+                <p>Quyết định đã đưa ra</p>
+            </div>
+        </div>
+        <div class="sd-card-body">
+            <div class="sd-detail-grid">
+                <div class="sd-detail-item">
+                    <div class="sd-detail-label">Decision By</div>
+                    <div class="sd-detail-value" th:text="${ctx.decisionModeratorEmail != null ? ctx.decisionModeratorEmail : '—'}">—</div>
+                </div>
+                <div class="sd-detail-item" style="grid-column:1/-1;">
+                    <div class="sd-detail-label">Reason</div>
+                    <div class="sd-detail-value" th:text="${ctx.decisionReason != null ? ctx.decisionReason : '—'}">—</div>
+                </div>
+                <div class="sd-detail-item" style="grid-column:1/-1;">
+                    <div class="sd-detail-label">Note</div>
+                    <div class="sd-detail-value" th:text="${ctx.decisionNote != null ? ctx.decisionNote : '—'}">—</div>
+                </div>
+                <div class="sd-detail-item">
+                    <div class="sd-detail-label">Decided At</div>
+                    <div class="sd-detail-value" th:text="${ctx.decidedAt != null ? #temporals.format(ctx.decidedAt, 'yyyy-MM-dd HH:mm:ss') : '—'}">—</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Moderator Actions -->
+    <div class="sd-card" style="margin-bottom:20px;">
+        <div class="sd-card-head">
+            <div>
+                <h3><i class="fas fa-shield-halved"></i> Moderator Actions</h3>
+                <p>Backend enforces state transitions. Direct API bypass returns 409.</p>
+            </div>
+        </div>
+        <div class="sd-card-body">
+            <div class="sd-action-row" th:if="${ctx.status.name() == 'OPEN' or ctx.status.name() == 'IN_REVIEW'}">
+                <form method="post"
+                      th:action="@{/moderator/cases/{id}/claim(id=${ctx.caseId}, page=${page}, size=${size}, status=${status}, reason=${reason}, resourceType=${resourceType})}"
+                      style="display:inline;">
+                    <button type="submit" class="sd-btn sd-btn-primary sd-btn-sm">
+                        <i class="fas fa-hand-holding-hand"></i> Claim
+                    </button>
+                </form>
+
+                <form method="post"
+                      th:action="@{/moderator/cases/{id}/approve(id=${ctx.caseId}, page=${page}, size=${size}, status=${status}, reason=${reason}, resourceType=${resourceType})}"
+                      style="display:inline;">
+                    <input type="hidden" name="reason" value="Report hợp lệ"/>
+                    <input type="hidden" name="note" value=""/>
+                    <button type="submit" class="sd-btn sd-btn-success sd-btn-sm">
+                        <i class="fas fa-circle-check"></i> Approve
+                    </button>
+                </form>
+
+                <button type="button" class="sd-btn sd-btn-secondary sd-btn-sm"
+                        onclick="openReasonModal('reject', '[[${ctx.caseId}]]', [[${page}]], '[[${size}]]', '[[${status}]]', '[[${reason}]]', '[[${resourceType}]]')">
+                    <i class="fas fa-circle-xmark"></i> Reject
+                </button>
+
+                <button type="button" class="sd-btn sd-btn-warning sd-btn-sm"
+                        onclick="openReasonModal('escalate', '[[${ctx.caseId}]]', [[${page}]], '[[${size}]]', '[[${status}]]', '[[${reason}]]', '[[${resourceType}]]')">
+                    <i class="fas fa-triangle-exclamation"></i> Escalate
+                </button>
+            </div>
+            <div th:unless="${ctx.status.name() == 'OPEN' or ctx.status.name() == 'IN_REVIEW'}">
+                <span class="sd-badge sd-badge-slate">Case đã ở trạng thái cuối, không thể xử lý thêm.</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Reason modal -->
+    <div id="reason-modal" class="sd-modal" role="dialog" aria-modal="true">
+        <div class="sd-modal-box">
+            <h3 id="reason-modal-title">Reason</h3>
+            <form id="reason-modal-form" method="post" action="">
+                <div class="sd-form-group">
+                    <label for="reason-text">Reason *</label>
+                    <textarea id="reason-text" name="reason" placeholder="Nhập lý do..." required
+                              style="width:100%;min-height:80px;padding:10px;border:1px solid var(--border,#e2e8f0);border-radius:6px;font:inherit;"></textarea>
+                </div>
+                <div class="sd-form-group" id="severity-row" style="display:none;">
+                    <label for="severity-select">Severity *</label>
+                    <select id="severity-select" name="severity">
+                        <option th:each="sev : ${escalationSeverityChoices}"
+                                th:value="${sev.name()}"
+                                th:text="${sev.name()}"></option>
+                    </select>
+                </div>
+                <div class="sd-form-group">
+                    <label for="note-text">Internal note (optional)</label>
+                    <input id="note-text" type="text" name="note" maxlength="2000"
+                           style="padding:8px 10px;border:1px solid var(--border,#e2e8f0);border-radius:6px;" />
+                </div>
+                <p class="sd-text-muted" style="font-size:13px;">
+                    Reject / Escalate require a non-blank reason. Backend re-validates.
+                </p>
+                <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:16px;">
+                    <button type="button" class="sd-btn sd-btn-secondary sd-btn-sm" onclick="closeReasonModal()">Hủy</button>
+                    <button type="submit" class="sd-btn sd-btn-primary sd-btn-sm">Confirm</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</main>
+<th:block th:fragment="page-scripts">
+    <style>
+        .sd-modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 99; align-items: center; justify-content: center; padding: 1rem; }
+        .sd-modal.is-open { display: flex; }
+        .sd-modal .sd-modal-box { background: #fff; padding: 24px; border-radius: 8px; width: min(560px, 90vw); max-height: 90vh; overflow: auto; box-shadow: 0 10px 40px rgba(0,0,0,0.2); }
+        .sd-modal .sd-modal-box h3 { margin-top: 0; margin-bottom: 12px; }
+    </style>
+    <script th:inline="javascript">
+        /*<![CDATA[*/
+        function openReasonModal(action, caseId, page, size, status, reason, resourceType) {
+            var form = document.getElementById('reason-modal-form');
+            form.action = '/moderator/cases/' + encodeURIComponent(caseId) + '/' + action
+                + '?page=' + page + '&size=' + encodeURIComponent(size)
+                + (status ? '&status=' + encodeURIComponent(status) : '')
+                + (reason ? '&reason=' + encodeURIComponent(reason) : '')
+                + (resourceType ? '&resourceType=' + encodeURIComponent(resourceType) : '');
+            var title = {reject: 'Reject Case — Reason', escalate: 'Escalate Case — Reason & Severity'}[action] || 'Reason';
+            document.getElementById('reason-modal-title').textContent = title;
+            var sevRow = document.getElementById('severity-row');
+            if (action === 'escalate') { sevRow.style.display = 'block'; document.getElementById('severity-select').setAttribute('required', 'required'); }
+            else { sevRow.style.display = 'none'; document.getElementById('severity-select').removeAttribute('required'); }
+            form.querySelector('textarea[name=reason]').value = '';
+            document.getElementById('note-text').value = '';
+            document.getElementById('reason-modal').classList.add('is-open');
+            form.querySelector('textarea[name=reason]').focus();
+        }
+        function closeReasonModal() { document.getElementById('reason-modal').classList.remove('is-open'); }
+        document.addEventListener('keydown', function (e) { if (e.key === 'Escape') closeReasonModal(); });
+        /*]]>*/
+    </script>
+</th:block>
+</body>
+</html>

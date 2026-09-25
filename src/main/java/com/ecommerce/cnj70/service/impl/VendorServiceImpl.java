@@ -11,6 +11,7 @@ import com.ecommerce.cnj70.enums.OrderStatus;
 import com.ecommerce.cnj70.enums.ProductStatus;
 import com.ecommerce.cnj70.enums.ShopStatus;
 import com.ecommerce.cnj70.exception.BadRequestException;
+import com.ecommerce.cnj70.exception.BusinessException;
 import com.ecommerce.cnj70.exception.ResourceNotFoundException;
 import com.ecommerce.cnj70.exception.UnauthorizedException;
 import com.ecommerce.cnj70.repository.OrderRepository;
@@ -176,11 +177,15 @@ public class VendorServiceImpl implements VendorService {
     public VendorDashboardRes getDashboardStats(UserDetails userDetails) {
         String shopId;
         Shop shop = null;
-        
+
         try {
             shopId = getShopIdFromUser(userDetails);
             shop = getShopByCurrentVendor(userDetails);
-        } catch (BadRequestException e) {
+        } catch (BadRequestException | BusinessException | ResourceNotFoundException e) {
+            // No shop yet OR shop record missing — render the empty-state branch
+            // instead of bubbling a 500/404. BadRequestException is thrown when
+            // user.shopId == null (getShopIdFromUser); BusinessException/ResourceNotFoundException
+            // if Shop record is orphaned.
             return VendorDashboardRes.builder()
                     .totalProducts(0)
                     .outOfStockProducts(0)

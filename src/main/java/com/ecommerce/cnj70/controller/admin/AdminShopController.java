@@ -13,6 +13,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Controller;
@@ -36,6 +37,11 @@ public class AdminShopController {
 
     private final AdminShopService adminShopService;
     private final UserRepository userRepository;
+    /**
+     * Phase 4 — dùng để raw-fetch User document với {@code _id} String
+     * (cùng pattern với AdminUserServiceImpl#getUserById ở Phase 3).
+     */
+    private final MongoTemplate mongoTemplate;
 
     private String currentActorId(UserDetails user) {
         return user != null ? user.getUsername() : null;
@@ -83,7 +89,20 @@ public class AdminShopController {
 
         User owner = null;
         if (shop.getOwnerId() != null && !shop.getOwnerId().isBlank()) {
-            owner = userRepository.findById(shop.getOwnerId()).orElse(null);
+            // Phase 4 — raw Document fetch (xem lý do trong field comment bên trên).
+            org.bson.Document rawOwner = mongoTemplate.getCollection("users")
+                    .find(new org.bson.Document("_id", shop.getOwnerId()))
+                    .first();
+            if (rawOwner != null) {
+                if (!rawOwner.containsKey("_class")) {
+                    rawOwner.put("_class", User.class.getName());
+                }
+                rawOwner.put("_id", shop.getOwnerId());
+                owner = mongoTemplate.getConverter().read(User.class, rawOwner);
+                if (owner.getId() == null) {
+                    owner.setId(shop.getOwnerId());
+                }
+            }
         }
 
         model.addAttribute("shop", shop);
@@ -175,7 +194,6 @@ public class AdminShopController {
                                  @RequestParam(required = false) String q,
                                  @RequestParam(required = false) String status,
                                  @RequestParam(required = false) String reason,
-                                 @AuthenticationPrincipal CustomUserDetails admin,
                                  RedirectAttributes redirectAttributes) {
         Shop shop;
         try {
@@ -186,7 +204,15 @@ public class AdminShopController {
         }
 
         try {
+<<<<<<< HEAD
             adminShopService.deactivateShop(id, currentActorId(userDetails), currentActorId(userDetails));
+=======
+            // Signature mới (merge feature/admin + feature/vendors-module):
+            //   deactivateShop(id, reason, adminUsername) - vừa lưu reason/actionBy/actionAt
+            //   lên Shop, vừa ghi AuditLog SHOP_SUSPENDED với adminUsername làm actor.
+            String actorId = currentActorId(userDetails);
+            adminShopService.deactivateShop(id, reason, actorId);
+>>>>>>> 105fc32050ccebc9b92d94f41bbd9d97b7536ace
             redirectAttributes.addFlashAttribute("flashSuccess",
                     "Đã ngừng hoạt động shop \"" + shop.getShopName() + "\"");
         } catch (BusinessException ex) {
@@ -220,7 +246,13 @@ public class AdminShopController {
         }
 
         try {
+<<<<<<< HEAD
             adminShopService.rejectShop(id, currentActorId(userDetails), currentActorId(userDetails), reason);
+=======
+            // Gộp cả reason + actorId/actorUsername.
+            String actorId = currentActorId(userDetails);
+            adminShopService.rejectShop(id, reason, actorId);
+>>>>>>> 105fc32050ccebc9b92d94f41bbd9d97b7536ace
             redirectAttributes.addFlashAttribute("flashSuccess",
                     "Đã từ chối shop \"" + shop.getShopName() + "\"");
         } catch (BusinessException ex) {

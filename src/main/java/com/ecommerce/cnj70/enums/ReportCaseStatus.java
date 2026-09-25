@@ -14,6 +14,18 @@ package com.ecommerce.cnj70.enums;
  */
 public enum ReportCaseStatus {
     PENDING,
+    OPEN,
+    IN_REVIEW,
     RESOLVED,
-    ESCALATED
+    APPROVED,
+    REJECTED,
+    ESCALATED;
+
+    /**
+     * Phase 2C — Terminal states are those where the case is closed and no
+     * further Moderator action is required.
+     */
+    public boolean isTerminal() {
+        return this == RESOLVED || this == ESCALATED;
+    }
 }

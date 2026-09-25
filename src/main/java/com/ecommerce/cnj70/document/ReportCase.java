@@ -1,7 +1,10 @@
 package com.ecommerce.cnj70.document;
 
+import com.ecommerce.cnj70.enums.EscalationSeverity;
 import com.ecommerce.cnj70.enums.ReportCaseDecision;
+import com.ecommerce.cnj70.enums.ReportCaseResourceType;
 import com.ecommerce.cnj70.enums.ReportCaseStatus;
+import com.ecommerce.cnj70.enums.ReportReason;
 import com.ecommerce.cnj70.enums.ReportTargetType;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -44,6 +47,19 @@ public class ReportCase {
     @Id
     private String id;
 
+    // ===== Phase 2C — Resource targeting (aligned with ModeratorReportCaseService) =====
+    /** Loại resource bị report (PRODUCT/REVIEW) - Phase 2C */
+    @Indexed
+    private ReportCaseResourceType resourceType;
+
+    /** ID của resource bị report - Phase 2C */
+    @Indexed
+    private String resourceId;
+
+    /** Tên resource (snapshot) - Phase 2C */
+    private String resourceName;
+
+    // ===== Legacy fields (kept from TASK #26) =====
     /** Loại đối tượng bị report */
     @Indexed
     private ReportTargetType targetType;
@@ -59,12 +75,39 @@ public class ReportCase {
     @Indexed
     private String reporterId;
 
+    /** Tên người report - Phase 2C */
+    private String reporterName;
+
+    /** Auto moderation status (string) - Phase 2C */
+    private String autoModerationStatus;
+
+    /** Email moderator được assigned - Phase 2C */
+    private String assignedModeratorEmail;
+
+    /** Email người report - Phase 2C */
+    private String reporterEmail;
+
+    /** Vendor ID sở hữu shop chứa resource - Phase 2C */
+    private String vendorId;
+
+    /** Vendor name - Phase 2C */
+    private String vendorName;
+
+    /** Shop ID - Phase 2C */
+    private String shopId;
+
+    /** Shop name - Phase 2C */
+    private String shopName;
+
     /** Loại nguồn: USER (do customer report) hoặc AUTO (do hệ thống) */
     @Builder.Default
     private String source = "USER";
 
-    /** Lý do report ngắn gọn (do user nhập hoặc do auto flag) */
+    /** Lý do report ngắn gọn (do user nhập hoặc do auto flag) - String (legacy TASK #26) */
     private String reason;
+
+    /** Lý do report enum (Phase 2C) - dùng cho ReportCaseService mới */
+    private ReportReason reportReason;
 
     /** Mô tả chi tiết thêm */
     private String description;
@@ -114,6 +157,27 @@ public class ReportCase {
 
     /** Thời điểm Moderator ra quyết định */
     private LocalDateTime resolvedAt;
+
+    /** Phase 2C: Escalation details */
+    private EscalationSeverity escalationSeverity;
+
+    /** Phase 2C: Lý do escalate */
+    private String escalationReason;
+
+    /** Phase 2C: Admin đã review escalation chưa */
+    private boolean escalationReviewed;
+
+    /** Phase 2C: Email moderator ra quyết định */
+    private String decisionModeratorEmail;
+
+    /** Phase 2C: ID moderator ra quyết định */
+    private String decisionModeratorId;
+
+    /** Phase 2C: Ghi chú quyết định */
+    private String decisionNote;
+
+    /** Phase 2C: Thời điểm ra quyết định */
+    private LocalDateTime decidedAt;
 
     @LastModifiedDate
     private LocalDateTime updatedAt;

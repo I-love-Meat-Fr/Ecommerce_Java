@@ -20,7 +20,10 @@ public interface UserRepository extends MongoRepository<User, String>, UserRepos
 
     List<User> findByRole(UserRole role);
 
-    List<User> findByRoleAndStatus(UserRole role, String status);
+    // NOTE: Line below removed - was `findByRoleAndStatus(UserRole, String)` which
+    // caused PartTree query parsing to fail at startup because User.status is
+    // AccountStatus (enum), not String. All callers use the typed version below.
+    // Page<User> findByRoleAndStatus(UserRole role, String status);
 
     // === User Search+Filter: role only / status only / both ===
     Page<User> findByRole(UserRole role, Pageable pageable);

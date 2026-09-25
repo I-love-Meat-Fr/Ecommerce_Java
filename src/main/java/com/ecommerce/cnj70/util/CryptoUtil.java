@@ -1,6 +1,8 @@
 package com.ecommerce.cnj70.util;
 
+import io.github.cdimascio.dotenv.Dotenv;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Component;
 
 import javax.crypto.Cipher;
@@ -41,9 +43,13 @@ public class CryptoUtil {
     private final SecretKey secretKey;
     private final SecureRandom secureRandom;
 
-    public CryptoUtil() {
+    /**
+     * Constructor có tham số - Spring sẽ tự inject Environment.
+     * Fallback cho unit test cũ (nếu có) dùng trực tiếp.
+     */
+    public CryptoUtil(Environment environment) {
         this.secureRandom = new SecureRandom();
-        this.secretKey = loadKey();
+        this.secretKey = loadKey(environment);
     }
 
     /**
@@ -130,18 +136,89 @@ public class CryptoUtil {
 
     /**
      * Load AES-256 key từ environment variable.
+     * Thứ tự ưu tiên (an toàn - chỉ đọc, không ghi/derive):
+     *   1. JVM system property (System.getProperty) - cho phép truyền -Dencription_key=...
+     *   2. Spring Environment (bao gồm MapPropertySource "dotenv" từ DotenvInitializer
+     *      + application.yml ${ENCRYPTION_KEY:...})
+     *   3. Direct Dotenv load từ file .env (fallback độc lập - không phụ thuộc Initializer)
+     *   4. OS environment variable (System.getenv)
      * Key phải là Base64-encoded 32-byte key.
+     * Nếu không tìm thấy ở bất kỳ nguồn nào → throw IllegalStateException
+     * để bảo vệ PII (không tự sinh key, không default).
      */
-    private SecretKey loadKey() {
-        String keyBase64 = System.getProperty(ENV_KEY);
+    private SecretKey loadKey(Environment environment) {
+        String keyBase64 = resolveKey(environment);
+        return buildKey(keyBase64);
+    }
 
-        if (keyBase64 == null || keyBase64.isBlank()) {
-            log.error("ENCRYPTION_KEY environment variable is not set. PII encryption disabled.");
-            throw new IllegalStateException(
-                    "ENCRYPTION_KEY env variable is required for PII encryption. " +
-                    "Generate one with: openssl rand -base64 32");
+    private String resolveKey(Environment environment) {
+        // 1. JVM system property (ưu tiên cao nhất - cho phép -D override)
+        String keyBase64 = System.getProperty(ENV_KEY);
+        if (keyBase64 != null && !keyBase64.isBlank()) {
+            log.info("ENCRYPTION_KEY resolved from JVM system property");
+            return keyBase64;
         }
 
+        // 2. Spring Environment - bao gồm cả .env (qua DotenvInitializer MapPropertySource)
+        //    và application.yml ${ENCRYPTION_KEY:...}
+        if (environment != null) {
+            keyBase64 = environment.getProperty(ENV_KEY);
+            if (keyBase64 != null && !keyBase64.isBlank()) {
+                log.info("ENCRYPTION_KEY resolved from Spring Environment (likely .env via DotenvInitializer)");
+                return keyBase64;
+            }
+        }
+
+        // 3. Direct Dotenv load (fallback độc lập - đọc trực tiếp từ file .env nếu
+        //    DotenvInitializer chưa populate Environment, hoặc CryptoUtil được khởi tạo
+        //    trước/sau DotenvInitializer theo thứ tự bất kỳ).
+        try {
+            Dotenv dotenv = Dotenv.configure()
+                    .ignoreIfMalformed()
+                    .ignoreIfMissing()
+                    .load();
+            keyBase64 = dotenv.get(ENV_KEY);
+            if (keyBase64 != null && !keyBase64.isBlank()) {
+                log.info("ENCRYPTION_KEY resolved from direct Dotenv (.env file)");
+                // Đồng thời set vào JVM property + Spring Environment cho các lần tra cứu sau
+                System.setProperty(ENV_KEY, keyBase64);
+                if (environment instanceof org.springframework.core.env.ConfigurableEnvironment ce) {
+                    if (!ce.getPropertySources().contains("dotenv-direct")) {
+                        java.util.Map<String, Object> map = new java.util.HashMap<>();
+                        map.put(ENV_KEY, keyBase64);
+                        ce.getPropertySources().addFirst(
+                                new org.springframework.core.env.MapPropertySource("dotenv-direct", map));
+                    }
+                }
+                return keyBase64;
+            }
+        } catch (Exception e) {
+            log.warn("Direct Dotenv load failed in CryptoUtil: {}", e.getMessage());
+        }
+
+        // 4. OS environment variable (cuối cùng)
+        try {
+            keyBase64 = System.getenv(ENV_KEY);
+            if (keyBase64 != null && !keyBase64.isBlank()) {
+                log.info("ENCRYPTION_KEY resolved from OS environment variable");
+                return keyBase64;
+            }
+        } catch (SecurityException ignored) {
+            // SecurityManager cấm getenv() - bỏ qua
+        }
+
+        log.error("ENCRYPTION_KEY is not set in any source: " +
+                "JVM system property (-D...), Spring Environment (.env via DotenvInitializer or application.yml), " +
+                "direct .env file (Dotenv), or OS environment variable.");
+        throw new IllegalStateException(
+                "ENCRYPTION_KEY is required for PII encryption. " +
+                "Set it via one of: " +
+                "(1) export ENCRYPTION_KEY=\"$(openssl rand -base64 32)\", " +
+                "(2) thêm dòng ENCRYPTION_KEY=... vào file .env ở thư mục gốc project, " +
+                "(3) thêm ENCRYPTION_KEY=... vào application.yml (chỉ dùng cho dev/test).");
+    }
+
+    private SecretKey buildKey(String keyBase64) {
         try {
             byte[] keyBytes = Base64.getDecoder().decode(keyBase64);
 

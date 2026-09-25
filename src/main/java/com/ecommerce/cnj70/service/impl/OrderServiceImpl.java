@@ -215,6 +215,15 @@ public class OrderServiceImpl implements OrderService {
     }
 
     @Override
+    public Order getOrderByIdForCustomer(String orderId, String customerId) {
+        Order order = getOrderById(orderId);
+        if (customerId == null || !customerId.equals(order.getUserId())) {
+            throw new ResourceNotFoundException("Không tìm thấy đơn hàng");
+        }
+        return order;
+    }
+
+    @Override
     public List<Order> getOrdersByUserId(String userId) {
         return orderRepository.findByUserIdOrderByCreatedAtDesc(userId);
     }

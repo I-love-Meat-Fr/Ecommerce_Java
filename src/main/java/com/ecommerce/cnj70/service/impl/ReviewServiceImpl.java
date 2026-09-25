@@ -274,6 +274,11 @@ public class ReviewServiceImpl implements ReviewService {
         review.setModeratedBy(moderatorId);
         review.setModeratedAt(LocalDateTime.now());
 
+        // Sync hidden flag for legacy template/admin UI compatibility.
+        review.setHidden(true);
+        review.setHiddenReason(reason);
+        review.setModerationActorId(moderatorId);
+
         Review saved = reviewRepository.save(review);
 
         auditLogService.logWarning(
@@ -326,6 +331,10 @@ public class ReviewServiceImpl implements ReviewService {
         review.setModeratedBy(moderatorId);
         review.setModeratedAt(LocalDateTime.now());
         review.setReportCount(0);
+
+        // Sync hidden flag for legacy template/admin UI compatibility.
+        review.setHidden(false);
+        review.setHiddenReason(null);
 
         Review saved = reviewRepository.save(review);
 

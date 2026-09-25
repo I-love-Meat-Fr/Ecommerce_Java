@@ -1,85 +1,142 @@
 package com.ecommerce.cnj70.controller.admin;
 
-import com.ecommerce.cnj70.document.AuditLog;
-import com.ecommerce.cnj70.enums.AuditAction;
-import com.ecommerce.cnj70.enums.AuditSeverity;
-import com.ecommerce.cnj70.service.AuditLogService;
+import com.ecommerce.cnj70.document.AuditLogEntry;
+import com.ecommerce.cnj70.enums.UserRole;
+import com.ecommerce.cnj70.service.AdminAuditLogService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
-import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.format.annotation.DateTimeFormat;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 
-import java.util.HashMap;
-import java.util.Map;
+import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
- * TASK #23/#24 — Admin endpoint xem AuditLog.
+ * Phase 3C — Admin Audit Log HTML Controller.
  *
- * Endpoint cho Admin xem lịch sử action trên hệ thống.
- * - GET /api/admin/audit-logs: filter theo action/severity/resource/actor
- * - GET /api/admin/audit-logs/resource/{type}/{id}: lịch sử resource cụ thể
- * - GET /api/admin/audit-logs/actor/{actorId}: lịch sử actor
+ * <p>Serves Thymeleaf pages for Admin to browse audit logs.
+ * Backend query delegate: {@link AdminAuditLogService}</p>
+ *
+ * <h3>Routes</h3>
+ * <ul>
+ *     <li>{@code GET /admin/audit}             — List audit log entries</li>
+ *     <li>{@code GET /admin/audit/{id}}      — Audit log detail</li>
+ * </ul>
+ *
+ * <h3>Security</h3>
+ * <p>{@code /admin/**} is protected by SecurityConfig.hasRole("ADMIN").</p>
  */
-@RestController
-@RequestMapping("/api/admin/audit-logs")
-@PreAuthorize("hasRole('ADMIN')")
+@Controller
+@RequestMapping("/admin/audit")
 @RequiredArgsConstructor
 public class AdminAuditLogController {
 
-    private final AuditLogService auditLogService;
+    private static final int DEFAULT_PAGE_SIZE = 20;
+
+    private final AdminAuditLogService adminAuditLogService;
 
     @GetMapping
-    public ResponseEntity<Map<String, Object>> list(
-            @RequestParam(required = false) AuditAction action,
-            @RequestParam(required = false) AuditSeverity severity,
+    public String list(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size,
+            @RequestParam(required = false) String role,
             @RequestParam(required = false) String actorId,
             @RequestParam(required = false) String resourceType,
             @RequestParam(required = false) String resourceId,
-            Pageable pageable
-    ) {
-        Page<AuditLog> page;
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime from,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime to,
+            Model model) {
 
-        boolean hasResource = resourceType != null && resourceId != null;
-        boolean hasActor = actorId != null;
+        int safeSize = (size <= 0) ? DEFAULT_PAGE_SIZE : Math.min(size, 100);
+        int safePage = Math.max(page, 0);
+        Pageable pageable = PageRequest.of(safePage, safeSize);
 
-        if (action != null) {
-            page = auditLogService.findByAction(action, pageable);
-        } else if (severity != null) {
-            page = auditLogService.findBySeverity(severity, pageable);
-        } else if (hasResource) {
-            page = auditLogService.findByResource(resourceType, resourceId, pageable);
-        } else if (hasActor) {
-            page = auditLogService.findByActor(actorId, pageable);
+        Page<AuditLogEntry> entries;
+
+        if (from != null && to != null) {
+            entries = adminAuditLogService.listByDateRange(from, to, null, null, java.util.Collections.emptyList(), pageable);
+        } else if (isNonEmpty(resourceType) && isNonEmpty(resourceId)) {
+            entries = adminAuditLogService.listByResource(resourceType, resourceId, pageable);
+        } else if (isNonEmpty(actorId)) {
+            entries = adminAuditLogService.listByActor(actorId, pageable);
+        } else if (isNonEmpty(role)) {
+            try {
+                UserRole roleEnum = UserRole.valueOf(role.toUpperCase());
+                entries = adminAuditLogService.listByRole(roleEnum, pageable);
+            } catch (IllegalArgumentException e) {
+                entries = adminAuditLogService.listAll(pageable);
+            }
         } else {
-            page = Page.empty();
+            entries = adminAuditLogService.listAll(pageable);
         }
 
-        Map<String, Object> response = new HashMap<>();
-        response.put("content", page.getContent());
-        response.put("totalElements", page.getTotalElements());
-        response.put("totalPages", page.getTotalPages());
-        response.put("currentPage", page.getNumber());
-        response.put("size", page.getSize());
+        model.addAttribute("entries", entries.getContent());
+        model.addAttribute("page", entries.getNumber());
+        model.addAttribute("size", entries.getSize());
+        model.addAttribute("totalPages", entries.getTotalPages());
+        model.addAttribute("totalItems", entries.getTotalElements());
+        model.addAttribute("hasNext", entries.hasNext());
+        model.addAttribute("hasPrev", entries.hasPrevious());
+        model.addAttribute("isFirst", entries.isFirst());
+        model.addAttribute("isLast", entries.isLast());
+        model.addAttribute("pageNumbers", computePageRange(entries.getNumber(), entries.getTotalPages()));
 
-        return ResponseEntity.ok(response);
+        model.addAttribute("roleFilter", isNonEmpty(role) ? role : "");
+        model.addAttribute("actorId", isNonEmpty(actorId) ? actorId : "");
+        model.addAttribute("resourceType", isNonEmpty(resourceType) ? resourceType : "");
+        model.addAttribute("resourceId", isNonEmpty(resourceId) ? resourceId : "");
+        model.addAttribute("from", from != null ? from.toString().replace("T", " ") : "");
+        model.addAttribute("to", to != null ? to.toString().replace("T", " ") : "");
+        model.addAttribute("roleChoices", UserRole.values());
+
+        return "admin/audit-list";
     }
 
-    @GetMapping("/resource/{resourceType}/{resourceId}")
-    public ResponseEntity<Page<AuditLog>> findByResource(
-            @PathVariable String resourceType,
-            @PathVariable String resourceId,
-            Pageable pageable
-    ) {
-        return ResponseEntity.ok(auditLogService.findByResource(resourceType, resourceId, pageable));
+    @GetMapping("/{id}")
+    public String detail(
+            @PathVariable String id,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size,
+            @RequestParam(required = false) String role,
+            @RequestParam(required = false) String actorId,
+            @RequestParam(required = false) String resourceType,
+            @RequestParam(required = false) String resourceId,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime from,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime to,
+            Model model) {
+
+        AuditLogEntry entry = adminAuditLogService.getDetail(id);
+        model.addAttribute("entry", entry);
+        model.addAttribute("page", page);
+        model.addAttribute("size", size);
+        model.addAttribute("roleFilter", isNonEmpty(role) ? role : "");
+        model.addAttribute("actorId", isNonEmpty(actorId) ? actorId : "");
+        model.addAttribute("resourceType", isNonEmpty(resourceType) ? resourceType : "");
+        model.addAttribute("resourceId", isNonEmpty(resourceId) ? resourceId : "");
+        model.addAttribute("from", from != null ? from.toString().replace("T", " ") : "");
+        model.addAttribute("to", to != null ? to.toString().replace("T", " ") : "");
+
+        return "admin/audit-detail";
     }
 
-    @GetMapping("/actor/{actorId}")
-    public ResponseEntity<Page<AuditLog>> findByActor(
-            @PathVariable String actorId,
-            Pageable pageable
-    ) {
-        return ResponseEntity.ok(auditLogService.findByActor(actorId, pageable));
+    private static boolean isNonEmpty(String s) {
+        return s != null && !s.isBlank();
+    }
+
+    private static List<Integer> computePageRange(int current, int totalPages) {
+        List<Integer> out = new ArrayList<>();
+        if (totalPages <= 0) return out;
+        int start = Math.max(0, current - 2);
+        int end = Math.min(totalPages - 1, current + 2);
+        for (int i = start; i <= end; i++) out.add(i);
+        return out;
     }
 }

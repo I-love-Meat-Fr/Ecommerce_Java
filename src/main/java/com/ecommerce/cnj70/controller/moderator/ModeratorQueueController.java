@@ -72,7 +72,7 @@ public class ModeratorQueueController {
             @RequestParam(defaultValue = "PENDING") String status,
             @RequestParam(required = false) String targetType,
             @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "20") int size) {
+            @RequestParam(defaultValue = "10") int size) {
 
         ReportCaseStatus statusEnum = parseStatus(status);
         ReportTargetType typeEnum = parseTargetType(targetType);
@@ -257,3 +257,4 @@ public class ModeratorQueueController {
         }
     }
 }
+

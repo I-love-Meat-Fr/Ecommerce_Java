@@ -174,7 +174,7 @@ public class OrderController {
                         .orderDate(order.getCreatedAt())
                         .status(order.getStatus())
                         .totalAmount(order.getTotalAmount())
-                        .itemCount(order.getItems().size())
+                        .totalItemCount(order.getItems().size())
                         .shopName(order.getShopName())
                         .productImages(order.getItems().stream()
                                 .map(Order.OrderItem::getImageUrl)

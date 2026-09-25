@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security6"
+      th:replace="~{layout/moderator-layout :: layout(title='Chi tiết sản phẩm - Moderator CNJ70', content=~{::main-content}, scripts=~{::page-scripts})}">
+<head>
+    <title>Chi tiết sản phẩm - Moderator CNJ70</title>
+</head>
+<body>
+<main th:fragment="main-content">
+    <!-- Flash messages -->
+    <div th:if="${flashSuccess}" class="auth-alert auth-alert-success" style="margin: 0 2rem 1rem;">
+        <div class="auth-alert-icon"><i class="fas fa-check-circle"></i></div>
+        <div class="auth-alert-content" th:text="${flashSuccess}">OK</div>
+    </div>
+    <div th:if="${flashError}" class="auth-alert auth-alert-error" style="margin: 0 2rem 1rem;">
+        <div class="auth-alert-icon"><i class="fas fa-exclamation-circle"></i></div>
+        <div class="auth-alert-content" th:text="${flashError}">Error</div>
+    </div>
+
+    <!-- Header -->
+    <div class="dash-hero" style="padding: 1.5rem 2rem;">
+        <div class="dash-hero-content">
+            <div class="dash-greeting">
+                <h1 th:text="${ctx.productName}">Tên sản phẩm</h1>
+                <p class="dash-greeting-sub">
+                    ID: <span th:text="${ctx.productId}">id</span> ·
+                    Trạng thái kiểm duyệt:
+                    <span class="sd-badge"
+                          th:classappend="${ctx.moderationStatus != null and ctx.moderationStatus.name() == 'PENDING_MANUAL' ? 'sd-badge-warning' :
+                                          (ctx.moderationStatus != null and ctx.moderationStatus.name() == 'AUTO_PASSED' ? 'sd-badge-green' :
+                                          (ctx.moderationStatus != null and ctx.moderationStatus.name() == 'AUTO_REJECTED' ? 'sd-badge-danger' :
+                                          (ctx.moderationStatus != null and ctx.moderationStatus.name() == 'APPROVED' ? 'sd-badge-green' :
+                                          (ctx.moderationStatus != null and ctx.moderationStatus.name() == 'REJECTED' ? 'sd-badge-danger' :
+                                          (ctx.moderationStatus != null and ctx.moderationStatus.name() == 'ESCALATED' ? 'sd-badge-slate' : 'sd-badge-blue')))))}"
+                          th:text="${ctx.moderationStatus != null ? ctx.moderationStatus.name() : 'Không có'}">PENDING_MANUAL</span>
+                </p>
+            </div>
+            <div class="dash-hero-actions">
+                <a th:href="@{/moderator/queue}" class="sd-btn sd-btn-outline">
+                    <i class="fas fa-arrow-left"></i> Quay lại Queue
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Two-column layout -->
+    <div style="display:grid; grid-template-columns: 2fr 1fr; gap: 1.5rem; padding: 0 2rem 2rem;">
+        <!-- LEFT: Product info + auto result -->
+        <div>
+            <!-- Product information -->
+            <div class="dash-card" style="margin-bottom: 1.5rem;">
+                <div class="dash-card-header">
+                    <div class="dash-card-title-group">
+                        <h3><i class="fas fa-box"></i> Thông tin sản phẩm</h3>
+                    </div>
+                </div>
+                <div class="dash-card-body">
+                    <table class="sd-table">
+                        <tbody>
+                            <tr><th style="width:30%;">Tên</th><td th:text="${ctx.productName}">—</td></tr>
+                            <tr><th>Mô tả</th><td th:text="${ctx.description != null ? ctx.description : '—'}">—</td></tr>
+                            <tr><th>Danh mục</th><td th:text="${ctx.categoryName != null ? ctx.categoryName : '—'}">—</td></tr>
+                            <tr><th>Product Status</th><td th:text="${ctx.productStatus != null ? ctx.productStatus.name() : '—'}">—</td></tr>
+                            <tr><th>Moderation Status</th>
+                                <td>
+                                    <span th:if="${ctx.moderationStatus != null}" th:text="${ctx.moderationStatus.name()}">—</span>
+                                    <span th:unless="${ctx.moderationStatus != null}" class="sd-badge sd-badge-slate">Không thuộc pipeline Moderator</span>
+                                </td>
+                            </tr>
+                            <tr><th>Ngày tạo</th><td th:text="${ctx.createdAt != null ? #temporals.format(ctx.createdAt, 'dd/MM/yyyy HH:mm') : '—'}">—</td></tr>
+                            <tr><th>Cập nhật</th><td th:text="${ctx.updatedAt != null ? #temporals.format(ctx.updatedAt, 'dd/MM/yyyy HH:mm') : '—'}">—</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Auto Moderation result -->
+            <div class="dash-card">
+                <div class="dash-card-header">
+                    <div class="dash-card-title-group">
+                        <h3><i class="fas fa-robot"></i> Auto Moderation Result</h3>
+                        <p>Kết quả từ Auto Moderation Engine (integration seam)</p>
+                    </div>
+                </div>
+                <div class="dash-card-body">
+                    <div th:if="${ctx.autoModerationResult == null}" class="sd-empty">
+                        <i class="fas fa-plug-circle-xmark"></i>
+                        <h3>Auto Moderation Result chưa có</h3>
+                        <p>Auto Moderation Engine chưa cung cấp kết quả cho sản phẩm này (INTEGRATION-READY).</p>
+                    </div>
+
+                    <div th:if="${ctx.autoModerationResult != null}">
+                        <table class="sd-table">
+                            <tbody>
+                                <tr><th style="width:30%;">Status</th>
+                                    <td>
+                                        <span class="sd-badge"
+                                              th:classappend="${ctx.autoModerationResult.status.name() == 'AUTO_PASSED' ? 'sd-badge-green' :
+                                                              (ctx.autoModerationResult.status.name() == 'AUTO_REJECTED' ? 'sd-badge-danger' : 'sd-badge-warning')}"
+                                              th:text="${ctx.autoModerationResult.status.name()}">AUTO_PASSED</span>
+                                    </td>
+                                </tr>
+                                <tr><th>Severity</th>
+                                    <td th:text="${ctx.autoModerationResult.severity != null ? ctx.autoModerationResult.severity : '—'}">—</td>
+                                </tr>
+                                <tr><th>Reason</th>
+                                    <td th:text="${ctx.autoModerationResult.reason != null ? ctx.autoModerationResult.reason : '—'}">—</td>
+                                </tr>
+                                <tr><th>Checked At</th>
+                                    <td th:text="${ctx.autoModerationResult.checkedAt != null ? #temporals.format(ctx.autoModerationResult.checkedAt, 'dd/MM/yyyy HH:mm') : '—'}">—</td>
+                                </tr>
+                                <tr><th>Flags</th>
+                                    <td>
+                                        <span th:if="${#lists.isEmpty(ctx.autoModerationResult.flags)}" class="sd-badge sd-badge-slate">Không có</span>
+                                        <span th:each="flag : ${ctx.autoModerationResult.flags}" class="sd-badge sd-badge-warning" style="margin-right:4px;" th:text="${flag.name()}">FLAG</span>
+                                    </td>
+                                </tr>
+                                <tr><th>Evidence</th>
+                                    <td>
+                                        <span th:if="${#lists.isEmpty(ctx.autoModerationResult.evidence)}" class="sd-badge sd-badge-slate">Không có</span>
+                                        <ul th:unless="${#lists.isEmpty(ctx.autoModerationResult.evidence)}" style="margin:0; padding-left:1rem;">
+                                            <li th:each="ev : ${ctx.autoModerationResult.evidence}">
+                                                <strong th:text="${ev.flagType != null ? ev.flagType.name() : 'OTHER'}">FLAG</strong>:
+                                                <span th:text="${ev.evidenceValue}">value</span>
+                                                <span th:if="${ev.evidenceSource != null}" class="sd-table-sub" th:text="' (source: ' + ${ev.evidenceSource} + ')'"></span>
+                                            </li>
+                                        </ul>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- RIGHT: Shop/Vendor context + actions -->
+        <div>
+            <!-- Shop / Vendor context -->
+            <div class="dash-card" style="margin-bottom: 1.5rem;">
+                <div class="dash-card-header">
+                    <div class="dash-card-title-group">
+                        <h3><i class="fas fa-store"></i> Shop / Vendor</h3>
+                    </div>
+                </div>
+                <div class="dash-card-body">
+                    <table class="sd-table">
+                        <tbody>
+                            <tr><th>Shop</th><td th:text="${ctx.shopName != null ? ctx.shopName : '—'}">—</td></tr>
+                            <tr><th>Shop ID</th><td th:text="${ctx.shopId != null ? ctx.shopId : '—'}">—</td></tr>
+                            <tr><th>Shop Status</th><td th:text="${ctx.shopStatus != null ? ctx.shopStatus.name() : '—'}">—</td></tr>
+                            <tr><th>Vendor</th><td th:text="${ctx.vendorName != null ? ctx.vendorName : '—'}">—</td></tr>
+                            <tr><th>Vendor Email</th><td th:text="${ctx.vendorEmail != null ? ctx.vendorEmail : '—'}">—</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Actions -->
+            <div class="dash-card" th:if="${ctx.moderationStatus != null and (ctx.moderationStatus.name() == 'PENDING_MANUAL' or ctx.moderationStatus.name() == 'AUTO_PASSED' or ctx.moderationStatus.name() == 'AUTO_REJECTED')}">
+                <div class="dash-card-header">
+                    <div class="dash-card-title-group">
+                        <h3><i class="fas fa-gavel"></i> Hành động kiểm duyệt</h3>
+                    </div>
+                </div>
+                <div class="dash-card-body" style="display:flex; flex-direction:column; gap:0.75rem;">
+                    <!-- Approve -->
+                    <form th:action="@{/moderator/products/{id}/approve(id=${ctx.productId})}" method="post"
+                          onsubmit="return confirm('Duyệt sản phẩm này?');">
+                        <button type="submit" class="sd-btn sd-btn-success sd-btn-sm" style="width:100%;">
+                            <i class="fas fa-check"></i> Approve
+                        </button>
+                    </form>
+
+                    <!-- Reject -->
+                    <details>
+                        <summary class="sd-btn sd-btn-danger sd-btn-sm" style="width:100%; cursor:pointer; list-style:none;">
+                            <i class="fas fa-times"></i> Reject
+                        </summary>
+                        <form th:action="@{/moderator/products/{id}/reject(id=${ctx.productId})}" method="post"
+                              style="margin-top:0.5rem; display:flex; flex-direction:column; gap:0.5rem;"
+                              onsubmit="return confirm('Từ chối sản phẩm này?');">
+                            <textarea name="reason" required minlength="3"
+                                      placeholder="Lý do từ chối (bắt buộc)"
+                                      style="width:100%; min-height:80px; padding:8px; border:1px solid var(--border,#e2e8f0); border-radius:6px;"></textarea>
+                            <button type="submit" class="sd-btn sd-btn-danger sd-btn-sm">
+                                <i class="fas fa-times"></i> Xác nhận Reject
+                            </button>
+                        </form>
+                    </details>
+
+                    <!-- Escalate -->
+                    <details>
+                        <summary class="sd-btn sd-btn-warning sd-btn-sm" style="width:100%; cursor:pointer; list-style:none;">
+                            <i class="fas fa-arrow-up"></i> Escalate to Admin
+                        </summary>
+                        <form th:action="@{/moderator/products/{id}/escalate(id=${ctx.productId})}" method="post"
+                              style="margin-top:0.5rem; display:flex; flex-direction:column; gap:0.5rem;"
+                              onsubmit="return confirm('Leo thang sản phẩm này lên Admin?');">
+                            <textarea name="reason" required minlength="3"
+                                      placeholder="Lý do leo thang (bắt buộc)"
+                                      style="width:100%; min-height:80px; padding:8px; border:1px solid var(--border,#e2e8f0); border-radius:6px;"></textarea>
+                            <button type="submit" class="sd-btn sd-btn-warning sd-btn-sm">
+                                <i class="fas fa-arrow-up"></i> Xác nhận Escalate
+                            </button>
+                        </form>
+                    </details>
+                </div>
+            </div>
+
+            <!-- Final state notice -->
+            <div class="dash-card" th:if="${ctx.moderationStatus != null and (ctx.moderationStatus.name() == 'APPROVED' or ctx.moderationStatus.name() == 'REJECTED' or ctx.moderationStatus.name() == 'ESCALATED')}">
+                <div class="dash-card-body">
+                    <div class="sd-empty">
+                        <i class="fas fa-lock"></i>
+                        <h3>Sản phẩm đã ở trạng thái cuối</h3>
+                        <p>Trạng thái hiện tại:
+                            <strong th:text="${ctx.moderationStatus.name()}">—</strong>
+                        </p>
+                        <p>Không thể xử lý tiếp.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</main>
+<th:block th:fragment="page-scripts"></th:block>
+</body>
+</html>

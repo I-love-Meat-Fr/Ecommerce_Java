@@ -13,6 +13,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 
@@ -28,6 +29,11 @@ public class AdminKycServiceImpl implements AdminKycService {
 
     private final KycProfileRepository kycProfileRepository;
     private final UserRepository userRepository;
+    /**
+     * Phase 4 — dùng cho raw Document query để tránh {@code findById(String)}
+     * không match với {@code _id} String (cùng pattern với AdminShop/AdminUser).
+     */
+    private final MongoTemplate mongoTemplate;
 
     @Override
     public Page<KycProfile> listPending(Pageable pageable, String search) {
@@ -48,8 +54,37 @@ public class AdminKycServiceImpl implements AdminKycService {
 
     @Override
     public Map<String, Object> getDetail(String profileId) {
-        KycProfile profile = kycProfileRepository.findById(profileId)
-                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy hồ sơ KYC"));
+        // Phase 5 fix — _id có thể là ObjectId lẫn String (giống pattern AdminShopServiceImpl.getShopById).
+        // Bug history: raw query `new Document("_id", profileId)` chỉ match khi DB lưu _id là String.
+        // Nếu _id là ObjectId, query thất bại trả null → "Không tìm thấy hồ sơ KYC".
+        org.bson.Document raw = null;
+        try {
+            raw = mongoTemplate.getCollection("kyc_profiles")
+                    .find(new org.bson.Document("_id", profileId))
+                    .first();
+        } catch (Exception e) {
+            log.debug("KYC lookup String _id failed for [{}]: {}", profileId, e.getMessage());
+        }
+        if (raw == null && profileId != null && profileId.length() == 24 && profileId.matches("[0-9a-fA-F]+")) {
+            try {
+                raw = mongoTemplate.getCollection("kyc_profiles")
+                        .find(new org.bson.Document("_id", new org.bson.types.ObjectId(profileId)))
+                        .first();
+            } catch (Exception e) {
+                log.debug("KYC lookup ObjectId _id failed for [{}]: {}", profileId, e.getMessage());
+            }
+        }
+        if (raw == null) {
+            throw new ResourceNotFoundException("Không tìm thấy hồ sơ KYC");
+        }
+        if (!raw.containsKey("_class")) {
+            raw.put("_class", KycProfile.class.getName());
+        }
+        raw.put("_id", profileId);
+        KycProfile profile = mongoTemplate.getConverter().read(KycProfile.class, raw);
+        if (profile.getId() == null) {
+            profile.setId(profileId);
+        }
 
         User user = getUserForProfile(profile);
 
@@ -141,7 +176,20 @@ public class AdminKycServiceImpl implements AdminKycService {
     @Override
     public User getUserForProfile(KycProfile profile) {
         if (profile.getUserId() == null) return null;
-        return userRepository.findById(profile.getUserId()).orElse(null);
+        // Phase 4 — raw Document fetch (cùng lý do với AdminShopController.shopDetail).
+        org.bson.Document rawUser = mongoTemplate.getCollection("users")
+                .find(new org.bson.Document("_id", profile.getUserId()))
+                .first();
+        if (rawUser == null) return null;
+        if (!rawUser.containsKey("_class")) {
+            rawUser.put("_class", User.class.getName());
+        }
+        rawUser.put("_id", profile.getUserId());
+        User user = mongoTemplate.getConverter().read(User.class, rawUser);
+        if (user.getId() == null) {
+            user.setId(profile.getUserId());
+        }
+        return user;
     }
 
     private void syncUserKycStatus(KycProfile profile) {

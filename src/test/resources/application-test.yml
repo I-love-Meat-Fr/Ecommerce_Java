@@ -1,0 +1,15 @@
+spring:
+  data:
+    mongodb:
+      auto-index-creation: false
+  main:
+    allow-bean-definition-overriding: true
+
+jwt:
+  secret: test-secret-please-do-not-use-this-in-production-test-only-secret-1234567890
+  expiration: 3600000
+
+logging:
+  level:
+    root: WARN
+    com.ecommerce.cnj70: INFO

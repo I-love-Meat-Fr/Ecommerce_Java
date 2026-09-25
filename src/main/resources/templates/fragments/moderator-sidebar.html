@@ -20,13 +20,33 @@
 
         <div class="sd-sidebar-nav-section">
             <span class="sd-sidebar-nav-title">Kiểm duyệt</span>
+            <a th:href="@{/moderator/queue}" class="sd-nav-item" data-match="/moderator/queue">
+                <i class="fas fa-box"></i>
+                <span class="sd-nav-label">Sản phẩm</span>
+            </a>
             <a th:href="@{/moderator/reviews}" class="sd-nav-item" data-match="/moderator/reviews">
                 <i class="fas fa-comment-dots"></i>
-                <span class="sd-nav-label">Review Queue</span>
+                <span class="sd-nav-label">Review</span>
+            </a>
+            <a th:href="@{/moderator/shops}" class="sd-nav-item" data-match="/moderator/shops">
+                <i class="fas fa-store"></i>
+                <span class="sd-nav-label">Shop</span>
+            </a>
+            <a th:href="@{/moderator/cases}" class="sd-nav-item" data-match="/moderator/cases">
+                <i class="fas fa-flag"></i>
+                <span class="sd-nav-label">Cases</span>
             </a>
             <a th:href="@{/moderator/kyc}" class="sd-nav-item" data-match="/moderator/kyc">
                 <i class="fas fa-user-check"></i>
-                <span class="sd-nav-label">KYC Queue</span>
+                <span class="sd-nav-label">KYC</span>
+            </a>
+            <a th:href="@{/moderator/violations}" class="sd-nav-item" data-match="/moderator/violations">
+                <i class="fas fa-exclamation-circle"></i>
+                <span class="sd-nav-label">Vi phạm</span>
+            </a>
+            <a th:href="@{/moderator/history}" class="sd-nav-item" data-match="/moderator/history">
+                <i class="fas fa-history"></i>
+                <span class="sd-nav-label">Lịch sử</span>
             </a>
         </div>
 

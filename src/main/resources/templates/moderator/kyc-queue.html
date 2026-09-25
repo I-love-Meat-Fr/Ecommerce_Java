@@ -26,8 +26,10 @@
                 <select name="status" class="sd-select sd-toolbar-select"
                         style="padding:8px 10px;border:1px solid var(--border,#e2e8f0);border-radius:6px;">
                     <option value="">Tất cả</option>
-                    <option value="PENDING_PROVIDER" th:selected="${status == 'PENDING_PROVIDER'}">Đang xử lý</option>
-                    <option value="KYC_REJECTED" th:selected="${status == 'KYC_REJECTED'}">Bị từ chối</option>
+                    <option value="PENDING_THIRD_PARTY" th:selected="${status == 'PENDING_THIRD_PARTY'}">Đang chờ 3rd-party</option>
+                    <option value="PENDING_ADMIN" th:selected="${status == 'PENDING_ADMIN'}">Đang chờ admin duyệt</option>
+                    <option value="THIRD_PARTY_REJECTED" th:selected="${status == 'THIRD_PARTY_REJECTED'}">3rd-party từ chối</option>
+                    <option value="ADMIN_REJECTED" th:selected="${status == 'ADMIN_REJECTED'}">Admin từ chối</option>
                 </select>
                 <button type="submit" class="sd-btn sd-btn-primary sd-btn-sm sd-toolbar-btn">
                     <i class="fas fa-filter"></i> Lọc
@@ -70,11 +72,17 @@
                         </td>
                         <td th:text="${shop.ownerId}">ownerId</td>
                         <td>
-                            <span th:if="${shop.kycStatus.name() == 'PENDING_PROVIDER'}" class="sd-badge sd-badge-warning">
-                                <i class="fas fa-clock"></i> Đang xử lý
+                            <span th:if="${shop.kycStatus.name() == 'PENDING_THIRD_PARTY'}" class="sd-badge sd-badge-warning">
+                                <i class="fas fa-clock"></i> Đang chờ 3rd-party
                             </span>
-                            <span th:if="${shop.kycStatus.name() == 'KYC_REJECTED'}" class="sd-badge sd-badge-danger">
-                                <i class="fas fa-xmark"></i> Bị từ chối
+                            <span th:if="${shop.kycStatus.name() == 'PENDING_ADMIN'}" class="sd-badge sd-badge-warning">
+                                <i class="fas fa-clock"></i> Đang chờ admin
+                            </span>
+                            <span th:if="${shop.kycStatus.name() == 'THIRD_PARTY_REJECTED'}" class="sd-badge sd-badge-danger">
+                                <i class="fas fa-xmark"></i> 3rd-party từ chối
+                            </span>
+                            <span th:if="${shop.kycStatus.name() == 'ADMIN_REJECTED'}" class="sd-badge sd-badge-danger">
+                                <i class="fas fa-xmark"></i> Admin từ chối
                             </span>
                             <span th:if="${shop.kycStatus.name() == 'APPROVED'}" class="sd-badge sd-badge-success">
                                 <i class="fas fa-check"></i> Đã duyệt

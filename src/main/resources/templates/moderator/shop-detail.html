@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/springsecurity6"
+      th:replace="~{layout/moderator-layout :: layout(title='Shop Detail - CNJ70 Moderator', content=~{::main-content}, scripts=~{::page-scripts})}">
+<head>
+    <title>Shop Detail - CNJ70 Moderator</title>
+</head>
+<body>
+<main th:fragment="main-content">
+    <div class="sd-page-head">
+        <div class="sd-page-head-title">
+            <h1><i class="fas fa-store"></i> Shop Detail</h1>
+            <p>Kiểm duyệt và thực thi hành động trên Shop.</p>
+        </div>
+        <div class="sd-page-head-actions">
+            <a th:href="@{/moderator/shops(page=${page}, size=${size}, q=${q}, status=${status})}"
+               class="sd-btn sd-btn-secondary sd-btn-sm">
+                <i class="fas fa-arrow-left"></i>
+                <span>Quay lại danh sách</span>
+            </a>
+        </div>
+    </div>
+
+    <!-- Status badges row -->
+    <div class="sd-card" style="margin-bottom:20px;">
+        <div class="sd-card-body" style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
+            <span class="sd-badge sd-badge-slate sd-mono" th:text="'ID: ' + ${ctx.shopId}">#id</span>
+            <span class="sd-badge"
+                  th:classappend="${ctx.status.name() == 'PENDING' ? 'sd-badge-amber' : (ctx.status.name() == 'APPROVED' ? 'sd-badge-green' : (ctx.status.name() == 'RESTRICTED' ? 'sd-badge-warning' : (ctx.status.name() == 'SUSPENDED' ? 'sd-badge-red' : 'sd-badge-slate')))}"
+                  th:text="${ctx.status.name() == 'PENDING' ? 'Chờ duyệt' : (ctx.status.name() == 'APPROVED' ? 'Đang hoạt động' : (ctx.status.name() == 'RESTRICTED' ? 'Bị giới hạn' : (ctx.status.name() == 'SUSPENDED' ? 'Bị đình chỉ' : ctx.status.name())))}">PENDING</span>
+            <span class="sd-badge"
+                  th:classappend="${ctx.active} ? 'sd-badge-green' : 'sd-badge-slate'"
+                  th:text="${ctx.active ? 'Đang hoạt động' : 'Đã tắt'}">Đang hoạt động</span>
+        </div>
+    </div>
+
+    <!-- Shop Information -->
+    <div class="sd-card" style="margin-bottom:20px;">
+        <div class="sd-card-head">
+            <div>
+                <h3><i class="fas fa-info-circle"></i> Shop Information</h3>
+                <p>Thông tin cơ bản của shop</p>
+            </div>
+        </div>
+        <div class="sd-card-body">
+            <div class="sd-detail-grid">
+                <div class="sd-detail-item">
+                    <div class="sd-detail-label">Shop ID</div>
+                    <div class="sd-detail-value sd-mono" th:text="${ctx.shopId}">id</div>
+                </div>
+                <div class="sd-detail-item">
+                    <div class="sd-detail-label">Shop Name</div>
+                    <div class="sd-detail-value" th:text="${ctx.shopName}">name</div>
+                </div>
+                <div class="sd-detail-item" style="grid-column:1/-1;">
+                    <div class="sd-detail-label">Description</div>
+                    <div class="sd-detail-value" th:text="${ctx.description != null ? ctx.description : '—'}">—</div>
+                </div>
+                <div class="sd-detail-item">
+                    <div class="sd-detail-label">Logo URL</div>
+                    <div class="sd-detail-value sd-mono" style="word-break:break-all;"
+                         th:text="${ctx.logoUrl != null ? ctx.logoUrl : '—'}">—</div>
+                </div>
+                <div class="sd-detail-item">
+                    <div class="sd-detail-label">Banner URL</div>
+                    <div class="sd-detail-value sd-mono" style="word-break:break-all;"
+                         th:text="${ctx.bannerUrl != null ? ctx.bannerUrl : '—'}">—</div>
+                </div>
+                <div class="sd-detail-item">
+                    <div class="sd-detail-label">Created At</div>
+                    <div class="sd-detail-value" th:text="${ctx.createdAt != null ? #temporals.format(ctx.createdAt, 'yyyy-MM-dd HH:mm:ss') : '—'}">—</div>
+                </div>
+                <div class="sd-detail-item">
+                    <div class="sd-detail-label">Updated At</div>
+                    <div class="sd-detail-value" th:text="${ctx.updatedAt != null ? #temporals.format(ctx.updatedAt, 'yyyy-MM-dd HH:mm:ss') : '—'}">—</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Vendor Information -->
+    <div class="sd-card" style="margin-bottom:20px;">
+        <div class="sd-card-head">
+            <div>
+                <h3><i class="fas fa-user-tie"></i> Vendor / Owner</h3>
+                <p>Thông tin chủ sở hữu shop</p>
+            </div>
+        </div>
+        <div class="sd-card-body">
+            <div class="sd-detail-grid">
+                <div class="sd-detail-item">
+                    <div class="sd-detail-label">Vendor ID</div>
+                    <div class="sd-detail-value sd-mono" th:text="${ctx.ownerId != null ? ctx.ownerId : '—'}">—</div>
+                </div>
+                <div class="sd-detail-item">
+                    <div class="sd-detail-label">Vendor Name</div>
+                    <div class="sd-detail-value" th:text="${ctx.ownerName != null ? ctx.ownerName : '—'}">—</div>
+                </div>
+                <div class="sd-detail-item">
+                    <div class="sd-detail-label">Vendor Email</div>
+                    <div class="sd-detail-value" th:text="${ctx.ownerEmail != null ? ctx.ownerEmail : '—'}">—</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Enforcement History -->
+    <div class="sd-card" style="margin-bottom:20px;">
+        <div class="sd-card-head">
+            <div>
+                <h3><i class="fas fa-gavel"></i> Enforcement History</h3>
+                <p>Lịch sử enforcement gần nhất (Admin / Moderator)</p>
+            </div>
+        </div>
+        <div class="sd-card-body">
+            <div class="sd-detail-grid">
+                <div class="sd-detail-item">
+                    <div class="sd-detail-label">Enforcement Actor ID</div>
+                    <div class="sd-detail-value sd-mono" th:text="${ctx.enforcementActorId != null ? ctx.enforcementActorId : '—'}">—</div>
+                </div>
+                <div class="sd-detail-item">
+                    <div class="sd-detail-label">Enforcement At</div>
+                    <div class="sd-detail-value" th:text="${ctx.enforcementAt != null ? #temporals.format(ctx.enforcementAt, 'yyyy-MM-dd HH:mm:ss') : '—'}">—</div>
+                </div>
+                <div class="sd-detail-item" style="grid-column:1/-1;">
+                    <div class="sd-detail-label">Enforcement Reason</div>
+                    <div class="sd-detail-value" th:text="${ctx.enforcementReason != null ? ctx.enforcementReason : '—'}">—</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Moderator Actions -->
+    <div class="sd-card" style="margin-bottom:20px;">
+        <div class="sd-card-head">
+            <div>
+                <h3><i class="fas fa-shield-halved"></i> Moderator Actions</h3>
+                <p>Backend enforces state transitions. Admin enforcement cannot be silently overwritten.</p>
+            </div>
+        </div>
+        <div class="sd-card-body">
+            <div class="sd-action-row">
+                <form th:if="${ctx.status.name() == 'PENDING'}"
+                      th:action="@{/moderator/shops/{id}/approve(id=${ctx.shopId}, page=${page}, size=${size}, q=${q}, status=${status})}"
+                      method="post"
+                      style="display:inline;"
+                      onsubmit="return confirm('Duyệt shop này?');">
+                    <button type="submit" class="sd-btn sd-btn-success sd-btn-sm">
+                        <i class="fas fa-circle-check"></i> Approve
+                    </button>
+                </form>
+
+                <button type="button"
+                        th:if="${ctx.status.name() == 'APPROVED' or ctx.status.name() == 'RESTRICTED'}"
+                        class="sd-btn sd-btn-danger sd-btn-sm"
+                        th:attr="data-action='suspend', data-shop-id=${ctx.shopId}, data-page=${page}, data-size=${size}, data-q=${q}, data-status=${status}"
+                        onclick="openReasonModalFromData(this)">
+                    <i class="fas fa-ban"></i> Suspend
+                </button>
+
+                <button type="button"
+                        th:if="${ctx.status.name() == 'APPROVED'}"
+                        class="sd-btn sd-btn-warning sd-btn-sm"
+                        th:attr="data-action='restrict', data-shop-id=${ctx.shopId}, data-page=${page}, data-size=${size}, data-q=${q}, data-status=${status}"
+                        onclick="openReasonModalFromData(this)">
+                    <i class="fas fa-gavel"></i> Restrict
+                </button>
+
+                <button type="button"
+                        th:if="${ctx.status.name() == 'SUSPENDED' or ctx.status.name() == 'RESTRICTED'}"
+                        class="sd-btn sd-btn-primary sd-btn-sm"
+                        th:attr="data-action='restore', data-shop-id=${ctx.shopId}, data-page=${page}, data-size=${size}, data-q=${q}, data-status=${status}"
+                        onclick="openReasonModalFromData(this)">
+                    <i class="fas fa-undo"></i> Restore
+                </button>
+            </div>
+
+            <p class="sd-text-muted" style="font-size:13px;margin-top:12px;">
+                <i class="fas fa-info-circle"></i>
+                Suspend / Restrict / Restore require a non-blank reason. Backend re-validates.
+            </p>
+        </div>
+    </div>
+
+    <!-- Reason modal -->
+    <div id="reason-modal" class="sd-modal" role="dialog" aria-modal="true">
+        <div class="sd-modal-box">
+            <h3 id="reason-modal-title">Reason</h3>
+            <form id="reason-modal-form" method="post" action="">
+                <div class="sd-form-group">
+                    <label for="reason-text">Reason *</label>
+                    <textarea id="reason-text" name="reason" placeholder="Nhập lý do..." required
+                              style="width:100%;min-height:80px;padding:10px;border:1px solid var(--border,#e2e8f0);border-radius:6px;font:inherit;"></textarea>
+                </div>
+                <div class="sd-form-group">
+                    <label for="note-text">Internal note (optional)</label>
+                    <input id="note-text" type="text" name="note" maxlength="2000"
+                           style="padding:8px 10px;border:1px solid var(--border,#e2e8f0);border-radius:6px;" />
+                </div>
+                <p class="sd-text-muted" style="font-size:13px;">
+                    Reason is required and backend will validate. Empty/spaces are rejected.
+                </p>
+                <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:16px;">
+                    <button type="button" class="sd-btn sd-btn-secondary sd-btn-sm" onclick="closeReasonModal()">Hủy</button>
+                    <button type="submit" class="sd-btn sd-btn-primary sd-btn-sm">Confirm</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</main>
+<th:block th:fragment="page-scripts">
+    <style>
+        .sd-modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 99; align-items: center; justify-content: center; padding: 1rem; }
+        .sd-modal.is-open { display: flex; }
+        .sd-modal .sd-modal-box { background: #fff; padding: 24px; border-radius: 8px; width: min(560px, 90vw); max-height: 90vh; overflow: auto; box-shadow: 0 10px 40px rgba(0,0,0,0.2); }
+        .sd-modal .sd-modal-box h3 { margin-top: 0; margin-bottom: 12px; }
+    </style>
+    <script th:inline="javascript">
+        /*<![CDATA[*/
+        function openReasonModalFromData(btn) {
+            var action = btn.getAttribute('data-action');
+            var shopId = btn.getAttribute('data-shop-id');
+            var page = btn.getAttribute('data-page');
+            var size = btn.getAttribute('data-size');
+            var q = btn.getAttribute('data-q');
+            var status = btn.getAttribute('data-status');
+            openReasonModal(action, shopId, page, size, q, status);
+        }
+        function openReasonModal(action, shopId, page, size, q, status) {
+            var form = document.getElementById('reason-modal-form');
+            form.action = '/moderator/shops/' + encodeURIComponent(shopId) + '/' + action
+                + '?page=' + page + '&size=' + encodeURIComponent(size)
+                + (q ? '&q=' + encodeURIComponent(q) : '')
+                + (status ? '&status=' + encodeURIComponent(status) : '');
+            var title = {suspend: 'Suspend Shop — Reason', restore: 'Restore Shop — Reason', restrict: 'Restrict Shop — Reason'}[action] || 'Reason';
+            document.getElementById('reason-modal-title').textContent = title;
+            form.querySelector('textarea[name=reason]').value = '';
+            document.getElementById('note-text').value = '';
+            document.getElementById('reason-modal').classList.add('is-open');
+            form.querySelector('textarea[name=reason]').focus();
+        }
+        function closeReasonModal() {
+            document.getElementById('reason-modal').classList.remove('is-open');
+        }
+        document.addEventListener('keydown', function (e) {
+            if (e.key === 'Escape') closeReasonModal();
+        });
+        /*]]>*/
+    </script>
+</th:block>
+</body>
+</html>

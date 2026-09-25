@@ -21,13 +21,40 @@ public interface ViolationRepository extends MongoRepository<Violation, String> 
 
     Page<Violation> findByShopIdAndType(String shopId, ViolationType type, Pageable pageable);
 
+    // Filter-only paths (no shop filter) — Phase 2 Fix BUG-V1.
+    // Used by Admin + Moderator violation list when no shopId is provided
+    // but severity/type filter is applied.
+    Page<Violation> findBySeverity(ViolationSeverity severity, Pageable pageable);
+
+    Page<Violation> findByType(ViolationType type, Pageable pageable);
+
+    Page<Violation> findBySeverityAndType(ViolationSeverity severity,
+                                          ViolationType type,
+                                          Pageable pageable);
+
     long countByShopId(String shopId);
 
     long countByShopIdAndResolvedAtIsNull(String shopId);
 
+    /**
+     * Phase 1 — Global count of active violations (resolvedAt IS NULL).
+     * Replaces inefficient {@code findAll().stream().filter(...).count()} used
+     * by AdminServiceImpl.countActiveViolations() / AdminDashboardRes.openViolation.
+     * O(1) DB-side count.
+     */
+    long countByResolvedAtIsNull();
+
     long countByShopIdAndSeverity(String shopId, ViolationSeverity severity);
 
-    /** Đếm số violation nghiêm trọng chưa được xử lý (dùng để chặn hoạt động bán hàng) */
+    /**
+     * Đếm số violation nghiêm trọng chưa được xử lý (dùng để chặn hoạt động bán hàng).
+     * Violation active = resolvedAt == null.
+     */
     long countByShopIdAndSeverityInAndResolvedAtIsNull(
             String shopId, List<ViolationSeverity> severities);
+
+    // Note: Violation KHÔNG có field 'status'.
+    // Domain model dùng resolvedAt == null để biểu diễn active state.
+    // Admin query sử dụng resolvedAt-based queries.
+    // ViolationStatus enum (Phase 3C) hiện không được sử dụng trên document.
 }

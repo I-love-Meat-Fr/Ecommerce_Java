@@ -13,6 +13,12 @@ public interface OrderService {
 
     Order getOrderById(String id);
 
+    /**
+     * Ownership-checked fetch. Returns the order only when it belongs to the given
+     * customerId; throws otherwise (defense against IDOR).
+     */
+    Order getOrderByIdForCustomer(String orderId, String customerId);
+
     List<Order> getOrdersByUserId(String userId);
 
     List<Order> getOrdersByShopId(String shopId);

@@ -59,7 +59,7 @@
 .sd-app .sd-textarea:focus {
     outline: none;
     border-color: var(--primary, #0fb5b0);
-    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.12);
+    box-shadow: 0 0 0 3px rgba(15, 181, 176, 0.12);
     background-color: var(--bg-elevated, #ffffff);
 }
 
@@ -702,6 +702,53 @@
     gap: 10px;
     flex-wrap: wrap;
     width: 100%;
+}
+
+/* ============================================================================
+ * Phase 1 Hotfix — Table Container Width
+ * ----------------------------------------------------------------------------
+ * Voucher table (và các table khác) có nhiều cột, nếu không có wrapper có
+ * overflow-x: auto thì table sẽ tràn ra ngoài .sd-content, đẩy body scroll
+ * ngang, khiến sidebar bị "nép" lại. Fix: card-body-flush chứa table phải
+ * cho phép scroll ngang độc lập và giới hạn max-width trong container cha.
+ * ============================================================================ */
+.sd-app .sd-card-body-flush:has(> .sd-table),
+.sd-app .sd-card-body-flush:has(> .sd-table-wrap) {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+}
+
+.sd-app .sd-card-body-flush > .sd-table {
+    min-width: 720px;
+}
+
+.sd-app .sd-table-wrap {
+    width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+}
+
+.sd-app .sd-table-wrap > .sd-table {
+    min-width: 720px;
+}
+
+/* Khi table có nhiều cột hơn viewport, giữ sidebar cố định */
+.sd-app .sd-content {
+    max-width: 100%;
+    overflow-x: hidden;
+}
+
+.sd-app .sd-card {
+    max-width: 100%;
+}
+
+.sd-app .sd-table {
+    table-layout: auto;
+}
+
+.sd-app .sd-table th,
+.sd-app .sd-table td {
+    word-break: break-word;
 }
 
 /* ============================================================================

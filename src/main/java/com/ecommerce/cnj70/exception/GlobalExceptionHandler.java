@@ -37,6 +37,13 @@ public class GlobalExceptionHandler {
         model.addAttribute("error", ex.getMessage());
         return "error/403";
     }
+
+    @ExceptionHandler(ConflictException.class)
+    @ResponseStatus(HttpStatus.CONFLICT)
+    public String handleConflictException(ConflictException ex, Model model) {
+        model.addAttribute("error", ex.getMessage());
+        return "error/409";
+    }
     
     @ExceptionHandler(org.springframework.security.access.AccessDeniedException.class)
     @ResponseStatus(HttpStatus.FORBIDDEN)

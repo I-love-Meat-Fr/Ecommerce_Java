@@ -7,6 +7,24 @@
 </head>
 <body>
 <main th:fragment="main-content">
+    <!-- Phase 4 — flash messages (addFlashAttribute) -->
+    <div th:if="${flashSuccess}" class="sd-card" style="margin-bottom:16px;border-left:4px solid #10b981;">
+        <div class="sd-card-body">
+            <div style="display:flex;align-items:center;gap:10px;color:#065f46;">
+                <i class="fas fa-circle-check"></i>
+                <span th:text="${flashSuccess}"></span>
+            </div>
+        </div>
+    </div>
+    <div th:if="${flashError}" class="sd-card" style="margin-bottom:16px;border-left:4px solid #ef4444;">
+        <div class="sd-card-body">
+            <div style="display:flex;align-items:center;gap:10px;color:#991b1b;">
+                <i class="fas fa-circle-exclamation"></i>
+                <span th:text="${flashError}"></span>
+            </div>
+        </div>
+    </div>
+
     <div class="sd-page-head">
         <div class="sd-page-head-title">
             <h1>Quản lý danh mục</h1>
