@@ -233,12 +233,16 @@
                             </div>
                         </div>
 
-                        <!-- Terms -->
+                        <!-- Terms & Privacy (TASK #22 — gộp thành 1 checkbox duy nhất) -->
                         <div class="form-terms">
-                            <label class="checkbox-wrapper">
-                                <input type="checkbox" required>
-                                <span class="checkmark"></span>
-                                <span>Tôi đồng ý với <a href="#">Điều khoản sử dụng</a> và <a href="#">Chính sách bảo mật</a></span>
+                            <input type="checkbox"
+                                   id="acceptTerms"
+                                   class="native-checkbox"
+                                   name="acceptTerms"
+                                   th:field="*{acceptTerms}"
+                                   required>
+                            <label for="acceptTerms" class="terms-label">
+                                Tôi đồng ý với <a href="/terms" target="_blank" rel="noopener" onclick="event.stopPropagation();">Điều khoản sử dụng</a> và <a href="/privacy" target="_blank" rel="noopener" onclick="event.stopPropagation();">Chính sách bảo mật</a>
                             </label>
                         </div>
 

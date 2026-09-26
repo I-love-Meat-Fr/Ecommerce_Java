@@ -123,9 +123,7 @@
                     <i class="fas fa-chevron-left"></i> Trước
                 </span>
 
-                <th:block th:each="i : ${#numbers.sequence(0, totalPages - 1)}" th:if="${i == page}">
-                    <span class="sd-page-link sd-page-active" th:text="${i + 1}">1</span>
-                </th:block>
+                <span class="sd-page-link sd-page-active" th:text="${page + 1} + ' / ' + ${totalPages}">1 / 1</span>
 
                 <a th:if="${hasNext}"
                    th:href="@{/moderator/kyc(page=${page + 1}, size=${size}, status=${status})}"

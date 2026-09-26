@@ -362,6 +362,7 @@
     align-items: center;
     gap: 16px;
     min-width: 0;
+    flex-wrap: wrap;
 }
 
 .oh-card-shop {
@@ -382,10 +383,18 @@
 }
 
 .oh-card-id {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
     font-size: 13px;
     font-weight: 600;
-    color: var(--oh-muted);
+    color: var(--oh-ink-soft);
     white-space: nowrap;
+}
+
+.oh-card-id i {
+    color: var(--oh-teal);
+    font-size: 12px;
 }
 
 .oh-card-id-code {
@@ -393,6 +402,99 @@
     color: var(--oh-ink);
     font-family: 'Courier New', monospace;
     letter-spacing: 0.02em;
+}
+
+.oh-card-date {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--oh-muted);
+}
+
+.oh-card-date i {
+    font-size: 11px;
+    color: var(--oh-muted);
+}
+
+.oh-card-time {
+    color: var(--oh-muted);
+    font-weight: 500;
+}
+
+/* ============================================================
+   PAYMENT STATUS MINI BADGE — order-history card header
+   Compact version hiển thị cùng dòng Order Status.
+   Icon + text ngắn ("Chờ TT" / "Đã TT" / "TT lỗi" / "Hoàn tiền")
+   Color coding: amber PENDING, green PAID, red FAILED, violet REFUNDED
+   ============================================================ */
+.oh-payment-status-mini {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 4px 10px;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+    border: 1px solid;
+    border-radius: 12px;
+    text-transform: uppercase;
+    white-space: nowrap;
+    cursor: help;
+    transition: transform 0.15s ease;
+}
+
+.oh-payment-status-mini:hover {
+    transform: translateY(-1px);
+}
+
+.oh-payment-status-mini i {
+    font-size: 10px;
+}
+
+.oh-payment-status-mini-label {
+    font-weight: 800;
+}
+
+.oh-payment-status-mini[data-status="PENDING"] {
+    background: #fffcf0;
+    border-color: #e3c97a;
+    color: var(--oh-amber);
+}
+
+.oh-payment-status-mini[data-status="PENDING"] i {
+    color: var(--oh-amber);
+}
+
+.oh-payment-status-mini[data-status="PAID"] {
+    background: #f0faf3;
+    border-color: #92d0a8;
+    color: var(--oh-green);
+}
+
+.oh-payment-status-mini[data-status="PAID"] i {
+    color: var(--oh-green);
+}
+
+.oh-payment-status-mini[data-status="FAILED"] {
+    background: #fff5f5;
+    border-color: #e0a0a4;
+    color: var(--oh-accent-red);
+}
+
+.oh-payment-status-mini[data-status="FAILED"] i {
+    color: var(--oh-accent-red);
+}
+
+.oh-payment-status-mini[data-status="REFUNDED"] {
+    background: #f5f0ff;
+    border-color: #b4a4d4;
+    color: #6b46c1;
+}
+
+.oh-payment-status-mini[data-status="REFUNDED"] i {
+    color: #6b46c1;
 }
 
 /* Status Badge */
@@ -441,6 +543,596 @@
     background: #fff5f5;
     border-color: #e0a0a4;
     color: var(--oh-accent-red);
+}
+
+/* ============================================================
+   PAYMENT STATUS BADGE — order-history card summary
+   4 trạng thái: PENDING (amber), PAID (green),
+                 FAILED (red), REFUNDED (violet)
+   Hiển thị cùng dòng với payment method để người dùng
+   thấy rõ: "Thanh toán: Đã thanh toán" hay "Chờ thanh toán"...
+   ============================================================ */
+.oh-summary-payment-status {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 14px;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+    border: 1px solid;
+    border-radius: 20px;
+    background: #fffcf0;
+    color: var(--oh-ink);
+    transition: transform 0.15s ease;
+}
+
+.oh-summary-payment-status:hover {
+    transform: translateY(-1px);
+}
+
+.oh-summary-payment-status i {
+    font-size: 12px;
+}
+
+.oh-summary-payment-status .oh-payment-status-label {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.oh-summary-payment-status .oh-payment-status-label strong {
+    font-weight: 800;
+}
+
+/* PENDING — chờ thanh toán (COD mặc định / VNPAY đang chờ) */
+.oh-summary-payment-status[data-status="PENDING"] {
+    background: #fffcf0;
+    border-color: #e3c97a;
+    color: var(--oh-amber);
+}
+
+.oh-summary-payment-status[data-status="PENDING"] i {
+    color: var(--oh-amber);
+}
+
+/* PAID — đã nhận tiền */
+.oh-summary-payment-status[data-status="PAID"] {
+    background: #f0faf3;
+    border-color: #92d0a8;
+    color: var(--oh-green);
+}
+
+.oh-summary-payment-status[data-status="PAID"] i {
+    color: var(--oh-green);
+}
+
+/* FAILED — thanh toán thất bại */
+.oh-summary-payment-status[data-status="FAILED"] {
+    background: #fff5f5;
+    border-color: #e0a0a4;
+    color: var(--oh-accent-red);
+}
+
+.oh-summary-payment-status[data-status="FAILED"] i {
+    color: var(--oh-accent-red);
+}
+
+/* REFUNDED — đã hoàn tiền */
+.oh-summary-payment-status[data-status="REFUNDED"] {
+    background: #f5f0ff;
+    border-color: #b4a4d4;
+    color: #6b46c1;
+}
+
+.oh-summary-payment-status[data-status="REFUNDED"] i {
+    color: #6b46c1;
+}
+
+/* ============================================================
+   SUBORDERS SECTION
+   ============================================================ */
+.oh-suborders {
+    border-bottom: 1px solid var(--oh-line);
+}
+
+.oh-suborder {
+    border-bottom: 1px dashed var(--oh-line);
+    transition: background 0.2s ease;
+}
+
+.oh-suborder:last-child {
+    border-bottom: none;
+}
+
+.oh-suborder:hover {
+    background: rgba(15, 181, 176, 0.02);
+}
+
+/* SubOrder Header */
+.oh-suborder-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 12px 20px;
+    background: var(--oh-bg-alt2);
+    border-bottom: 1px solid var(--oh-line);
+}
+
+.oh-suborder-shop {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--oh-ink);
+}
+
+.oh-suborder-shop i {
+    color: var(--oh-teal);
+    font-size: 12px;
+}
+
+/* Shipping Badge per Shop */
+.oh-shipping-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 3px 10px;
+    font-size: 11px;
+    font-weight: 700;
+    border-radius: 20px;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+}
+
+.oh-shipping-badge.PENDING,
+.oh-shipping-badge.CREATED {
+    background: #fffcf0;
+    color: var(--oh-amber);
+    border: 1px solid #e3c97a;
+}
+
+.oh-shipping-badge.PACKED {
+    background: #eef2ff;
+    color: #4338ca;
+    border: 1px solid #c7d2fe;
+}
+
+.oh-shipping-badge.PICKED_UP {
+    background: #e0f2fe;
+    color: #075985;
+    border: 1px solid #93c5fd;
+}
+
+.oh-shipping-badge.PROCESSING {
+    background: #f0f5ff;
+    color: #3a6ea5;
+    border: 1px solid #b0c4de;
+}
+
+.oh-shipping-badge.SHIPPED {
+    background: #f0f0ff;
+    color: #5b5bad;
+    border: 1px solid #b4b4e0;
+}
+
+.oh-shipping-badge.IN_TRANSIT {
+    background: #e8f0fe;
+    color: #4285f4;
+    border: 1px solid #a0b9e8;
+}
+
+.oh-shipping-badge.OUT_FOR_DELIVERY {
+    background: #fef9e8;
+    color: #f59e0b;
+    border: 1px solid #fbbf24;
+}
+
+.oh-shipping-badge.DELIVERED {
+    background: #f0faf3;
+    color: var(--oh-green);
+    border: 1px solid #92d0a8;
+}
+
+.oh-shipping-badge.FAILED {
+    background: #fff5f5;
+    color: var(--oh-accent-red);
+    border: 1px solid #e0a0a4;
+}
+
+.oh-shipping-badge.RETURNED,
+.oh-shipping-badge.RETURNING {
+    background: #fdf4ff;
+    color: #9333ea;
+    border: 1px solid #d8b4fe;
+}
+
+/* SubOrder Items */
+.oh-suborder-items {
+    padding: 12px 20px;
+}
+
+.oh-suborder-item {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--oh-line);
+}
+
+.oh-suborder-item:last-child {
+    border-bottom: none;
+}
+
+.oh-item-img {
+    width: 64px;
+    height: 64px;
+    object-fit: cover;
+    border: 1px solid var(--oh-line);
+    border-radius: var(--oh-radius);
+    flex-shrink: 0;
+}
+
+.oh-item-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.oh-item-name {
+    display: block;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--oh-ink);
+    margin-bottom: 4px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.oh-item-qty {
+    display: inline-flex;
+    align-items: center;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--oh-muted);
+    padding: 2px 8px;
+    background: var(--oh-bg-alt);
+    border-radius: 12px;
+}
+
+.oh-item-price {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--oh-ink);
+    white-space: nowrap;
+}
+
+/* SubOrder Footer */
+.oh-suborder-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 12px 20px;
+    background: var(--oh-bg-alt);
+    border-top: 1px solid var(--oh-line);
+}
+
+.oh-suborder-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    font-size: 12px;
+    color: var(--oh-muted);
+}
+
+.oh-suborder-meta span {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.oh-suborder-meta i {
+    color: var(--oh-teal);
+    font-size: 11px;
+}
+
+.oh-suborder-note {
+    font-style: italic;
+    color: var(--oh-ink-soft);
+}
+
+.oh-suborder-totals {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    align-items: flex-end;
+    min-width: 200px;
+}
+
+.oh-suborder-total-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 14px;
+    font-size: 12.5px;
+    color: var(--oh-ink-soft);
+    width: 100%;
+}
+
+.oh-suborder-total-row span {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.oh-suborder-total-row span i {
+    color: var(--oh-teal);
+    font-size: 11px;
+}
+
+.oh-suborder-total-label {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--oh-muted);
+}
+
+.oh-suborder-total-value {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--oh-ink);
+}
+
+.oh-suborder-total-final {
+    margin-top: 4px;
+    padding-top: 6px;
+    border-top: 1.5px solid var(--oh-line);
+    font-size: 13px !important;
+    font-weight: 800;
+}
+
+.oh-suborder-total-final span {
+    color: var(--oh-ink);
+    font-weight: 800;
+}
+
+.oh-suborder-total-final strong {
+    color: var(--oh-teal-deep);
+    font-size: 16px;
+}
+
+/* ============================================================
+   PER-SUBORDER SHIPPING PANEL (order-history)
+   ============================================================ */
+
+.oh-suborder-shipping-panel {
+    margin: 8px 20px 0;
+    padding: 12px 16px;
+    background: linear-gradient(135deg, #f0fdfa 0%, var(--oh-bg) 100%);
+    border: 1px solid var(--oh-line);
+    border-radius: var(--oh-radius);
+}
+
+.oh-suborder-shipping-panel[data-status="DELIVERED"] {
+    background: linear-gradient(135deg, #f0fdf4 0%, var(--oh-bg) 100%);
+    border-color: #bbf7d0;
+}
+
+.oh-suborder-shipping-panel[data-status="IN_TRANSIT"],
+.oh-suborder-shipping-panel[data-status="PICKED_UP"] {
+    background: linear-gradient(135deg, #eff6ff 0%, var(--oh-bg) 100%);
+    border-color: #bfdbfe;
+}
+
+.oh-suborder-shipping-panel[data-status="FAILED"],
+.oh-suborder-shipping-panel[data-status="RETURNED"] {
+    background: linear-gradient(135deg, #fef2f2 0%, var(--oh-bg) 100%);
+    border-color: #fecaca;
+}
+
+.oh-suborder-shipping-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 14px;
+    flex-wrap: wrap;
+}
+
+.oh-suborder-shipping-fee {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+    color: var(--oh-ink);
+    flex: 0 0 auto;
+}
+
+.oh-suborder-shipping-fee i {
+    color: var(--oh-teal);
+    font-size: 14px;
+}
+
+.oh-shipping-label {
+    color: var(--oh-ink-soft);
+    font-weight: 600;
+}
+
+.oh-shipping-fee-value {
+    color: var(--oh-teal-deep);
+    font-size: 14px;
+    font-weight: 800;
+}
+
+.oh-suborder-shipping-tracking {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+    color: var(--oh-ink);
+    flex: 1 1 auto;
+    justify-content: flex-end;
+    flex-wrap: wrap;
+}
+
+.oh-suborder-shipping-tracking i {
+    color: var(--oh-teal);
+    font-size: 14px;
+}
+
+.oh-tracking-info {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.oh-shipping-carrier {
+    color: var(--oh-teal-deep);
+    font-weight: 700;
+}
+
+.oh-tracking-code {
+    font-family: 'Courier New', monospace;
+    font-size: 12px;
+    background: var(--oh-bg);
+    padding: 3px 10px;
+    border-radius: var(--oh-radius);
+    border: 1px solid var(--oh-line-strong);
+    color: var(--oh-ink);
+    letter-spacing: 0.04em;
+}
+
+.oh-suborder-shipping-empty {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+    color: var(--oh-ink-soft);
+    font-style: italic;
+    flex: 1 1 auto;
+    justify-content: flex-end;
+}
+
+.oh-suborder-shipping-empty i {
+    color: var(--oh-amber);
+    font-size: 13px;
+}
+
+/* ============================================================
+   MASTER ORDER SUMMARY
+   ============================================================ */
+.oh-card-summary {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 24px;
+    padding: 16px 20px;
+    background: var(--oh-bg);
+    border-bottom: 1px solid var(--oh-line);
+}
+
+.oh-summary-breakdown {
+    flex: 1;
+}
+
+.oh-summary-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 24px;
+    padding: 4px 0;
+    font-size: 13px;
+    color: var(--oh-ink-soft);
+}
+
+.oh-summary-row span:last-child {
+    font-weight: 600;
+}
+
+.oh-summary-discount {
+    color: var(--oh-green);
+}
+
+.oh-summary-discount span:last-child {
+    font-weight: 700;
+}
+
+.oh-summary-total {
+    padding-top: 8px;
+    margin-top: 6px;
+    border-top: 1px solid var(--oh-line);
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--oh-ink);
+}
+
+.oh-total-value {
+    font-size: 18px;
+    font-weight: 900;
+    color: var(--oh-teal);
+    letter-spacing: -0.02em;
+}
+
+.oh-summary-meta {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    align-items: flex-end;
+}
+
+.oh-summary-voucher {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 12px;
+    background: var(--oh-teal-soft);
+    border: 1px solid var(--oh-teal-border);
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--oh-teal-deep);
+    border-radius: 20px;
+}
+
+.oh-summary-voucher i {
+    font-size: 10px;
+}
+
+.oh-summary-payment {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--oh-ink-soft);
+}
+
+.oh-summary-payment i {
+    color: var(--oh-muted);
+    font-size: 12px;
+}
+
+/* ============================================================
+   SHIPPING INFO
+   ============================================================ */
+.oh-shipping-info {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 20px;
+    background: #f8fafc;
+    border-bottom: 1px solid var(--oh-line);
+    font-size: 12px;
+    color: var(--oh-ink-soft);
+}
+
+.oh-shipping-info i {
+    color: var(--oh-teal);
+    font-size: 13px;
+}
+
+.oh-shipping-info strong {
+    color: var(--oh-ink);
 }
 
 /* Card Body */
@@ -658,6 +1350,66 @@
 }
 
 /* ============================================================
+   CARD ACTIONS — Per-order action buttons (e.g. Tạo khiếu nại)
+   ============================================================ */
+.oh-card-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+    padding: 12px 20px;
+    background: var(--bg);
+    border-top: 1px solid var(--line);
+}
+
+.oh-card-action {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 16px;
+    border-radius: var(--radius-sm);
+    font-size: 12.5px;
+    font-weight: 700;
+    text-decoration: none;
+    transition: all 0.15s;
+    border: 1px solid var(--line);
+    background: var(--bg-alt);
+    color: var(--ink-soft);
+}
+
+.oh-card-action i {
+    font-size: 11.5px;
+}
+
+.oh-card-action:hover {
+    border-color: var(--oh-teal);
+    color: var(--oh-teal);
+    background: rgba(15, 181, 176, 0.08);
+    transform: translateY(-1px);
+}
+
+.oh-card-action-complaint {
+    border-color: var(--line);
+}
+
+.oh-card-action-complaint:hover {
+    border-color: var(--accent-red);
+    color: var(--accent-red);
+    background: #fef2f2;
+}
+
+.oh-card-action-detail {
+    border-color: var(--oh-teal-border);
+    color: var(--oh-teal-deep);
+    background: var(--oh-teal-soft);
+}
+
+.oh-card-action-detail:hover {
+    border-color: var(--oh-teal);
+    color: var(--oh-teal-deep);
+    background: var(--oh-teal-soft);
+}
+
+/* ============================================================
    RESPONSIVE
    ============================================================ */
 @media (max-width: 900px) {
@@ -685,6 +1437,27 @@
         overflow-x: auto;
         justify-content: flex-start;
         padding: 14px 16px;
+    }
+
+    .oh-card-summary {
+        flex-direction: column;
+        gap: 12px;
+    }
+
+    .oh-summary-meta {
+        align-items: flex-start;
+    }
+
+    .oh-suborder-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 8px;
+    }
+
+    .oh-suborder-footer {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 8px;
     }
 }
 
@@ -750,6 +1523,39 @@
     .oh-breadcrumb {
         display: none;
     }
+
+    .oh-suborder-items {
+        padding: 10px 14px;
+    }
+
+    .oh-suborder-header {
+        padding: 10px 14px;
+    }
+
+    .oh-suborder-footer {
+        padding: 8px 14px;
+    }
+
+    .oh-item-img {
+        width: 52px;
+        height: 52px;
+    }
+
+    .oh-item-name {
+        font-size: 12px;
+    }
+
+    .oh-item-price {
+        font-size: 13px;
+    }
+
+    .oh-card-summary {
+        padding: 12px 14px;
+    }
+
+    .oh-shipping-info {
+        padding: 8px 14px;
+    }
 }
 
 /* ============================================================
@@ -793,4 +1599,31 @@
     font-size: 13px;
     color: var(--oh-muted);
     font-weight: 500;
+}
+
+/* ============================================================
+   RESPONSIVE — Per-suborder shipping panel
+   ============================================================ */
+
+@media (max-width: 720px) {
+    .oh-suborder-shipping-row {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 10px;
+    }
+
+    .oh-suborder-shipping-tracking {
+        justify-content: flex-start;
+        width: 100%;
+    }
+
+    .oh-suborder-shipping-empty {
+        justify-content: flex-start;
+        width: 100%;
+    }
+
+    .oh-suborder-totals {
+        width: 100%;
+        align-items: stretch;
+    }
 }

@@ -314,6 +314,250 @@ a.dash-stat-card:focus-visible .dash-stat-link-indicator,
 .dash-stat-danger .dash-stat-label { color: rgba(255, 255, 255, 0.92); }
 .dash-stat-danger svg path { stroke: rgba(255, 255, 255, 0.45) !important; }
 
+/* ============================================
+   SOFT-TINTED STATS — used by Financial Overview
+   and Compliance & Risk sections. White surface
+   with colored icon block, accent value text,
+   consistent hierarchy with the rest of the page.
+   ============================================ */
+.dash-stat-soft-info,
+.dash-stat-soft-purple,
+.dash-stat-soft-slate,
+.dash-stat-soft-amber,
+.dash-stat-soft-danger,
+.dash-stat-soft-red,
+.dash-stat-soft-dark {
+    background: var(--dash-surface);
+    border: 1px solid var(--dash-border);
+    box-shadow: var(--dash-shadow-sm);
+    color: var(--dash-text);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+}
+
+.dash-stat-soft-info .dash-stat-icon,
+.dash-stat-soft-purple .dash-stat-icon,
+.dash-stat-soft-slate .dash-stat-icon,
+.dash-stat-soft-amber .dash-stat-icon,
+.dash-stat-soft-danger .dash-stat-icon,
+.dash-stat-soft-red .dash-stat-icon,
+.dash-stat-soft-dark .dash-stat-icon {
+    width: 44px;
+    height: 44px;
+    border-radius: var(--dash-radius);
+    font-size: 18px;
+}
+
+.dash-stat-soft-info .dash-stat-link-indicator,
+.dash-stat-soft-purple .dash-stat-link-indicator,
+.dash-stat-soft-slate .dash-stat-link-indicator,
+.dash-stat-soft-amber .dash-stat-link-indicator,
+.dash-stat-soft-danger .dash-stat-link-indicator,
+.dash-stat-soft-red .dash-stat-link-indicator,
+.dash-stat-soft-dark .dash-stat-link-indicator {
+    color: var(--dash-text-faint);
+    background: transparent;
+    opacity: 1;
+    transform: none;
+    width: 22px;
+    height: 22px;
+    font-size: 11px;
+    border-radius: 6px;
+    transition: var(--dash-transition);
+}
+
+/* info (sky) */
+.dash-stat-soft-info .dash-stat-icon {
+    background: var(--dash-info-soft);
+    color: var(--dash-info);
+}
+.dash-stat-soft-info .dash-stat-value { color: var(--dash-info); }
+
+/* purple (platform revenue) */
+.dash-stat-soft-purple {
+    --dash-variant: #8b5cf6;
+    --dash-variant-soft: rgba(139, 92, 246, 0.12);
+}
+.dash-stat-soft-purple .dash-stat-icon {
+    background: var(--dash-variant-soft);
+    color: var(--dash-variant);
+}
+.dash-stat-soft-purple .dash-stat-value { color: var(--dash-variant); }
+
+/* slate (vendor / finance N/A) */
+.dash-stat-soft-slate {
+    --dash-variant: #64748b;
+    --dash-variant-soft: rgba(100, 116, 139, 0.12);
+}
+.dash-stat-soft-slate .dash-stat-icon {
+    background: var(--dash-variant-soft);
+    color: var(--dash-variant);
+}
+.dash-stat-soft-slate .dash-stat-value { color: var(--dash-text-muted); }
+
+/* amber (KYC) */
+.dash-stat-soft-amber {
+    --dash-variant: #f59e0b;
+    --dash-variant-soft: rgba(245, 158, 11, 0.14);
+}
+.dash-stat-soft-amber .dash-stat-icon {
+    background: var(--dash-variant-soft);
+    color: var(--dash-variant);
+}
+.dash-stat-soft-amber .dash-stat-value { color: var(--dash-variant); }
+
+/* danger (escalation) */
+.dash-stat-soft-danger {
+    --dash-variant: #ef4444;
+    --dash-variant-soft: rgba(239, 68, 68, 0.12);
+}
+.dash-stat-soft-danger .dash-stat-icon {
+    background: var(--dash-variant-soft);
+    color: var(--dash-variant);
+}
+.dash-stat-soft-danger .dash-stat-value { color: var(--dash-variant); }
+
+/* red (violation — deep) */
+.dash-stat-soft-red {
+    --dash-variant: #dc2626;
+    --dash-variant-soft: rgba(220, 38, 38, 0.12);
+}
+.dash-stat-soft-red .dash-stat-icon {
+    background: var(--dash-variant-soft);
+    color: var(--dash-variant);
+}
+.dash-stat-soft-red .dash-stat-value { color: var(--dash-variant); }
+
+/* dark (suspended) */
+.dash-stat-soft-dark {
+    --dash-variant: #475569;
+    --dash-variant-soft: rgba(71, 85, 105, 0.12);
+}
+.dash-stat-soft-dark .dash-stat-icon {
+    background: var(--dash-variant-soft);
+    color: var(--dash-variant);
+}
+.dash-stat-soft-dark .dash-stat-value { color: var(--dash-text); }
+
+/* ============================================
+   5-COL FINANCIAL & COMPLIANCE GRIDS
+   ============================================ */
+.dash-stats-financial,
+.dash-stats-compliance {
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: 16px;
+    padding: 20px 24px 24px;
+    margin: 0;
+}
+
+.dash-stats-financial .dash-stat-card,
+.dash-stats-compliance .dash-stat-card {
+    padding: 20px 18px 22px;
+    border-radius: var(--dash-radius-lg);
+    min-height: 168px;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+}
+
+.dash-stats-financial .dash-stat-icon-wrap,
+.dash-stats-compliance .dash-stat-icon-wrap {
+    margin-bottom: 14px;
+    min-height: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+}
+
+.dash-stats-financial .dash-stat-icon,
+.dash-stats-compliance .dash-stat-icon {
+    width: 44px;
+    height: 44px;
+    border-radius: var(--dash-radius);
+    font-size: 18px;
+    flex-shrink: 0;
+}
+
+.dash-stats-financial .dash-stat-value,
+.dash-stats-compliance .dash-stat-value {
+    font-size: 26px;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    line-height: 1.2;
+    margin-bottom: 6px;
+    word-break: break-word;
+}
+
+.dash-stats-financial .dash-stat-label,
+.dash-stats-compliance .dash-stat-label {
+    font-size: 13px;
+    font-weight: 600;
+    opacity: 1;
+    color: var(--dash-text);
+    margin-bottom: 8px;
+    line-height: 1.35;
+}
+
+.dash-stats-compliance .dash-stat-card:hover .dash-stat-link-indicator,
+.dash-stats-financial .dash-stat-card:hover .dash-stat-link-indicator {
+    background: var(--dash-primary-soft);
+    color: var(--dash-primary);
+    transform: translateX(2px);
+}
+
+/* Hover: subtle elevation + accent border glow */
+.dash-stats-financial a.dash-stat-card:hover,
+.dash-stats-compliance a.dash-stat-card:hover {
+    border-color: var(--dash-primary);
+    box-shadow: var(--dash-shadow);
+}
+
+/* Subtitle text under the label */
+.dash-stat-sub {
+    font-size: 12px;
+    color: var(--dash-text-muted);
+    font-weight: 400;
+    line-height: 1.45;
+    margin-top: auto;
+    padding-top: 8px;
+}
+
+/* N/A badge — small chip in top-right */
+.dash-na-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    height: 22px;
+    padding: 0 9px;
+    border-radius: 999px;
+    background: var(--dash-border-light);
+    color: var(--dash-text-muted);
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    line-height: 1;
+    align-self: flex-start;
+}
+
+.dash-stat-na .dash-stat-icon {
+    background: var(--dash-border-light) !important;
+    color: var(--dash-text-faint) !important;
+}
+
+.dash-stat-na.dash-stat-card:hover {
+    transform: none;
+    cursor: default;
+    box-shadow: var(--dash-shadow-sm);
+    border-color: var(--dash-border);
+}
+
+.dash-stat-na.dash-stat-soft-slate .dash-stat-value,
+.dash-stat-na .dash-stat-value {
+    color: var(--dash-text-faint) !important;
+}
+
 .dash-stat-icon-wrap {
     display: flex;
     align-items: flex-start;
@@ -395,6 +639,15 @@ a.dash-stat-card:focus-visible .dash-stat-link-indicator,
     box-shadow: var(--dash-shadow-sm);
     overflow: hidden;
     transition: var(--dash-transition);
+}
+
+.dash-card-section,
+.dash-card-quick {
+    margin-bottom: 24px;
+}
+
+.dash-card-quick {
+    margin-bottom: 0;
 }
 
 .dash-card:hover {
@@ -701,9 +954,14 @@ a.dash-stat-card:focus-visible .dash-stat-link-indicator,
     .dash-stats {
         grid-template-columns: repeat(2, 1fr);
     }
-    
+
     .dash-main-grid {
         grid-template-columns: 1fr;
+    }
+
+    .dash-stats-financial,
+    .dash-stats-compliance {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
     }
 }
 
@@ -711,11 +969,11 @@ a.dash-stat-card:focus-visible .dash-stat-link-indicator,
     .dash-quick-grid {
         grid-template-columns: repeat(2, 1fr);
     }
-    
+
     .dash-hero {
         padding: 24px;
     }
-    
+
     .dash-greeting h1 {
         font-size: 24px;
     }
@@ -725,38 +983,63 @@ a.dash-stat-card:focus-visible .dash-stat-link-indicator,
     .dash-stats {
         grid-template-columns: 1fr;
     }
-    
+
     .dash-stat-value {
         font-size: 32px;
     }
-    
+
     .dash-revenue-value {
         font-size: 32px;
     }
-    
+
     .dash-quick-grid {
         grid-template-columns: 1fr;
         padding: 16px;
         gap: 12px;
     }
-    
+
     .dash-hero-content {
         flex-direction: column;
         align-items: flex-start;
     }
-    
+
     .dash-hero-actions {
         width: 100%;
     }
-    
+
     .dash-btn {
         flex: 1;
         justify-content: center;
     }
-    
+
     .dash-card-header {
         flex-direction: column;
         align-items: flex-start;
+    }
+
+    .dash-stats-financial,
+    .dash-stats-compliance {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        padding: 16px;
+        gap: 12px;
+    }
+
+    .dash-stats-financial .dash-stat-card,
+    .dash-stats-compliance .dash-stat-card {
+        min-height: 0;
+        padding: 16px;
+    }
+
+    .dash-stats-financial .dash-stat-value,
+    .dash-stats-compliance .dash-stat-value {
+        font-size: 22px;
+    }
+}
+
+@media (max-width: 480px) {
+    .dash-stats-financial,
+    .dash-stats-compliance {
+        grid-template-columns: 1fr;
     }
 }
 
@@ -778,6 +1061,7 @@ a.dash-stat-card:focus-visible .dash-stat-link-indicator,
 .dash-stats .dash-stat-card:nth-child(2) { animation: dashFadeIn 0.4s ease-out 0.2s both; }
 .dash-stats .dash-stat-card:nth-child(3) { animation: dashFadeIn 0.4s ease-out 0.3s both; }
 .dash-stats .dash-stat-card:nth-child(4) { animation: dashFadeIn 0.4s ease-out 0.4s both; }
+.dash-stats .dash-stat-card:nth-child(5) { animation: dashFadeIn 0.4s ease-out 0.5s both; }
 
 .dash-main-grid .dash-card:nth-child(1) { animation: dashFadeIn 0.5s ease-out 0.3s both; }
 .dash-main-grid .dash-card:nth-child(2) { animation: dashFadeIn 0.5s ease-out 0.4s both; }

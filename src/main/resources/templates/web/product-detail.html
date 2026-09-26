@@ -74,12 +74,20 @@
                                     <i class="fas fa-share-alt"></i> Chia sẻ
                                 </span>
                                 <span class="pdp-share-sep">|</span>
-                                <span class="pdp-share-btn">
-                                    <i class="fas fa-heart"></i> Yêu thích <em>|</em> <i class="fas fa-flag"></i> Báo lỗi
-                                </span>
-                                <span class="pdp-share-btn">
-                                    <i class="fas fa-flag"></i>
-                                </span>
+                                <a th:href="@{/reports/new(targetType='PRODUCT',targetId=${product.id})}"
+                                   sec:authorize="isAuthenticated()"
+                                   class="pdp-share-btn"
+                                   id="pdp-report-product-btn"
+                                   title="Báo cáo sản phẩm vi phạm">
+                                    <i class="fas fa-flag"></i> Báo cáo sản phẩm
+                                </a>
+                                <a th:href="@{/auth/login}"
+                                   sec:authorize="!isAuthenticated()"
+                                   class="pdp-share-btn"
+                                   id="pdp-report-product-btn-guest"
+                                   title="Đăng nhập để báo cáo">
+                                    <i class="fas fa-flag"></i> Báo cáo sản phẩm
+                                </a>
                             </div>
                         </div>
                     </div>
@@ -367,7 +375,15 @@
 
                             <!-- Write Review Form -->
                             <div class="pdp-write-review-section" sec:authorize="isAuthenticated()">
-                                <div class="pdp-write-review-card" th:if="${hasReviewed == null or !hasReviewed}">
+                                <!-- Case 1: User đã review rồi → chỉ hiển thị thông báo -->
+                                <div class="pdp-already-reviewed" th:if="${hasReviewed == true}">
+                                    <i class="fas fa-check-circle"></i>
+                                    <p>Bạn đã đánh giá sản phẩm này. Xem đánh giá của bạn bên dưới.</p>
+                                </div>
+
+                                <!-- Case 2: User CHƯA review + ĐÃ nhận hàng → hiển thị form -->
+                                <div class="pdp-write-review-card"
+                                     th:if="${hasReviewed != true and canReview == true}">
                                     <h4 class="pdp-write-review-title">
                                         <i class="fas fa-edit"></i> Viết đánh giá của bạn
                                     </h4>
@@ -399,9 +415,20 @@
                                         </div>
                                     </form>
                                 </div>
-                                <div class="pdp-already-reviewed" th:if="${hasReviewed != null and hasReviewed}">
-                                    <i class="fas fa-check-circle"></i>
-                                    <p>Bạn đã đánh giá sản phẩm này. Xem đánh giá của bạn bên dưới.</p>
+
+                                <!-- Case 3: User CHƯA review + CHƯA nhận hàng (backend sẽ từ chối) →
+                                     Ẩn form, chỉ hiển thị thông báo giải thích. Đây chính là fix
+                                     để UI không cho review khi backend từ chối. -->
+                                <div class="pdp-cannot-review"
+                                     th:if="${hasReviewed != true and canReview != true}">
+                                    <i class="fas fa-info-circle"></i>
+                                    <div class="pdp-cannot-review-text">
+                                        <p class="pdp-cannot-review-title">Bạn chưa thể đánh giá sản phẩm này</p>
+                                        <p class="pdp-cannot-review-desc">
+                                            Bạn chỉ có thể đánh giá sau khi <strong>đã mua và nhận hàng thành công</strong> (đơn hàng ở trạng thái <em>Đã giao</em>).
+                                            Hãy quay lại sau khi đơn hàng được giao nhé!
+                                        </p>
+                                    </div>
                                 </div>
                             </div>
 
@@ -410,10 +437,49 @@
                                 <p>Bạn cần <a th:href="@{/auth/login}">đăng nhập</a> để viết đánh giá.</p>
                             </div>
 
+                            <!-- Flash banners từ ReviewController.createReview redirect.
+                                 Hiển thị khi user submit form và backend reject (ví dụ POST
+                                 trực tiếp bằng curl, hoặc browser giữ form cũ khi backend đổi
+                                 policy). Không bắt buộc vì UI đã ẩn form, nhưng là defense in depth. -->
+                            <div class="pdp-review-banner pdp-review-banner-error"
+                                 th:if="${reviewError != null and reviewErrorCode == 'REVIEW_BLOCKED_NOT_RECEIVED'}">
+                                <i class="fas fa-ban"></i>
+                                <div>
+                                    <strong>Không thể gửi đánh giá</strong>
+                                    <p th:text="${reviewError}">Bạn chỉ có thể đánh giá sau khi đã nhận hàng.</p>
+                                </div>
+                            </div>
+                            <div class="pdp-review-banner pdp-review-banner-error"
+                                 th:if="${reviewError != null and reviewErrorCode == 'REVIEW_ALREADY_DONE'}">
+                                <i class="fas fa-info-circle"></i>
+                                <div>
+                                    <strong>Bạn đã đánh giá sản phẩm này rồi</strong>
+                                    <p th:text="${reviewError}">Bạn đã đánh giá sản phẩm này.</p>
+                                </div>
+                            </div>
+                            <div class="pdp-review-banner pdp-review-banner-error"
+                                 th:if="${reviewError != null and (reviewErrorCode == null or (reviewErrorCode != 'REVIEW_BLOCKED_NOT_RECEIVED' and reviewErrorCode != 'REVIEW_ALREADY_DONE'))}">
+                                <i class="fas fa-exclamation-triangle"></i>
+                                <div>
+                                    <strong>Không thể gửi đánh giá</strong>
+                                    <p th:text="${reviewError}">Vui lòng kiểm tra lại.</p>
+                                </div>
+                            </div>
+                            <div class="pdp-review-banner pdp-review-banner-success"
+                                 th:if="${reviewSuccess != null}">
+                                <i class="fas fa-check-circle"></i>
+                                <div>
+                                    <strong>Thành công!</strong>
+                                    <p th:text="${reviewSuccess}">Cảm ơn bạn đã đánh giá sản phẩm.</p>
+                                </div>
+                            </div>
+
                             <!-- Review list -->
                             <div class="pdp-review-list" th:if="${reviews != null and !reviews.isEmpty()}">
                                 <th:block th:each="review : ${reviews}">
-                                    <div class="pdp-review-item" th:id="'review-' + ${review.id}">
+                                    <div class="pdp-review-item"
+                                         th:id="'review-' + ${review.id}"
+                                         th:classappend="${review.moderationStatus != null and review.moderationStatus.name() == 'HIDDEN'} ? 'pdp-review-item-hidden' : ''">
                                         <div class="pdp-review-avatar">
                                             <i class="fas fa-user"></i>
                                         </div>
@@ -425,16 +491,68 @@
                                                         <i class="fas fa-star" th:classappend="${i <= review.rating} ? 'filled' : ''"></i>
                                                     </th:block>
                                                 </div>
+                                                <!-- TASK #15 — Moderation badge phản ánh trạng thái thật của review.
+                                                     UI rule: HIDDEN chỉ owner mới thấy (vì service filter rồi),
+                                                     nên owner thấy badge "Đã ẩn" và có nút khôi phục qua admin.
+                                                     REPORTED hiển thị cho tất cả — review vẫn public nhưng có cảnh báo. -->
+                                                <th:block th:if="${review.moderationStatus != null}">
+                                                    <span th:if="${review.moderationStatus.name() == 'REPORTED'}"
+                                                          class="pdp-review-badge pdp-review-badge-reported"
+                                                          th:title="'Review này đang được xem xét (' + ${review.reportCount} + ' lượt báo cáo)'">
+                                                        <i class="fas fa-flag"></i> Đang chờ kiểm duyệt
+                                                    </span>
+                                                    <span th:if="${review.moderationStatus.name() == 'HIDDEN'}"
+                                                          class="pdp-review-badge pdp-review-badge-hidden"
+                                                          th:title="${review.moderationReason != null} ? ${review.moderationReason} : 'Review đã bị ẩn bởi Moderator'">
+                                                        <i class="fas fa-eye-slash"></i> Đã ẩn bởi Moderator
+                                                    </span>
+                                                </th:block>
                                             </div>
                                             <span class="pdp-review-date" th:text="${review.createdAt != null} ? ${#temporals.format(review.createdAt, 'dd/MM/yyyy')} : ''">01/01/2024</span>
-                                            <div class="pdp-review-text" th:text="${review.comment}">Nội dung đánh giá</div>
-                                            
-                                            <!-- Edit/Delete buttons for own review -->
-                                            <div class="pdp-review-actions" sec:authorize="isAuthenticated()"
-                                                 th:if="${#authentication.principal.id == review.userId}">
+
+                                            <!-- TASK #26 — Review images gallery.
+                                                 Review HIDDEN: hiển thị placeholder mờ thay vì ảnh thật
+                                                 (owner vẫn thấy ảnh nhưng style mờ để không gây hiểu lầm). -->
+                                            <div th:if="${review.images != null and !review.images.isEmpty()}"
+                                                 class="pdp-review-images"
+                                                 th:classappend="${review.moderationStatus != null and review.moderationStatus.name() == 'HIDDEN'} ? 'pdp-review-images-blurred' : ''">
+                                                <th:block th:each="img,iter : ${review.images}">
+                                                    <a th:href="${img}" target="_blank" rel="noopener noreferrer"
+                                                       class="pdp-review-image-link">
+                                                        <img th:src="${img}" th:alt="'Ảnh review ' + ${iter.count}"
+                                                             class="pdp-review-image" loading="lazy" />
+                                                    </a>
+                                                </th:block>
+                                            </div>
+
+                                            <!-- HIDDEN: hiển thị placeholder thay vì text gốc -->
+                                            <div th:if="${review.moderationStatus != null and review.moderationStatus.name() == 'HIDDEN'}"
+                                                 class="pdp-review-hidden-placeholder">
+                                                <i class="fas fa-eye-slash"></i>
+                                                <span>Nội dung đã bị ẩn bởi Moderator.</span>
+                                            </div>
+                                            <div th:unless="${review.moderationStatus != null and review.moderationStatus.name() == 'HIDDEN'}"
+                                                 class="pdp-review-text" th:text="${review.comment}">Nội dung đánh giá</div>
+
+                                            <!-- TASK #15/TASK #26 — Owner-only actions: edit/delete + image upload.
+                                                 Rule:
+                                                   - Chỉ chủ review (`#authentication.principal.id == review.userId`).
+                                                   - Và review KHÔNG ở trạng thái DELETED.
+                                                   - HIDDEN vẫn cho owner thao tác (để owner xóa nếu muốn). -->
+                                            <div class="pdp-review-actions"
+                                                 sec:authorize="isAuthenticated()"
+                                                 th:if="${#authentication.principal.id == review.userId and review.moderationStatus?.name() != 'DELETED'}">
                                                 <button type="button" class="pdp-review-edit-btn"
                                                         th:attr="data-review-id=${review.id},data-review-rating=${review.rating},data-review-comment=${review.comment}">
                                                     <i class="fas fa-edit"></i> Sửa
+                                                </button>
+                                                <button type="button" class="pdp-review-images-btn"
+                                                        th:attr="data-review-id=${review.id}"
+                                                        th:title="'Quản lý ảnh (' + ${review.images != null ? review.images.size() : 0} + '/5)'">
+                                                    <i class="fas fa-images"></i> Ảnh
+                                                    <span class="pdp-review-images-count"
+                                                          th:if="${review.images != null and !review.images.isEmpty()}"
+                                                          th:text="'(' + ${review.images.size()} + '/5)'">(0/5)</span>
                                                 </button>
                                                 <form th:action="@{/reviews/{id}/delete(id=${review.id})}" method="post"
                                                       style="display:inline;" onsubmit="return confirm('Bạn có chắc muốn xóa đánh giá này?');">
@@ -442,6 +560,19 @@
                                                         <i class="fas fa-trash-alt"></i> Xóa
                                                     </button>
                                                 </form>
+                                            </div>
+
+                                            <!-- Report button: hiện cho mọi user authenticated trừ chính chủ review.
+                                                 Ẩn nếu review đã HIDDEN/DELETED (không còn ý nghĩa report nữa). -->
+                                            <div class="pdp-review-actions"
+                                                 sec:authorize="isAuthenticated()"
+                                                 th:unless="${#authentication.principal.id == review.userId or review.moderationStatus?.name() == 'HIDDEN' or review.moderationStatus?.name() == 'DELETED'}">
+                                                <a th:href="@{/reports/new(targetType='REVIEW',targetId=${review.id})}"
+                                                   class="pdp-review-report-btn"
+                                                   th:attr="data-review-id=${review.id}"
+                                                   title="Báo cáo đánh giá vi phạm">
+                                                    <i class="fas fa-flag"></i> Báo cáo
+                                                </a>
                                             </div>
                                         </div>
                                     </div>
@@ -809,6 +940,222 @@
         });
         document.addEventListener('keydown', function(e) {
             if (e.key === 'Escape') closeEditModal();
+        });
+
+        // ===================================================================
+        // TASK #26 — Review Images Management Modal (owner-only)
+        // ===================================================================
+        // Mở modal quản lý ảnh cho 1 review. Endpoint:
+        //   GET    /api/reviews/{id}/images         → list ảnh hiện có
+        //   POST   /api/reviews/{id}/images (multipart)  → upload ảnh mới
+        //   DELETE /api/reviews/{id}/images?imageUrl=... → xóa ảnh
+        // Service đã enforce ownership check; UI hiển thị errorCode trả về.
+        function closeImagesModal() {
+            const modal = document.querySelector('.pdp-review-images-modal');
+            if (modal) {
+                modal.classList.remove('show');
+                setTimeout(function() { if (modal.parentNode) modal.parentNode.removeChild(modal); }, 300);
+            }
+        }
+        function openImagesModal(reviewId) {
+            // Tạo modal shell
+            const modal = document.createElement('div');
+            modal.className = 'pdp-review-images-modal';
+            modal.innerHTML = `
+                <div class="pdp-review-edit-overlay" onclick="closeImagesModal()"></div>
+                <div class="pdp-review-images-content">
+                    <div class="pdp-review-edit-header">
+                        <h3><i class="fas fa-images"></i> Quản lý ảnh đánh giá</h3>
+                        <button type="button" class="pdp-modal-close" onclick="closeImagesModal()">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                    <div class="pdp-review-images-body">
+                        <div class="pdp-review-images-upload">
+                            <label for="pdp-review-image-input" class="pdp-review-images-upload-label">
+                                <i class="fas fa-cloud-upload-alt"></i>
+                                <span>Chọn ảnh để tải lên</span>
+                                <small>JPG, PNG — tối đa 5MB / ảnh, tối đa 5 ảnh / đánh giá</small>
+                            </label>
+                            <input type="file" id="pdp-review-image-input" accept="image/jpeg,image/png"
+                                   style="display:none;" />
+                            <div id="pdp-review-image-status" class="pdp-review-image-status"></div>
+                        </div>
+                        <div id="pdp-review-image-gallery" class="pdp-review-image-gallery">
+                            <div class="pdp-review-image-empty">Đang tải ảnh...</div>
+                        </div>
+                    </div>
+                </div>`;
+            document.body.appendChild(modal);
+            setTimeout(function() { modal.classList.add('show'); }, 10);
+
+            // Load danh sách ảnh hiện có
+            loadReviewImages(reviewId);
+
+            // Hook upload handler
+            const fileInput = modal.querySelector('#pdp-review-image-input');
+            fileInput.addEventListener('change', function() {
+                if (!fileInput.files || fileInput.files.length === 0) return;
+                const file = fileInput.files[0];
+                uploadReviewImage(reviewId, file, function() {
+                    // Sau khi upload thành công, reset input để có thể chọn lại cùng file
+                    fileInput.value = '';
+                    loadReviewImages(reviewId);
+                });
+            });
+        }
+
+        function loadReviewImages(reviewId) {
+            const gallery = document.getElementById('pdp-review-image-gallery');
+            if (!gallery) return;
+            gallery.innerHTML = '<div class="pdp-review-image-empty">Đang tải ảnh...</div>';
+
+            fetch('/api/reviews/' + encodeURIComponent(reviewId) + '/images', {
+                method: 'GET',
+                credentials: 'same-origin',
+                headers: { 'Accept': 'application/json' }
+            })
+            .then(function(r) { return r.json().then(function(j) { return {status: r.status, body: j}; }); })
+            .then(function(result) {
+                if (!result.body.ok) {
+                    gallery.innerHTML = '<div class="pdp-review-image-empty">Lỗi: ' +
+                        escapeHtml(result.body.message || 'Không rõ') + '</div>';
+                    return;
+                }
+                const images = result.body.images || [];
+                if (images.length === 0) {
+                    gallery.innerHTML = '<div class="pdp-review-image-empty">Chưa có ảnh nào. Hãy tải ảnh lên!</div>';
+                    return;
+                }
+                gallery.innerHTML = '';
+                images.forEach(function(url) {
+                    const card = document.createElement('div');
+                    card.className = 'pdp-review-image-card';
+                    card.innerHTML = `
+                        <a href="${escapeHtml(url)}" target="_blank" rel="noopener noreferrer">
+                            <img src="${escapeHtml(url)}" alt="Ảnh review" loading="lazy" />
+                        </a>
+                        <button type="button" class="pdp-review-image-delete"
+                                data-image-url="${escapeHtml(url)}" title="Xóa ảnh này">
+                            <i class="fas fa-trash-alt"></i>
+                        </button>`;
+                    gallery.appendChild(card);
+                });
+                // Hook delete handlers
+                gallery.querySelectorAll('.pdp-review-image-delete').forEach(function(btn) {
+                    btn.addEventListener('click', function() {
+                        const url = btn.getAttribute('data-image-url');
+                        if (!confirm('Bạn có chắc muốn xóa ảnh này?')) return;
+                        deleteReviewImage(reviewId, url, function() {
+                            loadReviewImages(reviewId);
+                        });
+                    });
+                });
+            })
+            .catch(function(err) {
+                gallery.innerHTML = '<div class="pdp-review-image-empty">Lỗi kết nối: ' +
+                    escapeHtml(err.message || String(err)) + '</div>';
+            });
+        }
+
+        function uploadReviewImage(reviewId, file, onSuccess) {
+            const status = document.getElementById('pdp-review-image-status');
+            if (status) {
+                status.className = 'pdp-review-image-status pdp-review-image-status-loading';
+                status.textContent = 'Đang tải lên...';
+            }
+            const fd = new FormData();
+            fd.append('file', file);
+
+            fetch('/api/reviews/' + encodeURIComponent(reviewId) + '/images', {
+                method: 'POST',
+                credentials: 'same-origin',
+                body: fd
+            })
+            .then(function(r) { return r.json().then(function(j) { return {status: r.status, body: j}; }); })
+            .then(function(result) {
+                if (status) {
+                    if (result.body.ok) {
+                        status.className = 'pdp-review-image-status pdp-review-image-status-success';
+                        status.textContent = '✓ ' + (result.body.message || 'Đã thêm ảnh');
+                    } else {
+                        status.className = 'pdp-review-image-status pdp-review-image-status-error';
+                        // Mapping errorCode → message thân thiện
+                        let msg = result.body.message || 'Lỗi không rõ';
+                        if (result.body.errorCode === 'NOT_OWNER') {
+                            msg = 'Bạn không có quyền thêm ảnh vào đánh giá này';
+                        } else if (result.body.errorCode === 'MAX_IMAGES_REACHED') {
+                            msg = 'Đã đạt tối đa 5 ảnh / đánh giá. Hãy xóa ảnh cũ trước.';
+                        } else if (result.body.errorCode === 'AUTH_REQUIRED') {
+                            msg = 'Phiên đăng nhập đã hết — vui lòng tải lại trang';
+                        }
+                        status.textContent = msg;
+                    }
+                }
+                if (result.body.ok && typeof onSuccess === 'function') onSuccess();
+            })
+            .catch(function(err) {
+                if (status) {
+                    status.className = 'pdp-review-image-status pdp-review-image-status-error';
+                    status.textContent = 'Lỗi: ' + (err.message || String(err));
+                }
+            });
+        }
+
+        function deleteReviewImage(reviewId, imageUrl, onSuccess) {
+            const status = document.getElementById('pdp-review-image-status');
+            if (status) {
+                status.className = 'pdp-review-image-status pdp-review-image-status-loading';
+                status.textContent = 'Đang xóa...';
+            }
+            fetch('/api/reviews/' + encodeURIComponent(reviewId) + '/images' +
+                  '?imageUrl=' + encodeURIComponent(imageUrl), {
+                method: 'DELETE',
+                credentials: 'same-origin',
+                headers: { 'Accept': 'application/json' }
+            })
+            .then(function(r) { return r.json().then(function(j) { return {status: r.status, body: j}; }); })
+            .then(function(result) {
+                if (status) {
+                    if (result.body.ok) {
+                        status.className = 'pdp-review-image-status pdp-review-image-status-success';
+                        status.textContent = '✓ Đã xóa ảnh';
+                    } else {
+                        let msg = result.body.message || 'Lỗi không rõ';
+                        if (result.body.errorCode === 'NOT_OWNER') {
+                            msg = 'Bạn không có quyền xóa ảnh của đánh giá này';
+                        } else if (result.body.errorCode === 'IMAGE_NOT_FOUND') {
+                            msg = 'Ảnh không tồn tại trong đánh giá';
+                        } else if (result.body.errorCode === 'AUTH_REQUIRED') {
+                            msg = 'Phiên đăng nhập đã hết — vui lòng tải lại trang';
+                        }
+                        status.className = 'pdp-review-image-status pdp-review-image-status-error';
+                        status.textContent = msg;
+                    }
+                }
+                if (result.body.ok && typeof onSuccess === 'function') onSuccess();
+            })
+            .catch(function(err) {
+                if (status) {
+                    status.className = 'pdp-review-image-status pdp-review-image-status-error';
+                    status.textContent = 'Lỗi: ' + (err.message || String(err));
+                }
+            });
+        }
+
+        document.querySelectorAll('.pdp-review-images-btn').forEach(function(btn) {
+            btn.addEventListener('click', function() {
+                const id = btn.getAttribute('data-review-id');
+                if (id) openImagesModal(id);
+            });
+        });
+
+        // ESC cũng đóng images modal (nếu đang mở)
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                const imgModal = document.querySelector('.pdp-review-images-modal.show');
+                if (imgModal) closeImagesModal();
+            }
         });
 
         // -------- Gallery thumbnails --------

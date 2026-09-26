@@ -46,6 +46,11 @@ public class HomeController {
         List<FlashSaleStat> flashSaleStats = buildFlashSaleStats(flashSaleSource);
         List<Category> categories = categoryRepository.findByActiveTrueOrderBySortOrderAsc();
         List<Voucher> availableVouchers = voucherService.getAvailableVouchers();
+        // Trang chỉ hiển thị tối đa 3 voucher để section không bị kéo dài/loãng.
+        // Người dùng có nhu cầu xem thêm có thể bấm "Xem tất cả" → /vouchers.
+        if (availableVouchers != null && availableVouchers.size() > 3) {
+            availableVouchers = new ArrayList<>(availableVouchers.subList(0, 3));
+        }
 
         // Phase 17 — Banner Dynamic Display (Task 17.19)
         List<Banner> heroBanners = customerBannerService.getVisibleBanners("HERO_SLIDER");

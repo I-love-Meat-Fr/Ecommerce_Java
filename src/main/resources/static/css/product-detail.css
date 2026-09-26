@@ -1788,6 +1788,63 @@
     font-weight: 500;
 }
 
+/* ============================================================
+   "CANNOT REVIEW" NOTICE — UI guard khi backend từ chối
+   Hiển thị khi user đã đăng nhập, chưa review, NHƯNG chưa đủ điều kiện
+   (chưa mua / chưa nhận hàng / đơn bị huỷ). Style tương tự login-to-review
+   (warning tone) nhưng có cấu trúc title + description rõ ràng.
+   ============================================================ */
+.pdp-cannot-review {
+    background: #fff7ed;
+    border: 1px solid #fed7aa;
+    border-radius: 12px;
+    padding: 14px 18px;
+    display: flex;
+    align-items: flex-start;
+    gap: 14px;
+    color: #9a3412;
+}
+
+.pdp-cannot-review > i {
+    font-size: 22px;
+    color: #ea580c;
+    flex-shrink: 0;
+    margin-top: 2px;
+}
+
+.pdp-cannot-review-text {
+    flex: 1;
+    min-width: 0;
+}
+
+.pdp-cannot-review-title {
+    margin: 0 0 4px;
+    font-size: 14px;
+    font-weight: 700;
+    color: #7c2d12;
+}
+
+.pdp-cannot-review-desc {
+    margin: 0;
+    font-size: 13px;
+    font-weight: 500;
+    line-height: 1.5;
+    color: #9a3412;
+}
+
+.pdp-cannot-review-desc strong {
+    color: #7c2d12;
+    font-weight: 700;
+}
+
+.pdp-cannot-review-desc em {
+    font-style: normal;
+    background: #ffedd5;
+    padding: 1px 6px;
+    border-radius: 4px;
+    font-weight: 600;
+}
+
 .pdp-login-to-review {
     margin-top: 16px;
     padding: 16px 20px;
@@ -1813,6 +1870,350 @@
     color: var(--teal);
     font-weight: 600;
     text-decoration: underline;
+}
+
+/* ============================================================
+   REVIEW FLASH BANNER — Hiển thị sau redirect từ POST /reviews
+   Defense in depth: UI đã ẩn form khi backend từ chối, nhưng nếu
+   POST trực tiếp thì redirect sẽ kèm flash attribute (reviewError,
+   reviewErrorCode, reviewSuccess) và banner này sẽ hiển thị.
+   ============================================================ */
+.pdp-review-banner {
+    margin-top: 16px;
+    padding: 14px 18px;
+    border-radius: 12px;
+    display: flex;
+    align-items: flex-start;
+    gap: 14px;
+    border: 1px solid;
+}
+
+.pdp-review-banner > i {
+    font-size: 22px;
+    flex-shrink: 0;
+    margin-top: 2px;
+}
+
+.pdp-review-banner > div {
+    flex: 1;
+    min-width: 0;
+}
+
+.pdp-review-banner strong {
+    display: block;
+    font-size: 14px;
+    font-weight: 700;
+    margin-bottom: 2px;
+}
+
+.pdp-review-banner p {
+    margin: 0;
+    font-size: 13px;
+    line-height: 1.5;
+    font-weight: 500;
+}
+
+.pdp-review-banner-error {
+    background: #fef2f2;
+    border-color: #fecaca;
+    color: #991b1b;
+}
+
+.pdp-review-banner-error > i {
+    color: #dc2626;
+}
+
+.pdp-review-banner-success {
+    background: #f0fdf4;
+    border-color: #bbf7d0;
+    color: #15803d;
+}
+
+.pdp-review-banner-success > i {
+    color: #16a34a;
+}
+
+/* ============================================================
+   TASK #15 — Review Moderation Badges
+   Phản ánh trạng thái moderation để user biết review của mình
+   (hoặc của người khác) đang ở trạng thái nào.
+   ============================================================ */
+.pdp-review-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 2px 8px;
+    border-radius: 999px;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+    margin-left: 8px;
+    vertical-align: middle;
+}
+
+.pdp-review-badge i {
+    font-size: 10px;
+}
+
+.pdp-review-badge-reported {
+    background: #fef3c7;
+    color: #92400e;
+    border: 1px solid #fcd34d;
+}
+
+.pdp-review-badge-hidden {
+    background: #fee2e2;
+    color: #991b1b;
+    border: 1px solid #fca5a5;
+}
+
+/* Style cho review bị HIDDEN — giảm độ nổi bật */
+.pdp-review-item-hidden .pdp-review-author,
+.pdp-review-item-hidden .pdp-review-text,
+.pdp-review-item-hidden .pdp-review-date {
+    opacity: 0.6;
+}
+
+.pdp-review-hidden-placeholder {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 14px;
+    background: #fef2f2;
+    border: 1px dashed #fca5a5;
+    border-radius: 8px;
+    color: #991b1b;
+    font-style: italic;
+    margin-top: 8px;
+}
+
+.pdp-review-hidden-placeholder i {
+    font-size: 18px;
+    color: #dc2626;
+}
+
+/* ============================================================
+   TASK #26 — Review Images Gallery + Modal
+   Ảnh review hiển thị dạng grid nhỏ; click để xem ảnh gốc.
+   Modal quản lý cho phép owner upload/xoá ảnh.
+   ============================================================ */
+.pdp-review-images {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 10px;
+}
+
+.pdp-review-image-link {
+    display: block;
+    width: 96px;
+    height: 96px;
+    border-radius: 8px;
+    overflow: hidden;
+    border: 1px solid #e5e7eb;
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.pdp-review-image-link:hover {
+    transform: scale(1.03);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.12);
+}
+
+.pdp-review-image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+}
+
+/* HIDDEN: làm mờ ảnh để owner biết review này không còn public */
+.pdp-review-images-blurred .pdp-review-image-link {
+    filter: blur(4px) grayscale(60%);
+    opacity: 0.65;
+}
+
+/* Owner button: "Ảnh" + count */
+.pdp-review-images-btn {
+    background: #eef2ff;
+    color: #4338ca;
+    border: 1px solid #c7d2fe;
+    padding: 6px 12px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 500;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    transition: background 0.15s ease;
+}
+
+.pdp-review-images-btn:hover {
+    background: #e0e7ff;
+}
+
+.pdp-review-images-count {
+    font-weight: 600;
+    color: #6366f1;
+}
+
+/* Modal quản lý ảnh */
+.pdp-review-images-modal {
+    position: fixed;
+    inset: 0;
+    z-index: 9999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    transition: opacity 0.2s ease;
+}
+
+.pdp-review-images-modal.show {
+    opacity: 1;
+}
+
+.pdp-review-images-content {
+    position: relative;
+    z-index: 1;
+    background: #fff;
+    border-radius: 16px;
+    width: min(640px, 92vw);
+    max-height: 85vh;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 20px 50px rgba(0,0,0,0.25);
+    overflow: hidden;
+}
+
+.pdp-review-images-body {
+    padding: 20px;
+    overflow-y: auto;
+    flex: 1;
+}
+
+.pdp-review-images-upload {
+    margin-bottom: 18px;
+}
+
+.pdp-review-images-upload-label {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    padding: 20px;
+    border: 2px dashed #c7d2fe;
+    border-radius: 12px;
+    background: #f5f7ff;
+    color: #4338ca;
+    cursor: pointer;
+    transition: background 0.15s ease, border-color 0.15s ease;
+}
+
+.pdp-review-images-upload-label:hover {
+    background: #eef2ff;
+    border-color: #818cf8;
+}
+
+.pdp-review-images-upload-label i {
+    font-size: 28px;
+}
+
+.pdp-review-images-upload-label span {
+    font-weight: 600;
+    font-size: 14px;
+}
+
+.pdp-review-images-upload-label small {
+    font-size: 12px;
+    color: #6b7280;
+}
+
+.pdp-review-image-status {
+    margin-top: 10px;
+    padding: 8px 12px;
+    border-radius: 6px;
+    font-size: 13px;
+    display: none;
+}
+
+.pdp-review-image-status-loading {
+    background: #fef3c7;
+    color: #92400e;
+    display: block;
+}
+
+.pdp-review-image-status-success {
+    background: #d1fae5;
+    color: #065f46;
+    display: block;
+}
+
+.pdp-review-image-status-error {
+    background: #fee2e2;
+    color: #991b1b;
+    display: block;
+}
+
+.pdp-review-image-gallery {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    gap: 12px;
+}
+
+.pdp-review-image-empty {
+    grid-column: 1 / -1;
+    text-align: center;
+    padding: 30px 10px;
+    color: #6b7280;
+    font-size: 13px;
+    font-style: italic;
+}
+
+.pdp-review-image-card {
+    position: relative;
+    aspect-ratio: 1;
+    border-radius: 8px;
+    overflow: hidden;
+    border: 1px solid #e5e7eb;
+    background: #f3f4f6;
+}
+
+.pdp-review-image-card a {
+    display: block;
+    width: 100%;
+    height: 100%;
+}
+
+.pdp-review-image-card img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.pdp-review-image-delete {
+    position: absolute;
+    top: 6px;
+    right: 6px;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: rgba(220, 38, 38, 0.92);
+    color: #fff;
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 13px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+    transition: background 0.15s ease;
+}
+
+.pdp-review-image-delete:hover {
+    background: #dc2626;
 }
 
 .pdp-review-actions {
@@ -1851,6 +2252,38 @@
 
 .pdp-review-delete-btn:hover {
     background: #fecaca;
+}
+
+/* Report button on review (link styled like button) */
+.pdp-review-report-btn {
+    padding: 6px 12px;
+    border: none;
+    border-radius: 6px;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    transition: all 0.2s;
+    background: #fff7ed;
+    color: #c2410c;
+    text-decoration: none;
+}
+
+.pdp-review-report-btn:hover {
+    background: #fed7aa;
+    color: #9a3412;
+}
+
+/* Make share-btn anchor look like span */
+a.pdp-share-btn {
+    cursor: pointer;
+    text-decoration: none;
+}
+
+a.pdp-share-btn:hover {
+    color: var(--teal);
 }
 
 /* Edit Modal Styles */

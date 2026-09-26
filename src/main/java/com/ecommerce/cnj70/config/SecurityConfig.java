@@ -112,6 +112,7 @@ public class SecurityConfig {
                 .requestMatchers("/moderator/**").hasRole("MODERATOR")
                 .requestMatchers("/vendor/**").hasRole("VENDOR")
                 .requestMatchers("/complaints/**").authenticated()
+                .requestMatchers("/reports/**").authenticated()
                 .requestMatchers("/api/**").authenticated()
                 .anyRequest().permitAll()
             )

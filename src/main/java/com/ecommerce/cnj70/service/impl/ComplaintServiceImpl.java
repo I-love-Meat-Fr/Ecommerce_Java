@@ -173,13 +173,37 @@ public class ComplaintServiceImpl implements ComplaintService {
             throw new ConflictException("Complaint không ở trạng thái có thể phản hồi Level 0 (status=" + c.getStatus() + ")");
         }
 
-        c.setVendorResponse(req.getResponse());
-        c.setVendorRespondedAt(LocalDateTime.now());
+        String incoming = req.getResponse().trim();
+        LocalDateTime now = LocalDateTime.now();
+
+        // Phase 3A §47 — Append mode thay vì overwrite. Cho phép Vendor gửi
+        // nhiều lần phản hồi cho đến khi Customer đồng ý hoặc escalate.
+        // Mỗi lần append thêm block "[TIMESTAMP — NAME (email)]" trên cùng.
+        String header = String.format("— %s | %s",
+                now.format(java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm")),
+                user.getEmail() != null ? user.getEmail() : (user.getUsername() != null ? user.getUsername() : "Shop"));
+        String appended = header + "\n" + incoming;
+        if (c.getVendorResponse() != null && !c.getVendorResponse().isBlank()) {
+            appended = appended + "\n\n" + c.getVendorResponse();
+        }
+        c.setVendorResponse(appended);
+
+        // Tăng replyCount để UI có thể hiển thị "Shop đã trả lời N lần"
+        c.setVendorReplyCount(c.getVendorReplyCount() + 1);
+
+        c.setVendorRespondedAt(now);
         c.setVendorRespondedById(user.getId());
         c.setVendorRespondedByEmail(user.getEmail());
-        c.setStatus(ComplaintStatus.VENDOR_RESPONDED);
+
+        // Lần đầu → set VENDOR_RESPONDED. Lần sau → giữ nguyên status.
+        if (c.getStatus() == ComplaintStatus.OPEN) {
+            c.setStatus(ComplaintStatus.VENDOR_RESPONDED);
+        }
+
         Complaint saved = complaintRepository.save(c);
-        emitAudit(saved, "VENDOR_RESPONDED", user, null);
+        emitAudit(saved, "VENDOR_RESPONDED", user, "reply #" + saved.getVendorReplyCount());
+        log.info("Vendor {} responded to complaint {} (reply #{})",
+                user.getId(), complaintId, saved.getVendorReplyCount());
         return saved;
     }
 

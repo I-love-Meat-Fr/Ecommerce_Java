@@ -1,7 +1,7 @@
 <aside class="sd-sidebar" th:fragment="sidebar" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/springsecurity6">
     <div class="sd-sidebar-header">
         <div class="sd-sidebar-logo">
-            <i class="fas fa-shield-halved"></i>
+            <img th:src="@{/images/logoCNJ70.jpg}" alt="CNJ70" class="sd-sidebar-logo-img">
         </div>
         <div class="sd-sidebar-brand">
             <span class="sd-sidebar-brand-name">CNJ70 Admin</span>
@@ -59,6 +59,10 @@
             <a th:href="@{/admin/escalations}" class="sd-nav-item" data-match="/admin/escalations">
                 <i class="fas fa-triangle-exclamation"></i>
                 <span class="sd-nav-label">Escalations</span>
+            </a>
+            <a th:href="@{/admin/complaints}" class="sd-nav-item" data-match="/admin/complaints">
+                <i class="fas fa-flag"></i>
+                <span class="sd-nav-label">Khiếu nại (L2)</span>
             </a>
             <a th:href="@{/admin/audit}" class="sd-nav-item" data-match="/admin/audit">
                 <i class="fas fa-clipboard-list"></i>

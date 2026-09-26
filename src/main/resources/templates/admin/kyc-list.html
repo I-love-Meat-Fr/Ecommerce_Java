@@ -9,43 +9,63 @@
 <main th:fragment="main-content">
 
     <!-- Page Hero -->
-    <div class="vd-page-hero">
-        <div class="vd-page-hero-left">
-            <div class="vd-page-hero-icon"><i class="fas fa-shield-halved"></i></div>
-            <div class="vd-page-hero-info">
-                <h2>Duyệt hồ sơ KYC</h2>
-                <p>Xác minh danh tính nhà bán trước khi cho phép tạo shop.</p>
-            </div>
+    <div class="sd-page-head">
+        <div class="sd-page-head-title">
+            <h1><i class="fas fa-shield-halved"></i> Duyệt hồ sơ KYC</h1>
+            <p>Xác minh danh tính nhà bán trước khi cho phép tạo shop.</p>
+        </div>
+        <div class="sd-page-head-meta">
+            <span class="sd-page-head-meta-label">Tổng hồ sơ</span>
+            <span class="sd-page-head-meta-value" th:text="${(stats != null and stats['TOTAL'] != null) ? stats['TOTAL'] : (totalItems != null ? totalItems : 0)}">0</span>
         </div>
     </div>
 
-    <!-- Stats Row -->
-    <div class="kyc-stats">
-        <div class="kyc-stat kyc-stat-warn">
-            <div class="kyc-stat-label">Chờ admin duyệt</div>
-            <div class="kyc-stat-value" th:text="${stats != null ? (stats['PENDING_ADMIN'] ?: 0) : 0}">0</div>
+    <!-- Stats Row — đồng bộ với admin-dashboard (dash-stats + dash-stat-soft) -->
+    <div class="dash-stats" style="margin-bottom: 24px;">
+        <div class="dash-stat-card dash-stat-soft dash-stat-amber">
+            <div class="dash-stat-icon-wrap">
+                <div class="dash-stat-icon"><i class="fas fa-clock"></i></div>
+            </div>
+            <div class="dash-stat-value" th:text="${stats != null ? (stats['PENDING_ADMIN'] ?: 0) : 0}">0</div>
+            <div class="dash-stat-label">Chờ admin duyệt</div>
+            <div class="dash-stat-sub">KycStatus.PENDING_ADMIN</div>
         </div>
-        <div class="kyc-stat kyc-stat-info">
-            <div class="kyc-stat-label">Chờ bên thứ ba</div>
-            <div class="kyc-stat-value" th:text="${stats != null ? (stats['PENDING_THIRD_PARTY'] ?: 0) : 0}">0</div>
+        <div class="dash-stat-card dash-stat-soft dash-stat-info">
+            <div class="dash-stat-icon-wrap">
+                <div class="dash-stat-icon"><i class="fas fa-user-clock"></i></div>
+            </div>
+            <div class="dash-stat-value" th:text="${stats != null ? (stats['PENDING_THIRD_PARTY'] ?: 0) : 0}">0</div>
+            <div class="dash-stat-label">Chờ bên thứ ba</div>
+            <div class="dash-stat-sub">KycStatus.PENDING_THIRD_PARTY</div>
         </div>
-        <div class="kyc-stat kyc-stat-green">
-            <div class="kyc-stat-label">Đã duyệt</div>
-            <div class="kyc-stat-value" th:text="${stats != null ? (stats['APPROVED'] ?: 0) : 0}">0</div>
+        <div class="dash-stat-card dash-stat-soft dash-stat-green">
+            <div class="dash-stat-icon-wrap">
+                <div class="dash-stat-icon"><i class="fas fa-circle-check"></i></div>
+            </div>
+            <div class="dash-stat-value" th:text="${stats != null ? (stats['APPROVED'] ?: 0) : 0}">0</div>
+            <div class="dash-stat-label">Đã duyệt</div>
+            <div class="dash-stat-sub">KycStatus.APPROVED</div>
         </div>
-        <div class="kyc-stat kyc-stat-red">
-            <div class="kyc-stat-label">Bị từ chối</div>
-            <div class="kyc-stat-value" th:text="${(stats != null ? (stats['ADMIN_REJECTED'] ?: 0) : 0) + (stats != null ? (stats['THIRD_PARTY_REJECTED'] ?: 0) : 0)}">0</div>
+        <div class="dash-stat-card dash-stat-soft dash-stat-red">
+            <div class="dash-stat-icon-wrap">
+                <div class="dash-stat-icon"><i class="fas fa-circle-xmark"></i></div>
+            </div>
+            <div class="dash-stat-value" th:text="${(stats != null ? (stats['ADMIN_REJECTED'] ?: 0) : 0) + (stats != null ? (stats['THIRD_PARTY_REJECTED'] ?: 0) : 0)}">0</div>
+            <div class="dash-stat-label">Bị từ chối</div>
+            <div class="dash-stat-sub">ADMIN_REJECTED + THIRD_PARTY_REJECTED</div>
         </div>
     </div>
 
     <!-- Filters -->
-    <div class="sd-card" style="margin-bottom: 16px;">
-        <div class="sd-card-body" style="display: flex; gap: 12px; align-items: center; flex-wrap: wrap;">
-            <form th:action="@{/admin/kyc}" method="get" style="display: flex; gap: 12px; flex: 1; align-items: center;">
-                <input type="search" name="q" th:value="${searchQuery}" placeholder="Tìm theo tên chủ shop..."
-                       class="sd-form-control" style="flex: 1; max-width: 300px;">
-                <select name="status" class="sd-form-control" onchange="this.form.submit()" style="max-width: 220px;">
+    <div class="sd-card sd-toolbar" style="margin-bottom: 20px;">
+        <div class="sd-card-body">
+            <form th:action="@{/admin/kyc}" method="get" class="sd-toolbar-form">
+                <input type="hidden" name="size" th:value="${pageSize}" />
+                <input type="search" name="q" th:value="${searchQuery}"
+                       placeholder="Tìm theo tên chủ shop..."
+                       class="sd-input sd-toolbar-search"
+                       style="padding:8px 10px;border:1px solid var(--border,#e2e8f0);border-radius:6px;">
+                <select name="status" class="sd-select sd-toolbar-select" onchange="this.form.submit()">
                     <option value="PENDING_ADMIN" th:selected="${currentStatus == 'PENDING_ADMIN'}">Chờ admin duyệt</option>
                     <option value="PENDING_THIRD_PARTY" th:selected="${currentStatus == 'PENDING_THIRD_PARTY'}">Chờ bên thứ ba</option>
                     <option value="APPROVED" th:selected="${currentStatus == 'APPROVED'}">Đã duyệt</option>
@@ -54,9 +74,13 @@
                     <option value="SUSPENDED" th:selected="${currentStatus == 'SUSPENDED'}">Bị đình chỉ</option>
                     <option value="ALL" th:selected="${currentStatus == 'ALL'}">Tất cả</option>
                 </select>
-                <button type="submit" class="sd-btn sd-btn-cta">
+                <button type="submit" class="sd-btn sd-btn-primary sd-btn-sm sd-toolbar-btn">
                     <i class="fas fa-search"></i> Tìm
                 </button>
+                <a th:href="@{/admin/kyc(page=0, size=${pageSize})}"
+                   class="sd-btn sd-btn-secondary sd-btn-sm sd-toolbar-btn">
+                    <i class="fas fa-rotate-left"></i> Đặt lại
+                </a>
             </form>
         </div>
     </div>
@@ -67,7 +91,7 @@
 
     <!-- Table -->
     <div class="sd-card">
-        <div class="sd-card-body" style="padding: 0;">
+        <div class="sd-card-body sd-card-body-flush">
             <table class="sd-table">
                 <thead>
                     <tr>
@@ -84,11 +108,12 @@
                 <tbody>
                     <tr th:each="row : ${rows}">
                         <td>
-                            <div style="display: flex; align-items: center; gap: 8px;">
-                                <div class="sd-avatar-sm" th:text="${row.user != null and row.user.fullName != null ? row.user.fullName.substring(0,1).toUpperCase() : '?'}">V</div>
+                            <div class="sd-table-cell-flex">
+                                <div class="sd-table-avatar"
+                                     th:text="${row.user != null and row.user.fullName != null ? row.user.fullName.substring(0,1).toUpperCase() : '?'}">V</div>
                                 <div>
-                                    <div style="font-weight: 500;" th:text="${row.profile.ownerFullName ?: '—'}">—</div>
-                                    <div style="font-size: 0.8rem; color: #6c757d;" th:text="${row.user != null ? row.user.fullName : ''}">—</div>
+                                    <div class="sd-table-title" th:text="${row.profile.ownerFullName ?: '—'}">—</div>
+                                    <div class="sd-table-sub" th:text="${row.user != null ? row.user.fullName : ''}">—</div>
                                 </div>
                             </div>
                         </td>
@@ -99,8 +124,7 @@
                         </td>
                         <td>
                             <div th:text="${row.profile.bankName}">—</div>
-                            <small style="color: #6c757d;"
-                                   class="kyc-mask"
+                            <small class="sd-table-sub kyc-mask"
                                    th:text="${T(com.ecommerce.cnj70.util.KycMaskUtil).maskBankAccount(row.profile.bankAccount)}">***</small>
                         </td>
                         <td th:text="${row.profile.submitCount ?: 1}">1</td>
@@ -123,85 +147,100 @@
                         </td>
                     </tr>
                     <tr th:if="${#lists.isEmpty(rows)}">
-                        <td colspan="8" style="text-align: center; padding: 40px; color: #6c757d;">
-                            <i class="fas fa-inbox" style="font-size: 2rem; margin-bottom: 12px; display: block;"></i>
-                            Không có hồ sơ nào
+                        <td colspan="8">
+                            <div class="sd-empty">
+                                <i class="fas fa-inbox"></i>
+                                <h3>Không có hồ sơ nào</h3>
+                                <p>Không có hồ sơ KYC nào khớp với điều kiện lọc hiện tại.</p>
+                            </div>
                         </td>
                     </tr>
                 </tbody>
             </table>
         </div>
-    </div>
 
-    <!-- Pagination -->
-    <div th:if="${totalPages > 1}" style="margin-top: 16px; display: flex; justify-content: center; gap: 8px;">
-        <a th:if="${currentPage > 0}"
-           th:href="@{/admin/kyc(page=${currentPage - 1}, size=${pageSize}, q=${searchQuery}, status=${currentStatus})}"
-           class="sd-btn sd-btn-secondary sd-btn-sm">
-            <i class="fas fa-chevron-left"></i> Trước
-        </a>
-        <span class="sd-btn sd-btn-secondary sd-btn-sm" style="pointer-events: none;">
-            Trang <span th:text="${currentPage + 1}">1</span> / <span th:text="${totalPages}">1</span>
-        </span>
-        <a th:if="${currentPage < totalPages - 1}"
-           th:href="@{/admin/kyc(page=${currentPage + 1}, size=${pageSize}, q=${searchQuery}, status=${currentStatus})}"
-           class="sd-btn sd-btn-secondary sd-btn-sm">
-            Sau <i class="fas fa-chevron-right"></i>
-        </a>
+        <!-- Pagination — pattern giống admin/complaint-list: [Trước] [N / N] [Sau] -->
+        <div class="sd-card-body" th:if="${totalPages > 0}"
+             style="display: flex; justify-content: center; border-top: 1px solid var(--border, #e2e8f0);">
+            <nav class="sd-pagination" aria-label="Phân trang">
+                <a th:if="${currentPage > 0}"
+                   th:href="@{/admin/kyc(page=${currentPage - 1}, size=${pageSize}, q=${searchQuery}, status=${currentStatus})}"
+                   class="sd-page-link">
+                    <i class="fas fa-chevron-left"></i> Trước
+                </a>
+                <span th:unless="${currentPage > 0}" class="sd-page-link sd-page-disabled">
+                    <i class="fas fa-chevron-left"></i> Trước
+                </span>
+
+                <span class="sd-page-link sd-page-active"
+                      th:text="${currentPage + 1} + ' / ' + ${totalPages}">1 / 1</span>
+
+                <a th:if="${currentPage < totalPages - 1}"
+                   th:href="@{/admin/kyc(page=${currentPage + 1}, size=${pageSize}, q=${searchQuery}, status=${currentStatus})}"
+                   class="sd-page-link">
+                    Sau <i class="fas fa-chevron-right"></i>
+                </a>
+                <span th:unless="${currentPage < totalPages - 1}" class="sd-page-link sd-page-disabled">
+                    Sau <i class="fas fa-chevron-right"></i>
+                </span>
+            </nav>
+        </div>
     </div>
 
 </main>
 
 <th:block th:fragment="page-scripts">
 <style>
-.kyc-stats {
-    display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: 12px;
-    margin-bottom: 20px;
+/* Soft variants — sử dụng cho stats cards */
+.dash-stat-card.dash-stat-soft.dash-stat-amber .dash-stat-icon {
+    background: rgba(245, 158, 11, 0.12);
+    color: #f59e0b;
 }
-.kyc-stat {
-    padding: 16px;
-    border-radius: 8px;
-    color: #fff;
+.dash-stat-card.dash-stat-soft.dash-stat-green .dash-stat-icon {
+    background: rgba(16, 185, 129, 0.12);
+    color: #10b981;
 }
-.kyc-stat-warn { background: linear-gradient(135deg, #ffc107, #ff9800); }
-.kyc-stat-info { background: linear-gradient(135deg, #17a2b8, #138496); }
-.kyc-stat-green { background: linear-gradient(135deg, #28a745, #218838); }
-.kyc-stat-red { background: linear-gradient(135deg, #dc3545, #c82333); }
-.kyc-stat-label {
-    font-size: 0.85rem;
-    opacity: 0.9;
+.dash-stat-card.dash-stat-soft.dash-stat-red .dash-stat-icon {
+    background: rgba(239, 68, 68, 0.12);
+    color: #ef4444;
 }
-.kyc-stat-value {
-    font-size: 1.8rem;
-    font-weight: 700;
-    margin-top: 4px;
+.dash-stat-card.dash-stat-soft .dash-stat-sub {
+    color: var(--text-muted, #94a3b8);
+    font-size: 11.5px;
+    font-weight: 500;
+    margin-top: auto;
+    line-height: 1.4;
 }
-.sd-avatar-sm {
-    width: 36px;
-    height: 36px;
-    border-radius: 50%;
-    background: #0d6efd;
-    color: #fff;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-weight: 600;
-}
-.sd-btn-sm {
-    padding: 6px 12px;
-    font-size: 0.85rem;
-}
-/* Mask dữ liệu nhạy cảm */
+
+/* KYC-specific helpers — mask số CCCD/Bank */
 .kyc-mask {
     background: #f0f4f8;
     border: 1px solid #d6e0ea;
     border-radius: 4px;
     padding: 1px 6px;
-    font-family: 'SFMono-Regular', Menlo, Consolas, monospace;
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
     color: #495057;
     letter-spacing: 1px;
+    font-size: 12.5px;
+}
+
+/* Cell flex cho avatar + text */
+.sd-table-cell-flex {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+.sd-table-avatar {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: var(--primary, #0fb5b0);
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 600;
+    flex-shrink: 0;
 }
 </style>
 </th:block>

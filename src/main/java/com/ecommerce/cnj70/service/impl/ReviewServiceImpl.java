@@ -22,6 +22,7 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -129,9 +130,53 @@ public class ReviewServiceImpl implements ReviewService {
                 .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy đánh giá"));
     }
 
+    /**
+     * TASK #15/TASK #26 — Lấy review của product.
+     *
+     * <p>Phương thức gốc (backward-compat cho Admin/Moderator/Tests): trả về TẤT CẢ
+     * reviews kể cả HIDDEN/DELETED. KHÔNG dùng cho product-detail page.</p>
+     *
+     * <p>Để hiển thị cho user thường trên product-detail page, dùng
+     * {@link #getVisibleReviewsByProductId(String, String)}.</p>
+     */
     @Override
     public List<Review> getReviewsByProductId(String productId) {
         return reviewRepository.findByProductIdOrderByCreatedAtDesc(productId);
+    }
+
+    /**
+     * TASK #26 — Lấy review hiển thị trên product-detail page, có tính đến
+     * trạng thái moderation + viewer identity.
+     *
+     * <p>Quy tắc hiển thị:</p>
+     * <ul>
+     *   <li><b>VISIBLE / REPORTED</b>: hiển thị cho tất cả mọi người.</li>
+     *   <li><b>HIDDEN</b>: chỉ hiển thị cho owner của review (để owner có thể
+     *       sửa/xóa hoặc thấy trạng thái "đã bị ẩn"). Người khác không thấy.</li>
+     *   <li><b>DELETED</b>: không hiển thị cho bất kỳ ai trên public page
+     *       (kể cả owner — owner xem qua trang /my-reviews riêng).</li>
+     * </ul>
+     *
+     * <p>REPORTED vẫn hiển thị nội dung vì Moderator chưa xử lý; UI sẽ render
+     * badge "Đang chờ kiểm duyệt" để user biết.</p>
+     *
+     * @param productId id sản phẩm
+     * @param viewerId  user đang xem (null nếu khách vãng lai)
+     */
+    public List<Review> getVisibleReviewsByProductId(String productId, String viewerId) {
+        return reviewRepository.findByProductIdOrderByCreatedAtDesc(productId).stream()
+                .filter(r -> {
+                    ReviewModerationStatus st = r.getModerationStatus();
+                    if (st == ReviewModerationStatus.DELETED) {
+                        return false;
+                    }
+                    boolean isHidden = (st == ReviewModerationStatus.HIDDEN) || r.isHidden();
+                    if (isHidden) {
+                        return viewerId != null && viewerId.equals(r.getUserId());
+                    }
+                    return true;
+                })
+                .collect(Collectors.toList());
     }
 
     @Override
@@ -355,5 +400,98 @@ public class ReviewServiceImpl implements ReviewService {
     @Override
     public List<Review> getReviewsByModerationStatus(ReviewModerationStatus status) {
         return reviewRepository.findByModerationStatus(status);
+    }
+
+    // ===== TASK #26: Review Images (owner-only CRUD) =====
+
+    /**
+     * Số ảnh tối đa cho mỗi Review. Con số này cố định để tránh abuse và
+     * giữ payload response gọn.
+     */
+    private static final int MAX_IMAGES_PER_REVIEW = 5;
+
+    @Override
+    public Review addReviewImage(String reviewId, String userId, String imageUrl) {
+        // ===== Ownership check: chỉ owner review mới được thêm ảnh =====
+        Review review = reviewRepository.findById(reviewId)
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy đánh giá"));
+
+        if (!review.getUserId().equals(userId)) {
+            throw new BadRequestException("Bạn không có quyền thêm ảnh vào đánh giá này");
+        }
+
+        // ===== Validate URL =====
+        if (imageUrl == null || imageUrl.isBlank()) {
+            throw new BadRequestException("URL ảnh không được để trống");
+        }
+        if (!imageUrl.startsWith("/uploads/")) {
+            throw new BadRequestException("URL ảnh không hợp lệ (phải bắt đầu bằng /uploads/)");
+        }
+
+        // ===== Giới hạn số ảnh =====
+        if (review.getImages() == null) {
+            review.setImages(new java.util.ArrayList<>());
+        }
+        if (review.getImages().size() >= MAX_IMAGES_PER_REVIEW) {
+            throw new BadRequestException(
+                    "Mỗi đánh giá chỉ được đăng tối đa " + MAX_IMAGES_PER_REVIEW + " ảnh");
+        }
+        // Không cho thêm ảnh trùng
+        if (review.getImages().contains(imageUrl)) {
+            throw new BadRequestException("Ảnh này đã tồn tại trong đánh giá");
+        }
+
+        review.getImages().add(imageUrl);
+        Review saved = reviewRepository.save(review);
+
+        auditLogService.logInfo(
+                AuditAction.REVIEW_CREATED,
+                "REVIEW_IMAGE",
+                reviewId,
+                userId,
+                null,
+                "CUSTOMER",
+                "Customer thêm ảnh vào review: " + imageUrl
+        );
+
+        return saved;
+    }
+
+    @Override
+    public Review removeReviewImage(String reviewId, String userId, String imageUrl) {
+        // ===== Ownership check: chỉ owner review mới được xóa ảnh =====
+        Review review = reviewRepository.findById(reviewId)
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy đánh giá"));
+
+        if (!review.getUserId().equals(userId)) {
+            throw new BadRequestException("Bạn không có quyền xóa ảnh khỏi đánh giá này");
+        }
+
+        if (imageUrl == null || imageUrl.isBlank()) {
+            throw new BadRequestException("URL ảnh không được để trống");
+        }
+
+        if (review.getImages() == null || !review.getImages().contains(imageUrl)) {
+            throw new BadRequestException("Ảnh không tồn tại trong đánh giá");
+        }
+
+        review.getImages().remove(imageUrl);
+
+        // Xóa file vật lý (best-effort, không fail nếu file đã bị xóa trước đó)
+        com.ecommerce.cnj70.util.FileUploadUtil.deleteFile(imageUrl);
+
+        Review saved = reviewRepository.save(review);
+
+        auditLogService.logInfo(
+                AuditAction.REVIEW_CREATED,
+                "REVIEW_IMAGE",
+                reviewId,
+                userId,
+                null,
+                "CUSTOMER",
+                "Customer xóa ảnh khỏi review: " + imageUrl
+        );
+
+        return saved;
     }
 }

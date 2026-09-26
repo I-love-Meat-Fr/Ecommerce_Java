@@ -30,12 +30,9 @@ public class AuthServiceImpl implements AuthService {
 
     @Override
     public User register(RegisterReq request) {
-        // ===== TASK #22: Bắt buộc accept Terms + Privacy =====
+        // ===== TASK #22: Bắt buộc đồng ý Điều khoản sử dụng + Chính sách bảo mật (1 checkbox duy nhất) =====
         if (request.getAcceptTerms() == null || !request.getAcceptTerms()) {
-            throw new BadRequestException("Bạn phải đồng ý với Điều khoản sử dụng để đăng ký");
-        }
-        if (request.getAcceptPrivacy() == null || !request.getAcceptPrivacy()) {
-            throw new BadRequestException("Bạn phải đồng ý với Chính sách bảo mật để đăng ký");
+            throw new BadRequestException("Bạn phải đồng ý với Điều khoản sử dụng và Chính sách bảo mật để đăng ký");
         }
 
         if (existsByEmail(request.getEmail())) {

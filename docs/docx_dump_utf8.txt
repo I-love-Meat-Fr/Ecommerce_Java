@@ -1,0 +1,1234 @@
+﻿[0][normal] TR╞»ß╗£NG ─Éß║áI Hß╗îC C├öNG NGHß╗å ─É├öNG ├ü
+[1][normal] KHOA C├öNG NGHß╗å TH├öNG TIN
+[3][normal] B├ÇI Tß║¼P Lß╗ÜN
+[4][normal] Hß╗îC PHß║ªN: C├öNG NGHß╗å JAVA
+[5][normal] Chß╗º ─æß╗ü 7: C├íc b├ái to├ín quß║ún l├╜ kh├íc
+[6][normal] ─Éß╗ü t├ái CNJ70: ─Éß╗ü t├ái mß╗ƒ: X├óy dß╗▒ng ß╗�&#65533;ng dß╗Ñng web quß║ún l├╜ s├án th╞░╞íng mß║íi ─æiß╗çn tß╗¡ ─æa nh├á b├ín sß╗¡ dß╗Ñng Spring Boot, Spring Security, Spring Data MongoDB, Thymeleaf v├á MongoDB
+[7][normal] Lß╗ÜP T├ìN CHß╗ê: C├┤ng nghß╗ç Java-1-1-26(N05) 
+[8][normal]    	Giß║úng vi├¬n h╞░ß╗¢ng dß║½n: ThS. Trß║ºn Nguy├¬n Ho├áng
+[9][normal] Danh s├ích sinh vi├¬n thß╗▒c hiß╗çn: Nh├│m 21
+[10][normal] Bß║»c Ninh ΓÇô 2026
+[12][normal] Mß╗ñC Lß╗ñC
+[13][normal] (Tr├¼nh bß║ºy trong trang ri├¬ng)
+[14][normal] Contents
+[19][normal] DANH Mß╗ñC C├üC Tß╗¬ VIß║╛T Tß║«T (Nß║�&#65533;u c├│)
+[20][normal] (tr├¼nh bß║ºy trong trang ri├¬ng)
+[23][normal] DANH Mß╗ñC Bß║óNG BIß╗éU V├Ç S╞á ─Éß╗Æ (Nß║�&#65533;u c├│)
+[24][normal] (tr├¼nh bß║ºy trong trang ri├¬ng)
+[27][normal] L╞░u ├╜ 
+[28][normal] C├íc s╞í ─æß╗ô, h├¼nh vß║╜, bß║úng biß╗âu phß║úi c├│ t├¬n v├á sß╗æ thß╗�&#65533; tß╗▒ ─æ╞░ß╗úc sß║»p xß║�&#65533;p theo ch╞░╞íng.
+[29][normal] ─Éß╗æi vß╗¢i s╞í ─æß╗ô, h├¼nh vß║╜, ─æß╗ô thß╗ï th├¼ t├¬n ─æ╞░ß╗úc ─æß║╖t ß╗ƒ d╞░ß╗¢i
+[30][normal] ─Éß╗æi vß╗¢i bß║úng sß╗æ liß╗çu th├¼ t├¬n ─æß║╖t ß╗ƒ tr├¬n.
+[31][Heading 1] Lß╗£I Mß╗₧ ─Éß║ªU
+[32][normal] Trong bß╗æi cß║únh kß╗╖ nguy├¬n sß╗æ h├│a, th╞░╞íng mß║íi ─æiß╗çn tß╗¡ (TM─ÉT) ─æang trß║úi qua giai ─æoß║ín b├╣ng nß╗ò mß║ính mß║╜ cß║ú tr├¬n b├¼nh diß╗çn quß╗æc tß║�&#65533; lß║½n tß║íi Viß╗çt Nam. Sß╗▒ thay ─æß╗òi s├óu sß║»c trong th├│i quen ti├¬u d├╣ng ─æ├ú k├�&#65533;o theo nhu cß║ºu cß║Ñp thiß║�&#65533;t vß╗ü c├íc nß╗ün tß║úng giao th╞░╞íng trß╗▒c tuyß║�&#65533;n to├án diß╗çn, ─æß║╖c biß╗çt l├á m├┤ h├¼nh s├án TM─ÉT ─æa nh├á b├ín (Multi-Vendor E-commerce Platform). Nhß║¡n thß╗�&#65533;c ─æ╞░ß╗úc tß║ºm quan trß╗ìng v├á t├¡nh thß╗▒c tiß╗àn cß╗ºa xu h╞░ß╗¢ng n├áy, nh├│m quyß║�&#65533;t ─æß╗ïnh thß╗▒c hiß╗çn ─æß╗ü t├ái: ΓÇ£X├óy dß╗▒ng ß╗�&#65533;ng dß╗Ñng web quß║ún l├╜ s├án th╞░╞íng mß║íi ─æiß╗çn tß╗¡ ─æa nh├á b├ínΓÇ¥ (M├ú ─æß╗ü t├ái: CNJ70).
+[33][normal] L├á mß╗Öt ─æß╗ü t├ái nghi├¬n cß╗�&#65533;u ß╗�&#65533;ng dß╗Ñng thuß╗Öc l─�&#65533;nh vß╗▒c C├┤ng nghß╗ç Phß║ºn mß╗üm, dß╗▒ ├ín h╞░ß╗¢ng tß╗¢i viß╗çc kiß║�&#65533;n tß║ío mß╗Öt hß╗ç sinh th├íi mua b├ín trß╗▒c tuyß║�&#65533;n hiß╗çn ─æß║íi, m├┤ phß╗Ång kiß║�&#65533;n tr├║c v├á quy tr├¼nh vß║¡n h├ánh cß╗ºa c├íc nß╗ün tß║úng h├áng ─æß║ºu hiß╗çn nay nh╞░ Shopee, Tiki hay Lazada. Mß╗Ñc ti├¬u cß╗æt l├╡i cß╗ºa ─æß╗ü t├ái l├á x├óy dß╗▒ng th├ánh c├┤ng mß╗Öt hß╗ç thß╗æng kh├�&#65533;p k├¡n, ─æ├íp ß╗�&#65533;ng ho├án hß║úo nhu cß║ºu lu├ón chuyß╗ân nghiß╗çp vß╗Ñ giß╗»a ba chß╗º thß╗â ch├¡nh: (1) Cung cß║Ñp c├┤ng cß╗Ñ kiß╗âm so├ít to├án cß╗Ñc cho Quß║ún trß╗ï vi├¬n; (2) Hß╗ù trß╗ú Nh├á b├ín h├áng dß╗à d├áng ─æß╗ïnh danh, thiß║�&#65533;t lß║¡p gian h├áng ─æß╗Öc lß║¡p v├á tß╗▒ chß╗º quß║ún l├╜ chuß╗ùi sß║ún phß║�&#65533;m; (3) Mang lß║íi trß║úi nghiß╗çm mua sß║»m th├┤ng suß╗æt, an to├án v├á tiß╗çn lß╗úi cho Kh├ích h├áng.
+[34][normal] ─Éß╗â l├ám r├╡ quy tr├¼nh nghi├¬n cß╗�&#65533;u, ph├ón t├¡ch v├á triß╗ân khai hß╗ç thß╗æng, nß╗Öi dung cß╗ºa b├ío c├ío ─æ╞░ß╗úc tß╗ò chß╗�&#65533;c v├á tr├¼nh b├áy mß╗Öt c├ích logic, tuß║ºn tß╗▒ qua c├íc hß║íng mß╗Ñc trß╗ìng t├óm sau:
+[35][normal] + Giß╗¢i thiß╗çu tß╗òng quan: Kh├íi qu├ít bß╗æi cß║únh, mß╗Ñc ti├¬u cß╗æt l├╡i v├á giß╗¢i hß║ín phß║ím vi cß╗ºa dß╗▒ ├ín.
+[36][normal] + Kß║�&#65533; hoß║ích triß╗ân khai: Tr├¼nh b├áy lß╗Ö tr├¼nh ph├ít triß╗ân phß║ºn mß╗üm v├á ph╞░╞íng ├ín ph├ón c├┤ng nghiß╗çp vß╗Ñ chuy├¬n biß╗çt cho tß╗½ng th├ánh vi├¬n.
+[37][normal] + Giß║úi ph├íp kß╗╣ thuß║¡t: Ph├ón t├¡ch chuy├¬n s├óu c├íc thuß║¡t to├ín, c╞í chß║�&#65533; bß║úo mß║¡t v├á giß║úi ph├íp thiß║�&#65533;t kß║�&#65533; hß╗ç thß╗æng ─æ╞░ß╗úc ├íp dß╗Ñng ─æß╗â giß║úi quyß║�&#65533;t b├ái to├ín thß╗▒c tß║�&#65533;.
+[38][normal] + Hß╗ç sinh th├íi c├┤ng nghß╗ç: Tß╗òng hß╗úp v├á ─æ├ính gi├í c├íc nß╗ün tß║úng, ng├┤n ngß╗», c├╣ng bß╗Ö c├┤ng cß╗Ñ ─æ╞░ß╗úc t├¡ch hß╗úp xuy├¬n suß╗æt v├▓ng ─æß╗¥i ph├ít triß╗ân dß╗▒ ├ín.
+
+[39][Heading 1] CH╞»╞áNG 1: GIß╗ÜI THIß╗åU ─Éß╗Ç T├ÇI
+[40][Heading 2] 1.1. Giß╗¢i thiß╗çu tß╗òng quan ─æß╗ü t├ái
+[41][Heading 3] 1.1.1. T├¬n ─æß╗ü t├ái v├á m├┤ tß║ú tß╗òng quan
+[42][normal] ─Éß╗ü t├ái tß║¡p trung nghi├¬n cß╗�&#65533;u v├á ph├ít triß╗ân mß╗Öt nß╗ün tß║úng th╞░╞íng mß║íi ─æiß╗çn tß╗¡ ─æa nh├á b├ín h├áng (Multi-vendor E-commerce Platform), m├┤ phß╗Ång m├┤ h├¼nh vß║¡n h├ánh cß╗ºa c├íc s├án giao dß╗ïch lß╗¢n nh╞░ Shopee hay Tiki. Hß╗ç thß╗æng ─æ├│ng vai tr├▓ l├á cß║ºu nß╗æi giao th╞░╞íng trß╗▒c tuyß║�&#65533;n to├án diß╗çn, cho ph├�&#65533;p c├íc c├í nh├ón v├á doanh nghiß╗çp (Vendor/Shop) dß╗à d├áng thiß║�&#65533;t lß║¡p gian h├áng ─æß╗Öc lß║¡p, quß║ún l├╜ danh mß╗Ñc sß║ún phß║�&#65533;m v├á vß║¡n h├ánh luß╗ông ─æ╞ín h├áng. ─Éß╗æi vß╗¢i ng╞░ß╗¥i ti├¬u d├╣ng, nß╗ün tß║úng mang ─æß║�&#65533;n trß║úi nghiß╗çm mua sß║»m hiß╗çn ─æß║íi, liß╗ün mß║ích th├┤ng qua chuß╗ùi t├¡nh n─âng cß╗æt l├╡i bao gß╗ôm: t├¼m kiß║�&#65533;m sß║ún phß║�&#65533;m, quß║ún l├╜ giß╗Å h├áng th├┤ng minh, thanh to├ín linh hoß║ít, ├íp dß╗Ñng hß╗ç thß╗æng m├ú khuyß║�&#65533;n m├úi (voucher) v├á c╞í chß║�&#65533; ─æ├ính gi├í (review) minh bß║ích.
+[43][Heading 3] 1.1.2. ─Éß╗æi t╞░ß╗úng sß╗¡ dß╗Ñng v├á ph├ón quyß╗ün
+[44][normal] Hß╗ç thß╗æng ─æ╞░ß╗úc thiß║�&#65533;t kß║�&#65533; vß╗¢i c╞í chß║�&#65533; ph├ón quyß╗ün chß║╖t chß║╜, trang bß╗ï c├íc c├┤ng cß╗Ñ chuy├¬n biß╗çt nhß║▒m phß╗Ñc vß╗Ñ ba nh├│m ng╞░ß╗¥i d├╣ng (Actors) cß╗æt l├╡i:
+[45][normal] + Quß║ún trß╗ï vi├¬n (Administrator): ─É├│ng vai tr├▓ kiß╗âm so├ít v├á ─æiß╗üu phß╗æi to├án bß╗Ö hoß║ít ─æß╗Öng tr├¬n nß╗ün tß║úng. C├íc nghiß╗çp vß╗Ñ ch├¡nh bao gß╗ôm: quß║ún l├╜ danh s├ích t├ái khoß║ún, x├�&#65533;t duyß╗çt v├á gi├ím s├ít hoß║ít ─æß╗Öng cß╗ºa c├íc gian h├áng, kiß╗âm duyß╗çt danh mß╗Ñc sß║ún phß║�&#65533;m chuß║�&#65533;n, theo d├╡i luß╗ông ─æ╞ín h├áng to├án cß╗Ñc v├á truy xuß║Ñt c├íc b├ío c├ío thß╗æng k├¬ tß╗òng quan vß╗ü hiß╗çu suß║Ñt hß╗ç thß╗æng.
+[46][normal] + Nh├á b├ín h├áng (Vendor/Shop Owner): L├á ─æß╗æi t├íc cung ß╗�&#65533;ng sß║ún phß║�&#65533;m tr├¬n s├án. Nh├│m ng╞░ß╗¥i d├╣ng n├áy ─æ╞░ß╗úc cung cß║Ñp mß╗Öt ph├ón hß╗ç quß║ún l├╜ ri├¬ng (Seller Center) ─æß╗â thß╗▒c hiß╗çn c├íc nghiß╗çp vß╗Ñ: thiß║�&#65533;t lß║¡p th├┤ng tin cß╗¡a h├áng, ─æ─âng tß║úi v├á cß║¡p nhß║¡t sß║ún phß║�&#65533;m, xß╗¡ l├╜ ─æ╞ín ─æß║╖t h├áng, tß╗▒ ph├ít h├ánh m├ú giß║úm gi├í (voucher) v├á theo d├╡i trß╗▒c quan b├ío c├ío doanh thu.
+[47][normal] + Kh├ích h├áng (Customer): L├á ng╞░ß╗¥i ti├¬u d├╣ng cuß╗æi. Hß╗ç thß╗æng cung cß║Ñp giao diß╗çn th├ón thiß╗çn gi├║p kh├ích h├áng dß╗à d├áng kh├ím ph├í sß║ún phß║�&#65533;m, thao t├íc th├¬m v├áo giß╗Å h├áng, tiß║�&#65533;n h├ánh thanh to├ín, theo d├╡i tiß║�&#65533;n tr├¼nh giao h├áng, quß║ún l├╜ lß╗ïch sß╗¡ mua sß║»m v├á t╞░╞íng t├íc trß╗▒c tiß║�&#65533;p vß╗¢i sß║ún phß║�&#65533;m th├┤ng qua viß╗çc ─æß╗â lß║íi c├íc ─æ├ính gi├í, nhß║¡n x├�&#65533;t.
+[49][Heading 3] 1.1.3. ─Éß╗Öi ng┼�&#65533; ph├ít triß╗ân v├á ph├ón c├┤ng nhiß╗çm vß╗Ñ
+[50][normal] ─Éß╗ô ├ín ─æ╞░ß╗úc thß╗▒c hiß╗çn bß╗ƒi nh├│m nghi├¬n cß╗�&#65533;u v├á ph├ít triß╗ân CNJ70, bao gß╗ôm 5 th├ánh vi├¬n. Qu├í tr├¼nh ph├ón c├┤ng c├┤ng viß╗çc ─æ╞░ß╗úc r├á so├ít v├á ─æ├ính gi├í dß╗▒a tr├¬n kiß║�&#65533;n tr├║c tß╗òng thß╗â cß╗ºa hß╗ç thß╗æng, ─æß║úm bß║úo mß╗ùi c├í nh├ón chß╗ïu tr├ích nhiß╗çm ph├ít triß╗ân c├íc ph├ón hß╗ç (module) chuy├¬n biß╗çt tß╗½ backend ─æß║�&#65533;n frontend.
+[51][normal] Bß║úng 1.1. Bß║úng ph├ón c├┤ng nhiß╗çm vß╗Ñ v├á tiß║�&#65533;n ─æß╗Ö thß╗▒c hiß╗çn cß╗ºa nh├│m
+[52][Heading 2] 1.2. Kß║�&#65533; hoß║ích thß╗▒c hiß╗çn
+[53][normal] ─Éß╗â ─æß║úm bß║úo khß╗æi l╞░ß╗úng c├┤ng viß╗çc ─æ╞░ß╗úc ho├án th├ánh ─æ├║ng thß╗¥i hß║ín vß╗¢i chß║Ñt l╞░ß╗úng tß╗æt nhß║Ñt, lß╗Ö tr├¼nh x├óy dß╗▒ng v├á ph├ít triß╗ân nß╗ün tß║úng ─æ╞░ß╗úc tß╗ò chß╗�&#65533;c mß╗Öt c├ích khoa hß╗ìc.
+[54][normal] Bß║úng 1.2. Lß╗Ö tr├¼nh v├á kß║�&#65533; hoß║ích thß╗▒c hiß╗çn ─æß╗ô ├ín
+[55][Heading 2] 1.3. Giß║úi thuß║¡t v├á c├┤ng cß╗Ñ
+[56][Heading 3] 1.3.1. C├íc thuß║¡t to├ín v├á giß║úi ph├íp kß╗╣ thuß║¡t
+[57][normal] a) C╞í chß║�&#65533; x├íc thß╗▒c v├á ß╗ºy quyß╗ün (JWT - JSON Web Token)
+[58][normal] Hß╗ç thß╗æng sß╗¡ dß╗Ñng ti├¬u chuß║�&#65533;n JWT ─æß╗â x├óy dß╗▒ng c╞í chß║�&#65533; x├íc thß╗▒c phi trß║íng th├íi (stateless), ─æß║úm bß║úo an to├án v├á tß╗æi ╞░u t├ái nguy├¬n cho giao tiß║�&#65533;p giß╗»a Client v├á Server. Luß╗ông xß╗¡ l├╜ ─æ╞░ß╗úc thß╗▒c hiß╗çn qua c├íc b╞░ß╗¢c:
+[59][normal] + Cß║Ñp ph├ít: Ng╞░ß╗¥i d├╣ng gß╗¡i y├¬u cß║ºu ─æ─âng nhß║¡p bß║▒ng th├┤ng tin ─æß╗ïnh danh (username/password). Server x├íc thß╗▒c dß╗» liß╗çu, sau ─æ├│ k├╜ ph├ít mß╗Öt m├ú token (JWT) chß╗�&#65533;a c├íc th├┤ng tin (payload) nh╞░ userId, role, v├á thß╗¥i gian hß║�&#65533;t hß║ín (expiration time).
+[60][normal] + L╞░u trß╗»: Ph├¡a Client tiß║�&#65533;p nhß║¡n v├á l╞░u trß╗» token an to├án tß║íi LocalStorage.
+[61][normal] + ─É├¡nh k├¿m: Trong c├íc truy vß║Ñn t├ái nguy├¬n tiß║�&#65533;p theo, Client ─æ├¡nh k├¿m token v├áo HTTP Header d╞░ß╗¢i c├║ ph├íp Authorization: Bearer <token>.
+[62][normal] + Kiß╗âm duyß╗çt: Server tiß║�&#65533;n h├ánh giß║úi m├ú chß╗» k├╜, kiß╗âm tra t├¡nh to├án vß║╣n, hß║ín mß╗�&#65533;c thß╗¥i gian v├á quyß╗ün hß║ín truy cß║¡p cß╗ºa token tr╞░ß╗¢c khi phß║ún hß╗ôi dß╗» liß╗çu.
+[63][normal] b) Thuß║¡t to├ín quß║ún l├╜ v├▓ng ─æß╗¥i ─æ╞ín h├áng (Finite State Machine)
+[64][normal] Luß╗ông nghiß╗çp vß╗Ñ xß╗¡ l├╜ ─æ╞ín h├áng ─æ╞░ß╗úc m├┤ h├¼nh h├│a theo cß║Ñu tr├║c M├íy trß║íng th├íi hß╗»u hß║ín (State Machine) nhß║▒m kiß╗âm so├ít nghi├¬m ngß║╖t sß╗▒ thay ─æß╗òi trß║íng th├íi, ng─ân chß║╖n c├íc thao t├íc chuyß╗ân ─æß╗òi sai logic. C├íc quy tß║»c chuyß╗ân ─æß╗òi (Transition Rules) ─æ╞░ß╗úc ─æß╗ïnh ngh─�&#65533;a nh╞░ sau:
+[65][normal] + PENDING (Chß╗¥ x├íc nhß║¡n): Trß║íng th├íi khß╗ƒi tß║ío mß║╖c ─æß╗ïnh. ─É╞ín h├áng c├│ thß╗â tiß║�&#65533;n sang PREPARING (khi nh├á b├ín x├íc nhß║¡n) hoß║╖c CANCELLED (khi bß╗ï kh├ích/nh├á b├ín hß╗ºy bß╗Å).
+[66][normal] + PREPARING (─Éang chuß║�&#65533;n bß╗ï): C├│ thß╗â tiß║�&#65533;p tß╗Ñc dß╗ïch chuyß╗ân sang SHIPPING (b├án giao cho ─æ╞ín vß╗ï vß║¡n chuyß╗ân) hoß║╖c chuyß╗ân vß╗ü CANCELLED.
+[67][normal] + SHIPPING (─Éang giao h├áng): ─É╞ín h├áng ─æang ─æ╞░ß╗úc lu├ón chuyß╗ân. C├│ thß╗â cß║¡p nhß║¡t th├ánh DELIVERED (giao th├ánh c├┤ng) hoß║╖c CANCELLED (giao thß║Ñt bß║íi/ho├án trß║ú).
+[68][normal] + Trß║íng th├íi ─æ├│ng (Terminal States): DELIVERED v├á CANCELLED l├á c├íc trß║íng th├íi cuß╗æi cß╗ºa v├▓ng ─æß╗¥i ─æ╞ín h├áng. Khi ─æß║ít ─æß║�&#65533;n c├íc trß║íng th├íi n├áy, dß╗» liß╗çu trß╗ƒ th├ánh bß║Ñt biß║�&#65533;n (immutable) v├á kh├┤ng thß╗â ─æß║úo ng╞░ß╗úc.
+[69][normal] c) Giß║úi thuß║¡t t├¡nh to├ín ─æiß╗âm ─æ├ính gi├í sß║ún phß║�&#65533;m (Rating System)
+[70][normal] Nhß║▒m phß║ún ├ính kh├ích quan chß║Ñt l╞░ß╗úng sß║ún phß║�&#65533;m dß╗▒a tr├¬n phß║ún hß╗ôi cß╗ºa ng╞░ß╗¥i mua, hß╗ç thß╗æng ├íp dß╗Ñng thuß║¡t to├ín t├¡nh ─æiß╗âm trung b├¼nh cß╗Öng tr├¬n tß║¡p hß╗úp c├íc l╞░ß╗út ─æ├ính gi├í hß╗úp lß╗ç.
+[71][normal] C├┤ng thß╗�&#65533;c to├ín hß╗ìc ─æ╞░ß╗úc biß╗âu diß╗àn nh╞░ sau:
+[73][normal] Trong ─æ├│:
+[74][normal] + : L├á sß╗æ sao ─æ├ính gi├í (tß╗½ 1 ─æß║�&#65533;n 5) cß╗ºa kh├ích h├áng thß╗�&#65533; .
+[75][normal] + : L├á tß╗òng sß╗æ l╞░ß╗úng l╞░ß╗út ─æ├ính gi├í hiß╗çn c├│ cß╗ºa sß║ún phß║�&#65533;m.
+[76][normal] d) Giß║úi thuß║¡t t├¼m kiß║�&#65533;m v├á truy xuß║Ñt sß║ún phß║�&#65533;m
+[77][normal] ─Éß╗â tß╗æi ╞░u h├│a trß║úi nghiß╗çm kh├ím ph├í h├áng h├│a cß╗ºa ng╞░ß╗¥i d├╣ng, hß╗ç thß╗æng t├¡ch hß╗úp c├┤ng cß╗Ñ t├¼m kiß║�&#65533;m linh hoß║ít dß╗▒a tr├¬n kß╗╣ thuß║¡t ─É├ính chß╗ë mß╗Ñc v─ân bß║ún (Text Index) cß╗ºa hß╗ç quß║ún trß╗ï c╞í sß╗ƒ dß╗» liß╗çu (MongoDB).
+[78][normal] + C╞í chß║�&#65533; n├áy kß║�&#65533;t hß╗úp vß╗¢i ph╞░╞íng thß╗�&#65533;c truy vß║Ñn findByNameContainingIgnoreCase(keyword), cho ph├�&#65533;p hß╗ç thß╗æng qu├�&#65533;t chuß╗ùi v─ân bß║ún kh├┤ng ph├ón biß╗çt chß╗» hoa/chß╗» th╞░ß╗¥ng.
+[79][normal] + Ph╞░╞íng ph├íp n├áy gi├║p truy xuß║Ñt nhanh ch├│ng c├íc sß║ún phß║�&#65533;m c├│ ti├¬u ─æß╗ü chß╗�&#65533;a tß╗½ kh├│a mß╗Ñc ti├¬u, ─æß╗ông thß╗¥i giß║úm thiß╗âu ─æß╗Ö trß╗à truy vß║Ñn (query latency) tr├¬n l╞░ß╗úng dß╗» liß╗çu lß╗¢n.
+[80][normal] e) Thuß║¡t to├ín quß║ún l├╜ v├á ─æß╗ông bß╗Ö tß╗ôn kho (Inventory Management)
+[81][normal] ─Éß╗â giß║úi quyß║�&#65533;t b├ái to├ín ─æß╗ông thß╗¥i (Concurrency) v├á ─æß║úm bß║úo t├¡nh to├án vß║╣n dß╗» liß╗çu h├áng h├│a, nghiß╗çp vß╗Ñ tß╗ôn kho ─æ╞░ß╗úc ─æß║╖t trong mß╗Öt khß╗æi giao dß╗ïch (Transaction) chß║╖t chß║╜:
+[82][normal] + Luß╗ông khß╗ƒi tß║ío ─æ╞ín (Deduction): Khi kh├ích h├áng tiß║�&#65533;n h├ánh thanh to├ín, hß╗ç thß╗æng qu├�&#65533;t qua to├án bß╗Ö giß╗Å h├áng v├á ─æß╗æi chiß║�&#65533;u vß╗¢i sß╗æ l╞░ß╗úng tß╗ôn kho (stock) hiß╗çn tß║íi. Nß║�&#65533;u thß╗Åa m├ún ─æiß╗üu kiß╗çn (), hß╗ç thß╗æng thß╗▒c hiß╗çn khß║Ñu trß╗½ v├á ghi nhß║¡n ─æ╞ín. Nß║�&#65533;u ph├ít hiß╗çn bß║Ñt kß╗│ sß║ún phß║�&#65533;m n├áo v╞░ß╗út qu├í tß╗ôn kho, to├án bß╗Ö giao dß╗ïch sß║╜ bß╗ï hß╗ºy bß╗Å (Rollback) v├á ph├ít ra th├┤ng b├ío lß╗ùi.
+[83][normal] + Luß╗ông hß╗ºy ─æ╞ín (Refund): Trong tr╞░ß╗¥ng hß╗úp ─æ╞ín h├áng bß╗ï hß╗ºy bß╗Å hß╗úp lß╗ç, hß╗ç thß╗æng tß╗▒ ─æß╗Öng k├¡ch hoß║ít tiß║�&#65533;n tr├¼nh ho├án trß║ú, cß╗Öng dß╗ôn sß╗æ l╞░ß╗úng h├áng ─æ├ú ─æß║╖t trß╗ƒ lß║íi kho () ─æß╗â t├íi sß║╡n s├áng cung ß╗�&#65533;ng.
+[84][Heading 2] 1.4. C├┤ng nghß╗ç v├á c├┤ng cß╗Ñ ph├ít triß╗ân
+[85][normal] ─Éß╗â ─æ├íp ß╗�&#65533;ng c├íc y├¬u cß║ºu vß╗ü hiß╗çu n─âng, t├¡nh bß║úo mß║¡t v├á khß║ú n─âng mß╗ƒ rß╗Öng (scalability) cß╗ºa mß╗Öt nß╗ün tß║úng th╞░╞íng mß║íi ─æiß╗çn tß╗¡ ─æa nh├á b├ín, dß╗▒ ├ín lß╗▒a chß╗ìn sß╗¡ dß╗Ñng hß╗ç sinh th├íi c├┤ng nghß╗ç hiß╗çn ─æß║íi vß╗¢i sß╗▒ hß╗ù trß╗ú mß║ính mß║╜ tß╗½ cß╗Öng ─æß╗ông.
+[86][normal] Bß║úng 1.3. Tß╗òng hß╗úp c├íc c├┤ng nghß╗ç v├á c├┤ng cß╗Ñ sß╗¡ dß╗Ñng trong dß╗▒ ├ín
+[90][Heading 1] Ch╞░╞íng 2. Thiß║�&#65533;t kß║�&#65533; v├á x├óy dß╗▒ng ch╞░╞íng tr├¼nh
+[91][Heading 2] 2.1. Ph├ón t├¡ch y├¬u cß║ºu b├ái to├ín
+[92][normal] Hß╗ç thß╗æng ─æ╞░ß╗úc x├óy dß╗▒ng theo m├┤ h├¼nh s├án th╞░╞íng mß║íi ─æiß╗çn tß╗¡ ─æa nh├á b├ín, trong ─æ├│ c├│ ba nh├│m ng╞░ß╗¥i d├╣ng ch├¡nh gß╗ôm Customer, Vendor v├á Admin. Mß╗ùi nh├│m ─æ╞░ß╗úc cung cß║Ñp c├íc chß╗�&#65533;c n─âng kh├íc nhau dß╗▒a tr├¬n vai tr├▓ t├ái khoß║ún v├á c├íc quy tß║»c ph├ón quyß╗ün ─æ╞░ß╗úc cß║Ñu h├¼nh trong Spring Security.
+[93][normal] 2.1.1. Ph├ón t├¡ch chß╗�&#65533;c n─âng theo nh├│m ng╞░ß╗¥i d├╣ng
+[94][normal] a) Customer
+[95][normal] Customer l├á ng╞░ß╗¥i d├╣ng mua h├áng tr├¬n hß╗ç thß╗æng. C├íc chß╗�&#65533;c n─âng thß╗▒c tß║�&#65533; ─æ╞░ß╗úc triß╗ân khai gß╗ôm ─æ─âng k├╜, ─æ─âng nhß║¡p, xem sß║ún phß║�&#65533;m, t├¼m kiß║�&#65533;m sß║ún phß║�&#65533;m, xem shop, quß║ún l├╜ giß╗Å h├áng, checkout, ├íp dß╗Ñng voucher, theo d├╡i ─æ╞ín h├áng v├á ─æ├ính gi├í sß║ún phß║�&#65533;m.
+[96][normal] -        ─É─âng k├╜, ─æ─âng nhß║¡p v├á ─æ─âng xuß║Ñt
+[97][normal] +      Ng╞░ß╗¥i d├╣ng thß╗▒c hiß╗çn ─æ─âng k├╜ tß║íi /auth/register bß║▒ng c├íc th├┤ng tin email, password, hß╗ì t├¬n, sß╗æ ─æiß╗çn thoß║íi v├á ─æß╗ïa chß╗ë. Khi ─æ─âng k├╜, hß╗ç thß╗æng kiß╗âm tra email ─æ├ú tß╗ôn tß║íi hay ch╞░a, m├ú h├│a mß║¡t khß║�&#65533;u bß║▒ng BCrypt v├á l╞░u t├ái khoß║ún vß╗¢i trß║íng th├íi ACTIVE. Viß╗çc ─æ─âng k├╜ t├ái khoß║ún ADMIN tß╗½ giao diß╗çn public bß╗ï tß╗½ chß╗æi.
+[98][normal] +      Khi ─æ─âng nhß║¡p tß║íi /auth/login, hß╗ç thß╗æng t├¼m ng╞░ß╗¥i d├╣ng theo email, kiß╗âm tra mß║¡t khß║�&#65533;u v├á trß║íng th├íi t├ái khoß║ún. Nß║�&#65533;u t├ái khoß║ún hß╗úp lß╗ç, hß╗ç thß╗æng tß║ío JWT chß╗�&#65533;a username, userId v├á role, sau ─æ├│ l╞░u JWT v├áo cookie jwt. Ng╞░ß╗¥i d├╣ng ─æ╞░ß╗úc chuyß╗ân h╞░ß╗¢ng theo vai tr├▓.
+[99][normal] -        Xem v├á t├¼m kiß║�&#65533;m sß║ún phß║�&#65533;m
+[100][normal] +      Customer c├│ thß╗â truy cß║¡p /products ─æß╗â xem danh s├ích sß║ún phß║�&#65533;m, t├¼m kiß║�&#65533;m theo t├¬n, lß╗ìc theo danh mß╗Ñc v├á sß║»p xß║�&#65533;p theo gi├í, ─æ├ính gi├í hoß║╖c sß║ún phß║�&#65533;m mß╗¢i nhß║Ñt. Khi chß╗ìn mß╗Öt sß║ún phß║�&#65533;m, ng╞░ß╗¥i d├╣ng c├│ thß╗â xem chi tiß║�&#65533;t tß║íi /products/{id}.
+[101][normal] -        Xem shop
+[102][normal] +      Customer c├│ thß╗â truy cß║¡p /shop/{id} ─æß╗â xem trang shop c├┤ng khai. Trang n├áy hß╗ù trß╗ú lß╗ìc, sß║»p xß║�&#65533;p, ph├ón trang, xem ─æ├ính gi├í v├á c├íc sß║ún phß║�&#65533;m nß╗òi bß║¡t cß╗ºa shop.
+[103][normal] -        Quß║ún l├╜ giß╗Å h├áng
+[104][normal] +      Tß║íi /cart, Customer c├│ thß╗â xem giß╗Å h├áng v├á c├íc sß║ún phß║�&#65533;m ─æ╞░ß╗úc nh├│m theo shop. Ng╞░ß╗¥i d├╣ng c├│ thß╗â th├¬m sß║ún phß║�&#65533;m, cß║¡p nhß║¡t sß╗æ l╞░ß╗úng hoß║╖c x├│a sß║ún phß║�&#65533;m khß╗Åi giß╗Å h├áng. Hß╗ç thß╗æng kiß╗âm tra tß╗ôn kho tr╞░ß╗¢c khi thß╗▒c hiß╗çn c├íc thao t├íc li├¬n quan ─æß║�&#65533;n sß╗æ l╞░ß╗úng.
+[105][normal] -        Checkout v├á ─æß║╖t h├áng
+[106][normal] +      Customer thß╗▒c hiß╗çn checkout tß║íi /checkout. Ng╞░ß╗¥i d├╣ng nhß║¡p sß╗æ ─æiß╗çn thoß║íi, ─æß╗ïa chß╗ë nhß║¡n h├áng v├á ph╞░╞íng thß╗�&#65533;c thanh to├ín. Khi ─æß║╖t h├áng, hß╗ç thß╗æng kiß╗âm tra sß║ún phß║�&#65533;m v├á tß╗ôn kho, t├¡nh tiß╗ün h├áng, ph├¡ vß║¡n chuyß╗ân v├á tß╗òng tiß╗ün, sau ─æ├│ tß║ío ─æ╞ín h├áng v├á cß║¡p nhß║¡t tß╗ôn kho.
+[107][normal] -        Voucher
+[108][normal] +      Customer c├│ thß╗â xem c├íc voucher WEB khß║ú dß╗Ñng tß║íi /vouchers v├á ├íp dß╗Ñng voucher trong qu├í tr├¼nh checkout th├┤ng qua /checkout/apply-voucher. Hß╗ç thß╗æng kiß╗âm tra t├¡nh hß╗úp lß╗ç cß╗ºa voucher tr╞░ß╗¢c khi t├¡nh khoß║ún giß║úm gi├í.
+[109][normal] -        Theo d├╡i ─æ╞ín h├áng
+[110][normal] +      Customer c├│ thß╗â xem lß╗ïch sß╗¡ ─æ╞ín h├áng tß║íi /orders, lß╗ìc theo trß║íng th├íi v├á xem chi tiß║�&#65533;t ─æ╞ín h├áng.
+[111][normal] -        ─É├ính gi├í sß║ún phß║�&#65533;m
+[112][normal] +      Sau khi sß╗¡ dß╗Ñng chß╗�&#65533;c n─âng ─æ├ính gi├í, Customer c├│ thß╗â tß║ío, sß╗¡a, x├│a v├á xem review. Khi tß║ío review, hß╗ç thß╗æng kiß╗âm tra rating trong khoß║úng tß╗½ 1 ─æß║�&#65533;n 5, nß╗Öi dung kh├┤ng ─æ╞░ß╗úc ─æß╗â trß╗æng v├á kiß╗âm tra ng╞░ß╗¥i d├╣ng ch╞░a ─æ├ính gi├í sß║ún phß║�&#65533;m tr╞░ß╗¢c ─æ├│. Sau khi l╞░u review, hß╗ç thß╗æng cß║¡p nhß║¡t lß║íi rating trung b├¼nh v├á sß╗æ l╞░ß╗úng review cß╗ºa sß║ún phß║�&#65533;m.
+[113][normal] b) Vendor/Shop
+[114][normal] Vendor l├á ng╞░ß╗¥i quß║ún l├╜ shop v├á c├íc sß║ún phß║�&#65533;m thuß╗Öc shop cß╗ºa m├¼nh. C├íc chß╗�&#65533;c n─âng thß╗▒c tß║�&#65533; gß╗ôm quß║ún l├╜ shop, sß║ún phß║�&#65533;m, ─æ╞ín h├áng, voucher, dashboard v├á profile.
+[115][normal] -        Dashboard
+[116][normal] +      Vendor truy cß║¡p /vendor/dashboard ─æß╗â xem thß╗æng k├¬ cß╗ºa shop, doanh thu trong 7 ng├áy v├á c├íc sß║ún phß║�&#65533;m nß╗òi bß║¡t.
+[117][normal] -        Quß║ún l├╜ shop
+[118][normal] +      Vendor c├│ thß╗â tß║ío shop tß║íi /vendor/shop/create v├á cß║¡p nhß║¡t shop tß║íi /vendor/shop/update. Trong qu├í tr├¼nh quß║ún l├╜ shop, hß╗ç thß╗æng hß╗ù trß╗ú upload logo v├á banner. Shop mß╗¢i c├│ trß║íng th├íi chß╗¥ duyß╗çt v├á chß╗ë ─æ╞░ß╗úc hoß║ít ─æß╗Öng sau khi ─æ╞░ß╗úc Admin xß╗¡ l├╜ theo trß║íng th├íi cß╗ºa shop.
+[119][normal] -        Quß║ún l├╜ sß║ún phß║�&#65533;m
+[120][normal] +      Vendor c├│ thß╗â xem danh s├ích sß║ún phß║�&#65533;m tß║íi /vendor/products, tß║ío sß║ún phß║�&#65533;m tß║íi /vendor/products/create, chß╗ënh sß╗¡a v├á x├│a sß║ún phß║�&#65533;m. Form sß║ún phß║�&#65533;m hß╗ù trß╗ú th├┤ng tin specifications, variants v├á upload ß║únh.
+[121][normal] -        Quß║ún l├╜ ─æ╞ín h├áng
+[122][normal] +      Vendor xem c├íc ─æ╞ín h├áng li├¬n quan ─æß║�&#65533;n shop tß║íi /vendor/orders. Khi cß║¡p nhß║¡t trß║íng th├íi ─æ╞ín h├áng, hß╗ç thß╗æng kiß╗âm tra quyß╗ün sß╗ƒ hß╗»u shop tr╞░ß╗¢c khi thay ─æß╗òi trß║íng th├íi. Nß║�&#65533;u ─æ╞ín h├áng chuyß╗ân sang DELIVERED, hß╗ç thß╗æng ghi nhß║¡n thß╗¥i ─æiß╗âm giao h├áng.
+[123][normal] -        Quß║ún l├╜ voucher SHOP
+[124][normal] +      Vendor c├│ thß╗â tß║ío, sß╗¡a, x├│a v├á k├¡ch hoß║ít hoß║╖c v├┤ hiß╗çu h├│a voucher SHOP th├┤ng qua c├íc trang /vendor/vouchers.
+[125][normal] -        Profile
+[126][normal] +      Vendor c├│ thß╗â xem th├┤ng tin t├ái khoß║ún v├á shop tß║íi /vendor/profile.
+[127][normal] c) Admin
+[128][normal] Admin l├á nh├│m ng╞░ß╗¥i d├╣ng quß║ún l├╜ v├á kiß╗âm so├ít hoß║ít ─æß╗Öng cß╗ºa to├án bß╗Ö hß╗ç thß╗æng. C├íc chß╗�&#65533;c n─âng thß╗▒c tß║�&#65533; gß╗ôm dashboard, quß║ún l├╜ ng╞░ß╗¥i d├╣ng, shop, danh mß╗Ñc, ─æ╞ín h├áng, sß║ún phß║�&#65533;m, review, banner v├á voucher WEB.
+[129][normal] -        Dashboard
+[130][normal] +      Admin truy cß║¡p /admin/dashboard ─æß╗â xem thß╗æng k├¬ tß╗òng quan v├á doanh thu. Dashboard hß╗ù trß╗ú c├íc khoß║úng thß╗¥i gian DAY, WEEK, MONTH, QUARTER, YEAR v├á ALL.
+[131][normal] -        Quß║ún l├╜ ng╞░ß╗¥i d├╣ng
+[132][normal] +      Admin c├│ thß╗â xem danh s├ích, t├¼m kiß║�&#65533;m, lß╗ìc theo role hoß║╖c status, xem chi tiß║�&#65533;t v├á kh├│a/mß╗ƒ kh├│a t├ái khoß║ún th├┤ng qua /admin/users.
+[133][normal] -        Quß║ún l├╜ shop
+[134][normal] +      Admin c├│ thß╗â xem danh s├ích v├á chi tiß║�&#65533;t shop, ─æß╗ông thß╗¥i thß╗▒c hiß╗çn c├íc thao t├íc approve, activate, deactivate v├á reject shop.
+[135][normal] -        Quß║ún l├╜ danh mß╗Ñc
+[136][normal] +      Admin thß╗▒c hiß╗çn CRUD danh mß╗Ñc tß║íi /admin/categories. Hß╗ç thß╗æng hß╗ù trß╗ú lß╗ìc danh mß╗Ñc ─æang active. Khi x├│a danh mß╗Ñc, hß╗ç thß╗æng c├│ kiß╗âm tra sß║ún phß║�&#65533;m c├▓n li├¬n quan.
+[137][normal] -        Quß║ún l├╜ ─æ╞ín h├áng
+[138][normal] +      Admin c├│ thß╗â xem danh s├ích v├á chi tiß║�&#65533;t ─æ╞ín h├áng tß║íi /admin/orders. Theo source code ─æ╞░ß╗úc Audit x├íc nhß║¡n, module n├áy READ-ONLY, kh├┤ng c├│ endpoint cß║¡p nhß║¡t trß║íng th├íi ─æ╞ín h├áng.
+[139][normal] -        Quß║ún l├╜ sß║ún phß║�&#65533;m
+[140][normal] +      Admin c├│ thß╗â xem, t├¼m kiß║�&#65533;m v├á lß╗ìc sß║ún phß║�&#65533;m; thß╗▒c hiß╗çn hide, unhide v├á delete sß║ún phß║�&#65533;m.
+[141][normal] -        Quß║ún l├╜ review
+[142][normal] +      Admin c├│ thß╗â xem danh s├ích, t├¼m kiß║�&#65533;m, lß╗ìc theo rating v├á x├│a review. Viß╗çc x├│a review l├á hard delete v├á Audit x├íc nhß║¡n kh├┤ng c├│ cascade.
+[143][normal] -        Quß║ún l├╜ banner
+[144][normal] +      Admin c├│ thß╗â tß║ío, sß╗¡a, x├│a banner v├á thß╗▒c hiß╗çn publish/unpublish banner.
+[145][normal] -        Quß║ún l├╜ voucher WEB
+[146][normal] +      Admin quß║ún l├╜ voucher WEB th├┤ng qua /admin/vouchers, bao gß╗ôm tß║ío, sß╗¡a, x├│a, activate v├á deactivate.
+[148][normal] 2.1.2. Bß║úng y├¬u cß║ºu chß╗�&#65533;c n─âng
+[150][normal] 2.1.3. Y├¬u cß║ºu phi chß╗�&#65533;c n─âng
+[151][normal] Tß╗½ source code v├á cß║Ñu h├¼nh thß╗▒c tß║�&#65533;, hß╗ç thß╗æng sß╗¡ dß╗Ñng Java 17, Spring Boot 3.2.0, Spring Security, Spring Data MongoDB, Thymeleaf v├á MongoDB. C╞í chß║�&#65533; x├íc thß╗▒c sß╗¡ dß╗Ñng BCrypt kß║�&#65533;t hß╗úp JWT, trong ─æ├│ JWT c├│ thß╗¥i hß║ín 24 giß╗¥. ß╗¿ng dß╗Ñng chß║íy tß║íi port 8081 v├á sß╗¡ dß╗Ñng MongoDB database cnj70_ecommerce.
+[152][normal] Hß╗ç thß╗æng c┼�&#65533;ng c├│ c╞í chß║�&#65533; xß╗¡ l├╜ exception tß║¡p trung th├┤ng qua GlobalExceptionHandler, kiß╗âm so├ít quyß╗ün truy cß║¡p URL theo role v├á sß╗¡ dß╗Ñng MongoDB auditing ─æß╗â tß╗▒ ─æß╗Öng quß║ún l├╜ thß╗¥i gian tß║ío v├á cß║¡p nhß║¡t document.
+[154][Heading 2] 2.2 Kiß║�&#65533;n tr├║c hß╗ç thß╗æng
+[155][normal] 2.2.1. Kiß║�&#65533;n tr├║c tß╗òng thß╗â
+[156][normal] Project ─æ╞░ß╗úc tß╗ò chß╗�&#65533;c theo kiß║�&#65533;n tr├║c ph├ón lß╗¢p gß╗ôm Controller ΓåÆ Service ΓåÆ Repository ΓåÆ MongoDB. B├¬n cß║ính c├íc tß║ºng xß╗¡ l├╜ ch├¡nh, hß╗ç thß╗æng c├│ th├¬m c├íc th├ánh phß║ºn phß╗Ñc vß╗Ñ bß║úo mß║¡t, xß╗¡ l├╜ exception, interceptor v├á c├íc th├ánh phß║ºn cß║Ñu h├¼nh.
+[157][normal] Luß╗ông xß╗¡ l├╜ tß╗òng qu├ít cß╗ºa hß╗ç thß╗æng: Browser ΓåÆ Spring Security Filter Chain ΓåÆ DispatcherServlet ΓåÆ Controller ΓåÆ Service ΓåÆ Repository ΓåÆ MongoDB ΓåÆ Response
+[158][normal] Trong ─æ├│:
+[159][normal] -        Controller tiß║�&#65533;p nhß║¡n HTTP request v├á ─æiß╗üu phß╗æi xß╗¡ l├╜.
+[160][normal] -        Service chß╗�&#65533;a logic nghiß╗çp vß╗Ñ.
+[161][normal] -        Repository thß╗▒c hiß╗çn truy cß║¡p MongoDB th├┤ng qua Spring Data MongoDB hoß║╖c MongoTemplate.
+[162][normal] -        MongoDB l╞░u trß╗» dß╗» liß╗çu d╞░ß╗¢i dß║íng document.
+[163][normal] -        Spring Security thß╗▒c hiß╗çn x├íc thß╗▒c v├á ph├ón quyß╗ün.
+[164][normal] -        GlobalExceptionHandler xß╗¡ l├╜ exception tß║¡p trung.
+[165][normal] -        CartCountInterceptor bß╗ò sung th├┤ng tin sß╗æ l╞░ß╗úng sß║ún phß║�&#65533;m trong giß╗Å h├áng cho view.
+[166][normal] -        GlobalControllerAdvice cung cß║Ñp mß╗Öt sß╗æ dß╗» liß╗çu d├╣ng chung cho c├íc view.
+[167][normal] -        Mongo Auditing tß╗▒ ─æß╗Öng cß║¡p nhß║¡t createdAt v├á updatedAt.
+[168][normal] 2.2.2. Th├ánh phß║ºn Security
+[169][normal] Security cß╗ºa hß╗ç thß╗æng ─æ╞░ß╗úc cß║Ñu h├¼nh trong SecurityConfig. Hß╗ç thß╗æng sß╗¡ dß╗Ñng BCryptPasswordEncoder ─æß╗â m├ú h├│a v├á kiß╗âm tra mß║¡t khß║�&#65533;u.
+[170][normal] JWT ─æ╞░ß╗úc xß╗¡ l├╜ th├┤ng qua JwtAuthenticationFilter. Filter ─æß╗ìc JWT tß╗½:
+[171][normal] -        Header Authorization: Bearer ...
+[172][normal] -        Cookie c├│ t├¬n jwt
+[173][normal] JWT chß╗�&#65533;a subject, userId v├á role. Thß╗¥i gian hß║�&#65533;t hß║ín cß╗ºa token l├á 24 giß╗¥.
+[174][normal] C├íc URL ─æ╞░ß╗úc bß║úo vß╗ç theo role:
+[176][normal] T├ái khoß║ún chß╗ë ─æ╞░ß╗úc x├íc thß╗▒c th├ánh c├┤ng khi c├│ trß║íng th├íi ACTIVE. JWT c┼�&#65533;ng bß╗ï tß╗½ chß╗æi nß║�&#65533;u trß║íng th├íi ng╞░ß╗¥i d├╣ng kh├┤ng c├▓n ACTIVE.
+[177][normal] 2.2.3. M├┤ tß║ú lß╗¢p
+[178][normal] C├íc package Java ch├¡nh cß╗ºa project gß╗ôm:
+[180][normal] 2.2.4. Mß╗Öt sß╗æ Document quan trß╗ìng
+[182][normal] 2.2.5. Mß╗Öt sß╗æ Service v├á ph╞░╞íng thß╗�&#65533;c nghiß╗çp vß╗Ñ
+[184][normal] 2.2.6. Repository
+[185][normal] C├íc Repository ch├¡nh ─æß╗üu sß╗¡ dß╗Ñng MongoRepository<T, String> cß╗ºa Spring Data MongoDB.
+[187][normal] 2.2.7. Kß║�&#65533; thß╗½a v├á triß╗ân khai interface
+[188][normal] Mß╗Öt sß╗æ quan hß╗ç ti├¬u biß╗âu:
+[190][normal] 2.2.8. M├┤ h├¼nh lß╗¢p cß╗ºa hß╗ç thß╗æng
+[192][normal] 
+H├¼nh 2.1. M├┤ h├¼nh lß╗¢p cß╗ºa hß╗ç thß╗æng
+[194][Heading 2] 
+2.3 Thiß║�&#65533;t kß║�&#65533; giao diß╗çn
+[195][normal] Phß║ºn n├áy tr├¼nh b├áy chi tiß║�&#65533;t thiß║�&#65533;t kß║�&#65533; giao diß╗çn ng╞░ß╗¥i d├╣ng (User Interface) cß╗ºa hß╗ç thß╗æng th╞░╞íng mß║íi ─æiß╗çn tß╗¡ ─æa nh├á b├ín CNJ70 Shop. To├án bß╗Ö giao diß╗çn ─æ╞░ß╗úc x├óy dß╗▒ng theo m├┤ h├¼nh Server-Side Rendering vß╗¢i template engine Thymeleaf, sß╗¡ dß╗Ñng Tailwind CSS kß║�&#65533;t hß╗úp CSS t├╣y biß║�&#65533;n ─æß╗â styling, Font Awesome cho biß╗âu t╞░ß╗úng trß╗▒c quan, v├á Google Fonts (Work Sans) cho typography. Giao diß╗çn tu├ón thß╗º nguy├¬n tß║»c Responsive Web Design, ─æß║úm bß║úo hiß╗ân thß╗ï tß╗æt tr├¬n c├íc k├¡ch th╞░ß╗¢c m├án h├¼nh tß╗½ desktop ─æß║�&#65533;n mobile.
+[196][normal] 2.3.1 Liß╗çt k├¬ c├íc giao diß╗çn ch├¡nh
+[197][normal] Hß╗ç thß╗æng CNJ70 Shop ─æ╞░ß╗úc ph├ón th├ánh 3 nh├│m giao diß╗çn ch├¡nh, tß╗òng cß╗Öng 42 template HTML:
+[198][normal] Bß║úng 2.3-1: Danh s├ích c├íc giao diß╗çn ch├¡nh cß╗ºa hß╗ç thß╗æng
+[199][normal] 2.3.2 Ph├ón t├¡ch tß╗½ng form/trang
+[200][normal] D╞░ß╗¢i ─æ├óy l├á ph├ón t├¡ch chi tiß║�&#65533;t c├íc form/trang quan trß╗ìng nhß║Ñt, bao gß╗ôm mß╗Ñc ─æ├¡ch sß╗¡ dß╗Ñng, c├íc th├ánh phß║ºn giao diß╗çn ch├¡nh, v├á luß╗ông t╞░╞íng t├íc cß╗ºa ng╞░ß╗¥i d├╣ng.
+[201][normal] 2.3.2.1 Form ─É─âng k├╜ t├ái khoß║ún
+[203][normal] [ H├îNH 2.3-1: Form ─É─âng k├╜ ]
+[204][normal] ΓÇó Mß╗Ñc ─æ├¡ch: Cho ph├�&#65533;p ng╞░ß╗¥i d├╣ng tß║ío t├ái khoß║ún mß╗¢i tr├¬n hß╗ç thß╗æng.
+[205][normal] Bß║úng 2.3-2: M├┤ tß║ú c├íc th├ánh phß║ºn form ─É─âng k├╜
+[206][normal] 2.3.2.2 Form ─É─âng nhß║¡p
+[208][normal] [ H├îNH 2.3-2: Form ─É─âng nhß║¡p ]
+[209][normal] Γû�&#65533; M├┤ tß║ú chi tiß║�&#65533;t bß╗æ cß╗Ñc v├á th├ánh phß║ºn b├¬n d╞░ß╗¢i Γû�&#65533;
+[210][normal] ΓÇó Mß╗Ñc ─æ├¡ch: X├íc thß╗▒c ng╞░ß╗¥i d├╣ng hiß╗çn c├│ tr├¬n hß╗ç thß╗æng.
+[211][normal] ΓÇó URL: /auth/login (POST)
+[212][normal] Bß║úng 2.3-3: M├┤ tß║ú c├íc th├ánh phß║ºn form ─É─âng nhß║¡p
+[213][normal] 2.3.2.3 Trang chß╗º (Home Page)
+[214][normal] [ H├îNH 2.3-3: Trang chß╗º ]
+ Trang chß╗º CNJ70 Shop vß╗¢i ─æß║ºy ─æß╗º c├íc khu vß╗▒c: banner slider, danh mß╗Ñc, flash sale, sß║ún phß║�&#65533;m, voucher, blog, FAQ
+[215][normal] Γû�&#65533; M├┤ tß║ú chi tiß║�&#65533;t bß╗æ cß╗Ñc v├á th├ánh phß║ºn b├¬n d╞░ß╗¢i Γû�&#65533;
+[216][normal] Trang chß╗º l├á landing page ch├¡nh cß╗ºa hß╗ç thß╗æng, ─æ╞░ß╗úc tß╗ò chß╗�&#65533;c th├ánh 14 khu vß╗▒c (sections) tß╗½ tr├¬n xuß╗æng d╞░ß╗¢i, mß╗ùi khu vß╗▒c phß╗Ñc vß╗Ñ mß╗Öt mß╗Ñc ─æ├¡ch cß╗Ñ thß╗â.
+[217][normal] Bß║úng 2.3-4: C├íc khu vß╗▒c tr├¬n Trang chß╗º
+[218][normal] 2.3.2.4 Danh s├ích sß║ún phß║�&#65533;m
+[219][normal] [ H├îNH 2.3-4: Trang danh s├ích sß║ún phß║�&#65533;m ]
+ Trang products - hero tr├¬n, filter bar, category pills, product grid
+[220][normal] Γû�&#65533; M├┤ tß║ú chi tiß║�&#65533;t bß╗æ cß╗Ñc v├á th├ánh phß║ºn b├¬n d╞░ß╗¢i Γû�&#65533;
+[221][normal] Bß║úng 2.3-5: Th├ánh phß║ºn trang Danh s├ích sß║ún phß║�&#65533;m
+[222][normal] 2.3.2.5 Chi tiß║�&#65533;t sß║ún phß║�&#65533;m
+[223][normal] [ H├îNH 2.3-5: Trang chi tiß║�&#65533;t sß║ún phß║�&#65533;m ]
+ Trang product-detail - gallery ß║únh, th├┤ng tin sß║ún phß║�&#65533;m, reviews
+[224][normal] Γû�&#65533; M├┤ tß║ú chi tiß║�&#65533;t bß╗æ cß╗Ñc v├á th├ánh phß║ºn b├¬n d╞░ß╗¢i Γû�&#65533;
+[225][normal] ─É├óy l├á trang c├│ cß║Ñu tr├║c phß╗�&#65533;c tß║íp nhß║Ñt, bao gß╗ôm nhiß╗üu khu vß╗▒c: gallery ß║únh, th├┤ng tin sß║ún phß║�&#65533;m, th├┤ng sß╗æ kß╗╣ thuß║¡t, sß║ún phß║�&#65533;m c├╣ng shop, ─æ├ính gi├í, sß║ún phß║�&#65533;m t╞░╞íng tß╗▒.
+[226][normal] Bß║úng 2.3-6: C├íc khu vß╗▒c trong trang Chi tiß║�&#65533;t sß║ún phß║�&#65533;m
+[227][normal] 2.3.2.6 Giß╗Å h├áng
+[228][normal] [ H├îNH 2.3-6: Trang giß╗Å h├áng ]
+ Giß╗Å h├áng - nh├│m sß║ún phß║�&#65533;m theo shop, sidebar t├│m tß║»t ─æ╞ín h├áng
+[229][normal] Γû�&#65533; M├┤ tß║ú chi tiß║�&#65533;t bß╗æ cß╗Ñc v├á th├ánh phß║ºn b├¬n d╞░ß╗¢i Γû�&#65533;
+[230][normal] Bß║úng 2.3-7: Th├ánh phß║ºn trang Giß╗Å h├áng
+[231][normal] 2.3.2.7 Thanh to├ín (Checkout)
+[232][normal] [ H├îNH 2.3-7: Trang thanh to├ín ]
+ Checkout - 2 cß╗Öt: th├┤ng tin giao h├áng + t├│m tß║»t ─æ╞ín h├áng
+[233][normal] Γû�&#65533; M├┤ tß║ú chi tiß║�&#65533;t bß╗æ cß╗Ñc v├á th├ánh phß║ºn b├¬n d╞░ß╗¢i Γû�&#65533;
+[234][normal] Bß║úng 2.3-8: Th├ánh phß║ºn trang Thanh to├ín
+[235][normal] 2.3.2.8 Lß╗ïch sß╗¡ ─æ╞ín h├áng
+[236][normal] [ H├îNH 2.3-8: Trang lß╗ïch sß╗¡ ─æ╞ín h├áng ]
+ Order history - filter tab + cards ─æ╞ín h├áng vß╗¢i progress tracker
+[237][normal] Γû�&#65533; M├┤ tß║ú chi tiß║�&#65533;t bß╗æ cß╗Ñc v├á th├ánh phß║ºn b├¬n d╞░ß╗¢i Γû�&#65533;
+[238][normal] Bß║úng 2.3-9: Th├ánh phß║ºn trang Lß╗ïch sß╗¡ ─æ╞ín h├áng
+[239][normal] 2.3.2.9 Form Th├¬m/Sß╗¡a sß║ún phß║�&#65533;m (Vendor)
+[240][normal] [ H├îNH 2.3-9: Vendor - Form sß║ún phß║�&#65533;m ]
+ Form th├¬m/sß╗¡a sß║ún phß║�&#65533;m - hero + form card dß╗ìc
+[241][normal] Γû�&#65533; M├┤ tß║ú chi tiß║�&#65533;t bß╗æ cß╗Ñc v├á th├ánh phß║ºn b├¬n d╞░ß╗¢i Γû�&#65533;
+[242][normal] Bß║úng 2.3-10: Th├ánh phß║ºn Form Th├¬m/Sß╗¡a sß║ún phß║�&#65533;m
+[243][normal] 2.3.2.10 Trang Quß║ún l├╜ sß║ún phß║�&#65533;m (Admin)
+[244][normal] [ H├îNH 2.3-10: Admin - Quß║ún l├╜ sß║ún phß║�&#65533;m ]
+ Trang kiß╗âm duyß╗çt - filter bar + table
+[245][normal] Γû�&#65533; M├┤ tß║ú chi tiß║�&#65533;t bß╗æ cß╗Ñc v├á th├ánh phß║ºn b├¬n d╞░ß╗¢i Γû�&#65533;
+[246][normal] Bß║úng 2.3-11: Th├ánh phß║ºn trang Admin - Quß║ún l├╜ sß║ún phß║�&#65533;m
+[247][normal] 2.3.3 M├┤ tß║ú c├íc th├ánh phß║ºn giao diß╗çn
+[248][normal] Phß║ºn n├áy m├┤ tß║ú chi tiß║�&#65533;t c├íc th├ánh phß║ºn UI lß║╖p lß║íi nhiß╗üu lß║ºn trong hß╗ç thß╗æng: button, input, table, menu, modal. ─É├óy l├á design system cß╗ºa CNJ70 Shop, ─æß║úm bß║úo t├¡nh nhß║Ñt qu├ín tr├¬n to├án bß╗Ö giao diß╗çn ng╞░ß╗¥i d├╣ng.
+[249][normal] 2.3.3.1 Buttons (N├║t bß║Ñm)
+[250][normal] [ H├îNH 2.3-11: Button styles ]
+ Bß║úng mß║½u c├íc style button trong hß╗ç thß╗æng
+[251][normal] Γû�&#65533; M├┤ tß║ú chi tiß║�&#65533;t bß╗æ cß╗Ñc v├á th├ánh phß║ºn b├¬n d╞░ß╗¢i Γû�&#65533;
+[252][normal] Bß║úng 2.3-12: C├íc loß║íi button trong hß╗ç thß╗æng
+[253][normal] Tß║Ñt cß║ú button ─æß╗üu c├│ hiß╗çu ß╗�&#65533;ng hover (─æß╗òi m├áu nß╗ün 5% opacity), active state (─æß╗òi m├áu 10%), v├á loading state (spinner icon + disable). K├¡ch th╞░ß╗¢c ti├¬u chuß║�&#65533;n: padding 12px 24px, border-radius 8px, font-size 14px, line-height 20px.
+[254][normal] 2.3.3.2 Inputs (├ö nhß║¡p liß╗çu)
+[255][normal] [ H├îNH 2.3-12: Input styles ]
+ C├íc kiß╗âu input trong form
+[256][normal] Γû�&#65533; M├┤ tß║ú chi tiß║�&#65533;t bß╗æ cß╗Ñc v├á th├ánh phß║ºn b├¬n d╞░ß╗¢i Γû�&#65533;
+[257][normal] Bß║úng 2.3-13: C├íc kiß╗âu Input trong hß╗ç thß╗æng
+[258][normal] Tß║Ñt cß║ú input ─æ╞░ß╗úc wrap trong .form-group-modern vß╗¢i label ph├¡a tr├¬n (c├│ icon), input c├│ viß╗ün 1px #E5E7EB, focus border #0FB5B0, focus shadow 0 0 0 3px rgba(15, 181, 176, 0.1). Hiß╗ân thß╗ï icon b├¬n phß║úi input, v├á form-error message b├¬n d╞░ß╗¢i khi c├│ lß╗ùi.
+[259][normal] 2.3.3.3 Tables (Bß║úng dß╗» liß╗çu)
+[260][normal] [ H├îNH 2.3-13: Table component ]
+ Bß║úng dß╗» liß╗çu d├╣ng trong Admin/Vendor
+[261][normal] Γû�&#65533; M├┤ tß║ú chi tiß║�&#65533;t bß╗æ cß╗Ñc v├á th├ánh phß║ºn b├¬n d╞░ß╗¢i Γû�&#65533;
+[262][normal] Bß║úng 2.3-14: Cß║Ñu tr├║c Table chuß║�&#65533;n
+[263][normal] 2.3.3.4 Menus (Menu ─æiß╗üu h╞░ß╗¢ng)
+[264][normal] [ H├îNH 2.3-14: Navigation menus ]
+ Header kh├ích h├áng, sidebar admin, sidebar vendor
+[265][normal] Γû�&#65533; M├┤ tß║ú chi tiß║�&#65533;t bß╗æ cß╗Ñc v├á th├ánh phß║ºn b├¬n d╞░ß╗¢i Γû�&#65533;
+[266][normal] Bß║úng 2.3-15: C├íc loß║íi Menu trong hß╗ç thß╗æng
+[267][normal] 2.3.3.5 Modals (Hß╗Öp thoß║íi popup)
+[268][normal] [ H├îNH 2.3-15: Modal examples ]
+ C├íc modal trong hß╗ç thß╗æng - review, confirm delete, voucher copy
+[269][normal] Γû�&#65533; M├┤ tß║ú chi tiß║�&#65533;t bß╗æ cß╗Ñc v├á th├ánh phß║ºn b├¬n d╞░ß╗¢i Γû�&#65533;
+[270][normal] Bß║úng 2.3-16: C├íc Modal trong hß╗ç thß╗æng
+[271][normal] 2.3.4 Bß║úng m├┤ tß║ú ─æß╗æi t╞░ß╗úng giao diß╗çn
+[272][normal] Bß║úng d╞░ß╗¢i ─æ├óy m├┤ tß║ú c├íc ─æß╗æi t╞░ß╗úng giao diß╗çn (UI Objects) ch├¡nh trong hß╗ç thß╗æng - mß╗ùi ─æß╗æi t╞░ß╗úng l├á mß╗Öt thß╗▒c thß╗â nghiß╗çp vß╗Ñ c├│ giao diß╗çn ri├¬ng vß╗¢i c├íc thuß╗Öc t├¡nh v├á h├ánh vi cß╗Ñ thß╗â.
+[273][normal] Bß║úng 2.3-17: M├┤ tß║ú c├íc ─æß╗æi t╞░ß╗úng giao diß╗çn ch├¡nh
+[274][normal] 2.3.5 Ph├ón t├¡ch chi tiß║�&#65533;t th├ánh phß║ºn giao diß╗çn
+[275][normal] 2.3.5.1 Header (Top Navigation)
+[276][normal] [ H├îNH 2.3-16: Web Header ]
+ Header cß╗ºa trang kh├ích h├áng
+[277][normal] Γû�&#65533; M├┤ tß║ú chi tiß║�&#65533;t bß╗æ cß╗Ñc v├á th├ánh phß║ºn b├¬n d╞░ß╗¢i Γû�&#65533;
+[278][normal] Bß║úng 2.3-18: C├íc th├ánh phß║ºn trong Header
+[279][normal] 2.3.5.2 Footer
+[280][normal] [ H├îNH 2.3-17: Web Footer ]
+ Footer cß╗ºa trang web
+[281][normal] Γû�&#65533; M├┤ tß║ú chi tiß║�&#65533;t bß╗æ cß╗Ñc v├á th├ánh phß║ºn b├¬n d╞░ß╗¢i Γû�&#65533;
+[282][normal] Bß║úng 2.3-19: Cß║Ñu tr├║c Footer
+[283][normal] 2.3.5.3 Admin Sidebar
+[284][normal] [ H├îNH 2.3-18: Admin sidebar ]
+ Sidebar tr├íi cß╗ºa trang admin
+[285][normal] Γû�&#65533; M├┤ tß║ú chi tiß║�&#65533;t bß╗æ cß╗Ñc v├á th├ánh phß║ºn b├¬n d╞░ß╗¢i Γû�&#65533;
+[286][normal] Bß║úng 2.3-20: C├íc menu trong Admin Sidebar
+[287][normal] 2.3.5.4 Vendor Sidebar
+[288][normal] [ H├îNH 2.3-19: Vendor sidebar ]
+ Sidebar tr├íi cß╗ºa trang vendor
+[289][normal] Γû�&#65533; M├┤ tß║ú chi tiß║�&#65533;t bß╗æ cß╗Ñc v├á th├ánh phß║ºn b├¬n d╞░ß╗¢i Γû�&#65533;
+[290][normal] Bß║úng 2.3-21: C├íc menu trong Vendor Sidebar
+[291][normal] 2.3.6 S╞í ─æß╗ô thiß║�&#65533;t kß║�&#65533; giao diß╗çn (Wireframe)
+[292][normal] Phß║ºn n├áy m├┤ tß║ú s╞í ─æß╗ô bß╗æ cß╗Ñc (wireframe) cß╗ºa c├íc trang ch├¡nh trong hß╗ç thß╗æng. Do t├ái liß╗çu n├áy ─æ╞░ß╗úc viß║�&#65533;t bß║▒ng Word n├¬n kh├┤ng thß╗â nh├║ng file Figma/Draw.io trß╗▒c tiß║�&#65533;p, c├íc wireframe ─æ╞░ß╗úc m├┤ tß║ú d╞░ß╗¢i dß║íng s╞í ─æß╗ô khß╗æi vß╗¢i ch├║ th├¡ch chi tiß║�&#65533;t.
+[293][normal] 2.3.6.1 Wireframe - Trang chß╗º
+[294][normal] 2.3.6.2 Wireframe - Chi tiß║�&#65533;t sß║ún phß║�&#65533;m
+[295][normal] 2.3.6.3 Wireframe - Admin Dashboard
+[296][normal] 2.3.6.4 Wireframe - Form th├¬m sß║ún phß║�&#65533;m (Vendor)
+[297][normal] 2.3.7 Danh s├ích h├¼nh ß║únh giao diß╗çn thß╗▒c tß║�&#65533;
+[298][normal] Bß║úng d╞░ß╗¢i ─æ├óy liß╗çt k├¬ c├íc h├¼nh ß║únh chß╗Ñp m├án h├¼nh (screenshots) giao diß╗çn thß╗▒c tß║�&#65533; cß╗ºa hß╗ç thß╗æng CNJ70 Shop. Do t├¡nh chß║Ñt cß╗ºa t├ái liß╗çu Word, mß╗ùi h├¼nh ─æ╞░ß╗úc ─æ├ính sß╗æ thß╗�&#65533; tß╗▒ H├¼nh 2.3-X v├á c├│ ch├║ th├¡ch chi tiß║�&#65533;t vß╗ü nß╗Öi dung hiß╗ân thß╗ï.
+[299][normal] Bß║úng 2.3-22: Danh s├ích h├¼nh ß║únh giao diß╗çn v├á ch├║ th├¡ch
+[300][normal] 2.3.8 Tß╗òng kß║�&#65533;t thiß║�&#65533;t kß║�&#65533; giao diß╗çn
+[301][normal] Hß╗ç thß╗æng CNJ70 Shop c├│ tß╗òng cß╗Öng 42 template giao diß╗çn, ─æ╞░ß╗úc ph├ón th├ánh 3 nh├│m ch├¡nh: Kh├ích h├áng (15 trang), Nh├á b├ín (10 trang), Quß║ún trß╗ï (17 trang). Mß╗ùi trang ─æß╗üu tu├ón thß╗º design system thß╗æng nhß║Ñt vß╗¢i c├íc th├ánh phß║ºn UI t├íi sß╗¡ dß╗Ñng: button, input, table, modal, menu, card. Giao diß╗çn sß╗¡ dß╗Ñng bß║úng m├áu chß╗º ─æß║ío l├á teal #0FB5B0 kß║�&#65533;t hß╗úp vß╗¢i c├íc accent colors (─æß╗Å #EF4444, xanh l├í #10B981, v├áng #F59E0B, t├¡m #8B5CF6) cho c├íc trß║íng th├íi kh├íc nhau.
+[302][normal] Typography sß╗¡ dß╗Ñng Google Fonts Work Sans vß╗¢i c├íc mß╗�&#65533;c ─æß╗Ö weight 400-900, gi├║p giao diß╗çn hiß╗çn ─æß║íi v├á dß╗à ─æß╗ìc. To├án bß╗Ö icon ─æß╗ông nhß║Ñt sß╗¡ dß╗Ñng Font Awesome 6. Hß╗ç thß╗æng c├│ hß╗ù trß╗ú responsive ─æß║ºy ─æß╗º vß╗¢i 3 breakpoints ch├¡nh: mobile (<768px), tablet (768-1024px), v├á desktop (>1024px).
+[303][normal] C├íc nguy├¬n tß║»c UX ch├¡nh ─æ╞░ß╗úc ├íp dß╗Ñng: (1) Progressive Disclosure - chß╗ë hiß╗ân thß╗ï th├┤ng tin cß║ºn thiß║�&#65533;t theo ngß╗» cß║únh; (2) Visual Hierarchy - sß╗¡ dß╗Ñng typography, m├áu sß║»c, v├á spacing ─æß╗â dß║½n dß║»t mß║»t ng╞░ß╗¥i d├╣ng; (3) Feedback tß╗�&#65533;c th├¼ - mß╗ìi h├ánh ─æß╗Öng ─æß╗üu c├│ loading state, success/error message; (4) Accessibility - ─æß║úm bß║úo aria-label cho icon buttons, color contrast ratio ─æß║ít chuß║�&#65533;n WCAG AA.
+[304][normal] Bß║úng tß╗òng hß╗úp c├┤ng nghß╗ç & th╞░ viß╗çn sß╗¡ dß╗Ñng
+[305][normal] Bß║úng 2.3-23: C├┤ng nghß╗ç v├á th╞░ viß╗çn
+[309][Heading 2] 2.4. Thiß║�&#65533;t kß║�&#65533; c╞í sß╗ƒ dß╗» liß╗çu
+[310][normal] 2.4.1 L╞░ß╗úc ─æß╗ô c╞í sß╗ƒ dß╗» liß╗çu quan hß╗ç.
+[311][normal] M├┤ h├¼nh c╞í sß╗ƒ dß╗» liß╗çu quan hß╗ç, bao gß╗ôm bß║úng, thuß╗Öc t├¡nh, kiß╗âu dß╗» liß╗çu.
+[313][normal] H├¼nh 2. 2 M├┤ h├¼nh li├¬n kß║�&#65533;t thß╗▒c thß╗â
+[318][normal] H├¼nh 2. 3 M├┤ h├¼nh vß║¡t l├╜ csdl
+[319][normal] 2.4.2 C├íc truy vß║Ñn. (Stored Procedured)
+[320][normal] T├¼m h├│a ─æ╞ín c├│ gi├í trß╗ï cao nhß║Ñt
+[322][normal] T├¼m h├áng b├ín chß║íy nhß║Ñt trong khoß║úng thß╗¥i gian
+[325][Heading 2] 
+[326][Heading 2] 2.5. Tß╗ò chß╗�&#65533;c dß╗▒ ├ín, m├┤ tß║ú file m├ú nguß╗ôn
+[327][normal] 2.5.1 Tß╗ò chß╗�&#65533;c dß╗▒ ├ín
+[328][normal] Cß║Ñu tr├║c r├║t gß╗ìn cß╗ºa dß╗▒ ├ín ─æ╞░ß╗úc thß╗â hiß╗çn nh╞░ sau:
+[331][Heading 2] 2.5.2. m├┤ tß║ú file m├ú nguß╗ôn
+[332][normal] ≡ƒôü Gß╗æc dß╗▒ ├ín  (1 file)
+[334][normal] ≡ƒôü config  (15 file)
+[336][normal] ≡ƒôü document  (24 file)
+[338][normal] ≡ƒôü enums  (20 file)
+[340][normal] ≡ƒôü repository  (24 file)
+[342][normal] ≡ƒôü dto/cart  (1 file)
+[344][normal] ≡ƒôü dto/checkout  (1 file)
+[346][normal] ≡ƒôü dto/complaint  (3 file)
+[348][normal] ≡ƒôü dto/moderation  (4 file)
+[350][normal] ≡ƒôü dto/request  (12 file)
+[352][normal] ≡ƒôü dto/response  (12 file)
+[354][normal] ≡ƒôü dto/review  (1 file)
+[356][normal] ≡ƒôü controller  (1 file)
+[358][normal] ≡ƒôü controller/admin  (13 file)
+[360][normal] ≡ƒôü controller/api  (1 file)
+[362][normal] ≡ƒôü controller/auth  (1 file)
+[364][normal] ≡ƒôü controller/complaint  (3 file)
+[366][normal] ≡ƒôü controller/moderator  (8 file)
+[368][normal] ≡ƒôü controller/vendor  (8 file)
+[370][normal] ≡ƒôü controller/web  (13 file)
+[372][normal] ≡ƒôü service (interface)  (31 file)
+[375][Heading 2] 2.6 Kß║�&#65533;t ch╞░╞íng.
+[378][Heading 1] Ch╞░╞íng 3. Ph├ít triß╗ân hß╗ç thß╗æng v├á kiß╗âm thß╗¡
+[379][Heading 2] 3.1. Tß║ºng giao diß╗çn 
+[380][normal] C├íc form, mß╗æi quan hß╗ç giß╗»a c├íc Form
+[382][Heading 2] 3.2 Tß║ºng nghiß╗çp vß╗Ñ
+[383][normal] C├íc class nghiß╗çp vß╗Ñ c├│ trong hß╗ç thß╗æng, nh╞░ xß╗¡ l├╜, b├ío c├ío, thß╗æng k├¬.
+[386][Heading 2] 3.3. Tß║ºng thß╗▒c thß╗â
+[387][normal] C├íc lß╗¢p thß╗▒c thß╗â c├│ trong hß╗ç thß╗æng.
+[388][Heading 2] 
+[389][Heading 2] 
+[391][Heading 2] 3.4. Kß║╛T QUß║ó ─Éß║áT ─É╞»ß╗óC
+[392][Heading 3] 3.4.1. Liß╗çt k├¬ c├íc chß╗�&#65533;c n─âng ─æ├ú ho├án th├ánh
+[393][normal] Hß╗ç thß╗æng S├án th╞░╞íng mß║íi ─æiß╗çn tß╗¡ ─æa nh├á b├ín CNJ70 ─æ├ú ─æ╞░ß╗úc c├ái ─æß║╖t v├á vß║¡n h├ánh ß╗òn ─æß╗ïnh tr├¬n nß╗ün tß║úng Java 17, Spring Boot 3.2.0, Spring Security 6 v├á hß╗ç quß║ún trß╗ï c╞í sß╗ƒ dß╗» liß╗çu NoSQL MongoDB. To├án bß╗Ö c├íc luß╗ông nghiß╗çp vß╗Ñ ─æ├ú ─æ╞░ß╗úc ph├ón chia chß║╖t chß║╜ theo 3 t├íc nh├ón (Actor) ch├¡nh: Kh├ích h├áng (Customer), Ng╞░ß╗¥i b├ín (Vendor) v├á Quß║ún trß╗ï vi├¬n (Admin). Bß║úng d╞░ß╗¢i ─æ├óy tß╗òng hß╗úp chi tiß║�&#65533;t danh mß╗Ñc chß╗�&#65533;c n─âng ─æ├ú ho├án thiß╗çn cß╗ºa hß╗ç thß╗æng:
+[395][Heading 3] 3.4.2. M├┤ tß║ú kß║�&#65533;t quß║ú ─æß║ít ─æ╞░ß╗úc v├á H╞░ß╗¢ng dß║½n Demo giao diß╗çn
+[396][normal] Hß╗ç thß╗æng cung cß║Ñp trß║úi nghiß╗çm giao diß╗çn ng╞░ß╗¥i d├╣ng hiß╗çn ─æß║íi, trß╗▒c quan, ─æ├íp ß╗�&#65533;ng nguy├¬n l├╜ t╞░╞íng t├íc web th├ón thiß╗çn. D╞░ß╗¢i ─æ├óy l├á m├┤ tß║ú chi tiß║�&#65533;t luß╗ông hoß║ít ─æß╗Öng k├¿m theo c├íc vß╗ï tr├¡ khung h├¼nh ─æß╗â d├ín ß║únh chß╗Ñp m├án h├¼nh (Screenshot) khi tiß║�&#65533;n h├ánh chß║íy demo ß╗�&#65533;ng dß╗Ñng thß╗▒c tß║�&#65533; tr├¬n m├┤i tr╞░ß╗¥ng localhost:
+[397][normal] a) Ph├ón hß╗ç Kh├ích h├áng (Customer Interface)
+[398][normal] ΓÇó Trang chß╗º v├á Danh mß╗Ñc sß║ún phß║�&#65533;m: Giao diß╗çn kh├ích h├áng tß║¡p trung v├áo t├¡nh trß╗▒c quan, tß╗æc ─æß╗Ö tß║úi trang nhanh v├á ─æ╞ín giß║ún h├│a thao t├íc t├¼m kiß║�&#65533;m - mua h├áng:
+[399][normal] H├¼nh 3.1: Giao diß╗çn Trang chß╗º v├á hß╗ç thß╗æng Banner quß║úng c├ío s├án TM─ÉT
+ (Thao t├íc: Truy cß║¡p http://localhost:8081/home, chß╗Ñp to├án cß║únh thanh ─æiß╗üu h╞░ß╗¢ng Header, Slider banner ─æß╗Öng v├á danh mß╗Ñc nß╗òi bß║¡t.)
+[400][normal] ΓÇó Trang danh s├ích sß║ún phß║�&#65533;m v├á bß╗Ö lß╗ìc: Kh├ích h├áng c├│ thß╗â dß╗à d├áng tra cß╗�&#65533;u sß║ún phß║�&#65533;m th├┤ng qua thanh t├¼m kiß║�&#65533;m tß╗½ kh├│a, kß║�&#65533;t hß╗úp bß╗Ö lß╗ìc danh mß╗Ñc v├á khoß║úng gi├í:
+[401][normal] H├¼nh 3.2: Giao diß╗çn Danh s├ích sß║ún phß║�&#65533;m kß║�&#65533;t hß╗úp bß╗Ö lß╗ìc danh mß╗Ñc v├á sß║»p xß║�&#65533;p gi├í
+ (Thao t├íc: Truy cß║¡p http://localhost:8081/products?category=...&minPrice=..., chß╗Ñp m├án h├¼nh l╞░ß╗¢i sß║ún phß║�&#65533;m v├á cß╗Öt bß╗Ö lß╗ìc b├¬n tr├íi.)
+[402][normal] ΓÇó Trang chi tiß║�&#65533;t sß║ún phß║�&#65533;m: Cung cß║Ñp ─æß║ºy ─æß╗º th├┤ng tin h├¼nh ß║únh chi tiß║�&#65533;t, gi├í gß╗æc, gi├í khuyß║�&#65533;n m├úi, bß║úng th├┤ng sß╗æ kß╗╣ thuß║¡t, chß╗ìn thuß╗Öc t├¡nh m├áu/size v├á khu vß╗▒c b├¼nh luß║¡n:
+[403][normal] H├¼nh 3.3: Giao diß╗çn Chi tiß║�&#65533;t sß║ún phß║�&#65533;m, lß╗▒a chß╗ìn biß║�&#65533;n thß╗â (Variant) v├á ─æ├ính gi├í kh├ích h├áng
+ (Thao t├íc: Truy cß║¡p http://localhost:8081/products/{id}, chß╗Ñp m├án h├¼nh hiß╗ân thß╗ï thuß╗Öc t├¡nh chß╗ìn mua v├á n├║t Th├¬m v├áo giß╗Å h├áng.)
+[404][normal] ΓÇó Trang Giß╗Å h├áng (Shopping Cart): Cho ph├�&#65533;p ng╞░ß╗¥i d├╣ng kiß╗âm tra lß║íi c├íc mß║╖t h├áng ─æ├ú chß╗ìn, ─æiß╗üu chß╗ënh sß╗æ l╞░ß╗úng, hß╗ç thß╗æng tß╗▒ ─æß╗Öng t├¡nh to├ín lß║íi tß╗òng tiß╗ün giß╗Å h├áng:
+[405][normal] H├¼nh 3.4: Giao diß╗çn Quß║ún l├╜ Giß╗Å h├áng mua sß║»m cß╗ºa kh├ích h├áng
+ (Thao t├íc: Truy cß║¡p http://localhost:8081/cart, chß╗Ñp bß║úng danh s├ích mß║╖t h├áng, n├║t t─âng giß║úm sß╗æ l╞░ß╗úng v├á n├║t Tiß║�&#65533;n h├ánh thanh to├ín.)
+[406][normal] ΓÇó Trang ─Éß║╖t h├áng & Thanh to├ín (Checkout): Giao diß╗çn thanh to├ín cho ph├�&#65533;p ng╞░ß╗¥i d├╣ng chß╗ìn ─æß╗ïa chß╗ë nhß║¡n h├áng, h├¼nh thß╗�&#65533;c thanh to├ín (COD hoß║╖c VNPAY) v├á chß╗ìn ├íp dß╗Ñng m├ú Voucher:
+[407][normal] H├¼nh 3.5: Giao diß╗çn Trang thanh to├ín (Checkout) v├á ├íp dß╗Ñng m├ú giß║úm gi├í (Voucher)
+ (Thao t├íc: Truy cß║¡p http://localhost:8081/checkout, chß╗Ñp form th├┤ng tin giao h├áng, danh s├ích voucher ├íp dß╗Ñng v├á tß╗òng tiß╗ün sau giß║úm gi├í.)
+[408][normal] ΓÇó Trang Lß╗ïch sß╗¡ ─æ╞ín h├áng: Ng╞░ß╗¥i d├╣ng theo d├╡i trß║íng th├íi ─æ╞ín h├áng ─æ├ú ─æß║╖t theo tß╗½ng giai ─æoß║ín (Chß╗¥ xß╗¡ l├╜, ─Éang ─æ├│ng g├│i, ─Éang giao, ─É├ú giao):
+[409][normal] H├¼nh 3.6: Giao diß╗çn Lß╗ïch sß╗¡ ─æ╞ín h├áng v├á theo d├╡i tiß║�&#65533;n tr├¼nh xß╗¡ l├╜
+ (Thao t├íc: Truy cß║¡p http://localhost:8081/orders, chß╗Ñp danh s├ích ─æ╞ín h├áng ─æ├ú mua k├¿m trß║íng th├íi v├á chi tiß║�&#65533;t ─æ╞ín h├áng.)
+[410][normal] b) Ph├ón hß╗ç Ng╞░ß╗¥i b├ín h├áng (Vendor Interface)
+[411][normal] ΓÇó Dashboard thß╗æng k├¬ cß╗ºa Shop: Giao diß╗çn d├ánh ri├¬ng cho chß╗º shop ─æ╞░ß╗úc thiß║�&#65533;t kß║�&#65533; theo phong c├ích trang quß║ún trß╗ï chuy├¬n nghiß╗çp, tß╗æi ╞░u quy tr├¼nh xß╗¡ l├╜ ─æ╞ín:
+[412][normal] H├¼nh 3.7: Giao diß╗çn Dashboard thß╗æng k├¬ doanh thu v├á ─æ╞ín h├áng cß╗ºa Vendor
+ (Thao t├íc: ─É─âng nhß║¡p t├ái khoß║ún Vendor, truy cß║¡p http://localhost:8081/vendor/dashboard, chß╗Ñp c├íc thß║╗ chß╗ë sß╗æ doanh thu v├á biß╗âu ─æß╗ô ─æ╞ín h├áng.)
+[413][normal] ΓÇó Quß║ún l├╜ sß║ún phß║�&#65533;m cß╗ºa Shop: Hß╗ù trß╗ú Vendor quß║ún l├╜ danh s├ích sß║ún phß║�&#65533;m thuß╗Öc quyß╗ün sß╗ƒ hß╗»u, th├¬m mß╗¢i sß║ún phß║�&#65533;m ─æß║ºy ─æß╗º m├┤ tß║ú, h├¼nh ß║únh v├á biß║�&#65533;n thß╗â ph├ón loß║íi:
+[414][normal] H├¼nh 3.8: Giao diß╗çn Quß║ún l├╜ danh s├ích sß║ún phß║�&#65533;m v├á Form th├¬m sß║ún phß║�&#65533;m mß╗¢i cß╗ºa Vendor
+ (Thao t├íc: Truy cß║¡p http://localhost:8081/vendor/products, chß╗Ñp danh s├ích sß║ún phß║�&#65533;m hoß║╖c form th├¬m mß╗¢i sß║ún phß║�&#65533;m c├│ cß║Ñu h├¼nh biß║�&#65533;n thß╗â.)
+[415][normal] ΓÇó Quß║ún l├╜ v├á xß╗¡ l├╜ ─æ╞ín h├áng cß╗ºa Shop: Vendor dß╗à d├áng lß╗ìc c├íc ─æ╞ín h├áng mß╗¢i, xem th├┤ng tin ng╞░ß╗¥i mua v├á thß╗▒c hiß╗çn chuyß╗ân trß║íng th├íi ─æ╞ín h├áng khi ─æ├ú ─æ├│ng g├│i xong:
+[416][normal] H├¼nh 3.9: Giao diß╗çn Quß║ún l├╜ danh s├ích ─æ╞ín h├áng v├á chuyß╗ân trß║íng th├íi ─æ╞ín cß╗ºa Vendor
+ (Thao t├íc: Truy cß║¡p http://localhost:8081/vendor/orders, chß╗Ñp danh s├ích ─æ╞ín h├áng cß╗ºa shop v├á thao t├íc ─æß╗òi trß║íng th├íi sang SHIPPING.)
+[417][normal] c) Ph├ón hß╗ç Quß║ún trß╗ï vi├¬n (Admin Interface)
+[418][normal] ΓÇó Dashboard quß║ún trß╗ï tß╗òng quan: Quß║ún trß╗ï vi├¬n c├│ to├án quyß╗ün kiß╗âm so├ít hß╗ç sinh th├íi s├án TM─ÉT, gi├ím s├ít vß║¡n h├ánh v├á ─æß║úm bß║úo an ninh hß╗ç thß╗æng:
+[419][normal] H├¼nh 3.10: Giao diß╗çn Dashboard tß╗òng quan hß╗ç thß╗æng d├ánh cho Quß║ún trß╗ï vi├¬n (Admin)
+ (Thao t├íc: ─É─âng nhß║¡p t├ái khoß║ún Admin, truy cß║¡p http://localhost:8081/admin/dashboard, chß╗Ñp c├íc th├┤ng sß╗æ to├án s├án (Users, Shops, Orders, Revenue).)
+[420][normal] ΓÇó Quß║ún l├╜ t├ái khoß║ún ng╞░ß╗¥i d├╣ng: Admin c├│ thß╗â tra cß╗�&#65533;u to├án bß╗Ö ng╞░ß╗¥i d├╣ng, xem lß╗ïch sß╗¡ v├á thß╗▒c hiß╗çn kh├│a t├ái khoß║ún nß║�&#65533;u ph├ít hiß╗çn h├ánh vi gian lß║¡n:
+[421][normal] H├¼nh 3.11: Giao diß╗çn Quß║ún l├╜ danh s├ích ng╞░ß╗¥i d├╣ng v├á chß╗�&#65533;c n─âng Kh├│a / Mß╗ƒ kh├│a t├ái khoß║ún
+ (Thao t├íc: Truy cß║¡p http://localhost:8081/admin/users, chß╗Ñp bß║úng danh s├ích th├ánh vi├¬n v├á n├║t thao t├íc Kh├│a (Lock) t├ái khoß║ún.)
+[422][normal] ΓÇó Ph├¬ duyß╗çt y├¬u cß║ºu mß╗ƒ Cß╗¡a h├áng: Admin kiß╗âm tra th├┤ng tin ─æ─âng k├╜ cß╗ºa c├íc chß╗º shop mß╗¢i v├á quyß║�&#65533;t ─æß╗ïnh ph├¬ duyß╗çt (APPROVED) ─æß╗â shop ─æ╞░ß╗úc ph├�&#65533;p b├ín h├áng:
+[423][normal] H├¼nh 3.12: Giao diß╗çn X├�&#65533;t duyß╗çt hß╗ô s╞í mß╗ƒ Cß╗¡a h├áng (Shop Approval) cß╗ºa Quß║ún trß╗ï vi├¬n
+ (Thao t├íc: Truy cß║¡p http://localhost:8081/admin/shops, chß╗Ñp danh s├ích shop ß╗ƒ trß║íng th├íi PENDING v├á n├║t Ph├¬ duyß╗çt (Approve).)
+[424][Heading 2] 3.5. KIß╗éM THß╗¼ Hß╗å THß╗ÉNG
+[425][Heading 3] 3.5.1. Mß╗Ñc ti├¬u v├á Ph╞░╞íng ph├íp kiß╗âm thß╗¡
+[426][normal] Mß╗Ñc ti├¬u cß╗ºa giai ─æoß║ín kiß╗âm thß╗¡ l├á x├íc minh to├án bß╗Ö c├íc chß╗�&#65533;c n─âng ─æ├ú x├óy dß╗▒ng hoß║ít ─æß╗Öng ch├¡nh x├íc theo ─æ├║ng ─æß║╖c tß║ú nghiß╗çp vß╗Ñ y├¬u cß║ºu, ph├ít hiß╗çn v├á khß║»c phß╗Ñc c├íc sai s├│t tiß╗üm ß║�&#65533;n, ─æß║úm bß║úo hß╗ç thß╗æng vß║¡n h├ánh ß╗òn ─æß╗ïnh, dß╗» liß╗çu nhß║Ñt qu├ín v├á an to├án ph├ón quyß╗ün ng╞░ß╗¥i d├╣ng.
+[427][normal] +   	Ph╞░╞íng ph├íp ├íp dß╗Ñng: Kiß╗âm thß╗¡ hß╗Öp ─æen (Black-box Testing): Tß║¡p trung kiß╗âm thß╗¡ chß╗�&#65533;c n─âng giao diß╗çn, t├¡nh ─æ├║ng ─æß║»n cß╗ºa dß╗» liß╗çu ─æß║ºu v├áo v├á kß║�&#65533;t quß║ú ─æß║ºu ra m├á kh├┤ng cß║ºn can thiß╗çp trß╗▒c tiß║�&#65533;p v├áo m├ú nguß╗ôn b├¬n trong.
+[428][normal] +   	Ph╞░╞íng ph├íp bß║úo mß║¡t: Kiß╗âm thß╗¡ ph├ón quyß╗ün bß║úo mß║¡t (Security Testing): ─Éß║úm bß║úo c├íc ─æ╞░ß╗¥ng dß║½n `/admin/**` v├á `/vendor/**` ─æ╞░ß╗úc Spring Security bß║úo vß╗ç nghi├¬m ngß║╖t, ng─ân chß║╖n truy cß║¡p tr├íi ph├�&#65533;p.
+[429][normal] +   	Ph╞░╞íng ph├íp dß╗» liß╗çu: Kiß╗âm thß╗¡ t├¡nh to├án vß║╣n dß╗» liß╗çu (Data Integrity): ─Éß║úm bß║úo c├íc giao dß╗ïch ─æß║╖t h├áng, trß╗½ sß╗æ l╞░ß╗úng tß╗ôn kho v├á ├íp dß╗Ñng m├ú Voucher ─æ╞░ß╗úc l╞░u trß╗» ch├¡nh x├íc trong c╞í sß╗ƒ dß╗» liß╗çu MongoDB.
+[430][normal] +   	M├┤i tr╞░ß╗¥ng kiß╗âm thß╗¡: Hß╗ç ─æiß╗üu h├ánh Windows 11; OpenJDK 17; Spring Boot 3.2.0 chß║íy tß║íi cß╗òng 8081; MongoDB 6.0 chß║íy tß║íi cß╗òng 27017; Tr├¼nh duyß╗çt Google Chrome phi├¬n bß║ún mß╗¢i nhß║Ñt.
+[431][Heading 3] 3.5.2. Kß╗ïch bß║ún v├á Bß║úng Test Case chi tiß║�&#65533;t
+[432][normal] D╞░ß╗¢i ─æ├óy l├á bß║úng ma trß║¡n kiß╗âm thß╗¡ chi tiß║�&#65533;t bao gß╗ôm 20 ca kiß╗âm thß╗¡ (Test Case) then chß╗æt bao phß╗º to├án bß╗Ö c├íc ph├ón hß╗ç tß╗½ x├íc thß╗▒c, mua sß║»m kh├ích h├áng, quy tr├¼nh xß╗¡ l├╜ ─æ╞ín cß╗ºa ng╞░ß╗¥i b├ín ─æß║�&#65533;n nghiß╗çp vß╗Ñ ─æiß╗üu h├ánh cß╗ºa quß║ún trß╗ï vi├¬n:
+[434][Heading 3] 3.5.3. Tß╗òng hß╗úp v├á ─É├ính gi├í kß║�&#65533;t quß║ú kiß╗âm thß╗¡
+[435][normal] Dß╗▒a tr├¬n 20 ca kiß╗âm thß╗¡ chß╗�&#65533;c n─âng v├á an to├án bß║úo mß║¡t ─æ╞░ß╗úc thß╗▒c hiß╗çn tr├¬n m├┤i tr╞░ß╗¥ng thß╗▒c tß║�&#65533;, kß║�&#65533;t quß║ú tß╗òng hß╗úp ─æ╞░ß╗úc thß╗â hiß╗çn qua bß║úng sau:
+[437][normal]  ─É├ính gi├í chung: Kß║�&#65533;t quß║ú kiß╗âm thß╗¡ cho thß║Ñy 100% c├íc ca kiß╗âm thß╗¡ ch├¡nh ─æß╗üu ─æß║ít trß║íng th├íi PASSED. Hß╗ç thß╗æng ─æ├íp ß╗�&#65533;ng trß╗ìn vß║╣n c├íc y├¬u cß║ºu chß╗�&#65533;c n─âng ─æß║╖t ra: luß╗ông dß╗» liß╗çu giß╗»a Controller, Service v├á Repository cß╗ºa Spring Boot kß║�&#65533;t nß╗æi nhß╗ïp nh├áng vß╗¢i MongoDB; c├íc r├áng buß╗Öc dß╗» liß╗çu ─æ╞░ß╗úc xß╗¡ l├╜ chß║╖t chß║╜; c╞í chß║�&#65533; bß║úo mß║¡t cß╗ºa Spring Security ng─ân chß║╖n tß╗æt c├íc truy cß║¡p tr├íi ph├�&#65533;p; giao diß╗çn Thymeleaf phß║ún hß╗ôi m╞░ß╗út m├á v├á trß╗▒c quan vß╗¢i c├íc thao t├íc cß╗ºa ng╞░ß╗¥i d├╣ng.
+[438][Heading 2] 3.6. Kß║╛T CH╞»╞áNG 3
+[439][normal] Trong Ch╞░╞íng 3, ─æß╗ü t├ái ─æ├ú ─æi s├óu v├áo hiß╗çn thß╗▒c h├│a to├án bß╗Ö kiß║�&#65533;n tr├║c v├á chß╗�&#65533;c n─âng cß╗ºa S├án th╞░╞íng mß║íi ─æiß╗çn tß╗¡ ─æa nh├á b├ín CNJ70. Bß║▒ng viß╗çc ß╗�&#65533;ng dß╗Ñng nß╗ün tß║úng Spring Boot 3 kß║�&#65533;t hß╗úp c├╣ng hß╗ç quß║ún trß╗ï c╞í sß╗ƒ dß╗» liß╗çu MongoDB v├á c├┤ng nghß╗ç hiß╗ân thß╗ï giao diß╗çn Thymeleaf, nh├│m ─æ├ú x├óy dß╗▒ng th├ánh c├┤ng 3 ph├ón hß╗ç ─æß╗Öc lß║¡p nh╞░ng li├¬n kß║�&#65533;t chß║╖t chß║╜ gß╗ôm Kh├ích h├áng, Ng╞░ß╗¥i b├ín v├á Quß║ún trß╗ï vi├¬n.
+[440][normal] C├íc th├ánh phß║ºn cß╗æt l├╡i nh╞░ quß║ún l├╜ sß║ún phß║�&#65533;m ─æa biß║�&#65533;n thß╗â, giß╗Å h├áng, ─æß║╖t h├áng linh hoß║ít theo ph╞░╞íng thß╗�&#65533;c COD/VNPAY, hß╗ç thß╗æng ph├ón bß╗ò Voucher theo cß║Ñp ─æß╗Ö s├án v├á cß║Ñp ─æß╗Ö shop, c├╣ng quy tr├¼nh x├�&#65533;t duyß╗çt hß╗ô s╞í mß╗ƒ cß╗¡a h├áng ─æß╗üu ─æ╞░ß╗úc kiß╗âm nghiß╗çm thß╗▒c tß║�&#65533; qua bß╗Ö 20 Test Case to├án diß╗çn. Kß║�&#65533;t quß║ú kiß╗âm thß╗¡ thß╗▒c nghiß╗çm khß║│ng ─æß╗ïnh hß╗ç thß╗æng ─æß║ít ─æß╗Ö ß╗òn ─æß╗ïnh cao, luß╗ông nghiß╗çp vß╗Ñ r├╡ r├áng, an to├án bß║úo mß║¡t, tß║ío tiß╗ün ─æß╗ü vß╗»ng chß║»c cho viß╗çc ─æ├ính gi├í v├á ─æß╗ïnh h╞░ß╗¢ng ph├ít triß╗ân ß╗ƒ phß║ºn kß║�&#65533;t luß║¡n cß╗ºa ─æß╗ô ├ín.
+[441][Heading 1] Kß║╛T LUß║¼N V├Ç H╞»ß╗ÜNG PH├üT TRIß╗éN
+[442][normal] 1. Kß║�&#65533;t quß║ú thu ─æ╞░ß╗úc
+[443][normal] Sau thß╗¥i gian nghi├¬m t├║c nghi├¬n cß╗�&#65533;u v├á triß╗ân khai ─æß╗ü t├ái "X├óy dß╗▒ng S├án th╞░╞íng mß║íi ─æiß╗çn tß╗¡ ─æa nh├á b├ín (CNJ70 Ecommerce)", nh├│m t├íc giß║ú ─æ├ú ho├án th├ánh mß╗Ñc ti├¬u ─æß╗ü ra vß╗¢i nhß╗»ng kß║�&#65533;t quß║ú cß╗Ñ thß╗â nh╞░ sau:
+[444][normal] +   	Vß╗ü mß║╖t sß║ún phß║�&#65533;m phß║ºn mß╗üm: ─É├ú x├óy dß╗▒ng th├ánh c├┤ng mß╗Öt ß╗�&#65533;ng dß╗Ñng web s├án th╞░╞íng mß║íi ─æiß╗çn tß╗¡ ho├án chß╗ënh theo m├┤ h├¼nh Multi-vendor, cho ph├�&#65533;p nhiß╗üu nh├á b├ín c├╣ng kinh doanh tr├¬n mß╗Öt nß╗ün tß║úng chung d╞░ß╗¢i sß╗▒ gi├ím s├ít cß╗ºa ban quß║ún trß╗ï.
+[445][normal] +   	Vß╗ü quy tr├¼nh nghiß╗çp vß╗Ñ: Hiß╗çn thß╗▒c h├│a ─æß║ºy ─æß╗º c├íc t├¡nh n─âng thß╗▒c tß║�&#65533; nh╞░ duyß╗çt sß║ún phß║�&#65533;m, lß╗ìc theo khoß║úng gi├í/danh mß╗Ñc, quß║ún l├╜ giß╗Å h├áng, ├íp dß╗Ñng Voucher khuyß║�&#65533;n m├úi (theo % hoß║╖c sß╗æ tiß╗ün cß╗æ ─æß╗ïnh), quy tr├¼nh thanh to├ín v├á theo d├╡i lß╗ïch sß╗¡ ─æ╞ín h├áng theo 5 trß║íng th├íi chuy├¬n nghiß╗çp.
+[446][normal] +   	Vß╗ü mß║╖t kß╗╣ thuß║¡t & c├┤ng nghß╗ç: L├ám chß╗º v├á vß║¡n dß╗Ñng th├ánh thß║ío hß╗ç sinh th├íi c├┤ng nghß╗ç Java hiß╗çn ─æß║íi: Java 17, Spring Boot 3.2, Spring Security 6, Spring Data MongoDB v├á template engine Thymeleaf. ├üp dß╗Ñng chuß║�&#65533;n m├┤ h├¼nh MVC v├á kiß║�&#65533;n tr├║c h╞░ß╗¢ng dß╗ïch vß╗Ñ (Service-oriented Layered Architecture).
+[447][normal] +   	Vß╗ü kß╗╣ n─âng thß╗▒c tiß╗àn: C├íc th├ánh vi├¬n trong nh├│m n├óng cao kß╗╣ n─âng phß╗æi hß╗úp l├ám viß╗çc nh├│m th├┤ng qua hß╗ç thß╗æng quß║ún l├╜ m├ú nguß╗ôn Git/GitHub, r├¿n luyß╗çn t╞░ duy thiß║�&#65533;t kß║�&#65533; c╞í sß╗ƒ dß╗» liß╗çu phi quan hß╗ç (NoSQL Document) v├á xß╗¡ l├╜ kiß╗âm thß╗¡ phß║ºn mß╗üm b├ái bß║ún.
+[448][normal] 2. Nhß╗»ng hß║ín chß║�&#65533; cß╗ºa ─æß╗ü t├ái
+[449][normal] B├¬n cß║ính nhß╗»ng kß║�&#65533;t quß║ú ─æ├ú ─æß║ít ─æ╞░ß╗úc, do giß╗¢i hß║ín vß╗ü mß║╖t thß╗¥i gian c┼�&#65533;ng nh╞░ phß║ím vi cß╗ºa mß╗Öt ─æß╗ô ├ín m├┤n hß╗ìc, hß╗ç thß╗æng vß║½n tß╗ôn tß║íi mß╗Öt sß╗æ ─æiß╗âm hß║ín chß║�&#65533; nhß║Ñt ─æß╗ïnh:
+[450][normal] +   	T├¡ch hß╗úp thanh to├ín: T├¡nh n─âng thanh to├ín trß╗▒c tuyß║�&#65533;n qua cß╗òng VNPAY hiß╗çn mß╗¢i dß╗½ng lß║íi ß╗ƒ mß╗�&#65533;c ─æß╗Ö t├¡ch hß╗úp thß╗¡ nghiß╗çm (Sandbox/Simulation), ch╞░a kß║�&#65533;t nß╗æi trß╗▒c tiß║�&#65533;p vß╗¢i t├ái khoß║ún doanh nghiß╗çp thß╗▒c tß║�&#65533; tr├¬n m├┤i tr╞░ß╗¥ng Production.
+[451][normal] +   	 T╞░╞íng t├íc kh├ích h├áng - ng╞░ß╗¥i b├ín: Ch╞░a t├¡ch hß╗úp c╞í chß║�&#65533; giao tiß║�&#65533;p thß╗¥i gian thß╗▒c (Realtime Chat bß║▒ng WebSocket) giß╗»a Ng╞░ß╗¥i mua v├á Chß╗º shop ─æß╗â t╞░ vß║Ñn trß╗▒c tiß║�&#65533;p vß╗ü sß║ún phß║�&#65533;m.
+[452][normal] +   	 C╞í chß║�&#65533; th├┤ng b├ío tß╗▒ ─æß╗Öng: Hß╗ç thß╗æng ch╞░a c├│ c╞í chß║�&#65533; gß╗¡i email tß╗▒ ─æß╗Öng x├íc nhß║¡n ─æ╞ín h├áng hoß║╖c gß╗¡i th├┤ng b├ío ─æß║�&#65533;y (Push Notification) khi trß║íng th├íi ─æ╞ín h├áng thay ─æß╗òi.
+[453][normal] +   	 Trß║úi nghiß╗çm th├┤ng minh: Chß╗�&#65533;c n─âng t├¼m kiß║�&#65533;m v├á ─æß╗ü xuß║Ñt sß║ún phß║�&#65533;m hiß╗çn ─æang dß╗▒a tr├¬n c├óu truy vß║Ñn tß╗½ kh├│a c╞í bß║ún cß╗ºa MongoDB, ch╞░a ├íp dß╗Ñng c├íc thuß║¡t to├ín m├íy hß╗ìc (Machine Learning/AI) ─æß╗â c├í nh├ón h├│a gß╗úi ├╜ sß║ún phß║�&#65533;m dß╗▒a tr├¬n h├ánh vi duyß╗çt web cß╗ºa kh├ích h├áng.
+[454][normal] 3. H╞░ß╗¢ng ph├ít triß╗ân trong t╞░╞íng lai
+[455][normal] ─Éß╗â ho├án thiß╗çn v├á n├óng tß║ºm ß╗�&#65533;ng dß╗Ñng c├│ thß╗â ─æ╞░a v├áo vß║¡n h├ánh thß╗▒c tß║�&#65533; quy m├┤ lß╗¢n, h╞░ß╗¢ng nghi├¬n cß╗�&#65533;u v├á ph├ít triß╗ân tiß║�&#65533;p theo cß╗ºa ─æß╗ü t├ái sß║╜ tß║¡p trung v├áo c├íc nß╗Öi dung sau:
+[456][normal] +   	Ho├án thiß╗çn thanh to├ín ─æa k├¬nh: T├¡ch hß╗úp ho├án thiß╗çn c├íc cß╗òng thanh to├ín ─æiß╗çn tß╗¡ phß╗ò biß║�&#65533;n tß║íi Viß╗çt Nam nh╞░ VNPAY, MoMo, ZaloPay v├á cß╗òng thanh to├ín thß║╗ quß╗æc tß║�&#65533; Stripe/PayPal k├¿m c╞í chß║�&#65533; Webhook ─æß╗æi so├ít tß╗▒ ─æß╗Öng.
+[457][normal] +   	 Ph├ít triß╗ân ß╗�&#65533;ng dß╗Ñng di ─æß╗Öng: X├óy dß╗▒ng ß╗�&#65533;ng dß╗Ñng di ─æß╗Öng (Mobile App) tr├¬n cß║ú hai nß╗ün tß║úng Android v├á iOS bß║▒ng Flutter hoß║╖c React Native, kß║�&#65533;t nß╗æi trß╗▒c tiß║�&#65533;p vß╗¢i hß╗ç thß╗æng backend th├┤ng qua RESTful API c├│ sß║╡n.
+[458][normal] +   	 N├óng cß║Ñp kiß║�&#65533;n tr├║c hß╗ç thß╗æng: ß╗¿ng dß╗Ñng kiß║�&#65533;n tr├║c Microservices v├á h├áng ─æß╗úi th├┤ng ─æiß╗çp Message Broker (Apache Kafka hoß║╖c RabbitMQ) nhß║▒m tß╗æi ╞░u h├│a tß║úi trß╗ìng v├á ph├ón t├ích c├íc dß╗ïch vß╗Ñ ─æß║╖t h├áng - thanh to├ín trong c├íc chiß║�&#65533;n dß╗ïch Flash Sale l╞░u l╞░ß╗úng ─æß╗Öt biß║�&#65533;n.
+[459][normal] +   	 ß╗¿ng dß╗Ñng tr├¡ tuß╗ç nh├ón tß║ío: T├¡ch hß╗úp hß╗ç sinh th├íi AI / Recommender System sß╗¡ dß╗Ñng thuß║¡t to├ín Collaborative Filtering hoß║╖c Content-based Filtering ─æß╗â gß╗úi ├╜ sß║ún phß║�&#65533;m ch├¡nh x├íc theo sß╗ƒ th├¡ch c├í nh├ón cß╗ºa tß╗½ng kh├ích h├áng.
+[460][normal] +   	Kß║�&#65533;t nß╗æi dß╗ïch vß╗Ñ hß║¡u cß║ºn (Logistics): T├¡ch hß╗úp c├íc ─æ╞ín vß╗ï vß║¡n chuyß╗ân chuy├¬n nghiß╗çp (Giao H├áng Nhanh - GHN, Giao H├áng Tiß║�&#65533;t Kiß╗çm - GHTK) ─æß╗â tß╗▒ ─æß╗Öng t├¡nh ph├¡ vß║¡n chuyß╗ân theo tß╗ìa ─æß╗Ö ─æß╗ïa l├╜ v├á in m├ú vß║¡n ─æ╞ín tß╗▒ ─æß╗Öng.
+[462][Heading 1] Danh mß╗Ñc s├ích tham khß║úo
+[463][normal]  [1] Trang web abc.com [tham khß║úo ng├áy ΓÇª th├íng  ΓÇª n─âm]
+[464][normal]  [2] T├¬n s├ích, t├¬n t├íc giß║ú, n─âm xuß║Ñt bß║ún, nh├á xuß║Ñt bß║ún.
+
+
+--- TABLES ---
+
+=== Table 0 (6 rows x 4 cols) ===
+  R0: ['TT', 'M├ú sinh vi├¬n', 'Sinh vi├¬n thß╗▒c hiß╗çn', 'Lß╗¢p h├ánh ch├¡nh']
+  R1: ['1', '20230022', 'Trß║ºn ─Éß╗�&#65533;c Ho├án', 'DCCNTT 14.1']
+  R2: ['2', '20230199', 'Vi Anh Tuß║Ñn', 'DCCNTT 14.1']
+  R3: ['3', '20230182', 'Trß║ºn Anh Qu├ón', 'DCCNTT 14.1']
+  R4: ['4', '20230496', 'Trß║ºn Mß║ính Qu├ón', 'DCCNTT 14.1']
+  R5: ['5', '20230194', 'Nguyß╗àn Quß╗æc Anh', 'DCCNTT 14.1']
+
+=== Table 1 (4 rows x 3 cols) ===
+  R0: ['STT', 'Chß╗» viß║�&#65533;t tß║»t', 'Giß║úi th├¡ch']
+  R1: ['1', '', '']
+  R2: ['2', '', '']
+  R3: ['3', '', '']
+
+=== Table 2 (3 rows x 3 cols) ===
+  R0: ['Sß╗æ hiß╗çu', 'T├¬n', 'Trang ']
+  R1: ['1.1', '', '']
+  R2: ['', '', '']
+
+=== Table 3 (6 rows x 6 cols) ===
+  R0: ['STT', 'Hß╗ì v├á t├¬n', 'Vai tr├▓ (Role)', 'Ph├ón hß╗ç ─æß║úm nhiß╗çm (Core Responsibilities)', 'Tß╗òng sß╗æ Task', 'Tiß║�&#65533;n ─æß╗Ö']
+  R1: ['1', 'Quß╗æc Anh', 'Lead / Core System', 'Quß║ún l├╜ bß║úo mß║¡t (Security), Luß╗ông xß╗¡ l├╜ ─æ╞ín h├áng (Order), Thanh to├ín (Checkout) v├á T├¡ch hß╗úp hß╗ç thß╗æng.', '23', '22%']
+  R2: ['2', 'Ho├án', 'Admin Developer', 'Quß║ún l├╜ ng╞░ß╗¥i d├╣ng, Danh mß╗Ñc, Kiß╗âm duyß╗çt cß╗¡a h├áng v├á X├óy dß╗▒ng trang tß╗òng quan (Dashboard) hß╗ç thß╗æng.', '22', '100%']
+  R3: ['3', 'Mß║ính Qu├ón', 'Vendor Developer', 'Quß║ún l├╜ gian h├áng (Shop), Danh mß╗Ñc sß║ún phß║�&#65533;m (Product) v├á Xß╗¡ l├╜ ─æ╞ín h├áng cß╗ºa nh├á b├ín (Vendor Order).', '22', '100%']
+  R4: ['4', 'Anh Qu├ón', 'Customer Developer', 'Thiß║�&#65533;t kß║�&#65533; trang chß╗º, Hiß╗ân thß╗ï sß║ún phß║�&#65533;m, T├¼m kiß║�&#65533;m, Lß╗ìc sß║ún phß║�&#65533;m v├á Quß║ún l├╜ lß╗ïch sß╗¡ mua h├áng.', '23', '26%']
+  R5: ['5', 'Anh Tuß║Ñn', 'Cart / Review Developer', 'X├óy dß╗▒ng chß╗�&#65533;c n─âng Giß╗Å h├áng (Cart), Hß╗ù trß╗ú thanh to├ín v├á T├¡ch hß╗úp hß╗ç thß╗æng ─æ├ính gi├í/nhß║¡n x├�&#65533;t (Review).', '21', '62%']
+
+=== Table 4 (8 rows x 3 cols) ===
+  R0: ['Giai ─æoß║ín', 'Thß╗¥i gian', 'Nß╗Öi dung c├┤ng viß╗çc trß╗ìng t├óm']
+  R1: ['Giai ─æoß║ín 1', 'Tuß║ºn 1', 'Khß║úo s├ít v├á ph├ón t├¡ch y├¬u cß║ºu; Thiß║�&#65533;t kß║�&#65533; kiß║�&#65533;n tr├║c hß╗ç thß╗æng v├á c╞í sß╗ƒ dß╗» liß╗çu.']
+  R2: ['Giai ─æoß║ín 2', 'Tuß║ºn 2', 'Khß╗ƒi tß║ío nß╗ün tß║úng Backend (Thiß║�&#65533;t lß║¡p c╞í sß╗ƒ hß║í tß║ºng, Security, Authentication).']
+  R3: ['Giai ─æoß║ín 3', 'Tuß║ºn 3', 'Ph├ít triß╗ân c├íc luß╗ông nghiß╗çp vß╗Ñ cho Ph├ón hß╗ç Quß║ún trß╗ï (Admin Module).']
+  R4: ['Giai ─æoß║ín 4', 'Tuß║ºn 4', 'Ph├ít triß╗ân chß╗�&#65533;c n─âng vß║¡n h├ánh cho Ph├ón hß╗ç Nh├á b├ín h├áng (Vendor Module).']
+  R5: ['Giai ─æoß║ín 5', 'Tuß║ºn 5 - 6', 'Ph├ít triß╗ân Ph├ón hß╗ç Kh├ích h├áng (Customer) v├á X├óy dß╗▒ng giao diß╗çn ng╞░ß╗¥i d├╣ng (Web Frontend).']
+  R6: ['Giai ─æoß║ín 6', 'Tuß║ºn 7', 'T├¡ch hß╗úp hß╗ç thß╗æng (Integration); Tiß║�&#65533;n h├ánh kiß╗âm thß╗¡ to├án diß╗çn (Testing) v├á sß╗¡a lß╗ùi (Fix bug).']
+  R7: ['Giai ─æoß║ín 7', 'Tuß║ºn 8', 'Ho├án thiß╗çn t├ái liß╗çu b├ío c├ío ─æß╗ô ├ín, ─æ├│ng g├│i sß║ún phß║�&#65533;m v├á chuß║�&#65533;n bß╗ï kß╗ïch bß║ún Demo.']
+
+=== Table 5 (9 rows x 3 cols) ===
+  R0: ['Ph├ón lß╗¢p c├┤ng nghß╗ç', 'C├┤ng nghß╗ç / Phi├¬n bß║ún', 'Vai tr├▓ v├á M├┤ tß║ú nghiß╗çp vß╗Ñ']
+  R1: ['Ph├ón hß╗ç M├íy chß╗º (Backend)', 'Java 17, Spring Boot 3.2.0', 'Nß╗ün tß║úng ph├ít triß╗ân logic nghiß╗çp vß╗Ñ cß╗æt l├╡i, cung cß║Ñp kiß║�&#65533;n tr├║c mß║ính mß║╜, hß╗ù trß╗ú Dependency Injection v├á khß║ú n─âng khß╗ƒi tß║ío dß╗▒ ├ín nhanh ch├│ng.']
+  R2: ['Bß║úo mß║¡t (Security)', 'Spring Security, JWT 0.12.3', 'X├óy dß╗▒ng c╞í chß║�&#65533; x├íc thß╗▒c phi trß║íng th├íi (Stateless Authentication) v├á thiß║�&#65533;t lß║¡p c├íc bß╗Ö lß╗ìc (filters) nhß║▒m quß║ún l├╜ ph├ón quyß╗ün truy cß║¡p t├ái nguy├¬n nghi├¬m ngß║╖t.']
+  R3: ['C╞í sß╗ƒ dß╗» liß╗çu (Database)', 'MongoDB, Spring Data MongoDB', 'Hß╗ç quß║ún trß╗ï c╞í sß╗ƒ dß╗» liß╗çu phi cß║Ñu tr├║c (NoSQL), tß╗æi ╞░u cho viß╗çc l╞░u trß╗» dß╗» liß╗çu ─æa h├¼nh th├íi (document-based) v├á hß╗ù trß╗ú truy xuß║Ñt tß╗æc ─æß╗Ö cao cho c├íc luß╗ông dß╗» liß╗çu lß╗¢n.']
+  R4: ['Ph├ón hß╗ç Giao diß╗çn (Frontend)', 'Thymeleaf, HTML5/CSS3, JavaScript', 'Thymeleaf ─æ├│ng vai tr├▓ l├á Template Engine kß║�&#65533;t xuß║Ñt dß╗» liß╗çu ─æß╗Öng ph├¡a Server (Server-side rendering), kß║�&#65533;t hß╗úp c├╣ng Web c╞í bß║ún ─æß╗â thiß║�&#65533;t kß║�&#65533; giao diß╗çn t╞░╞íng t├íc (UI/UX).']
+  R5: ['Th╞░ viß╗çn UI (UI Libraries)', 'Font Awesome, Google Fonts', 'Cung cß║Ñp hß╗ç thß╗æng biß╗âu t╞░ß╗úng vector (icons) v├á c├íc bß╗Ö kiß╗âu chß╗» (typography) ─æ╞░ß╗úc chuß║�&#65533;n h├│a, gi├║p giao diß╗çn trß╗▒c quan v├á chuy├¬n nghiß╗çp.']
+  R6: ['C├┤ng cß╗Ñ Quß║ún l├╜ (Build Tool)', 'Maven', 'C├┤ng cß╗Ñ quß║ún l├╜ v├▓ng ─æß╗¥i dß╗▒ ├ín (Project Lifecycle), tß╗▒ ─æß╗Öng h├│a qu├í tr├¼nh ─æ├│ng g├│i (build) v├á kiß╗âm so├ít chß║╖t chß║╜ c├íc th╞░ viß╗çn phß╗Ñ thuß╗Öc (Dependencies).']
+  R7: ['Tiß╗çn ├¡ch hß╗ù trß╗ú (Utilities)', 'Lombok 1.18.46', 'Tß╗æi ╞░u h├│a m├ú nguß╗ôn Java, tß╗▒ ─æß╗Öng sinh c├íc ph╞░╞íng thß╗�&#65533;c ─æß║╖c tß║ú (getter/setter, constructor, builder) nhß║▒m giß║úm thiß╗âu m├ú r├íc (boilerplate code) v├á t─âng t├¡nh dß╗à ─æß╗ìc.']
+  R8: ['Kiß╗âm thß╗¡ (Testing)', 'Spring Boot Test, Spring Security Test', 'Bß╗Ö c├┤ng cß╗Ñ hß╗ù trß╗ú x├óy dß╗▒ng kß╗ïch bß║ún kiß╗âm thß╗¡ tß╗▒ ─æß╗Öng (Unit Test v├á Integration Test), ─æß║úm bß║úo t├¡nh ─æ├║ng ─æß║»n cß╗ºa logic hß╗ç thß╗æng v├á c├íc quy tß║»c bß║úo mß║¡t.']
+
+=== Table 6 (28 rows x 5 cols) ===
+  R0: ['STT', 'Nh├│m ng╞░ß╗¥i d├╣ng', 'Chß╗�&#65533;c n─âng', 'M├┤ tß║ú', 'Kß║�&#65533;t quß║ú']
+  R1: ['1', 'Customer', '─É─âng k├╜', 'Tß║ío t├ái khoß║ún bß║▒ng th├┤ng tin ─æ─âng k├╜', 'T├ái khoß║ún ─æ╞░ß╗úc l╞░u vß╗¢i trß║íng th├íi ACTIVE']
+  R2: ['2', 'Customer', '─É─âng nhß║¡p', 'Kiß╗âm tra email, mß║¡t khß║�&#65533;u v├á trß║íng th├íi', 'Tß║ío JWT v├á ─æ─âng nhß║¡p hß╗ç thß╗æng']
+  R3: ['3', 'Customer', '─É─âng xuß║Ñt', 'Thß╗▒c hiß╗çn logout tß║íi /auth/logout', 'Kß║�&#65533;t th├║c phi├¬n sß╗¡ dß╗Ñng JWT cookie']
+  R4: ['4', 'Customer', 'Xem sß║ún phß║�&#65533;m', 'Xem danh s├ích v├á chi tiß║�&#65533;t sß║ún phß║�&#65533;m', 'Hiß╗ân thß╗ï th├┤ng tin sß║ún phß║�&#65533;m']
+  R5: ['5', 'Customer', 'T├¼m kiß║�&#65533;m sß║ún phß║�&#65533;m', 'T├¼m theo t├¬n, danh mß╗Ñc v├á ─æiß╗üu kiß╗çn sß║»p xß║�&#65533;p', 'Danh s├ích sß║ún phß║�&#65533;m ph├╣ hß╗úp']
+  R6: ['6', 'Customer', 'Xem shop', 'Xem shop c├┤ng khai', 'Hiß╗ân thß╗ï th├┤ng tin v├á sß║ún phß║�&#65533;m cß╗ºa shop']
+  R7: ['7', 'Customer', 'Quß║ún l├╜ giß╗Å h├áng', 'Th├¬m, sß╗¡a, x├│a v├á xem giß╗Å h├áng', 'Giß╗Å h├áng ─æ╞░ß╗úc cß║¡p nhß║¡t']
+  R8: ['8', 'Customer', 'Checkout', 'Nhß║¡p th├┤ng tin nhß║¡n h├áng v├á thanh to├ín', 'Hiß╗ân thß╗ï form checkout']
+  R9: ['9', 'Customer', '─Éß║╖t h├áng', 'Kiß╗âm tra tß╗ôn kho v├á tß║ío Order', '─É╞ín h├áng ─æ╞░ß╗úc l╞░u']
+  R10: ['10', 'Customer', '├üp dß╗Ñng voucher', 'Kiß╗âm tra voucher v├á t├¡nh giß║úm gi├í', 'Trß║ú kß║�&#65533;t quß║ú giß║úm gi├í']
+  R11: ['11', 'Customer', 'Xem lß╗ïch sß╗¡ ─æ╞ín', 'Xem v├á lß╗ìc ─æ╞ín h├áng', 'Hiß╗ân thß╗ï lß╗ïch sß╗¡ ─æ╞ín']
+  R12: ['12', 'Customer', 'Review', 'Tß║ío, sß╗¡a, x├│a v├á xem review', 'Review ─æ╞░ß╗úc l╞░u v├á rating sß║ún phß║�&#65533;m cß║¡p nhß║¡t']
+  R13: ['13', 'Vendor', 'Dashboard', 'Xem thß╗æng k├¬ shop', 'Hiß╗ân thß╗ï doanh thu v├á sß║ún phß║�&#65533;m']
+  R14: ['14', 'Vendor', 'Quß║ún l├╜ shop', 'Tß║ío v├á cß║¡p nhß║¡t shop', 'Th├┤ng tin shop ─æ╞░ß╗úc l╞░u']
+  R15: ['15', 'Vendor', 'Quß║ún l├╜ sß║ún phß║�&#65533;m', 'CRUD sß║ún phß║�&#65533;m v├á upload ß║únh', 'Sß║ún phß║�&#65533;m ─æ╞░ß╗úc cß║¡p nhß║¡t']
+  R16: ['16', 'Vendor', 'Quß║ún l├╜ ─æ╞ín h├áng', 'Xem v├á cß║¡p nhß║¡t trß║íng th├íi ─æ╞ín', 'Trß║íng th├íi ─æ╞ín ─æ╞░ß╗úc cß║¡p nhß║¡t']
+  R17: ['17', 'Vendor', 'Voucher SHOP', 'CRUD v├á activate/deactivate voucher', 'Voucher SHOP ─æ╞░ß╗úc quß║ún l├╜']
+  R18: ['18', 'Vendor', 'Profile', 'Xem th├┤ng tin vendor', 'Hiß╗ân thß╗ï profile']
+  R19: ['19', 'Admin', 'Dashboard', 'Xem thß╗æng k├¬ v├á doanh thu theo kß╗│', 'Dashboard quß║ún trß╗ï']
+  R20: ['20', 'Admin', 'Quß║ún l├╜ User', 'T├¼m kiß║�&#65533;m, lß╗ìc, lock/unlock', 'Trß║íng th├íi t├ái khoß║ún ─æ╞░ß╗úc cß║¡p nhß║¡t']
+  R21: ['21', 'Admin', 'Quß║ún l├╜ Shop', 'Duyß╗çt, tß╗½ chß╗æi, activate/deactivate', 'Trß║íng th├íi shop ─æ╞░ß╗úc cß║¡p nhß║¡t']
+  R22: ['22', 'Admin', 'Quß║ún l├╜ Category', 'CRUD v├á lß╗ìc active', 'Danh mß╗Ñc ─æ╞░ß╗úc quß║ún l├╜']
+  R23: ['23', 'Admin', 'Xem Order', 'Xem danh s├ích v├á chi tiß║�&#65533;t', 'Th├┤ng tin ─æ╞ín h├áng ─æ╞░ß╗úc hiß╗ân thß╗ï']
+  R24: ['24', 'Admin', 'Quß║ún l├╜ Product', 'Hide, unhide, delete', 'Trß║íng th├íi sß║ún phß║�&#65533;m ─æ╞░ß╗úc cß║¡p nhß║¡t']
+  R25: ['25', 'Admin', 'Quß║ún l├╜ Review', 'T├¼m kiß║�&#65533;m, lß╗ìc v├á x├│a', 'Review ─æ╞░ß╗úc quß║ún l├╜']
+  R26: ['26', 'Admin', 'Quß║ún l├╜ Banner', 'CRUD v├á publish/unpublish', 'Banner ─æ╞░ß╗úc quß║ún l├╜']
+  R27: ['27', 'Admin', 'Voucher WEB', 'CRUD v├á activate/deactivate', 'Voucher WEB ─æ╞░ß╗úc quß║ún l├╜']
+
+=== Table 7 (9 rows x 2 cols) ===
+  R0: ['Pattern', 'Quyß╗ün']
+  R1: ['/, /auth/**, /css/**, /js/**, /images/**, /uploads/**, /error', 'Public']
+  R2: ['/api/auth/**, /api/products/**, /api/categories/**', 'Public']
+  R3: ['/vouchers', 'Public']
+  R4: ['/checkout/apply-voucher', 'Public']
+  R5: ['/admin/**', 'ADMIN']
+  R6: ['/vendor/**', 'VENDOR']
+  R7: ['/api/**', 'Authenticated']
+  R8: ['C├íc request c├▓n lß║íi', 'Public']
+
+=== Table 8 (13 rows x 4 cols) ===
+  R0: ['STT', 'Class/Package', 'Package', 'Vai tr├▓']
+  R1: ['1', 'Cnj70EcommerceApplication', 'com.ecommerce.cnj70', 'Lß╗¢p khß╗ƒi ─æß╗Öng ß╗�&#65533;ng dß╗Ñng']
+  R2: ['2', 'C├íc Controller', 'controller', 'Tiß║�&#65533;p nhß║¡n HTTP request']
+  R3: ['3', 'C├íc Document', 'document', '─Éß║íi diß╗çn dß╗» liß╗çu MongoDB']
+  R4: ['4', 'DTO Request/Response', 'dto.request, dto.response', 'Dß╗» liß╗çu v├áo/ra']
+  R5: ['5', 'Enum', 'enums', 'C├íc kiß╗âu trß║íng th├íi v├á loß║íi nghiß╗çp vß╗Ñ']
+  R6: ['6', 'Repository', 'repository', 'Truy cß║¡p MongoDB']
+  R7: ['7', 'Service', 'service', 'Khai b├ío nghiß╗çp vß╗Ñ']
+  R8: ['8', 'Service Implementation', 'service.impl', 'C├ái ─æß║╖t nghiß╗çp vß╗Ñ']
+  R9: ['9', 'Security', 'security', 'JWT v├á x├íc thß╗▒c']
+  R10: ['10', 'Config', 'config', 'Cß║Ñu h├¼nh ß╗�&#65533;ng dß╗Ñng']
+  R11: ['11', 'Exception', 'exception', 'Exception nghiß╗çp vß╗Ñ']
+  R12: ['12', 'Interceptor', 'interceptor', 'Xß╗¡ l├╜ interceptor']
+
+=== Table 9 (10 rows x 5 cols) ===
+  R0: ['STT', 'Class', 'Package', 'Thuß╗Öc t├¡nh ch├¡nh', 'Ph╞░╞íng thß╗�&#65533;c/Chß╗�&#65533;c n─âng']
+  R1: ['1', 'User', 'document', 'id, email, password, fullName, phone, address, role, status, shopId, avatarUrl, createdAt, updatedAt', 'L╞░u th├┤ng tin t├ái khoß║ún']
+  R2: ['2', 'Shop', 'document', 'id, ownerId, shopName, description, logoUrl, bannerUrl, status, active, createdAt, updatedAt', 'L╞░u th├┤ng tin shop']
+  R3: ['3', 'Product', 'document', 'id, shopId, name, brand, price, stock, categoryId, imageUrls, specifications, variants, status, rating, reviewCount, sold', 'L╞░u th├┤ng tin sß║ún phß║�&#65533;m']
+  R4: ['4', 'Category', 'document', 'id, name, description, iconUrl, parentId, sortOrder, active', 'L╞░u danh mß╗Ñc']
+  R5: ['5', 'Cart', 'document', 'id, userId, items, updatedAt', 'L╞░u giß╗Å h├áng']
+  R6: ['6', 'Order', 'document', 'id, userId, shippingAddress, items, subtotal, shippingFee, totalAmount, status, paymentMethod, paid', 'L╞░u ─æ╞ín h├áng']
+  R7: ['7', 'Voucher', 'document', 'id, code, name, type, shopId, productIds, discountType, discountValue, quantity, used, startDate, endDate, active', 'L╞░u voucher']
+  R8: ['8', 'Banner', 'document', 'id, title, description, imageUrl, link, status, position, sortOrder', 'L╞░u banner']
+  R9: ['9', 'Review', 'document', 'id, productId, userId, userName, userAvatar, rating, comment, createdAt', 'L╞░u ─æ├ính gi├í']
+
+=== Table 10 (17 rows x 4 cols) ===
+  R0: ['STT', 'Service', 'Ph╞░╞íng thß╗�&#65533;c ti├¬u biß╗âu', 'Chß╗�&#65533;c n─âng']
+  R1: ['1', 'AuthService', 'register, login, existsByEmail', '─É─âng k├╜ v├á ─æ─âng nhß║¡p']
+  R2: ['2', 'CartService', 'getCartByUserId, addToCart, updateCartItem, removeFromCart, clearCart, countItems, calculateTotal', 'Quß║ún l├╜ giß╗Å h├áng']
+  R3: ['3', 'ProductService', 'createProduct, updateProduct, deleteProduct, getProductById, searchProducts, getNewArrivals, getFeaturedProducts', 'Quß║ún l├╜ v├á truy vß║Ñn sß║ún phß║�&#65533;m']
+  R4: ['4', 'ReviewService', 'createReview, updateReview, deleteReview, getReviewsByProductId, getAverageRatingByProductId', 'Quß║ún l├╜ review v├á rating']
+  R5: ['5', 'OrderService', 'createOrder, getOrderById, getOrdersByUserId, getOrdersByShopId, updateOrderStatus, cancelOrder', 'Xß╗¡ l├╜ ─æ╞ín h├áng']
+  R6: ['6', 'VendorService', 'getCurrentVendor, createShop, updateShop, getDashboardStats, validateShopOwnership', 'Quß║ún l├╜ Vendor v├á shop']
+  R7: ['7', 'VoucherService', 'createVoucher, updateVoucher, deleteVoucher, isVoucherValid, validateForCheckout', 'Quß║ún l├╜ v├á kiß╗âm tra voucher']
+  R8: ['8', 'AdminService', 'getDashboardStats, getDashboardStatsByPeriod', 'Dashboard Admin']
+  R9: ['9', 'AdminProductService', 'listProducts, hideProduct, unhideProduct, deleteProduct', 'Moderation sß║ún phß║�&#65533;m']
+  R10: ['10', 'AdminUserService', 'listUsers, getUserById, lockUser, unlockUser', 'Quß║ún l├╜ User']
+  R11: ['11', 'AdminShopService', 'listShops, approveShop, activateShop, deactivateShop, rejectShop', 'Quß║ún l├╜ Shop']
+  R12: ['12', 'AdminCategoryService', 'listCategories, createCategory, updateCategory, deleteCategory', 'Quß║ún l├╜ Category']
+  R13: ['13', 'AdminOrderService', 'listOrders, getOrderById', 'Xem ─æ╞ín h├áng READ-ONLY']
+  R14: ['14', 'AdminReviewService', 'listReviews, getReviewById, deleteReview', 'Quß║ún l├╜ review']
+  R15: ['15', 'AdminBannerService', 'listBanners, createBanner, updateBanner, publishBanner, unpublishBanner, deleteBanner', 'Quß║ún l├╜ banner']
+  R16: ['16', 'CustomerBannerService', 'getVisibleBanners', 'Lß║Ñy banner PUBLISHED cho Customer']
+
+=== Table 11 (10 rows x 5 cols) ===
+  R0: ['STT', 'Repository', 'Document', 'Ph╞░╞íng thß╗�&#65533;c ti├¬u biß╗âu', 'Chß╗�&#65533;c n─âng']
+  R1: ['1', 'UserRepository', 'User', 'findByEmail, findByRole, findByStatus', 'T├¼m User theo ─æiß╗üu kiß╗çn']
+  R2: ['2', 'ShopRepository', 'Shop', 'findByOwnerId, findByShopName, findByStatus', 'Truy vß║Ñn Shop']
+  R3: ['3', 'ProductRepository', 'Product', 'findByShopId, findByCategoryId, findByStatus, findByNameContainingIgnoreCase', 'Truy vß║Ñn Product']
+  R4: ['4', 'CategoryRepository', 'Category', 'findByName, findByParentId, findByActiveTrue', 'Truy vß║Ñn Category']
+  R5: ['5', 'CartRepository', 'Cart', 'findByUserId, deleteByUserId', 'Quß║ún l├╜ Cart']
+  R6: ['6', 'OrderRepository', 'Order', 'findByUserId, findByShopId, findByStatus', 'Truy vß║Ñn Order']
+  R7: ['7', 'VoucherRepository', 'Voucher', 'findByCode, findByShopId, findByActiveTrueAndEndDateAfter', 'Truy vß║Ñn Voucher']
+  R8: ['8', 'BannerRepository', 'Banner', 'findByStatus, findByPositionOrderBySortOrderAscCreatedAtAsc', 'Truy vß║Ñn Banner']
+  R9: ['9', 'ReviewRepository', 'Review', 'findByProductId, findByUserId, countByProductId', 'Truy vß║Ñn Review']
+
+=== Table 12 (19 rows x 5 cols) ===
+  R0: ['STT', 'Lß╗¢p', 'Quan hß╗ç', 'Interface/Lß╗¢p cha', 'Mß╗Ñc ─æ├¡ch']
+  R1: ['1', 'AuthServiceImpl', 'implements', 'AuthService', 'C├ái ─æß║╖t nghiß╗çp vß╗Ñ ─æ─âng k├╜/─æ─âng nhß║¡p']
+  R2: ['2', 'CartServiceImpl', 'implements', 'CartService', 'C├ái ─æß║╖t nghiß╗çp vß╗Ñ giß╗Å h├áng']
+  R3: ['3', 'ProductServiceImpl', 'implements', 'ProductService', 'C├ái ─æß║╖t nghiß╗çp vß╗Ñ sß║ún phß║�&#65533;m']
+  R4: ['4', 'ReviewServiceImpl', 'implements', 'ReviewService', 'C├ái ─æß║╖t nghiß╗çp vß╗Ñ review']
+  R5: ['5', 'OrderServiceImpl', 'implements', 'OrderService', 'C├ái ─æß║╖t nghiß╗çp vß╗Ñ ─æ╞ín h├áng']
+  R6: ['6', 'VendorServiceImpl', 'implements', 'VendorService', 'C├ái ─æß║╖t nghiß╗çp vß╗Ñ Vendor']
+  R7: ['7', 'VoucherServiceImpl', 'implements', 'VoucherService', 'C├ái ─æß║╖t nghiß╗çp vß╗Ñ voucher']
+  R8: ['8', 'AdminServiceImpl', 'implements', 'AdminService', 'C├ái ─æß║╖t dashboard Admin']
+  R9: ['9', 'AdminUserServiceImpl', 'implements', 'AdminUserService', 'C├ái ─æß║╖t quß║ún l├╜ User']
+  R10: ['10', 'AdminShopServiceImpl', 'implements', 'AdminShopService', 'C├ái ─æß║╖t quß║ún l├╜ Shop']
+  R11: ['11', 'AdminProductServiceImpl', 'implements', 'AdminProductService', 'C├ái ─æß║╖t moderation Product']
+  R12: ['12', 'AdminCategoryServiceImpl', 'implements', 'AdminCategoryService', 'C├ái ─æß║╖t quß║ún l├╜ Category']
+  R13: ['13', 'AdminOrderServiceImpl', 'implements', 'AdminOrderService', 'C├ái ─æß║╖t ─æß╗ìc Order']
+  R14: ['14', 'AdminReviewServiceImpl', 'implements', 'AdminReviewService', 'C├ái ─æß║╖t quß║ún l├╜ Review']
+  R15: ['15', 'AdminBannerServiceImpl', 'implements', 'AdminBannerService', 'C├ái ─æß║╖t quß║ún l├╜ Banner']
+  R16: ['16', 'CustomerBannerServiceImpl', 'implements', 'CustomerBannerService', 'C├ái ─æß║╖t Banner cho Customer']
+  R17: ['17', 'UserRepositoryImpl', 'implements', 'UserRepositoryCustom', 'C├ái ─æß║╖t truy vß║Ñn User t├╣y chß╗ënh']
+  R18: ['18', 'CustomUserDetails', 'implements', 'UserDetails', 'Thß╗▒c hiß╗çn contract cß╗ºa Spring Security']
+
+=== Table 13 (28 rows x 3 cols) ===
+  R0: ['STT', 'T├¬n giao diß╗çn', 'Nh├│m']
+  R1: ['1', 'Trang chß╗º (Home)', 'Kh├ích h├áng']
+  R2: ['2', '─É─âng nhß║¡p', 'Kh├ích h├áng']
+  R3: ['3', '─É─âng k├╜', 'Kh├ích h├áng']
+  R4: ['4', 'Danh s├ích sß║ún phß║�&#65533;m', 'Kh├ích h├áng']
+  R5: ['5', 'Chi tiß║�&#65533;t sß║ún phß║�&#65533;m', 'Kh├ích h├áng']
+  R6: ['6', 'Giß╗Å h├áng', 'Kh├ích h├áng']
+  R7: ['7', 'Thanh to├ín', 'Kh├ích h├áng']
+  R8: ['8', 'Lß╗ïch sß╗¡ ─æ╞ín h├áng', 'Kh├ích h├áng']
+  R9: ['9', 'Trang Shop (Cß╗¡a h├áng)', 'Kh├ích h├áng']
+  R10: ['10', 'Kho Voucher', 'Kh├ích h├áng']
+  R11: ['11', 'Dashboard nh├á b├ín', 'Nh├á b├ín']
+  R12: ['12', 'Quß║ún l├╜ sß║ún phß║�&#65533;m', 'Nh├á b├ín']
+  R13: ['13', 'Th├¬m/Sß╗¡a sß║ún phß║�&#65533;m', 'Nh├á b├ín']
+  R14: ['14', 'Quß║ún l├╜ ─æ╞ín h├áng', 'Nh├á b├ín']
+  R15: ['15', 'Chi tiß║�&#65533;t ─æ╞ín h├áng (Vendor)', 'Nh├á b├ín']
+  R16: ['16', 'Hß╗ô s╞í nh├á b├ín', 'Nh├á b├ín']
+  R17: ['17', 'Tß║ío cß╗¡a h├áng', 'Nh├á b├ín']
+  R18: ['18', 'Quß║ún l├╜ Voucher (Vendor)', 'Nh├á b├ín']
+  R19: ['19', 'Dashboard quß║ún trß╗ï', 'Quß║ún trß╗ï']
+  R20: ['20', 'Quß║ún l├╜ ng╞░ß╗¥i d├╣ng', 'Quß║ún trß╗ï']
+  R21: ['21', 'Quß║ún l├╜ cß╗¡a h├áng', 'Quß║ún trß╗ï']
+  R22: ['22', 'Kiß╗âm duyß╗çt sß║ún phß║�&#65533;m', 'Quß║ún trß╗ï']
+  R23: ['23', 'Quß║ún l├╜ ─æ╞ín h├áng (Admin)', 'Quß║ún trß╗ï']
+  R24: ['24', 'Quß║ún l├╜ banner', 'Quß║ún trß╗ï']
+  R25: ['25', 'Quß║ún l├╜ danh mß╗Ñc', 'Quß║ún trß╗ï']
+  R26: ['26', 'Quß║ún l├╜ Voucher (Admin)', 'Quß║ún trß╗ï']
+  R27: ['27', 'Quß║ún l├╜ ─æ├ính gi├í', 'Quß║ún trß╗ï']
+
+=== Table 14 (11 rows x 4 cols) ===
+  R0: ['STT', 'Th├ánh phß║ºn', 'Kiß╗âu', 'M├┤ tß║ú chß╗�&#65533;c n─âng']
+  R1: ['1', 'Hß╗ì v├á t├¬n (fullName)', 'Input text (required)', 'Nhß║¡p hß╗ì t├¬n ─æß║ºy ─æß╗º cß╗ºa ng╞░ß╗¥i d├╣ng, tß╗æi ─æa 100 k├╜ tß╗▒']
+  R2: ['2', 'Email', 'Input email (required)', '─Éß╗ïa chß╗ë email d├╣ng ─æß╗â ─æ─âng nhß║¡p, validate ─æß╗ïnh dß║íng email']
+  R3: ['3', 'Mß║¡t khß║�&#65533;u (password)', 'Input password (required)', 'Mß║¡t khß║�&#65533;u tß╗æi thiß╗âu 6 k├╜ tß╗▒, c├│ thanh ─æo ─æß╗Ö mß║ính']
+  R4: ['4', 'Sß╗æ ─æiß╗çn thoß║íi (phone)', 'Input tel (optional)', 'Sß╗æ ─æiß╗çn thoß║íi li├¬n hß╗ç, format 0xxx xxx xxx']
+  R5: ['5', '─Éß╗ïa chß╗ë (address)', 'Input text (optional)', '─Éß╗ïa chß╗ë giao h├áng mß║╖c ─æß╗ïnh']
+  R6: ['6', 'Loß║íi t├ái khoß║ún (role)', 'Radio button', 'Chß╗ìn Kh├ích h├áng (CUSTOMER) hoß║╖c Nh├á b├ín (VENDOR)']
+  R7: ['7', '─Éiß╗üu khoß║ún sß╗¡ dß╗Ñng', 'Checkbox (required)', '─Éß╗ông ├╜ vß╗¢i ─Éiß╗üu khoß║ún & Ch├¡nh s├ích bß║úo mß║¡t']
+  R8: ['8', 'N├║t Tß║ío t├ái khoß║ún', 'Button submit', 'Gß╗¡i form ─æ─âng k├╜ - c├│ hiß╗çu ß╗�&#65533;ng loading spinner']
+  R9: ['9', 'N├║t ─É─âng nhß║¡p Google', 'Social button', 'OAuth2 vß╗¢i Google - ─æ─âng nhß║¡p bß║▒ng t├ái khoß║ún Google']
+  R10: ['10', 'N├║t ─É─âng nhß║¡p Facebook', 'Social button', 'OAuth2 vß╗¢i Facebook - ─æ─âng nhß║¡p bß║▒ng t├ái khoß║ún Facebook']
+
+=== Table 15 (8 rows x 4 cols) ===
+  R0: ['STT', 'Th├ánh phß║ºn', 'Kiß╗âu', 'M├┤ tß║ú chß╗�&#65533;c n─âng']
+  R1: ['1', 'Email', 'Input email', 'T├ái khoß║ún email ─æ├ú ─æ─âng k├╜']
+  R2: ['2', 'Mß║¡t khß║�&#65533;u', 'Input password + toggle show/hide', 'Mß║¡t khß║�&#65533;u c├│ n├║t con mß║»t ─æß╗â hiß╗çn/ß║�&#65533;n']
+  R3: ['3', 'Ghi nhß╗¢ ─æ─âng nhß║¡p', 'Checkbox', 'L╞░u session ─æ─âng nhß║¡p (remember-me token)']
+  R4: ['4', 'Qu├¬n mß║¡t khß║�&#65533;u?', 'Link', 'Li├¬n kß║�&#65533;t ─æß║�&#65533;n trang kh├┤i phß╗Ñc mß║¡t khß║�&#65533;u']
+  R5: ['5', 'N├║t ─É─âng nhß║¡p', 'Button submit', 'X├íc thß╗▒c th├┤ng tin v├á chuyß╗ân h╞░ß╗¢ng']
+  R6: ['6', 'Social login', 'Buttons (Google/Facebook)', '─É─âng nhß║¡p qua mß║íng x├ú hß╗Öi']
+  R7: ['7', 'Alert th├┤ng b├ío', 'Alert box', 'Hiß╗ân thß╗ï lß╗ùi ─æ─âng nhß║¡p hoß║╖c th├┤ng b├ío th├ánh c├┤ng']
+
+=== Table 16 (15 rows x 4 cols) ===
+  R0: ['STT', 'Khu vß╗▒c', 'Th├ánh phß║ºn ch├¡nh', 'Chß╗�&#65533;c n─âng']
+  R1: ['1', 'Top Marquee Bar', 'Thanh th├┤ng b├ío cuß╗Ön ngang', 'Hiß╗ân thß╗ï c├íc sß╗▒ kiß╗çn nß╗òi bß║¡t: ─æ╞ín h├áng, ─æ├ính gi├í, flash sale']
+  R2: ['2', 'Search Section', 'Input t├¼m kiß║�&#65533;m + Quick filter chips', 'T├¼m kiß║�&#65533;m sß║ún phß║�&#65533;m, lß╗ìc nhanh theo danh mß╗Ñc']
+  R3: ['3', 'Hero Banner Slider', 'Slider 3 slide vß╗¢i prev/next + indicators', 'Quß║úng c├ío c├íc ch╞░╞íng tr├¼nh khuyß║�&#65533;n m├úi lß╗¢n']
+  R4: ['4', 'Categories Grid', 'Grid 16 danh mß╗Ñc vß╗¢i icon gradient', 'Danh mß╗Ñc sß║ún phß║�&#65533;m nß╗òi bß║¡t - click ─æß╗â lß╗ìc']
+  R5: ['5', 'Flash Deal Strip', 'Marquee ngang vß╗¢i countdown timer', 'Sß║ún phß║�&#65533;m Flash Sale k├¿m ─æß║�&#65533;m ng╞░ß╗úc thß╗¥i gian']
+  R6: ['6', 'Product Tabs', '3 tab: Nß╗òi bß║¡t / Mß╗¢i vß╗ü / Tß║Ñt cß║ú', "Sß║ún phß║�&#65533;m chia theo 3 ti├¬u ch├¡ vß╗¢i n├║t 'Xem th├¬m'"]
+  R7: ['7', 'Promo Banners', '2 banner ngang', 'Quß║úng b├í freeship, giß║úm gi├í ─æß║╖c biß╗çt']
+  R8: ['8', 'Vouchers Section', 'Grid c├íc voucher c├│ sß║╡n', 'Hiß╗ân thß╗ï m├ú giß║úm gi├í ─æang c├│ hiß╗çu lß╗▒c']
+  R9: ['9', 'Top Vendors', 'Grid 6 nh├á b├ín h├áng ─æß║ºu', 'Giß╗¢i thiß╗çu c├íc shop uy t├¡n']
+  R10: ['10', 'Activity Feed', 'Danh s├ích hoß║ít ─æß╗Öng + sidebar live', 'Hoß║ít ─æß╗Öng gß║ºn ─æ├óy + cß║¡p nhß║¡t real-time']
+  R11: ['11', 'Benefits Grid', '4 thß║╗ cam kß║�&#65533;t', 'An to├án, giao nhanh, ─æß╗òi trß║ú, hß╗ù trß╗ú 24/7']
+  R12: ['12', 'Blog Section', '3 b├ái viß║�&#65533;t mß║½u', 'Tin tß╗�&#65533;c v├á mß║╣o hay']
+  R13: ['13', 'FAQ Section', 'Accordion 5 c├óu hß╗Åi', 'C├óu hß╗Åi th╞░ß╗¥ng gß║╖p - mß╗ƒ/─æ├│ng']
+  R14: ['14', 'Newsletter + CTA', 'Form ─æ─âng k├╜ email + CTA mß╗ƒ shop', '─É─âng k├╜ nhß║¡n tin + k├¬u gß╗ìi trß╗ƒ th├ánh nh├á b├ín']
+
+=== Table 17 (10 rows x 4 cols) ===
+  R0: ['STT', 'Th├ánh phß║ºn', 'Kiß╗âu', 'M├┤ tß║ú']
+  R1: ['1', 'Page Hero', 'Section header', 'Ti├¬u ─æß╗ü + breadcrumb + sß╗æ liß╗çu thß╗æng k├¬']
+  R2: ['2', 'Filter Bar', 'Form search + select sort', 'T├¼m kiß║�&#65533;m + sß║»p xß║�&#65533;p (Mß╗¢i nhß║Ñt, Gi├í, ─É├ính gi├í)']
+  R3: ['3', 'Category Pills', 'Danh s├ích chip danh mß╗Ñc', 'Lß╗ìc nhanh theo tß╗½ng danh mß╗Ñc sß║ún phß║�&#65533;m']
+  R4: ['4', 'Result Count', 'Text', 'Hiß╗ân thß╗ï tß╗òng sß╗æ sß║ún phß║�&#65533;m t├¼m thß║Ñy']
+  R5: ['5', 'View Toggle', '2 button (grid/list)', 'Chuyß╗ân ─æß╗òi giß╗»a xem dß║íng l╞░ß╗¢i v├á danh s├ích']
+  R6: ['6', 'Product Grid', 'Grid card sß║ún phß║�&#65533;m', 'Hiß╗ân thß╗ï ß║únh, t├¬n, gi├í, rating, t├¬n shop, badge TOP']
+  R7: ['7', 'Pagination', 'Prev/Next + page info', 'Ph├ón trang Trang X/Y']
+  R8: ['8', 'Quick Filters', '3 card link', 'Link nhanh: Gi├í tß╗æt / Top ─æ├ính gi├í / H├áng mß╗¢i']
+  R9: ['9', 'Empty State', 'Illustration + CTA', 'Hiß╗ân thß╗ï khi kh├┤ng t├¼m thß║Ñy sß║ún phß║�&#65533;m']
+
+=== Table 18 (14 rows x 4 cols) ===
+  R0: ['STT', 'Khu vß╗▒c', 'Th├ánh phß║ºn', 'Chß╗�&#65533;c n─âng']
+  R1: ['1', 'Sticky Header', 'Header cß╗æ ─æß╗ïnh khi scroll', 'Hiß╗çn khi user scroll xuß╗æng, hiß╗ân thß╗ï t├¬n + gi├í + rating']
+  R2: ['2', 'Gallery', 'Slider ß║únh + thumbnail', 'Xem ß║únh sß║ún phß║�&#65533;m vß╗¢i chß║�&#65533; ─æß╗Ö zoom, vuß╗æt ─æß╗â chuyß╗ân ß║únh']
+  R3: ['3', 'Product Info', 'T├¬n, rating, gi├í, badge HOT/Mß╗ÜI', 'Th├┤ng tin c╞í bß║ún + chß╗ë b├ío t├¼nh trß║íng']
+  R4: ['4', 'Variants', 'Button chß╗ìn biß║�&#65533;n thß╗â (size/m├áu)', 'Chß╗ìn phi├¬n bß║ún sß║ún phß║�&#65533;m - disable nß║�&#65533;u hß║�&#65533;t h├áng']
+  R5: ['5', 'Quantity Stepper', 'N├║t +/- sß╗æ l╞░ß╗úng', '─Éiß╗üu chß╗ënh sß╗æ l╞░ß╗úng mua (min=1, max=stock)']
+  R6: ['6', 'Action Buttons', 'Th├¬m giß╗Å / Mua ngay', '2 n├║t ch├¡nh ─æß╗â mua h├áng']
+  R7: ['7', 'Shop Card', 'Logo shop + n├║t Chat/Theo d├╡i', 'Th├┤ng tin nh├á b├ín + t╞░╞íng t├íc']
+  R8: ['8', 'Policy Strip', 'Cam kß║�&#65533;t: ship, ─æß╗òi trß║ú, bß║úo h├ánh', 'C├íc ch├¡nh s├ích bß║úo vß╗ç kh├ích h├áng']
+  R9: ['9', 'Specifications', 'Table th├┤ng sß╗æ kß╗╣ thuß║¡t', 'Chi tiß║�&#65533;t thuß╗Öc t├¡nh sß║ún phß║�&#65533;m (RAM, CPU, ...)']
+  R10: ['10', 'Description', 'Rich text editor content', 'M├┤ tß║ú chi tiß║�&#65533;t sß║ún phß║�&#65533;m (TinyMCE)']
+  R11: ['11', 'Reviews Tab', 'Tß╗òng quan + danh s├ích ─æ├ính gi├í', 'Rating breakdown + review cards']
+  R12: ['12', 'Related Products', 'Grid sß║ún phß║�&#65533;m t╞░╞íng tß╗▒', 'Sß║ún phß║�&#65533;m c├╣ng danh mß╗Ñc']
+  R13: ['13', 'Write Review Modal', 'Modal form ─æ├ính gi├í', 'Popup cho ph├�&#65533;p ─æ├ính gi├í 1-5 sao + text']
+
+=== Table 19 (12 rows x 4 cols) ===
+  R0: ['STT', 'Th├ánh phß║ºn', 'Kiß╗âu', 'M├┤ tß║ú']
+  R1: ['1', 'Cart Hero', 'Section header', 'Hiß╗ân thß╗ï tß╗òng sß╗æ sß║ún phß║�&#65533;m + sß╗æ l╞░ß╗úng']
+  R2: ['2', 'Shop Group', 'Nh├│m theo tß╗½ng shop', 'Sß║ún phß║�&#65533;m ─æ╞░ß╗úc gom nh├│m theo nh├á b├ín (mß╗ùi shop 1 card)']
+  R3: ['3', 'Cart Item Card', 'Item card', 'ß║ónh + t├¬n + shop + gi├í + qty stepper + subtotal + n├║t x├│a']
+  R4: ['4', 'Quantity Stepper', 'N├║t +/-', 'T─âng/giß║úm sß╗æ l╞░ß╗úng, c├│ giß╗¢i hß║ín stock']
+  R5: ['5', 'Remove Button', 'Icon trash', 'X├│a sß║ún phß║�&#65533;m - c├│ confirm dialog']
+  R6: ['6', 'Continue Shopping', 'Link vß╗¢i icon', 'N├║t quay lß║íi trang sß║ún phß║�&#65533;m']
+  R7: ['7', 'Summary Card', 'Sidebar sticky', 'Tß║ím t├¡nh, ph├¡ ship, m├ú giß║úm gi├í, tß╗òng cß╗Öng']
+  R8: ['8', 'Coupon Input', 'Input + Button ├üp dß╗Ñng', 'Nhß║¡p v├á ├íp dß╗Ñng m├ú voucher']
+  R9: ['9', 'Checkout Button', 'Button primary', 'Chuyß╗ân sang trang thanh to├ín']
+  R10: ['10', 'Trust Badges', '3 icon + text', 'An to├án, ─æß╗òi trß║ú, giao h├áng']
+  R11: ['11', 'Empty State', 'SVG illustration + CTA', 'Hiß╗ân thß╗ï khi giß╗Å trß╗æng']
+
+=== Table 20 (11 rows x 4 cols) ===
+  R0: ['STT', 'Th├ánh phß║ºn', 'Kiß╗âu', 'M├┤ tß║ú']
+  R1: ['1', 'Checkout Hero', 'Header + stats', 'Ti├¬u ─æß╗ü + tß╗òng sß║ún phß║�&#65533;m']
+  R2: ['2', 'Shop Group', 'Nh├│m sß║ún phß║�&#65533;m', 'Hiß╗ân thß╗ï sß║ún phß║�&#65533;m theo tß╗½ng shop ─æ├ú mua']
+  R3: ['3', 'Item Row', 'Row ngang', 'ß║ónh thumbnail + t├¬n + gi├í + sß╗æ l╞░ß╗úng + subtotal']
+  R4: ['4', 'Phone Input', 'Input tel', 'Sß╗æ ─æiß╗çn thoß║íi ng╞░ß╗¥i nhß║¡n (required, validated)']
+  R5: ['5', 'Address Input', 'Input text', '─Éß╗ïa chß╗ë giao h├áng chi tiß║�&#65533;t (required)']
+  R6: ['6', 'Payment Methods', 'Radio card', '2 lß╗▒a chß╗ìn: COD (mß║╖c ─æß╗ïnh) hoß║╖c VNPAY']
+  R7: ['7', 'Place Order Button', 'Button primary', 'X├íc nhß║¡n ─æß║╖t h├áng - c├│ loading state']
+  R8: ['8', 'Order Summary Sidebar', 'Sidebar sticky', 'Danh s├ích sß║ún phß║�&#65533;m + ph├¡ ship + tß╗òng']
+  R9: ['9', 'Trust Section', '4 icon + text', 'Cam kß║�&#65533;t bß║úo mß║¡t, ─æß╗òi trß║ú, giao h├áng, hß╗ù trß╗ú']
+  R10: ['10', 'Form Validation', 'Inline error', 'Validate phone v├á address tr╞░ß╗¢c khi submit']
+
+=== Table 21 (9 rows x 4 cols) ===
+  R0: ['STT', 'Th├ánh phß║ºn', 'Kiß╗âu', 'M├┤ tß║ú']
+  R1: ['1', 'Filter Tabs', '6 button', 'Lß╗ìc theo trß║íng th├íi: Tß║Ñt cß║ú, Chß╗¥ xß╗¡ l├╜, Chuß║�&#65533;n bß╗ï, ─Éang giao, ─É├ú giao, ─É├ú hß╗ºy']
+  R2: ['2', 'Order Card', 'Card ─æ╞ín h├áng', 'Hiß╗ân thß╗ï shop, m├ú ─æ╞ín, trß║íng th├íi, h├¼nh sß║ún phß║�&#65533;m, tß╗òng tiß╗ün, ng├áy']
+  R3: ['3', 'Status Badge', 'Badge c├│ m├áu', 'Mß╗ùi trß║íng th├íi c├│ m├áu v├á icon ri├¬ng']
+  R4: ['4', 'Product Thumbs', 'Stack ß║únh + overlay', "Hiß╗ân thß╗ï tß╗æi ─æa 4 ß║únh, nß║�&#65533;u nhiß╗üu h╞ín c├│ '+N'"]
+  R5: ['5', 'Progress Tracker', 'Stepper 4 b╞░ß╗¢c', '─Éß║╖t h├áng ΓåÆ Chuß║�&#65533;n bß╗ï ΓåÆ Giao h├áng ΓåÆ Ho├án tß║Ñt']
+  R6: ['6', 'Total Value', 'Text nß╗òi bß║¡t', 'Hiß╗ân thß╗ï tß╗òng tiß╗ün ─æ╞ín h├áng']
+  R7: ['7', 'Cancel Notice', 'Alert', 'Th├┤ng b├ío ─æ╞ín ─æ├ú bß╗ï hß╗ºy']
+  R8: ['8', 'Empty State', 'Illustration', 'Khi ch╞░a c├│ ─æ╞ín h├áng n├áo']
+
+=== Table 22 (13 rows x 4 cols) ===
+  R0: ['STT', 'Th├ánh phß║ºn', 'Kiß╗âu', 'M├┤ tß║ú']
+  R1: ['1', 'Page Hero', 'Header', 'Ti├¬u ─æß╗ü + m├┤ tß║ú + n├║t quay lß║íi']
+  R2: ['2', 'T├¬n sß║ún phß║�&#65533;m', 'Input text', 'T├¬n sß║ún phß║�&#65533;m, bß║»t buß╗Öc, tß╗æi ─æa 200 k├╜ tß╗▒']
+  R3: ['3', 'Gi├í (VN─É)', 'Input number', 'Gi├í b├ín, phß║úi > 0']
+  R4: ['4', 'Sß╗æ l╞░ß╗úng tß╗ôn kho', 'Input number', 'Stock, phß║úi >= 0']
+  R5: ['5', 'Danh mß╗Ñc', 'Select', 'Dropdown chß╗ìn danh mß╗Ñc sß║ún phß║�&#65533;m']
+  R6: ['6', 'H├¼nh ß║únh', 'Upload zone', 'K├�&#65533;o thß║ú hoß║╖c click chß╗ìn ß║únh (JPG, PNG, WEBP, GIF, max 5MB)']
+  R7: ['7', 'Image Preview', 'Img preview', 'Hiß╗ân thß╗ï preview sau khi chß╗ìn file']
+  R8: ['8', 'M├┤ tß║ú', 'TinyMCE editor', 'Rich text editor m├┤ tß║ú chi tiß║�&#65533;t sß║ún phß║�&#65533;m']
+  R9: ['9', 'Specifications', 'Dynamic form rows', 'Th├¬m/x├│a c├íc cß║╖p key-value th├┤ng sß╗æ kß╗╣ thuß║¡t']
+  R10: ['10', 'Variants', 'Dynamic form rows', 'Th├¬m/x├│a c├íc biß║�&#65533;n thß╗â (size, m├áu, ...)']
+  R11: ['11', 'Save Buttons', 'Submit + Cancel', 'L╞░u sß║ún phß║�&#65533;m hoß║╖c quay lß║íi']
+  R12: ['12', 'Alert error', 'Alert', 'Hiß╗ân thß╗ï lß╗ùi validation nß║�&#65533;u c├│']
+
+=== Table 23 (9 rows x 4 cols) ===
+  R0: ['STT', 'Th├ánh phß║ºn', 'Kiß╗âu', 'M├┤ tß║ú']
+  R1: ['1', 'Page Head', 'Header', 'Ti├¬u ─æß╗ü + m├┤ tß║ú + tß╗òng sß╗æ sß║ún phß║�&#65533;m']
+  R2: ['2', 'Toolbar', 'Form filter', 'T├¼m kiß║�&#65533;m + lß╗ìc theo trß║íng th├íi (DRAFT/ACTIVE/OUT_OF_STOCK/HIDDEN)']
+  R3: ['3', 'Filter Tags', 'Badge + button', 'Hiß╗ân thß╗ï c├íc filter ─æang ├íp dß╗Ñng vß╗¢i n├║t bß╗Å lß╗ìc']
+  R4: ['4', 'Data Table', 'Table c├│ header', 'Danh s├ích sß║ún phß║�&#65533;m vß╗¢i c├íc cß╗Öt: ß║únh, t├¬n, shop, gi├í, status, actions']
+  R5: ['5', 'Status Badge', 'Badge m├áu', 'Trß║íng th├íi sß║ún phß║�&#65533;m c├│ m├áu t╞░╞íng ß╗�&#65533;ng']
+  R6: ['6', 'Action Buttons', 'Icon buttons', 'ß║¿n/Hiß╗çn/X├│a sß║ún phß║�&#65533;m vß╗¢i confirm']
+  R7: ['7', 'Pagination', 'Ph├ón trang', 'Ph├ón trang vß╗¢i size selector']
+  R8: ['8', 'Empty State', 'Empty illustration', 'Khi kh├┤ng c├│ sß║ún phß║�&#65533;m n├áo']
+
+=== Table 24 (12 rows x 4 cols) ===
+  R0: ['Loß║íi', 'M├áu nß╗ün', 'M├áu chß╗»', 'Use case']
+  R1: ['btn-primary / sd-btn-primary', 'Teal #0FB5B0', 'Trß║»ng', 'H├ánh ─æß╗Öng ch├¡nh: L╞░u, X├íc nhß║¡n, Th├¬m']
+  R2: ['btn-secondary / sd-btn-secondary', 'X├ím #6B7280', 'Trß║»ng', 'H├ánh ─æß╗Öng phß╗Ñ: Hß╗ºy, Quay lß║íi']
+  R3: ['btn-success', 'Xanh l├í #10B981', 'Trß║»ng', 'H├ánh ─æß╗Öng t├¡ch cß╗▒c: Duyß╗çt, K├¡ch hoß║ít']
+  R4: ['btn-danger / sd-btn-danger', '─Éß╗Å #EF4444', 'Trß║»ng', 'H├ánh ─æß╗Öng nguy hiß╗âm: X├│a, Hß╗ºy ─æ╞ín']
+  R5: ['btn-warning', 'V├áng #F59E0B', 'Trß║»ng', 'Cß║únh b├ío: Tß║ím ng╞░ng, Chß╗¥ duyß╗çt']
+  R6: ['btn-outline', 'Trong suß╗æt + viß╗ün teal', 'Teal #0FB5B0', 'H├ánh ─æß╗Öng phß╗Ñ: Xem th├¬m, T├¼m hiß╗âu']
+  R7: ['btn-ghost', 'Trong suß╗æt', 'Teal #0FB5B0', 'Li├¬n kß║�&#65533;t text: Xem tß║Ñt cß║ú, Sß╗¡a']
+  R8: ['btn-icon', 'Tr├▓n, icon-only', 'Teal/X├ím', 'H├ánh ─æß╗Öng nhanh: Edit, Delete, View']
+  R9: ['btn-teal', 'Gradient teal', 'Trß║»ng', 'CTA ch├¡nh tr├¬n banner']
+  R10: ['btn-social-google', 'Trß║»ng + logo G', '─Éen', '─É─âng nhß║¡p Google OAuth']
+  R11: ['btn-social-facebook', 'Trß║»ng + logo FB', '─Éen', '─É─âng nhß║¡p Facebook OAuth']
+
+=== Table 25 (13 rows x 3 cols) ===
+  R0: ['Loß║íi', 'Use case', 'Validation']
+  R1: ['text input', 'T├¬n, ─æß╗ïa chß╗ë, m├┤ tß║ú', 'Required, maxLength']
+  R2: ['email input', 'Email ─æ─âng nhß║¡p/─æ─âng k├╜', 'Pattern email, required']
+  R3: ['password input + toggle', 'Mß║¡t khß║�&#65533;u (c├│ n├║t con mß║»t)', 'Min 6 chars, required']
+  R4: ['tel input', 'Sß╗æ ─æiß╗çn thoß║íi', 'Pattern sß╗æ ─æiß╗çn thoß║íi VN']
+  R5: ['number input', 'Gi├í, sß╗æ l╞░ß╗úng, stock', 'Min, max, required']
+  R6: ['textarea', 'M├┤ tß║ú d├ái, nhß║¡n x├�&#65533;t', 'Max length']
+  R7: ['select dropdown', 'Danh mß╗Ñc, status, sort', 'Required nß║�&#65533;u cß║ºn']
+  R8: ['radio button', 'Ph╞░╞íng thß╗�&#65533;c thanh to├ín, role', '1 lß╗▒a chß╗ìn']
+  R9: ['checkbox', '─Éß╗ông ├╜ ─æiß╗üu khoß║ún, remember-me', 'Required nß║�&#65533;u cß║ºn']
+  R10: ['file input', 'Upload ß║únh sß║ún phß║�&#65533;m, avatar', 'Accept image/*, max 5MB']
+  R11: ['search input', 'T├¼m kiß║�&#65533;m sß║ún phß║�&#65533;m', 'Debounce submit']
+  R12: ['date input', 'Ng├áy hß║�&#65533;t hß║ín voucher', 'Required']
+
+=== Table 26 (9 rows x 3 cols) ===
+  R0: ['Th├ánh phß║ºn', 'Class CSS', 'M├┤ tß║ú']
+  R1: ['Container', 'sd-table', 'Table c├│ viß╗ün, header nß╗ün x├ím, row hover nß╗ün teal nhß║ít']
+  R2: ['Header row', 'sd-table thead', 'Background #F8FAFC, bold, text-align center']
+  R3: ['Body row', 'sd-table tbody tr', 'Hover background #F0FDFA, cursor pointer']
+  R4: ['Cell', 'sd-table td', 'Padding 12px 16px, border-bottom 1px #E5E7EB']
+  R5: ['Status badge', 'sd-badge', 'Mß╗ùi trß║íng th├íi c├│ class ri├¬ng (success/warning/danger/info)']
+  R6: ['Action cell', 'sd-table-actions', 'Chß╗�&#65533;a icon button edit/delete/view']
+  R7: ['Empty row', 'sd-table-empty', 'Hiß╗ân thß╗ï khi kh├┤ng c├│ data, c├│ icon + text']
+  R8: ['Pagination', 'sd-pagination', 'Ph├ón trang vß╗¢i prev/next + page numbers']
+
+=== Table 27 (9 rows x 3 cols) ===
+  R0: ['Loß║íi Menu', 'Vß╗ï tr├¡', 'Th├ánh phß║ºn']
+  R1: ['Web Header', 'Top trang web', 'Logo + Search + Categories dropdown + Cart icon + User dropdown']
+  R2: ['Admin Sidebar', 'Left sidebar admin', 'Logo + 7 menu items + Logout']
+  R3: ['Vendor Sidebar', 'Left sidebar vendor', 'Logo + 6 menu items + Logout']
+  R4: ['Dashboard Topbar', 'Top admin/vendor', 'Breadcrumb + User profile + Notifications']
+  R5: ['Footer', 'Bottom trang web', '4 cß╗Öt: About + Links + Help + Contact']
+  R6: ['Category Pills', 'D╞░ß╗¢i filter bar', 'Horizontal scroll danh mß╗Ñc']
+  R7: ['User Dropdown', 'Top-right khi login', 'Avatar + T├¬n + Menu: Profile, Orders, Logout']
+  R8: ['Cart Dropdown', 'Top-right khi login', 'Mini cart vß╗¢i 3 sß║ún phß║�&#65533;m gß║ºn nhß║Ñt + Xem giß╗Å']
+
+=== Table 28 (9 rows x 3 cols) ===
+  R0: ['Modal', 'Trigger', 'Chß╗�&#65533;c n─âng']
+  R1: ['Review Modal', "N├║t 'Viß║�&#65533;t ─æ├ính gi├í'", 'Form ─æ├ính gi├í 1-5 sao + textarea + upload ß║únh']
+  R2: ['Confirm Delete', 'N├║t x├│a sß║ún phß║�&#65533;m/─æ╞ín', 'X├íc nhß║¡n tr╞░ß╗¢c khi x├│a vß╗¢i cß║únh b├ío']
+  R3: ['Voucher Copy Toast', 'Click n├║t copy voucher', "Toast th├┤ng b├ío '─É├ú sao ch├�&#65533;p m├ú'"]
+  R4: ['Add to Cart Success', 'Submit add to cart', 'Toast hiß╗ân thß╗ï sß║ún phß║�&#65533;m ─æ├ú th├¬m']
+  R5: ['Login Required Modal', 'Action cß║ºn login', 'Popup y├¬u cß║ºu ─æ─âng nhß║¡p']
+  R6: ['Payment Method Modal', 'Chß╗ìn VNPAY', 'Redirect sang cß╗òng VNPAY']
+  R7: ['Image Zoom Modal', 'Click ß║únh sß║ún phß║�&#65533;m', 'Xem ß║únh full size vß╗¢i prev/next']
+  R8: ['Share Modal', 'N├║t chia sß║╗', 'Copy link hoß║╖c share qua MXH']
+
+=== Table 29 (11 rows x 4 cols) ===
+  R0: ['─Éß╗æi t╞░ß╗úng', 'Trang li├¬n quan', 'Thuß╗Öc t├¡nh hiß╗ân thß╗ï', 'H├ánh vi t╞░╞íng t├íc']
+  R1: ['Product (Sß║ún phß║�&#65533;m)', 'products.html, product-detail.html', 'ß║ónh, t├¬n, gi├í, rating, sß╗æ l╞░ß╗úng b├ín, danh mß╗Ñc, shop, badge', 'Xem chi tiß║�&#65533;t, Th├¬m giß╗Å, Mua ngay, ─É├ính gi├í, Y├¬u th├¡ch']
+  R2: ['Cart (Giß╗Å h├áng)', 'cart.html', 'Items, shop groups, tß╗òng tiß╗ün, m├ú giß║úm gi├í', 'Th├¬m/Sß╗¡a/X├│a item, ├üp voucher, Checkout']
+  R3: ['Order (─É╞ín h├áng)', 'checkout.html, order-history.html', 'M├ú ─æ╞ín, sß║ún phß║�&#65533;m, shop, trß║íng th├íi, tß╗òng tiß╗ün, ─æß╗ïa chß╗ë', '─Éß║╖t h├áng, Hß╗ºy ─æ╞ín, Theo d├╡i, ─É├ính gi├í']
+  R4: ['Shop (Cß╗¡a h├áng)', 'shop.html', 'Logo, banner, t├¬n, m├┤ tß║ú, rating, tß╗òng sß║ún phß║�&#65533;m, tß╗òng b├ín', 'Theo d├╡i, Chat, Chia sß║╗, Lß╗ìc sß║ún phß║�&#65533;m']
+  R5: ['User (Ng╞░ß╗¥i d├╣ng)', 'auth/login.html, auth/register.html, admin/user-list.html', 'T├¬n, email, S─ÉT, ─æß╗ïa chß╗ë, role, trß║íng th├íi', '─É─âng k├╜, ─É─âng nhß║¡p, Sß╗¡a profile, ─Éß╗òi MK']
+  R6: ['Voucher', 'vouchers/list.html, vendor/voucher-create.html', 'M├ú, t├¬n, loß║íi (PERCENT/AMOUNT), gi├í trß╗ï, ─æiß╗üu kiß╗çn, HSD', 'Copy m├ú, ├üp dß╗Ñng, Tß║ío/Sß╗¡a/X├│a']
+  R7: ['Banner', 'admin/banner-list.html, admin/banner-form.html', 'Ti├¬u ─æß╗ü, ß║únh, link, trß║íng th├íi, thß╗�&#65533; tß╗▒, ng├áy', 'Th├¬m/Sß╗¡a/X├│a, K├¡ch hoß║ít/Tß║ím ng╞░ng']
+  R8: ['Category (Danh mß╗Ñc)', 'admin/category-manage.html', 'T├¬n, icon, gradient, m├┤ tß║ú, sß╗æ sß║ún phß║�&#65533;m', 'CRUD, Sß║»p xß║�&#65533;p thß╗�&#65533; tß╗▒']
+  R9: ['Review (─É├ính gi├í)', 'product-detail.html, admin/review-list.html', 'Rating 1-5 sao, text, ß║únh, ng├áy, user', 'Tß║ío review, Sß╗¡a/X├│a (admin), Like/Report']
+  R10: ['Dashboard (Thß╗æng k├¬)', 'admin/dashboard.html, vendor/dashboard.html', 'Doanh thu, ─æ╞ín h├áng, sß║ún phß║�&#65533;m, biß╗âu ─æß╗ô', 'Lß╗ìc theo ng├áy/tuß║ºn/th├íng, Export']
+
+=== Table 30 (9 rows x 3 cols) ===
+  R0: ['Th├ánh phß║ºn', 'Vß╗ï tr├¡', 'Chß╗�&#65533;c n─âng']
+  R1: ['Logo', 'Left', 'Logo CNJ70 Shop - click vß╗ü trang chß╗º']
+  R2: ['Search Bar', 'Center', "T├¼m kiß║�&#65533;m sß║ún phß║�&#65533;m theo tß╗½ kh├│a, placeholder 'T├¼m kiß║�&#65533;m sß║ún phß║�&#65533;m...'"]
+  R3: ['Danh mß╗Ñc dropdown', 'Left of search', 'Mega menu hiß╗ân thß╗ï tß║Ñt cß║ú danh mß╗Ñc vß╗¢i icon']
+  R4: ['Cart Icon + Count', 'Right', 'Icon giß╗Å h├áng k├¿m sß╗æ l╞░ß╗úng sß║ún phß║�&#65533;m (badge ─æß╗Å)']
+  R5: ['Notification Bell', 'Right', 'Th├┤ng b├ío ─æ╞ín h├áng, khuyß║�&#65533;n m├úi']
+  R6: ['User Dropdown', 'Right', 'Khi ─æ─âng nhß║¡p: Avatar + menu (Profile, Orders, Logout). Khi ch╞░a: n├║t ─É─âng nhß║¡p/─É─âng k├╜']
+  R7: ['Mobile Hamburger', 'Mobile only', 'Toggle menu tr├¬n mobile']
+  R8: ['Sticky behavior', 'Top', 'Header sticky khi scroll, ─æß╗òi nß╗ün khi cuß╗Ön xuß╗æng']
+
+=== Table 31 (6 rows x 2 cols) ===
+  R0: ['Cß╗Öt', 'Nß╗Öi dung']
+  R1: ['Cß╗Öt 1: Vß╗ü CNJ70 Shop', 'Logo + M├┤ tß║ú + Social icons (Facebook, Instagram, YouTube, TikTok)']
+  R2: ['Cß╗Öt 2: Hß╗ù trß╗ú kh├ích h├áng', 'C├íc li├¬n kß║�&#65533;t: H╞░ß╗¢ng dß║½n mua h├áng, ─Éß╗òi trß║ú, Ch├¡nh s├ích bß║úo h├ánh, FAQ']
+  R3: ['Cß╗Öt 3: Vß╗ü ch├║ng t├┤i', 'Giß╗¢i thiß╗çu, Li├¬n hß╗ç, Tuyß╗ân dß╗Ñng, Tin tß╗�&#65533;c']
+  R4: ['Cß╗Öt 4: Li├¬n hß╗ç', 'Hotline, Email, ─Éß╗ïa chß╗ë + Form ─æ─âng k├╜ nhß║¡n tin']
+  R5: ['Bottom Bar', 'Copyright ┬�&#65533; 2026 CNJ70 Shop + Payment methods icons (Visa, Master, COD)']
+
+=== Table 32 (10 rows x 4 cols) ===
+  R0: ['Menu', 'Icon', 'URL', 'Quyß╗ün']
+  R1: ['Dashboard', 'fa-tachometer-alt', '/admin', 'ADMIN']
+  R2: ['Ng╞░ß╗¥i d├╣ng', 'fa-users', '/admin/users', 'ADMIN']
+  R3: ['Cß╗¡a h├áng', 'fa-store', '/admin/shops', 'ADMIN']
+  R4: ['Sß║ún phß║�&#65533;m', 'fa-box-open', '/admin/products', 'ADMIN']
+  R5: ['─É╞ín h├áng', 'fa-shopping-bag', '/admin/orders', 'ADMIN']
+  R6: ['Danh mß╗Ñc', 'fa-tags', '/admin/categories', 'ADMIN']
+  R7: ['Banner', 'fa-images', '/admin/banners', 'ADMIN']
+  R8: ['Voucher', 'fa-ticket-alt', '/admin/vouchers', 'ADMIN']
+  R9: ['─É├ính gi├í', 'fa-star', '/admin/reviews', 'ADMIN']
+
+=== Table 33 (7 rows x 3 cols) ===
+  R0: ['Menu', 'Icon', 'URL']
+  R1: ['Dashboard', 'fa-tachometer-alt', '/vendor']
+  R2: ['Sß║ún phß║�&#65533;m', 'fa-box', '/vendor/products']
+  R3: ['─É╞ín h├áng', 'fa-shopping-bag', '/vendor/orders']
+  R4: ['Voucher', 'fa-ticket-alt', '/vendor/vouchers']
+  R5: ['Hß╗ô s╞í', 'fa-user', '/vendor/profile']
+  R6: ['Cß╗¡a h├áng', 'fa-store', '/vendor/shop/profile']
+
+=== Table 34 (20 rows x 3 cols) ===
+  R0: ['Sß╗æ hiß╗çu', 'T├¬n h├¼nh', 'M├┤ tß║ú nß╗Öi dung']
+  R1: ['H├¼nh 2.3-1', 'Form ─æ─âng k├╜', 'Hiß╗ân thß╗ï 2 cß╗Öt: Brand panel tr├íi (logo + tagline + ╞░u ─æ├úi) + Form panel phß║úi (Hß╗ì t├¬n, Email, MK, S─ÉT, ─Éß╗ïa chß╗ë, Role radio, Checkbox ─æiß╗üu khoß║ún, N├║t Tß║ío t├ái khoß║ún)']
+  R2: ['H├¼nh 2.3-2', 'Form ─æ─âng nhß║¡p', 'Hiß╗ân thß╗ï 2 cß╗Öt: Brand panel tr├íi + Form ─æ─âng nhß║¡p phß║úi (Email, Password c├│ toggle, Remember me, Qu├¬n MK, N├║t ─É─âng nhß║¡p, Social login)']
+  R3: ['H├¼nh 2.3-3', 'Trang chß╗º', 'To├án cß║únh trang chß╗º vß╗¢i ─æß║ºy ─æß╗º 14 khu vß╗▒c: Header, Search, Banner slider, Categories, Flash sale, Product tabs, Promo, Vouchers, Top vendors, Activity, Blog, FAQ, Newsletter, CTA']
+  R4: ['H├¼nh 2.3-4', 'Danh s├ích sß║ún phß║�&#65533;m', 'Hero + Filter bar (search + sort) + Category pills + Product grid vß╗¢i ß║únh, t├¬n, gi├í, rating + Pagination']
+  R5: ['H├¼nh 2.3-5', 'Chi tiß║�&#65533;t sß║ún phß║�&#65533;m', 'Gallery ß║únh tr├íi, th├┤ng tin sß║ún phß║�&#65533;m phß║úi (t├¬n, gi├í, variants, qty, n├║t CTA), tabs M├┤ tß║ú/Th├┤ng sß╗æ/─É├ính gi├í, sß║ún phß║�&#65533;m li├¬n quan']
+  R6: ['H├¼nh 2.3-6', 'Giß╗Å h├áng', 'Nh├│m sß║ún phß║�&#65533;m theo shop, mß╗ùi item c├│ qty stepper, n├║t x├│a, subtotal, sidebar t├│m tß║»t ─æ╞ín h├áng vß╗¢i m├ú giß║úm gi├í v├á n├║t thanh to├ín']
+  R7: ['H├¼nh 2.3-7', 'Thanh to├ín', 'Cß╗Öt tr├íi: Items theo shop + Form (phone, address, payment method), Cß╗Öt phß║úi: Order summary sticky']
+  R8: ['H├¼nh 2.3-8', 'Lß╗ïch sß╗¡ ─æ╞ín h├áng', 'Filter tabs trß║íng th├íi + Cards ─æ╞ín h├áng vß╗¢i progress tracker 4 b╞░ß╗¢c']
+  R9: ['H├¼nh 2.3-9', 'Form sß║ún phß║�&#65533;m (Vendor)', 'Hero + Form card dß╗ìc: Th├┤ng tin c╞í bß║ún (t├¬n, gi├í, stock, danh mß╗Ñc, upload), M├┤ tß║ú TinyMCE, Th├┤ng sß╗æ kß╗╣ thuß║¡t']
+  R10: ['H├¼nh 2.3-10', 'Quß║ún l├╜ sß║ún phß║�&#65533;m (Admin)', 'Toolbar filter + Data table vß╗¢i c├íc cß╗Öt: ß║ónh, T├¬n, Shop, Gi├í, Trß║íng th├íi, Actions']
+  R11: ['H├¼nh 2.3-11', 'Button styles', 'Bß║úng tr├¼nh b├áy c├íc biß║�&#65533;n thß╗â button: primary teal, secondary x├ím, danger ─æß╗Å, outline, ghost, icon']
+  R12: ['H├¼nh 2.3-12', 'Input styles', 'C├íc kiß╗âu input: text, email, password vß╗¢i toggle, tel, number, select, radio, checkbox, file upload']
+  R13: ['H├¼nh 2.3-13', 'Table component', 'Bß║úng dß╗» liß╗çu chuß║�&#65533;n vß╗¢i header, body row hover, status badge, action buttons']
+  R14: ['H├¼nh 2.3-14', 'Navigation menus', 'Header kh├ích h├áng, sidebar admin/vendor, dropdown menu, mobile menu']
+  R15: ['H├¼nh 2.3-15', 'Modal examples', 'C├íc modal: review form, confirm delete, toast notification, image zoom']
+  R16: ['H├¼nh 2.3-16', 'Web Header', 'Logo CNJ70 Shop, search bar, categories dropdown, cart icon vß╗¢i badge count, user avatar']
+  R17: ['H├¼nh 2.3-17', 'Web Footer', '4 cß╗Öt: About + Support + Company + Contact, Bottom bar copyright']
+  R18: ['H├¼nh 2.3-18', 'Admin Sidebar', 'Sidebar tr├íi vß╗¢i 9 menu items c├│ icon, logo CNJ70 Admin, n├║t logout cuß╗æi']
+  R19: ['H├¼nh 2.3-19', 'Vendor Sidebar', 'Sidebar tr├íi vß╗¢i 6 menu items c├│ icon, logo CNJ70 Vendor, n├║t logout cuß╗æi']
+
+=== Table 35 (11 rows x 3 cols) ===
+  R0: ['Th├ánh phß║ºn', 'C├┤ng nghß╗ç / Th╞░ viß╗çn', 'Mß╗Ñc ─æ├¡ch']
+  R1: ['Template Engine', 'Thymeleaf 3', 'Render HTML ph├¡a server vß╗¢i c├║ ph├íp tß╗▒ nhi├¬n']
+  R2: ['CSS Framework', 'Tailwind CSS + Custom CSS', 'Utility-first + t├╣y biß║�&#65533;n theo brand']
+  R3: ['JavaScript', 'Vanilla JS + jQuery', 'Xß╗¡ l├╜ DOM, AJAX, event handling']
+  R4: ['Icons', 'Font Awesome 6.4', 'Bß╗Ö icon vector ─æa dß║íng']
+  R5: ['Fonts', 'Work Sans (Google Fonts)', 'Typography hiß╗çn ─æß║íi, hß╗ù trß╗ú tiß║�&#65533;ng Viß╗çt']
+  R6: ['Rich Text Editor', 'TinyMCE 6', 'Soß║ín thß║úo m├┤ tß║ú sß║ún phß║�&#65533;m cho vendor']
+  R7: ['Charts', 'Chart.js', 'Vß║╜ biß╗âu ─æß╗ô dashboard admin/vendor']
+  R8: ['Image Upload', 'Custom + Spring MVC', 'Upload ß║únh vß╗¢i validation']
+  R9: ['Responsive', 'CSS Media Queries + Flexbox/Grid', 'T╞░╞íng th├¡ch ─æa thiß║�&#65533;t bß╗ï']
+  R10: ['Animation', 'CSS Animations + AOS', 'Hiß╗çu ß╗�&#65533;ng chuyß╗ân ─æß╗Öng m╞░ß╗út m├á']
+
+=== Table 36 (1 rows x 1 cols) ===
+  R0: ['']
+
+=== Table 37 (1 rows x 1 cols) ===
+  R0: ['']
+
+=== Table 38 (2 rows x 3 cols) ===
+  R0: ['STT', 'T├¬n file', 'Chß╗�&#65533;c n─âng ─æß║úm nhiß╗çm']
+  R1: ['1', 'Cnj70EcommerceApplication', 'Spring Boot entry point cß╗ºa ß╗�&#65533;ng dß╗Ñng e-commerce CNJ70. Khß╗ƒi tß║ío SpringApplication v├á ─æ─âng k├╜ DotenvInitializer ─æß╗â nß║íp biß║�&#65533;n m├┤i tr╞░ß╗¥ng tß╗½ .env tr╞░ß╗¢c khi context start.']
+
+=== Table 39 (16 rows x 3 cols) ===
+  R0: ['STT', 'T├¬n file', 'Chß╗�&#65533;c n─âng ─æß║úm nhiß╗çm']
+  R1: ['1', 'AdminBootstrap', "CommandLineRunner (chß╗ë chß║íy vß╗¢i profile 'admin-bootstrap') reset password admin2@gmail.com vß╗ü 'admin123' (BCrypt), ├�&#65533;p role = ADMIN, status = ACTIVE, v├á lock user ─æ╞░ß╗úc chß╗ë ─æß╗ïnh qua system property admin-bootstrap.lock-email."]
+  R2: ['2', 'CategoryIconHelper', '@Component("categoryIcon") map t├¬n danh mß╗Ñc (tiß║�&#65533;ng Viß╗çt) sang FontAwesome icon class + gradient m├áu. D├╣ng cho home page category cards. Match longest keyword wins.']
+  R3: ['3', 'ComplaintEscalationScheduler', '@Scheduled cron jobs escalate Complaint qu├í hß║ín Level 0 ΓåÆ Level 1 (mß╗ùi 15 ph├║t) v├á Level 1 ΓåÆ Level 2 (mß╗ùi giß╗¥). Sß╗¡ dß╗Ñng SchedulerIdempotencyService ─æß╗â ─æß║úm bß║úo idempotent, restart-safe, concurrency-safe.']
+  R4: ['4', 'DotenvConfig', '@PostConstruct load file .env (qua th╞░ viß╗çn cdimascio/dotenv) v├á set c├íc entry v├áo System Property (nß║�&#65533;u ch╞░a c├│). Backup cho DotenvInitializer.']
+  R5: ['5', 'DotenvInitializer', "ApplicationContextInitializer load file .env TR╞»ß╗ÜC khi Spring context start; populate cß║ú System Property lß║½n Spring Environment (MapPropertySource 'dotenv') ─æß╗â ─æß║úm bß║úo ENCRYPTION_KEY c├│ sß║╡n cho CryptoUtil."]
+  R6: ['6', 'GlobalControllerAdvice', '@ControllerAdvice th├¬m c├íc ModelAttribute to├án cß╗Ñc cho mß╗ìi view: hasShop, kycStatus, kycApproved, activeViolations, availableVoucherCount ΓÇö phß╗Ñc vß╗Ñ header/sidebar cß╗ºa vendor pages.']
+  R7: ['7', 'ImageHelper', '@Component("image") helper xß╗¡ l├╜ URL ß║únh trong Thymeleaf: normalize (th├¬m /uploads/), fallback placeholder placehold.co, ─æa dß║íng m├áu placeholder theo hash imageUrl.']
+  R8: ['8', 'LegalDocumentSeeder', 'CommandLineRunner seed 8 LegalDocument mß║╖c ─æß╗ïnh (Terms, Privacy, Return, Shipping, Warranty, Complaint, Payment, Sitemap) khi collection rß╗ùng. Nß╗Öi dung Markdown tiß║�&#65533;ng Viß╗çt ─æß║ºy ─æß╗º.']
+  R9: ['9', 'ModeratorBootstrap', "CommandLineRunner (profile 'moderator-bootstrap') upsert t├ái khoß║ún moderator2@gmail.com / 'moderator123' vß╗¢i role MODERATOR, status ACTIVE ΓÇö Phase 1 test fixture."]
+  R10: ['10', 'MoneyHelper', '@Component("money") helper format BigDecimal th├ánh chuß╗ùi VND (vi-VN), formatSold (1.2k, 9.9k, 10k+), flashDiscount / flashProgress / flashOriginalPrice ΓÇö d├╣ng trong Thymeleaf templates cho shopee-style flash sale.']
+  R11: ['11', 'MongoConfig', "K├¡ch hoß║ít MongoDB Auditing (@EnableMongoAuditing) v├á ─æ─âng k├╜ MongoCustomConversions ─æß╗â ─æß╗ìc DiscountType tß╗½ MongoDB, hß╗ù trß╗ú map gi├í trß╗ï legacy 'FIXED' sang AMOUNT."]
+  R12: ['12', 'RestTemplateConfig', 'Cß║Ñu h├¼nh RestTemplate vß╗¢i timeout kß║�&#65533;t nß╗æi/─æß╗ìc cho KYC provider (kyc.provider.timeout-connect / timeout-read).']
+  R13: ['13', 'SecurityConfig', 'Cß║Ñu h├¼nh Spring Security: filter chain, CORS, role-based authorization cho /admin/**, /moderator/**, /vendor/**, /api/**, JWT filter, exception handling v├á authentication provider.']
+  R14: ['14', 'SoldCountSeeder', "One-shot seeder fill sß╗æ '─É├ú b├ín' cho Product c├▓n sold = 0, vß╗¢i bucket 80% <1k, 18% 1k-9.9k, 2% 10k+, deterministic seed = 42 ─æß╗â restart vß║½n ß╗òn ─æß╗ïnh."]
+  R15: ['15', 'WebMvcConfig', 'Cß║Ñu h├¼nh WebMvc: view controllers (redirect / ΓåÆ /home), resource handlers cho /uploads/**, ─æ─âng k├╜ CartCountInterceptor ├íp dß╗Ñng cho to├án bß╗Ö web pages (loß║íi trß╗½ /api, /admin, /vendor, /auth, static).']
+
+=== Table 40 (25 rows x 3 cols) ===
+  R0: ['STT', 'T├¬n file', 'Chß╗�&#65533;c n─âng ─æß║úm nhiß╗çm']
+  R1: ['1', 'AuditLog', "Document Mongo (collection 'audit_logs') TASK #23 ΓÇö Ghi log audit to├án diß╗çn: actor (id/username/role), action (AuditAction), resourceType/Id, beforeState/afterState, ipAddress, userAgent, reason, severity, metadata map. Trß║ú lß╗¥i 'ai-l├ám-g├¼-vß╗¢i-c├íi-g├¼-khi-n├áo-tß╗½-─æ├óu-tß║íi-sao'."]
+  R2: ['2', 'AuditLogEntry', "Document Mongo (collection 'audit_logs') Phase 3C ΓÇö Query/display layer cß╗ºa audit events (Admin read-only), contract-first, append-only. Compound indexes cho query phß╗ò biß║�&#65533;n. actor (id/email/role UserRole), action, resourceType/Id, reason, severity, before/after, ip."]
+  R3: ['3', 'Banner', "Document Mongo (collection 'banners') l╞░u Banner Phase 17: title, description, tag/tagIcon, imageUrl, link, ctaText/ctaIcon, theme, status (PUBLISHED/UNPUBLISHED), position, sortOrder. Kh├┤ng c├│ scheduling/priority algorithm (LOCK 4/5)."]
+  R4: ['4', 'Cart', "Document Mongo (collection 'carts') l╞░u giß╗Å h├áng: userId unique, items list, appliedVoucherCode, updatedAt. Inner static CartItem vß╗¢i productId/Name/imageUrl/price/qty/subtotal/shopId/Name/stock."]
+  R5: ['5', 'Category', "Document Mongo (collection 'categories') l╞░u danh mß╗Ñc sß║ún phß║�&#65533;m: name unique, description, iconUrl, parentId (cho c├óy ph├ón cß║Ñp), sortOrder, active."]
+  R6: ['6', 'Complaint', "Document Mongo (collection 'complaints') l╞░u khiß║�&#65533;u nß║íi CustomerΓåöVendor 3 cß║Ñp (LEVEL_0/1/2): customerId, shopId/vendorId, orderId, orderItemIds, reason, description, evidence, status, level, vendorResponse, assigned moderator/admin, decision/deadlines, escalationCount."]
+  R7: ['7', 'Escalation', "Document Mongo (collection 'escalations') Phase 2C/3A ΓÇö Ghi nhß║¡n Moderator escalate ReportCase l├¬n Admin: reportCaseId, resourceType/Id, vendorId/shopId, reason, severity, moderator info, sourceStatus. Phase 3A th├¬m Admin lifecycle (status PENDING/IN_REVIEW/RESOLVED), assignedAdminId, decisionAdminId/Email, decisionAction (ViolationAction), decisionNote, resolvedAt. Inner enum Status."]
+  R8: ['8', 'FlashSaleStat', 'POJO view-model (kh├┤ng @Document) wrap Product + statistics cho Flash Deal strip tr├¬n home page: product, hasDiscount, discountPercent, soldCount, progressPercent (sold/(sold+stock) cap 99).']
+  R9: ['9', 'KycProfile', "Document Mongo (collection 'kyc_profiles') Phase 4 source-of-truth cho KYC: userId unique (1 user Γåö 1 profile), status (KycStatus), th├┤ng tin chß╗º shop (ownerFullName, idNumber, idFront/BackImageUrl), doanh nghiß╗çp (businessName, taxCode, businessLicenseUrl), ng├ón h├áng (bankAccount/Name/Branch), kß║�&#65533;t quß║ú third-party (result/reason/referenceId/verifiedAt), admin review (reviewerId/Name/note/reviewedAt), audit (submittedAt/lastResubmittedAt/submitCount)."]
+  R10: ['10', 'LegalDocument', "Document Mongo (collection 'legal_documents') TASK #21 ΓÇö T├ái liß╗çu ph├íp l├╜: type unique (LegalDocumentType), title, content, version, effectiveDate, updatedBy, renderedContent, metaDescription. Seeder tß║ío 8 document khi rß╗ùng."]
+  R11: ['11', 'ModerationHistory', "Document Mongo (collection 'moderation_history') Phase 2A ΓÇö Lß╗ïch sß╗¡ per-product Moderator decisions: resourceType/Id/Name, action (ModerationAction), beforeStatus, afterStatus, reason, moderator id/email/role."]
+  R12: ['12', 'Order', "Document Mongo (collection 'orders') l╞░u ─æ╞ín h├áng: userId, items, subtotal, shippingFee, totalAmount, discount, voucherId/Code/Name, status, paymentMethod, paymentStatus, paid/paidAt/refundedAt, shopId/Name, shippingByShop map (per-shop sub-order vß╗¢i trackingNumber/carrier)."]
+  R13: ['13', 'Product', "Document Mongo (collection 'products') l╞░u sß║ún phß║�&#65533;m: shopId/shopName, name, brand, warrantyMonths, manufacturer, price, stock, categoryId/Name, imageUrls, thumbnailUrl, specifications, variants, status, moderationStatus (orthogonal), moderationActorId/Reason/At, enforcementActorId/Reason/At, rating, reviewCount, sold."]
+  R14: ['14', 'ProductSpecification', "POJO cß║╖p key-value cho spec sß║ún phß║�&#65533;m (VD: 'Chß║Ñt liß╗çu' / 'Cotton' / null). Nh├║ng trong Product v├á ProductVariant."]
+  R15: ['15', 'ProductVariant', 'POJO (kh├┤ng @Document) ─æß║íi diß╗çn cho biß║�&#65533;n thß╗â sß║ún phß║�&#65533;m (size, m├áu...): specifications list, price, stock, sku. Nh├║ng trong Product.']
+  R16: ['16', 'RefundRequest', "Document Mongo (collection 'refunds') Phase 3A ┬º28 ΓÇö Intent refund: complaintId/returnId/orderId (at least one), customerId, shopId/vendorId, declaredAmount (proposal), settledAmount (provider), provider, providerTransactionId, status, providerMessage, requestedBy*."]
+  R17: ['17', 'ReportCase', "Document Mongo (collection 'report_cases') TASK #26/Phase 2C ΓÇö Phi├¬n kiß╗âm duyß╗çt cho User-report hoß║╖c Auto-Moderation: resourceType (PRODUCT/REVIEW), resourceId/Name, reporterId/Email/Name, source (USER/AUTO), reason text + reportReason enum, description, evidence, autoFlags, status (PENDING/.../RESOLVED/ESCALATED), assignedModeratorId/Email, decision (APPROVE/REJECT/ESCALATE), decisionReason/Note, targetStatusBefore/After, escalation fields."]
+  R18: ['18', 'ReturnRequest', "Document Mongo (collection 'returns') Phase 3A ┬º23 ΓÇö Return lifecycle t├ích Order tß╗½ Complaint: complaintId, orderId, orderItemIds, customerId, shopId/vendorId, reason (text), evidence, status, refundId, declaredAmount."]
+  R19: ['19', 'Review', "Document Mongo (collection 'reviews') l╞░u ─æ├ính gi├í: productId, userId, userName/Avatar, rating, comment, images, moderationStatus (VISIBLE/REPORTED/HIDDEN/DELETED), reportCount, hidden flag, pipelineModerationStatus."]
+  R20: ['20', 'SchedulerIdempotencyRecord', "Document Mongo (collection 'scheduler_idempotency') Phase 3C ΓÇö ─Éß║úm bß║úo scheduler idempotent: operationKey unique (jobName:entityType:entityId), jobName, entityType, entityId, operation, status (SUCCESS/FAILED/SKIPPED), detail, expiresAt (TTL). Compound indexes cho query."]
+  R21: ['21', 'Shop', "Document Mongo (collection 'shops') l╞░u Shop: ownerId, shopName unique, description, logo/banner, status, kycStatus denormalized, encrypted PII mirror, rejection/deactivation reason + actor, enforcement fields."]
+  R22: ['22', 'User', "Document Mongo (collection 'users') l╞░u t├ái khoß║ún: email, password BCrypt, fullName, phone, address, role, status, shopId, avatarUrl, encrypted PII (citizenId/taxCode/bankAccount AES-256-GCM), accepted Terms/Privacy version, marketingOptIn, kycStatus denormalized, enforcement fields. Unique index tr├¬n email."]
+  R23: ['23', 'Violation', "Document Mongo (collection 'violations') l╞░u vi phß║ím shop: shopId, productId, type (WARNING/VIOLATION/BAN), severity (LOW/MEDIUM/HIGH/CRITICAL), reason, adminNote, createdBy, resolvedAt/resolvedBy/resolutionNote. isActive() theo resolvedAt."]
+  R24: ['24', 'Voucher', "Document Mongo (collection 'vouchers') l╞░u voucher SHOP/WEB: code unique, name, type, shopId/productIds, discountType (PERCENT/AMOUNT), discountValue, maxDiscountAmount, minOrderValue, quantity, used, startDate/endDate, active, createdBy. isAvailable() check c├▓n khß║ú dß╗Ñng."]
+
+=== Table 41 (21 rows x 3 cols) ===
+  R0: ['STT', 'T├¬n file', 'Chß╗�&#65533;c n─âng ─æß║úm nhiß╗çm']
+  R1: ['1', 'AccountStatus', 'Trß║íng th├íi t├ái khoß║ún User: ACTIVE / LOCKED / UNVERIFIED.']
+  R2: ['2', 'AuditAction', 'Tß║Ñt cß║ú action ─æ╞░ß╗úc audit log: USER_*, SHOP_*, KYC_*, PRODUCT_*, REVIEW_*, COMPLAINT_*, REPORT_CASE_*, VIOLATION_*, ESCALATION_*, ADMIN_*, LEGAL_*, PII_ACCESSED, LOGIN_*, REGISTER_*, OTHER.']
+  R3: ['3', 'AuditSeverity', 'Severity cho AuditLog (TASK #23): INFO, WARNING, CRITICAL.']
+  R4: ['4', 'ComplaintLevel', 'Cß║Ñp ─æß╗Ö escalation theo Policy ┬º7: LEVEL_0 (Customer Γåö Vendor), LEVEL_1 (Moderator), LEVEL_2 (Admin).']
+  R5: ['5', 'ComplaintReason', 'L├╜ do khiß║�&#65533;u nß║íi theo Marketplace Policy ┬º6: NON_DELIVERY, WRONG_PRODUCT, MISSING_ITEM, DAMAGED_PRODUCT, NOT_AS_DESCRIBED, WARRANTY_ISSUE, OTHER.']
+  R6: ['6', 'ComplaintStatus', 'State machine cß╗ºa Complaint theo Phase 3: OPEN ΓåÆ VENDOR_RESPONDED ΓåÆ ESCALATED ΓåÆ MODERATOR_REVIEW ΓåÆ ESCALATED_L2 ΓåÆ ADMIN_REVIEW ΓåÆ RESOLVED / CLOSED / REJECTED.']
+  R7: ['7', 'DiscountType', 'Loß║íi giß║úm gi├í cho Voucher: PERCENT (phß║ºn tr─âm), AMOUNT (sß╗æ tiß╗ün cß╗æ ─æß╗ïnh ΓÇö ─æß╗òi t├¬n tß╗½ FIXED legacy).']
+  R8: ['8', 'KycStatus', 'Trß║íng th├íi KYC hß╗úp nhß║Ñt cho to├án hß╗ç thß╗æng (Phase 4): NOT_SUBMITTED ΓåÆ PENDING_THIRD_PARTY ΓåÆ PENDING_ADMIN ΓåÆ APPROVED, c├íc nh├ính THIRD_PARTY_REJECTED / ADMIN_REJECTED / SUSPENDED.']
+  R9: ['9', 'ModerationAction', 'Action Moderator thß╗▒c hiß╗çn (Product/Review/Shop): APPROVE, REJECT, ESCALATE, HIDE, UNHIDE, SUSPEND, RESTORE, RESTRICT.']
+  R10: ['10', 'ModerationStatus', 'Workflow trß║íng th├íi moderation cß╗ºa Product (orthogonal vß╗¢i ProductStatus): PENDING_MANUAL, AUTO_PASSED, AUTO_REJECTED, APPROVED, REJECTED, ESCALATED.']
+  R11: ['11', 'OrderStatus', 'Workflow trß║íng th├íi ─æ╞ín h├áng tß╗òng: PENDING ΓåÆ PREPARING ΓåÆ SHIPPING ΓåÆ DELIVERED, c├│ CANCELLED.']
+  R12: ['12', 'PaymentMethod', 'Ph╞░╞íng thß╗�&#65533;c thanh to├ín hß╗ù trß╗ú: COD, VNPAY, BANK_QR (chuyß╗ân khoß║ún QR VietQR).']
+  R13: ['13', 'PaymentStatus', 'Trß║íng th├íi thanh to├ín t├ích biß╗çt khß╗Åi OrderStatus/ShippingStatus: PENDING ΓåÆ PAID / FAILED ΓåÆ REFUNDED (terminal).']
+  R14: ['14', 'ProductStatus', 'Trß║íng th├íi public-facing cß╗ºa Product: DRAFT, ACTIVE, OUT_OF_STOCK, HIDDEN. T├ích biß╗çt vß╗¢i ModerationStatus (orthogonal).']
+  R15: ['15', 'ReviewModerationStatus', 'Trß║íng th├íi moderation Review (TASK #15): VISIBLE (b├¼nh th╞░ß╗¥ng), REPORTED (─æang chß╗¥ xß╗¡ l├╜), HIDDEN, DELETED.']
+  R16: ['16', 'ShopStatus', 'Trß║íng th├íi Shop: PENDING, APPROVED, REJECTED, SUSPENDED (Admin enforcement), RESTRICTED (ligher enforcement).']
+  R17: ['17', 'UserRole', 'Vai tr├▓ ng╞░ß╗¥i d├╣ng trong hß╗ç thß╗æng: ADMIN, MODERATOR, VENDOR, CUSTOMER.']
+  R18: ['18', 'ViolationAction', 'H├ánh ─æß╗Öng enforcement m├á Admin thß╗▒c hiß╗çn: WARNING, PRODUCT_HIDDEN, PRODUCT_REJECTED, SHOP_RESTRICTED, SHOP_SUSPENDED, VENDOR_BANNED, FUNDS_FROZEN (Phase 4C).']
+  R19: ['19', 'ViolationType', 'Ph├ón loß║íi mß╗�&#65533;c ─æß╗Ö vi phß║ím: WARNING (nhß║╣), VIOLATION (nghi├¬m trß╗ìng h╞ín), BAN (shop bß╗ï ─æ├¼nh chß╗ë).']
+  R20: ['20', 'VoucherType', 'Ph├ón loß║íi voucher: SHOP (vendor tß║ío cho shop cß╗ºa m├¼nh) hoß║╖c WEB (admin tß║ío cho to├án hß╗ç thß╗æng).']
+
+=== Table 42 (25 rows x 3 cols) ===
+  R0: ['STT', 'T├¬n file', 'Chß╗�&#65533;c n─âng ─æß║úm nhiß╗çm']
+  R1: ['1', 'AuditLogEntryRepository', 'Admin read-only query repository cho AuditLogEntry (audit_logs collection). Dß╗» liß╗çu ─æ╞░ß╗úc ghi bß╗ƒi AuditEventWriter integration seam; repository n├áy l├á Admin read view (Phase 3C).']
+  R2: ['2', 'AuditLogRepository', 'Repository CRUD cho AuditLog document - truy vß║Ñn theo actor, action, resource, severity, khoß║úng thß╗¥i gian cho hß╗ç thß╗æng audit log.']
+  R3: ['3', 'BannerRepository', 'Repository cho Banner document - lß╗ìc theo status, position cho hiß╗ân thß╗ï banner tr├¬n trang chß╗º v├á trang quß║ún trß╗ï.']
+  R4: ['4', 'CartRepository', 'Repository CRUD cho Cart document - quß║ún l├╜ giß╗Å h├áng cß╗ºa user theo userId.']
+  R5: ['5', 'CategoryRepository', 'Repository CRUD cho Category - t├¼m theo name, parent, active, ph├ón trang search theo t├¬n.']
+  R6: ['6', 'ComplaintRepository', 'Repository cho Complaint document - hß╗ù trß╗ú Customer/Vendor queue v├á Scheduler t├¼m complaint qu├í hß║ín theo level + deadline (Phase 3 ┬º31-┬º34).']
+  R7: ['7', 'EscalationRepository', 'Repository cho Escalation document - queue theo status/severity/resourceType v├á bß║úo vß╗ç duplicate escalation per ReportCase (Phase 3A ┬º14, 3B ┬º14).']
+  R8: ['8', 'KycProfileRepository', 'Repository cho KycProfile - Admin quß║ún l├╜ hß╗ô s╞í KYC theo trß║íng th├íi v├á t├¬n chß╗º shop.']
+  R9: ['9', 'LegalDocumentRepository', 'Repository cho LegalDocument (Terms, Privacy, ...) - t├¼m theo type cho public API v├á Admin update.']
+  R10: ['10', 'ModerationHistoryRepository', 'Repository cho ModerationHistory - lß╗ïch sß╗¡ c├íc quyß║�&#65533;t ─æß╗ïnh moderation cß╗ºa product/review theo resource v├á tß╗òng.']
+  R11: ['11', 'OrderRepository', 'Repository CRUD cho Order document - lß╗ìc theo user/shop/status, ph├ón trang Admin v├á aggregation count unique customers (Phase 10).']
+  R12: ['12', 'ProductRepository', 'Repository cho Product document - t├¼m theo shop/category/status, moderation status cho Phase 2A queue v├á Dashboard count.']
+  R13: ['13', 'RefundRequestRepository', 'Phase 3A ┬º28 - Read-only persistence layer cho RefundRequest - query theo customer/shop/status v├á li├¬n kß║�&#65533;t complaint/return/order.']
+  R14: ['14', 'ReportCaseRepository', 'Repository cho ReportCase - query theo targetType/targetId legacy v├á resourceType/resourceId (Phase 2C) cho Moderator queue v├á Admin dashboard.']
+  R15: ['15', 'ReturnRequestRepository', 'Phase 3A ┬º23 - Persistence layer cho ReturnRequest - query theo customer/shop/status, complaint v├á order cho ownership check.']
+  R16: ['16', 'ReviewRepository', 'Repository cho Review document - query theo product/user, moderation status legacy v├á pipelineModerationStatus (Phase 2B) cho Moderator queue.']
+  R17: ['17', 'SchedulerIdempotencyRepository', 'Repository cho SchedulerIdempotencyRecord - hß╗ù trß╗ú Scheduler chß║íy idempotent qua operationKey, tr├ính apply c├╣ng operation nhiß╗üu lß║ºn.']
+  R18: ['18', 'ShopRepository', 'Repository cho Shop document - query theo shopName/owner/status/kycStatus, KYC reference cho callback, count cho Admin Dashboard.']
+  R19: ['19', 'UserRepository', 'Repository CRUD cho User document - kß║�&#65533; thß╗½a UserRepositoryCustom cho t├¼m kiß║�&#65533;m theo keyword bß║▒ng MongoTemplate regex.']
+  R20: ['20', 'UserRepositoryCustom', 'Custom repository interface cho User - ─æß╗ïnh ngh─�&#65533;a method search theo keyword (email + fullName) sß╗¡ dß╗Ñng MongoTemplate regex.']
+  R21: ['21', 'UserRepositoryImpl', 'Implementation cß╗ºa UserRepositoryCustom.searchByKeyword - d├╣ng MongoTemplate vß╗¢i regex CASE_INSENSITIVE match email hoß║╖c fullName, trß║ú vß╗ü Page.']
+  R22: ['22', 'VendorRepository', 'Repository cho User document theo shopId - t├¼m vendor (chß╗º shop) theo shopId hoß║╖c kiß╗âm tra tß╗ôn tß║íi.']
+  R23: ['23', 'ViolationRepository', 'Repository cho Violation document - query theo shop/severity/type, count active (resolvedAt IS NULL) cho Admin/Moderator list (Phase 2 Fix BUG-V1).']
+  R24: ['24', 'VoucherRepository', 'Repository cho Voucher document - t├¼m theo code/type/shopId, filter active trong khoß║úng thß╗¥i gian, ph├ón trang Admin Phase 12.']
+
+=== Table 43 (2 rows x 3 cols) ===
+  R0: ['STT', 'T├¬n file', 'Chß╗�&#65533;c n─âng ─æß║úm nhiß╗çm']
+  R1: ['1', 'CartItemValidation', 'Per-item validation result cho cart items - kiß╗âm tra real-time Product.status, Shop.active, Shop.status APPROVED, stock ─æß╗º, tß╗ôn tß║íi Product/Shop. Render badge cho UI.']
+
+=== Table 44 (2 rows x 3 cols) ===
+  R0: ['STT', 'T├¬n file', 'Chß╗�&#65533;c n─âng ─æß║úm nhiß╗çm']
+  R1: ['1', 'CheckoutValidationRes', 'Response cho POST /api/checkout/validate - kiß╗âm tra price/stock/shop/voucher tr╞░ß╗¢c khi user submit. C├│ inner class: ValidatedItem, Summary, VoucherState.']
+
+=== Table 45 (4 rows x 3 cols) ===
+  R0: ['STT', 'T├¬n file', 'Chß╗�&#65533;c n─âng ─æß║úm nhiß╗çm']
+  R1: ['1', 'CreateComplaintReq', 'Phase 3A ┬º11/┬º13 - Request Customer tß║ío Complaint. customerId/shopId suy ra tß╗½ authenticated user; orderItemIds phß║úi nß║▒m trong Order.items.']
+  R2: ['2', 'ResolveComplaintReq', 'Request d├╣ng cho Moderator/Admin resolve complaint vß╗¢i action (RESOLVE|REJECT|ESCALATE), reason v├á note.']
+  R3: ['3', 'VendorRespondReq', 'Request Vendor phß║ún hß╗ôi Level 0 cß╗ºa complaint - chß╗ë c├│ field response chß╗�&#65533;a nß╗Öi dung phß║ún hß╗ôi.']
+
+=== Table 46 (5 rows x 3 cols) ===
+  R0: ['STT', 'T├¬n file', 'Chß╗�&#65533;c n─âng ─æß║úm nhiß╗çm']
+  R1: ['1', 'EscalateProductReq', 'Phase 2A ┬º32 - Request escalate product - reason l├á REQUIRED.']
+  R2: ['2', 'RejectProductReq', 'Phase 2A ┬º29/┬º30 - Request reject product vß╗¢i reason REQUIRED.']
+  R3: ['3', 'RestoreShopReq', 'Phase 6 - Request restore shop - reason REQUIRED ─æß╗â audit trail.']
+  R4: ['4', 'SuspendShopReq', 'Phase 6 - Request suspend shop - reason REQUIRED.']
+
+=== Table 47 (13 rows x 3 cols) ===
+  R0: ['STT', 'T├¬n file', 'Chß╗�&#65533;c n─âng ─æß║úm nhiß╗çm']
+  R1: ['1', 'AssignReportCaseReq', 'TASK #26 - Request Moderator tß╗▒ assign case cho m├¼nh.']
+  R2: ['2', 'CheckoutReq', 'Data contract tß╗½ Checkout sang Order - shippingAddress/phone/paymentMethod + optional items (partial checkout) + voucherCode/discount (server t├¡nh lß║íi). C├│ inner class: CheckoutItemReq.']
+  R3: ['3', 'KycFormReq', 'Form KYC gß╗ôm th├┤ng tin chß╗º shop (CCCD 12 sß╗æ), doanh nghiß╗çp (taxCode 10-13 sß╗æ), ng├ón h├áng - validate ─æß║ºy ─æß╗º bß║▒ng @Pattern.']
+  R4: ['4', 'LoginReq', 'Request ─æ─âng nhß║¡p vß╗¢i email/password.']
+  R5: ['5', 'ProductFormReq', 'Form tß║ío/sß╗¡a sß║ún phß║�&#65533;m - name/price/stock required, categoryId, imageUrls, specifications, status.']
+  R6: ['6', 'RegisterReq', 'TASK #22 - Register request bß║»t buß╗Öc accept Terms + Privacy (qua @AssertTrue isAcceptTerms/isAcceptPrivacy).']
+  R7: ['7', 'ReportCaseCreateReq', 'TASK #26 - Request tß║ío ReportCase mß╗¢i (Customer report hoß║╖c Auto Moderation), targetType/targetId/reason required, evidence/autoFlags optional.']
+  R8: ['8', 'ReportCaseDecisionReq', 'TASK #26 - Request Moderator ra quyß║�&#65533;t ─æß╗ïnh ReportCase - decision required, reason required cho REJECT/ESCALATE (>=10 k├╜ tß╗▒).']
+  R9: ['9', 'ReportReviewReq', 'TASK #15 - Request Customer report mß╗Öt Review - reason required.']
+  R10: ['10', 'ReviewReq', 'Request tß║ío/sß╗¡a review - rating 1-5, comment required.']
+  R11: ['11', 'ShopFormReq', 'Form tß║ío/sß╗¡a shop - shopName 3-100 k├╜ tß╗▒ required, c├íc field contact/logo/banner optional.']
+  R12: ['12', 'VoucherFormReq', 'Form tß║ío/sß╗¡a Voucher - code 3-20 k├╜ tß╗▒ uppercase, discountType, discountValue, quantity, date range.']
+
+=== Table 48 (13 rows x 3 cols) ===
+  R0: ['STT', 'T├¬n file', 'Chß╗�&#65533;c n─âng ─æß║úm nhiß╗çm']
+  R1: ['1', 'AdminDashboardRes', 'Phase 4A - Admin Dashboard response gß╗ôm platform overview, financial (GMV/PlatformRevenue/VendorSales/...), compliance (pendingKyc/pendingModeration/openEscalation/openViolation), risk. C├│ inner class: MetricAvailability, RecentActivity, DailyMetric.']
+  R2: ['2', 'AdminOrderRes', 'Admin Order response nh├│m items theo Shop - c├│ inner class: ShopGroup, OrderItemRes. C├│ factory fromOrder mapping items by shop.']
+  R3: ['3', 'AuthResponse', 'Response auth sau login/register chß╗�&#65533;a JWT token, tokenType, user info, expiresIn.']
+  R4: ['4', 'KycStatusRes', 'KYC status response cho vendor - mask CCCD/taxCode/bankAccount khi hiß╗ân thß╗ï, fromProfile factory v├á status label mapping tiß║�&#65533;ng Viß╗çt.']
+  R5: ['5', 'KycStatusResponse', 'TASK #16 - KYC status response kh├┤ng chß╗�&#65533;a PII plaintext - chß╗ë metadata + status + message tiß║�&#65533;ng Viß╗çt.']
+  R6: ['6', 'OrderHistoryRes', 'Order history cho Customer - master order fields + SubOrders grouped by shop + product images. C├│ inner class: SubOrderRes, OrderItemRes.']
+  R7: ['7', 'ReportCaseRes', 'TASK #26 - ReportCase response cho cß║ú list v├á detail - targetType/targetId, reporter, reason, status, decision, assignment, autoFlags, evidence, timestamps.']
+  R8: ['8', 'ReportCaseStatsRes', 'TASK #26 - Thß╗æng k├¬ ReportCase cho dashboard - pending total/byTargetType, resolved, escalated, resolvedToday.']
+  R9: ['9', 'ReviewRes', 'TASK #15/#26 - Review response bao gß╗ôm images, moderationStatus, moderationReason, reportCount.']
+  R10: ['10', 'VendorDashboardRes', 'Vendor Dashboard response - product/order/revenue counts, topProducts, revenueTrend. C├│ inner class: ShopSummary, TopProduct, DailyMetric.']
+  R11: ['11', 'VendorOrderRes', 'Vendor Order response vß╗¢i shipping per shop. C├│ inner class: OrderItemRes, ShippingStatusRes.']
+  R12: ['12', 'VendorProfileRes', 'Vendor profile response bao gß╗ôm Shop info. C├│ inner class: ShopInfo.']
+
+=== Table 49 (2 rows x 3 cols) ===
+  R0: ['STT', 'T├¬n file', 'Chß╗�&#65533;c n─âng ─æß║úm nhiß╗çm']
+  R1: ['1', 'ReviewModerationReq', 'Phase 2B ┬º31 - Generic Review Moderation Request - reason REQUIRED cho Reject/Hide/Escalate.']
+
+=== Table 50 (2 rows x 3 cols) ===
+  R0: ['STT', 'T├¬n file', 'Chß╗�&#65533;c n─âng ─æß║úm nhiß╗çm']
+  R1: ['1', 'VoucherController', 'Controller xß╗¡ l├╜ voucher - public /vouchers list, vendor /vendor/vouchers CRUD, admin /admin/vouchers CRUD, /checkout/apply-voucher JSON, /checkout/place-order.']
+
+=== Table 51 (14 rows x 3 cols) ===
+  R0: ['STT', 'T├¬n file', 'Chß╗�&#65533;c n─âng ─æß║úm nhiß╗çm']
+  R1: ['1', 'AdminAuditLogController', 'Phase 3C - Admin Audit Log HTML Controller - list + detail vß╗¢i filter role/actorId/resourceType/resourceId/date range (ROLE_ADMIN).']
+  R2: ['2', 'AdminBannerController', 'Phase 17 - Admin Banner/PR Controller - CRUD banner + publish/unpublish/delete + image upload (ROLE_ADMIN).']
+  R3: ['3', 'AdminCategoryController', 'Admin Category CRUD - search + filter active + pagination 5/trang, create/edit/delete form (ROLE_ADMIN).']
+  R4: ['4', 'AdminComplaintController', 'Phase 3 - Admin Complaint Web Controller (Level 2 cuß╗æi c├╣ng) - queue Level 2, actions Claim/Resolve/Reject vß╗¢i timeline + conversation + handler info (ROLE_ADMIN).']
+  R5: ['5', 'AdminDashboardController', 'Admin Dashboard HTML - render stats theo period (WEEK/MONTH/QUARTER/YEAR) cho admin home (ROLE_ADMIN).']
+  R6: ['6', 'AdminEscalationController', 'Phase 3A - Admin Escalation Controller - queue theo status/severity/resourceType, detail vß╗¢i vendor/shop/source case context, claim/enforce (ViolationAction)/dismiss (ROLE_ADMIN).']
+  R7: ['7', 'AdminKycController', 'Admin KYC Controller - list profiles theo status (default PENDING_ADMIN), detail, approve/reject/suspend (ROLE_ADMIN).']
+  R8: ['8', 'AdminOrderController', 'Admin Order Controller - list search + filter status + pagination 5/trang, detail vß╗¢i AdminOrderRes (ROLE_ADMIN).']
+  R9: ['9', 'AdminProductController', 'Phase 14 - Admin Product Moderation Controller - list search + filter status + pagination 10/trang, hide/unhide/delete violation (ROLE_ADMIN).']
+  R10: ['10', 'AdminReviewController', 'TASK #15 - Admin Review Moderation Controller - list search + filter rating + pagination, delete/hide/restore review (ROLE_ADMIN).']
+  R11: ['11', 'AdminShopController', 'Admin Shop Controller - list search + filter status, detail + owner, approve/activate/deactivate/reject shop (ROLE_ADMIN).']
+  R12: ['12', 'AdminUserController', 'Admin User Controller - list search + filter role/status, detail, lock/unlock/edit status (ROLE_ADMIN).']
+  R13: ['13', 'AdminViolationController', 'Admin Violation Controller - list filter shop/severity/type, create, resolve, detail (ROLE_ADMIN).']
+
+=== Table 52 (2 rows x 3 cols) ===
+  R0: ['STT', 'T├¬n file', 'Chß╗�&#65533;c n─âng ─æß║úm nhiß╗çm']
+  R1: ['1', 'AuthApiController', 'REST API Auth Controller - login/register JWT, /me endpoint trß║ú current user info.']
+
+=== Table 53 (2 rows x 3 cols) ===
+  R0: ['STT', 'T├¬n file', 'Chß╗�&#65533;c n─âng ─æß║úm nhiß╗çm']
+  R1: ['1', 'AuthController', 'Form-based Auth Controller - login (set JWT cookie), register form, logout - redirect theo role (ADMIN/MODERATOR/VENDOR ΓåÆ dashboard t╞░╞íng ß╗�&#65533;ng).']
+
+=== Table 54 (4 rows x 3 cols) ===
+  R0: ['STT', 'T├¬n file', 'Chß╗�&#65533;c n─âng ─æß║úm nhiß╗çm']
+  R1: ['1', 'ComplaintApiController', 'Phase 3 - Complaint REST API gateway cho Customer/Vendor/Moderator/Admin - ownership + role + state guards trong service.']
+  R2: ['2', 'RefundRequestController', 'Phase 3A ┬º28 - Refund Request REST controller - request/list/get/poll status, ownership-checked.']
+  R3: ['3', 'ReturnRequestController', 'Phase 3A ┬º23 - Return Request REST controller - customer request return, ownership-checked list/get.']
+
+=== Table 55 (9 rows x 3 cols) ===
+  R0: ['STT', 'T├¬n file', 'Chß╗�&#65533;c n─âng ─æß║úm nhiß╗çm']
+  R1: ['1', 'ModeratorComplaintController', 'Phase 3 - Moderator Complaint Web Controller cho Level 1 - queue + detail + Claim/Resolve/Reject/Escalate vß╗¢i timeline + conversation + handler (ROLE_MODERATOR).']
+  R2: ['2', 'ModeratorController', 'TASK #15 - Moderator Controller dashboard + KYC queue/detail/approve/reject vß╗¢i PII decryption qua CryptoUtil + AuditLog (ROLE_MODERATOR).']
+  R3: ['3', 'ModeratorDashboardController', 'Phase 1/2A/2B/2C - Moderator Dashboard Controller - violations list/detail + history (ROLE_MODERATOR).']
+  R4: ['4', 'ModeratorProductController', 'Phase 2A - Moderator Product Moderation Controller - queue + detail + approve/reject/escalate product (ROLE_MODERATOR).']
+  R5: ['5', 'ModeratorQueueController', 'TASK #26 - Moderator Queue REST API - ReportCase queue CRUD + assign + 3 decision actions (APPROVE/REJECT/ESCALATE) vß╗¢i reason >= 10 k├╜ tß╗▒.']
+  R6: ['6', 'ModeratorReportCaseController', 'Phase 2C - Moderator ReportCase HTML Controller - queue filter status/reason/resourceType + detail + claim/approve/reject/escalate (ROLE_MODERATOR).']
+  R7: ['7', 'ModeratorReviewController', 'Phase 2B - Moderator Review HTML Controller - queue filter moderationStatus/rating + detail + 5 actions approve/reject/hide/unhide/escalate (ROLE_MODERATOR).']
+  R8: ['8', 'ModeratorShopController', 'Phase 6 - Moderator Shop Moderation Controller - queue + detail + approve/suspend/restore/restrict shop vß╗¢i reason required (ROLE_MODERATOR).']
+
+=== Table 56 (9 rows x 3 cols) ===
+  R0: ['STT', 'T├¬n file', 'Chß╗�&#65533;c n─âng ─æß║úm nhiß╗çm']
+  R1: ['1', 'VendorComplaintController', 'Phase 3 - Vendor Complaint Web Controller cho chß╗º shop - list + detail Level 0 + Respond/Escalate/Resolve vß╗¢i timeline + SLA deadline (ROLE_VENDOR).']
+  R2: ['2', 'VendorDashboardController', 'Vendor Dashboard Controller - redirect sang /vendor/kyc nß║�&#65533;u ch╞░a KYC APPROVED, render dashboard stats.']
+  R3: ['3', 'VendorKycController', 'Vendor KYC Controller - status page + edit form pre-fill + upload image + submit (ROLE_VENDOR).']
+  R4: ['4', 'VendorOrderController', 'Vendor Order Controller - list orders c├│ item thuß╗Öc shop, detail + update order status + update shipping status per shop (ROLE_VENDOR).']
+  R5: ['5', 'VendorProductController', 'Vendor Product Controller - list/create/edit/delete product + upload image + categories JSON API (ROLE_VENDOR).']
+  R6: ['6', 'VendorProfileController', 'Vendor Profile Controller - render profile + shop info (ROLE_VENDOR).']
+  R7: ['7', 'VendorShopController', 'Vendor Shop Controller - profile + create form (y├¬u cß║ºu KYC APPROVED) + update shop vß╗¢i logo/banner upload (ROLE_VENDOR).']
+  R8: ['8', 'VendorViolationController', 'Vendor Violation Controller - list violations cß╗ºa shop + detail (ownership-checked) (ROLE_VENDOR).']
+
+=== Table 57 (14 rows x 3 cols) ===
+  R0: ['STT', 'T├¬n file', 'Chß╗�&#65533;c n─âng ─æß║úm nhiß╗çm']
+  R1: ['1', 'CartController', 'Cart HTML + JSON Controller - view cart + add/update/remove/removeInvalid/removeByShop + apply/remove voucher + available vouchers JSON vß╗¢i real-time validation (AUTHENTICATED).']
+  R2: ['2', 'ComplaintController', 'Phase 3 - Customer-facing Complaint Web Controller - list + create form + submit + detail vß╗¢i timeline/conversation + escalate/resolve Level 0 (ROLE_CUSTOMER).']
+  R3: ['3', 'DebugLogController', 'Temporary debug controller - nhß║¡n NDJSON logs tß╗½ browser v├á ghi ra file .cursor/debug-04f262.log.']
+  R4: ['4', 'HomeController', 'Home Controller - render trang chß╗º vß╗¢i products, newArrivals, featuredProducts, flashSaleStats, categories, vouchers, heroBanners, promoBanners.']
+  R5: ['5', 'KycController', 'TASK #16/#18 - KYC REST endpoints - /api/kyc/submit (VENDOR), /api/kyc/status (authenticated), /api/kyc/callback (PUBLIC) vß╗¢i audit log.']
+  R6: ['6', 'LegalDocumentController', 'TASK #21 - Public API legal documents - GET public cho mß╗ìi ng╞░ß╗¥i, PUT /api/legal/{type} chß╗ë Admin.']
+  R7: ['7', 'OrderController', 'Customer-facing Order Controller - checkout page + POST submit order + pre-submit validate JSON (/api/checkout/validate) + orders history + order detail vß╗¢i sub-orders (AUTHENTICATED).']
+  R8: ['8', 'ProductController', 'Public Product Controller - products list (search/category/sort/pagination) + product detail vß╗¢i reviews + related products.']
+  R9: ['9', 'RefundController', 'Customer-facing Refund/Return UI - /refunds list kß║�&#65533;t hß╗úp refund + return + filter type/status, /refunds/{id} + /returns/{id} detail vß╗¢i timeline.']
+  R10: ['10', 'ReportController', 'Customer-facing Report UI - /reports list + /reports/new form + submit + /reports/{id} detail vß╗¢i ownership check (chß╗ë reporter mß╗¢i xem ─æ╞░ß╗úc).']
+  R11: ['11', 'ReviewController', 'Customer-facing Review Controller - create/edit/delete review + JSON API upload/delete images (owner-only) + report review + check can-review.']
+  R12: ['12', 'SellerOnboardingController', "Public landing page cho ch╞░╞íng tr├¼nh 'Trß╗ƒ th├ánh ng╞░ß╗¥i b├ín tr├¬n CNJ70 Shop' - marketing + y├¬u cß║ºu + 5 b╞░ß╗¢c onboarding."]
+  R13: ['13', 'ShopController', 'Public Shop detail page - /shop/{id} vß╗¢i filter category/priceRange + sort newest/price/rating/best-selling + stats (totalSold, avgRating, responseRate) + recent reviews + top products.']
+
+=== Table 58 (32 rows x 3 cols) ===
+  R0: ['STT', 'T├¬n file', 'Chß╗�&#65533;c n─âng ─æß║úm nhiß╗çm']
+  R1: ['1', 'AdminAuditLogService', 'Admin read-only AuditLog query service. Chi cho phep VIEW/SEARCH/FILTER/PAGINATE audit events. Khong co mutation cua audit records.']
+  R2: ['2', 'AdminBannerService', 'Quan ly banner cho Admin: tao, cap nhat, publish/unpublish, xoa banner. Chi dinh admin thao tac cac banner, mac dinh tao moi se co trang thai UNPUBLISHED.']
+  R3: ['3', 'AdminCategoryService', 'Quan ly Category cho Admin: list categories voi search va filter active, xem chi tiet, tao, cap nhat, xoa category.']
+  R4: ['4', 'AdminEscalationService', 'Admin Escalation va Enforcement Service: list escalations, claim, enforce (ViolationAction), dismiss. Thuc hien state transition (Product -> HIDDEN, Shop -> SUSPENDED/RESTRICTED, User -> LOCKED) va emit audit event.']
+  R5: ['5', 'AdminKycService', 'Quan ly KYC cho Admin: list pending/pending by status, xem chi tiet ho so, approve/reject/suspend KYC profile, thong ke dashboard, lay User tu KycProfile.']
+  R6: ['6', 'AdminOrderService', 'Quan ly Order cho Admin: list orders voi search va filter status, xem chi tiet order, convert sang AdminOrderRes DTO.']
+  R7: ['7', 'AdminProductService', 'Quan ly product cho Admin: list tat ca vendor products voi search va filter, xem chi tiet, an/hien, xoa product violation. Khong cascade den Order/Review/Cart.']
+  R8: ['8', 'AdminReviewService', 'Admin Review Moderation: list reviews voi search va filter rating, xem chi tiet, xoa review violation (hard delete). Khong cascade den Product/Order/Customer.']
+  R9: ['9', 'AdminService', 'Cap nhat dashboard cho Admin voi thong ke tong quan: users, shops, products, orders, revenue, recent activities. Ho tro loc theo period (DAY, WEEK, MONTH, QUARTER, YEAR, ALL).']
+  R10: ['10', 'AdminShopService', 'Quan ly shop cho Admin: list shops, approve/reject/activate/deactivate shop. Mot so method co ho tro AuditLog actor tracking.']
+  R11: ['11', 'AdminUserService', 'Quan ly User cho Admin: list users voi search va filter role/status, xem chi tiet, lock/unlock user, cap nhat user status (ACTIVE/LOCKED/UNVERIFIED).']
+  R12: ['12', 'AuditLogService', 'Ghi log moi compliance action: moderation, KYC, admin, escalation, auto flag. Ho tro cac muc do severity: INFO, WARNING, CRITICAL va loc theo action, actor, resource.']
+  R13: ['13', 'AuthService', 'Quan ly dang ky, dang nhap va xac thuc nguoi dung. Tra ve CustomUserDetails cho Spring Security sau khi login thanh cong.']
+  R14: ['14', 'CartService', 'Quan ly Cart: them, cap nhat, xoa san pham; dat Applied Voucher; xoa items/khong hop le/theo shop; tinh tong; validate cart items (product status, shop status, stock).']
+  R15: ['15', 'ComplaintService', 'Quan ly Complaint voi state machine: OPEN -> VENDOR_RESPONDED -> RESOLVED | ESCALATED -> MODERATOR_REVIEW -> RESOLVED | ESCALATED_L2 -> ADMIN_REVIEW -> RESOLVED / CLOSED. Ho tro Customer/Vendor/Moderator/Admin theo tung level.']
+  R16: ['16', 'KycService', 'Orchestrator quan ly vong doi KYC: Vendor nop KYC (ma hoa PII, gui provider), lay KYC status, xu ly callback tu provider, cap nhat Shop.kycStatus.']
+  R17: ['17', 'ModeratorProductService', 'Moderator Product Moderation: list queue (PENDING_MANUAL, AUTO_PASSED, AUTO_REJECTED), get detail, approve/reject/escalate product. Admin enforcement la out of scope.']
+  R18: ['18', 'ModeratorReportCaseService', 'Xu ly ReportCase cho Moderator: list queue, get detail, approve/reject/escalate/claim case. Moi action deu viet ModerationHistory va emit AuditEvent.']
+  R19: ['19', 'ModeratorReviewService', 'Moderator Review Moderation: list queue, get detail, approve/reject/hide/unhide/escalate review. Moi action deu viet ModerationHistory va AuditEvent. Review content khong bi thay doi, chi metadata moderation duoc set.']
+  R20: ['20', 'ModeratorService', 'Kiem duyet Review queue (REPORTED, HIDDEN) va KYC queue (pending/rejected shops). Moderator duyet hoac tu choi KYC cua cac shop.']
+  R21: ['21', 'ModeratorShopService', 'Moderator Shop Moderation: list queue, approve pending registration, suspend/restore/restrict shop. Moderator khong the overwite terminal SUSPENDED status tu Admin enforcement.']
+  R22: ['22', 'OrderService', 'Quan ly Order: tao order, validate checkout, lay order theo id/user/shop, cap nhat trang thai order va shipping, huy order. Kiem tra customer da mua/nhan san pham chua.']
+  R23: ['23', 'ProductService', 'Quan ly Product: tao, cap nhat, xoa product; lay product theo id/shop/category; search products; lay product active, new arrivals, featured products; cap nhat trang thai product.']
+  R24: ['24', 'RefundService', 'Xu ly yeu cau hoan tien cho Customer/Vendor/Moderator. Tao Refund record va delegate sang RefundProvider. Khong tu quyet amount, khong tu cong balance.']
+  R25: ['25', 'ReportCaseService', 'Quan ly workflow kiem duyet cho Moderator: tao case (tu User report hoac Auto Moderation), assign, approve/reject/escalate. Dam bao transactional, AuditLog, khong cho thao tac tren da RESOLVED/ESCALATED.']
+  R26: ['26', 'ReturnService', 'Xu ly yeu cau tra hang cho Customer/Vendor/Moderator. Tao ReturnRequest, list returns, xem detail. Vendor approve/reject va Refund trigger thuoc Phase 3B/3C.']
+  R27: ['27', 'ReviewService', 'Quan ly Review: tao, cap nhat, xoa review; lay reviews theo product/user; kiem tra quyen review; an/hoi phuc review; them/xoa hinh anh review. Bao gom review moderation cho Moderator/Admin.']
+  R28: ['28', 'VendorKycService', 'Quan ly KYC cho Vendor: lay trang thai KYC, submit/resubmit ho so, upload hinh KYC, lay form co the chinh sua. Kiem tra vendor da APPROVED KYC chua truoc khi tao shop.']
+  R29: ['29', 'VendorService', 'Quan ly Vendor: lay current vendor, shop, tao/cap nhat shop, lay vendor profile va dashboard stats, validate shop/product ownership.']
+  R30: ['30', 'ViolationService', 'Quan ly Violation: lay lich su violation cua shop, dem violation active/critical, tao moi, resolve violation. Dung cho vendor xem va admin monitor.']
+  R31: ['31', 'VoucherService', 'Quan ly Voucher cho Shop va Admin (WEB voucher): tao, cap nhat, xoa, activate/deactivate, lay voucher theo id/code/shop, kiem tra tinh hop le, validate cho checkout, dem va tang/giam so lan su dung.']
+
+=== Table 59 (1 rows x 1 cols) ===
+  R0: ['Code ─æß║╖c tr╞░ng']
+
+=== Table 60 (1 rows x 1 cols) ===
+  R0: ['']
+
+=== Table 61 (21 rows x 4 cols) ===
+  R0: ['STT', 'Ph├ón hß╗ç (Actor)', 'Chß╗�&#65533;c n─âng ho├án th├ánh', 'M├┤ tß║ú chi tiß║�&#65533;t']
+  R1: ['1', 'Kh├ích h├áng |  (Customer)', '─É─âng k├╜ & ─É─âng nhß║¡p', 'X├íc thß╗▒c t├ái khoß║ún qua Spring Security, m├ú h├│a mß║¡t khß║�&#65533;u BCrypt, ph├ón quyß╗ün vai tr├▓ CUSTOMER.']
+  R2: ['2', 'Kh├ích h├áng', 'Trang chß╗º & Banner', 'Hiß╗ân thß╗ï hß╗ç thß╗æng banner quß║úng c├ío ─æß╗Öng, danh mß╗Ñc sß║ún phß║�&#65533;m, sß╗▒ kiß╗çn Flash-sale v├á sß║ún phß║�&#65533;m nß╗òi bß║¡t.']
+  R3: ['3', 'Kh├ích h├áng', 'T├¼m kiß║�&#65533;m & Lß╗ìc sß║ún phß║�&#65533;m', 'T├¼m kiß║�&#65533;m theo tß╗½ kh├│a t├¬n sß║ún phß║�&#65533;m, lß╗ìc ─æa ti├¬u ch├¡ theo danh mß╗Ñc, khoß║úng gi├í, sß║»p xß║�&#65533;p gi├í/─æ├ính gi├í.']
+  R4: ['4', 'Kh├ích h├áng', 'Chi tiß║�&#65533;t sß║ún phß║�&#65533;m & Biß║�&#65533;n thß╗â', 'Xem m├┤ tß║ú, th├┤ng sß╗æ kß╗╣ thuß║¡t (Specification), chß╗ìn biß║�&#65533;n thß╗â (Variant: m├áu/k├¡ch cß╗í), xem sß╗æ l╞░ß╗úng tß╗ôn kho.']
+  R5: ['5', 'Kh├ích h├áng', '─É├ính gi├í & B├¼nh luß║¡n', 'Gß╗¡i ─æ├ính gi├í sao (1-5 sao) v├á nhß║¡n x├�&#65533;t cho sß║ún phß║�&#65533;m ─æ├ú trß║úi nghiß╗çm, xem danh s├ích ─æ├ính gi├í cß╗ºa cß╗Öng ─æß╗ông.']
+  R6: ['6', 'Kh├ích h├áng', 'Quß║ún l├╜ Giß╗Å h├áng', 'Th├¬m sß║ún phß║�&#65533;m/biß║�&#65533;n thß╗â v├áo giß╗Å, cß║¡p nhß║¡t sß╗æ l╞░ß╗úng mua, x├│a sß║ún phß║�&#65533;m, tß╗▒ ─æß╗Öng t├¡nh tß╗òng tiß╗ün theo thß╗¥i gian thß╗▒c.']
+  R7: ['7', 'Kh├ích h├áng', '├üp dß╗Ñng Voucher giß║úm gi├í', 'Chß╗ìn m├ú giß║úm gi├í khß║ú dß╗Ñng cß╗ºa S├án (WEB) hoß║╖c cß╗ºa Shop (SHOP) theo % hoß║╖c sß╗æ tiß╗ün cß╗æ ─æß╗ïnh.']
+  R8: ['8', 'Kh├ích h├áng', 'Thanh to├ín & ─Éß║╖t h├áng', '─Éß║╖t h├áng vß╗¢i ph╞░╞íng thß╗�&#65533;c COD (thanh to├ín khi nhß║¡n) hoß║╖c VNPAY, l╞░u ─æß╗ïa chß╗ë giao h├áng v├á th├┤ng tin li├¬n hß╗ç.']
+  R9: ['9', 'Kh├ích h├áng', 'Lß╗ïch sß╗¡ & Chi tiß║�&#65533;t ─æ╞ín h├áng', 'Theo d├╡i trß║íng th├íi ─æ╞ín h├áng (PENDING, PREPARING, SHIPPING, DELIVERED, CANCELLED), xem chi tiß║�&#65533;t sß║ún phß║�&#65533;m ─æ├ú mua.']
+  R10: ['10', 'Kh├ích h├áng', 'Xem hß╗ô s╞í Shop', 'Xem trang c├í nh├ón cß╗ºa cß╗¡a h├áng b├ín h├áng, th├┤ng tin shop, ─æ├ính gi├í chung v├á danh s├ích sß║ún phß║�&#65533;m ri├¬ng cß╗ºa shop.']
+  R11: ['11', 'Ng╞░ß╗¥i b├ín |  (Vendor)', '─É─âng k├╜ mß╗ƒ Cß╗¡a h├áng', 'Nß╗Öp hß╗ô s╞í mß╗ƒ shop (t├¬n shop, m├┤ tß║ú, sß╗æ ─æiß╗çn thoß║íi, ─æß╗ïa chß╗ë, logo, banner) v├á chß╗¥ Admin ph├¬ duyß╗çt.']
+  R12: ['12', 'Ng╞░ß╗¥i b├ín', 'Dashboard Vendor', 'Thß╗æng k├¬ tß╗òng quan doanh thu, tß╗òng sß╗æ ─æ╞ín ─æß║╖t h├áng, biß╗âu ─æß╗ô v├á sß╗æ sß║ún phß║�&#65533;m ─æang kinh doanh cß╗ºa cß╗¡a h├áng.']
+  R13: ['13', 'Ng╞░ß╗¥i b├ín', 'Quß║ún l├╜ Sß║ún phß║�&#65533;m (CRUD)', 'Th├¬m mß╗¢i, sß╗¡a, x├│a sß║ún phß║�&#65533;m; quß║ún l├╜ biß║�&#65533;n thß╗â, gi├í b├ín, cß║Ñu h├¼nh th├┤ng sß╗æ kß╗╣ thuß║¡t v├á trß║íng th├íi hiß╗ân thß╗ï.']
+  R14: ['14', 'Ng╞░ß╗¥i b├ín', 'Quß║ún l├╜ ─É╞ín h├áng', 'Theo d├╡i danh s├ích ─æ╞ín h├áng thuß╗Öc shop, xem chi tiß║�&#65533;t v├á chuyß╗ân ─æß╗òi tiß║�&#65533;n tr├¼nh trß║íng th├íi (PENDING -> PREPARING -> SHIPPING).']
+  R15: ['15', 'Ng╞░ß╗¥i b├ín', 'Quß║ún l├╜ Voucher cß╗ºa Shop', 'Tß║ío v├á quß║ún l├╜ c├íc m├ú giß║úm gi├í ├íp dß╗Ñng ri├¬ng cho sß║ún phß║�&#65533;m cß╗ºa shop (VoucherType = SHOP).']
+  R16: ['16', 'Quß║ún trß╗ï vi├¬n |  (Admin)', 'Dashboard S├án', 'Thß╗æng k├¬ to├án diß╗çn doanh thu to├án s├án, sß╗æ l╞░ß╗úng t├ái khoß║ún ─æ─âng k├╜, sß╗æ l╞░ß╗úng shop, sß║ún phß║�&#65533;m v├á ─æ╞ín h├áng.']
+  R17: ['17', 'Quß║ún trß╗ï vi├¬n', 'Quß║ún l├╜ Ng╞░ß╗¥i d├╣ng', 'Xem danh s├ích ng╞░ß╗¥i d├╣ng, chi tiß║�&#65533;t t├ái khoß║ún, thß╗▒c hiß╗çn Kh├│a (LOCK) / Mß╗ƒ kh├│a (UNLOCK) khi c├│ vi phß║ím.']
+  R18: ['18', 'Quß║ún trß╗ï vi├¬n', 'X├�&#65533;t duyß╗çt Cß╗¡a h├áng', 'Xem danh s├ích y├¬u cß║ºu mß╗ƒ shop; thß╗▒c hiß╗çn Ph├¬ duyß╗çt (APPROVED) hoß║╖c Tß╗½ chß╗æi (REJECTED) hß╗ô s╞í.']
+  R19: ['19', 'Quß║ún trß╗ï vi├¬n', 'Quß║ún l├╜ Danh mß╗Ñc & Banner', 'Th├¬m mß╗¢i, cß║¡p nhß║¡t, x├│a danh mß╗Ñc sß║ún phß║�&#65533;m to├án s├án; cß║Ñu h├¼nh h├¼nh ß║únh banner quß║úng c├ío tr├¬n trang chß╗º.']
+  R20: ['20', 'Quß║ún trß╗ï vi├¬n', 'Quß║ún l├╜ Voucher & ─É├ính gi├í', 'Tß║ío m├ú giß║úm gi├í to├án s├án (WEB); kiß╗âm duyß╗çt, ß║�&#65533;n/x├│a c├íc b├¼nh luß║¡n ─æ├ính gi├í kh├┤ng ph├╣ hß╗úp ti├¬u chuß║�&#65533;n.']
+
+=== Table 62 (21 rows x 7 cols) ===
+  R0: ['M├ú TC', 'Chß╗�&#65533;c n─âng', 'Kß╗ïch bß║ún (C├íc b╞░ß╗¢c)', 'Dß╗» liß╗çu ─æß║ºu v├áo', 'Kß║�&#65533;t quß║ú mong ─æß╗úi (Expected)', 'Kß║�&#65533;t quß║ú thß╗▒c tß║�&#65533; (Actual)', '─É├ính gi├í']
+  R1: ['TC01', '─É─âng k├╜', "1. Truy cß║¡p /auth/register |  2. Nhß║¡p th├┤ng tin hß╗úp lß╗ç |  3. Bß║Ñm '─É─âng k├╜'", 'Email: test@gmail.com |  Pass: 123456 |  Name: Nguyß╗àn V─ân A', '─É─âng k├╜ th├ánh c├┤ng, l╞░u User v├áo DB, chuyß╗ân h╞░ß╗¢ng sang trang ─æ─âng nhß║¡p.', 'T├ái khoß║ún ─æ╞░ß╗úc tß║ío th├ánh c├┤ng, chuyß╗ân h╞░ß╗¢ng trang /auth/login vß╗¢i th├┤ng b├ío th├ánh c├┤ng.', 'PASS']
+  R2: ['TC02', '─É─âng k├╜', "1. Truy cß║¡p /auth/register |  2. Nhß║¡p Email ─æ├ú tß╗ôn tß║íi |  3. Bß║Ñm '─É─âng k├╜'", 'Email: test@gmail.com (─æ├ú c├│) |  Pass: 123456', "Hß╗ç thß╗æng b├ío lß╗ùi: 'Email ─æ├ú ─æ╞░ß╗úc sß╗¡ dß╗Ñng', kh├┤ng l╞░u tr├╣ng v├áo DB.", "Hiß╗ân thß╗ï th├┤ng b├ío lß╗ùi 'Email ─æ├ú tß╗ôn tß║íi' ngay tß║íi form ─æ─âng k├╜.", 'PASS']
+  R3: ['TC03', '─É─âng nhß║¡p', "1. Truy cß║¡p /auth/login |  2. Nhß║¡p ─æ├║ng Email v├á Mß║¡t khß║�&#65533;u |  3. Bß║Ñm '─É─âng nhß║¡p'", 'Email: customer@gmail.com |  Pass: 123456', '─É─âng nhß║¡p th├ánh c├┤ng, thiß║�&#65533;t lß║¡p Security Context, chuyß╗ân h╞░ß╗¢ng vß╗ü /home.', '─É─âng nhß║¡p th├ánh c├┤ng, thanh Header hiß╗ân thß╗ï t├¬n ng╞░ß╗¥i d├╣ng v├á giß╗Å h├áng.', 'PASS']
+  R4: ['TC04', '─É─âng nhß║¡p', "1. Truy cß║¡p /auth/login |  2. Nhß║¡p sai Mß║¡t khß║�&#65533;u |  3. Bß║Ñm '─É─âng nhß║¡p'", 'Email: customer@gmail.com |  Pass: sai_mat_khau', 'B├ío lß╗ùi x├íc thß╗▒c kh├┤ng hß╗úp lß╗ç, giß╗» nguy├¬n tß║íi trang ─æ─âng nhß║¡p.', "Hiß╗ân thß╗ï th├┤ng b├ío lß╗ùi m├áu ─æß╗Å 'T├ái khoß║ún hoß║╖c mß║¡t khß║�&#65533;u kh├┤ng ch├¡nh x├íc'.", 'PASS']
+  R5: ['TC05', '─É─âng nhß║¡p', '1. ─É─âng nhß║¡p v├áo t├ái khoß║ún ─æ├ú bß╗ï Admin kh├│a (LOCKED)', 'Email: user_locked@gmail.com |  Pass: 123456', 'Hß╗ç thß╗æng tß╗½ chß╗æi ─æ─âng nhß║¡p, th├┤ng b├ío t├ái khoß║ún ─æang bß╗ï kh├│a.', "B├ío lß╗ùi 'T├ái khoß║ún cß╗ºa bß║ín ─æ├ú bß╗ï kh├│a, vui l├▓ng li├¬n hß╗ç quß║ún trß╗ï vi├¬n'.", 'PASS']
+  R6: ['TC06', 'T├¼m kiß║�&#65533;m', '1. Tß║íi Header g├╡ tß╗½ kh├│a v├áo ├┤ t├¼m kiß║�&#65533;m |  2. Bß║Ñm Enter', "Tß╗½ kh├│a: 'Laptop'", "Hiß╗ân thß╗ï danh s├ích c├íc sß║ún phß║�&#65533;m c├│ t├¬n chß╗�&#65533;a 'Laptop' (kh├┤ng ph├ón biß╗çt hoa th╞░ß╗¥ng).", 'Trß║ú vß╗ü ch├¡nh x├íc danh s├ích c├íc sß║ún phß║�&#65533;m laptop ─æang c├│ tr├¬n s├án.', 'PASS']
+  R7: ['TC07', 'Lß╗ìc sß║ún phß║�&#65533;m', "1. V├áo /products |  2. Chß╗ìn Danh mß╗Ñc '─Éiß╗çn tß╗¡' |  3. ─Éiß╗ün gi├í tß╗½ 5tr - 15tr", 'Category: ─Éiß╗çn tß╗¡ |  Price: 5.000.000 - 15.000.000', 'Chß╗ë hiß╗ân thß╗ï c├íc sß║ún phß║�&#65533;m thuß╗Öc danh mß╗Ñc v├á c├│ gi├í nß║▒m trong khoß║úng chß╗ë ─æß╗ïnh.', 'L╞░ß╗¢i sß║ún phß║�&#65533;m lß╗ìc ─æ├║ng theo ti├¬u ch├¡, hiß╗ân thß╗ï sß╗æ l╞░ß╗úng kß║�&#65533;t quß║ú t╞░╞íng ß╗�&#65533;ng.', 'PASS']
+  R8: ['TC08', 'Xem chi tiß║�&#65533;t', '1. Bß║Ñm v├áo sß║ún phß║�&#65533;m bß║Ñt kß╗│ |  2. Chß╗ìn biß║�&#65533;n thß╗â m├áu sß║»c/k├¡ch th╞░ß╗¢c', 'Sß║ún phß║�&#65533;m ID: 65a... |  Variant: M├áu ─Éen, Size XL', 'Hiß╗ân thß╗ï ─æ├║ng gi├í t╞░╞íng ß╗�&#65533;ng vß╗¢i biß║�&#65533;n thß╗â v├á sß╗æ l╞░ß╗úng tß╗ôn kho khß║ú dß╗Ñng.', 'Giao diß╗çn cß║¡p nhß║¡t gi├í b├ín v├á sß╗æ l╞░ß╗úng tß╗ôn theo ─æ├║ng biß║�&#65533;n thß╗â ─æ╞░ß╗úc chß╗ìn.', 'PASS']
+  R9: ['TC09', 'Giß╗Å h├áng', "1. Tß║íi trang chi tiß║�&#65533;t, chß╗ìn sß╗æ l╞░ß╗úng = 2 |  2. Bß║Ñm 'Th├¬m v├áo giß╗Å h├áng'", 'Sß╗æ l╞░ß╗úng: 2 |  Variant: M├áu ─Éen', 'Sß║ún phß║�&#65533;m ─æ╞░ß╗úc th├¬m v├áo giß╗Å h├áng, cß║¡p nhß║¡t sß╗æ l╞░ß╗úng icon giß╗Å h├áng tr├¬n Header.', "Giß╗Å h├áng t─âng th├¬m 2 sß║ún phß║�&#65533;m, hiß╗ân thß╗ï toast th├┤ng b├ío '─É├ú th├¬m v├áo giß╗Å'.", 'PASS']
+  R10: ['TC10', 'Giß╗Å h├áng', "1. V├áo /cart |  2. Bß║Ñm n├║t '+' t─âng sß╗æ l╞░ß╗úng l├¬n 3 |  3. Bß║Ñm n├║t X├│a sß║ún phß║�&#65533;m", 'Thao t├íc: T─âng sß╗æ l╞░ß╗úng v├á X├│a sß║ún phß║�&#65533;m', 'Cß║¡p nhß║¡t tß╗òng tiß╗ün tß╗�&#65533;c th├¼ khi ─æß╗òi sß╗æ l╞░ß╗úng; x├│a sß║ún phß║�&#65533;m khß╗Åi giß╗Å h├áng th├ánh c├┤ng.', 'Tß╗òng tiß╗ün tß╗▒ ─æß╗Öng t├¡nh lß║íi ch├¡nh x├íc; sß║ún phß║�&#65533;m bß╗ï x├│a biß║�&#65533;n mß║Ñt khß╗Åi bß║úng giß╗Å h├áng.', 'PASS']
+  R11: ['TC11', 'Voucher', "1. Tß║íi trang Checkout, nhß║¡p m├ú voucher hß╗úp lß╗ç |  2. Bß║Ñm '├üp dß╗Ñng'", 'M├ú: GIAM50K (─É╞ín tß╗½ 200k, giß║úm 50k)', 'Hß╗ç thß╗æng kiß╗âm tra ─æiß╗üu kiß╗çn, trß╗½ 50.000─æ v├áo tß╗òng tiß╗ün thanh to├ín.', 'M├ú ├íp dß╗Ñng th├ánh c├┤ng, cß╗Öt giß║úm gi├í hiß╗ân thß╗ï -50.000─æ, tß╗òng thanh to├ín cß║¡p nhß║¡t ─æ├║ng.', 'PASS']
+  R12: ['TC12', 'Voucher', '1. Nhß║¡p m├ú voucher khi ─æ╞ín h├áng ch╞░a ─æß║ít gi├í trß╗ï tß╗æi thiß╗âu', 'M├ú: GIAM100K (Y├¬u cß║ºu ─æ╞ín tß╗½ 500k; ─É╞ín hiß╗çn tß║íi: 300k)', "B├ío lß╗ùi '─É╞ín h├áng ch╞░a ─æß║ít gi├í trß╗ï tß╗æi thiß╗âu ─æß╗â sß╗¡ dß╗Ñng m├ú n├áy'.", 'Hß╗ç thß╗æng tß╗½ chß╗æi ├íp dß╗Ñng voucher v├á hiß╗ân thß╗ï th├┤ng b├ío cß║únh b├ío r├╡ r├áng.', 'PASS']
+  R13: ['TC13', '─Éß║╖t h├áng', "1. ─Éiß╗ün ─æß╗ïa chß╗ë nhß║¡n h├áng |  2. Chß╗ìn ph╞░╞íng thß╗�&#65533;c COD |  3. Bß║Ñm '─Éß║╖t h├áng ngay'", 'Hß╗ì t├¬n: Trß║ºn V─ân B |  S─ÉT: 0987654321 |  ─Éß╗ïa chß╗ë: H├á Nß╗Öi |  Payment: COD', 'Tß║ío ─æ╞ín h├áng mß╗¢i (Status: PENDING), x├│a sß║ún phß║�&#65533;m ─æ├ú mua khß╗Åi giß╗Å h├áng, trß╗½ kho.', '─É╞ín h├áng ─æ╞░ß╗úc tß║ío th├ánh c├┤ng, chuyß╗ân h╞░ß╗¢ng sang trang x├íc nhß║¡n th├ánh c├┤ng.', 'PASS']
+  R14: ['TC14', '─É─âng k├╜ Shop', '1. T├ái khoß║ún Customer v├áo /vendor/shop/create |  2. ─Éiß╗ün th├┤ng tin shop |  3. Nß╗Öp hß╗ô s╞í', 'T├¬n shop: TechStore |  S─ÉT: 0912345678 |  ─Éß╗ïa chß╗ë: TP.HCM', 'Tß║ío Shop ß╗ƒ trß║íng th├íi PENDING, chß╗¥ Admin duyß╗çt; hiß╗ân thß╗ï th├┤ng b├ío chß╗¥ x├�&#65533;t duyß╗çt.', 'Shop ─æ╞░ß╗úc l╞░u v├áo MongoDB vß╗¢i status = PENDING, chuyß╗ân h╞░ß╗¢ng trang chß╗¥ duyß╗çt.', 'PASS']
+  R15: ['TC15', 'Duyß╗çt Shop', "1. Admin ─æ─âng nhß║¡p, v├áo /admin/shops |  2. T├¼m shop TechStore |  3. Bß║Ñm 'Ph├¬ duyß╗çt'", 'Shop: TechStore |  Action: APPROVE', 'Cß║¡p nhß║¡t Shop sang APPROVED, cß║Ñp quyß╗ün VENDOR cho chß╗º shop.', 'Trß║íng th├íi shop ─æß╗òi sang APPROVED, t├ái khoß║ún chß╗º shop c├│ quyß╗ün truy cß║¡p /vendor.', 'PASS']
+  R16: ['TC16', '─É─âng sß║ún phß║�&#65533;m', "1. Vendor v├áo /vendor/products/create |  2. Nhß║¡p th├┤ng tin, gi├í, tß╗ôn kho |  3. Bß║Ñm 'L╞░u'", 'T├¬n: B├án ph├¡m c╞í |  Gi├í: 800.000─æ |  Kho: 50 |  Category: Phß╗Ñ kiß╗çn', 'Sß║ún phß║�&#65533;m ─æ╞░ß╗úc l╞░u v├áo DB vß╗¢i shopId cß╗ºa Vendor, hiß╗ân thß╗ï ngay tr├¬n s├án.', 'Sß║ún phß║�&#65533;m hiß╗ân thß╗ï trong danh s├ích cß╗ºa Vendor v├á hiß╗ân thß╗ï tß║íi trang /products.', 'PASS']
+  R17: ['TC17', 'Cß║¡p nhß║¡t ─æ╞ín', '1. Vendor v├áo /vendor/orders |  2. Chß╗ìn ─æ╞ín PENDING |  3. ─Éß╗òi trß║íng th├íi sang PREPARING', 'Order ID: 65b... |  New Status: PREPARING', 'Cß║¡p nhß║¡t trß║íng th├íi ─æ╞ín h├áng th├ánh c├┤ng, hiß╗ân thß╗ï ─æ├║ng tiß║�&#65533;n tr├¼nh.', 'Trß║íng th├íi ─æ╞ín ─æß╗òi th├ánh PREPARING, kh├ích h├áng v├áo /orders c┼�&#65533;ng thß║Ñy cß║¡p nhß║¡t.', 'PASS']
+  R18: ['TC18', 'Kh├│a User', "1. Admin v├áo /admin/users |  2. Chß╗ìn user vi phß║ím |  3. Bß║Ñm 'Kh├│a t├ái khoß║ún'", 'User ID: 65c... |  Action: LOCK', 'Cß║¡p nhß║¡t status cß╗ºa User th├ánh LOCKED; v├┤ hiß╗çu h├│a quyß╗ün truy cß║¡p.', 'Trß║íng th├íi user chuyß╗ân th├ánh LOCKED, user bß╗ï chß║╖n ─æ─âng nhß║¡p ngay lß║¡p tß╗�&#65533;c.', 'PASS']
+  R19: ['TC19', 'Quß║ún l├╜ mß╗Ñc', "1. Admin v├áo /admin/categories |  2. Nhß║¡p t├¬n danh mß╗Ñc mß╗¢i |  3. Bß║Ñm 'Th├¬m danh mß╗Ñc'", "T├¬n danh mß╗Ñc: 'Thiß║�&#65533;t bß╗ï th├┤ng minh'", 'Tß║ío mß╗¢i danh mß╗Ñc th├ánh c├┤ng, hiß╗ân thß╗ï trong menu lß╗ìc sß║ún phß║�&#65533;m tr├¬n trang chß╗º.', 'Danh mß╗Ñc mß╗¢i xuß║Ñt hiß╗çn trong bß║úng quß║ún l├╜ v├á hiß╗ân thß╗ï ngay tr├¬n thanh ─æiß╗üu h╞░ß╗¢ng.', 'PASS']
+  R20: ['TC20', 'Bß║úo mß║¡t URL', '1. D├╣ng t├ái khoß║ún CUSTOMER g├╡ URL: http://localhost:8081/admin/dashboard', 'Role hiß╗çn tß║íi: CUSTOMER |  Target URL: /admin/dashboard', 'Spring Security chß║╖n y├¬u cß║ºu, trß║ú vß╗ü lß╗ùi 403 Forbidden hoß║╖c chuyß╗ân vß╗ü /error.', 'Bß╗ï chß║╖n truy cß║¡p ch├¡nh x├íc, chuyß╗ân h╞░ß╗¢ng vß╗ü trang th├┤ng b├ío lß╗ùi quyß╗ün truy cß║¡p (403).', 'PASS']
+
+=== Table 63 (7 rows x 6 cols) ===
+  R0: ['STT', 'Ph├ón hß╗ç kiß╗âm thß╗¡', 'Sß╗æ l╞░ß╗úng Test Case', 'Sß╗æ ca ─Éß║ít (Pass)', 'Sß╗æ ca Lß╗ùi (Fail)', 'Tß╗╖ lß╗ç ─Éß║ít (%)']
+  R1: ['1', 'X├íc thß╗▒c & T├ái khoß║ún (Auth & Profile)', '5', '5', '0', '100%']
+  R2: ['2', 'Mua sß║»m Kh├ích h├áng (Catalog, Cart, Checkout, Voucher)', '7', '7', '0', '100%']
+  R3: ['3', 'Nghiß╗çp vß╗Ñ Ng╞░ß╗¥i b├ín (Vendor Shop, Product, Order)', '4', '4', '0', '100%']
+  R4: ['4', 'Quß║ún trß╗ï S├án (Admin Management & Approval)', '3', '3', '0', '100%']
+  R5: ['5', 'Bß║úo mß║¡t & Ph├ón quyß╗ün URL (Spring Security)', '1', '1', '0', '100%']
+  R6: ['Tß╗öNG Cß╗ÿNG', 'To├án bß╗Ö hß╗ç thß╗æng', '20', '20', '0', '100%']

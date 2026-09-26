@@ -292,18 +292,29 @@ public class VoucherServiceImpl implements VoucherService {
         // Nhiều bản ghi voucher trong DB có _id là ObjectId (24 hex) do insert
         // bằng Compass / script / Spring Data. Nếu chỉ tìm bằng String thì miss →
         // trả null → ném ResourceNotFoundException("Không tìm thấy voucher").
-        // Fix: thử String trước, fallback ObjectId nếu id là hex 24 ký tự.
+        //
+        // FIX (Sep 2026): KHÔNG chuyển _id từ ObjectId sang String trong raw
+        // Document nữa. Lý do: nếu caller sau đó gọi save() (vd: incrementUsed),
+        // Spring Data sẽ query bằng String _id, không match ObjectId _id trong DB
+        // → MongoDB tưởng là INSERT mới → trigger E11000 duplicate key trên
+        // unique index `code`. Cách an toàn:
+        //   1) Dùng mongoTemplate.findById(oid, Voucher.class) — converter tự
+        //      convert ObjectId → String cho Voucher.id, nhưng KHÔNG modify raw doc
+        //   2) Nếu caller cần save lại, họ nên dùng updateFirst() (atomic, không
+        //      bị bug này) — xem incrementUsed().
+        //
+        // Cách 1) thử String _id trước (cho voucher mới tạo qua Spring Data)
         org.bson.Document raw = mongoTemplate.getCollection("vouchers")
                 .find(new org.bson.Document("_id", id))
                 .first();
+        // Cách 2) Fallback ObjectId _id (cho voucher cũ insert bằng Compass)
         if (raw == null && id.length() == 24 && id.matches("[0-9a-fA-F]+")) {
             org.bson.types.ObjectId oid = new org.bson.types.ObjectId(id);
             raw = mongoTemplate.getCollection("vouchers")
                     .find(new org.bson.Document("_id", oid))
                     .first();
-            if (raw != null) {
-                raw.put("_id", id);
-            }
+            // QUAN TRỌNG: KHÔNG gọi raw.put("_id", id) — giữ nguyên ObjectId _id
+            // để converter đọc đúng và để save() (nếu có) không bị duplicate key.
         }
         if (raw == null) {
             throw new ResourceNotFoundException("Không tìm thấy voucher");
@@ -313,6 +324,8 @@ public class VoucherServiceImpl implements VoucherService {
             raw.put("_class", Voucher.class.getName());
         }
         Voucher voucher = mongoTemplate.getConverter().read(Voucher.class, raw);
+        // Fallback: nếu _id trong DB không phải ObjectId (vd: voucher rỗng/legacy
+        // data), set id từ parameter để caller có thể dùng.
         if (voucher.getId() == null) {
             voucher.setId(id);
         }
@@ -467,16 +480,69 @@ public class VoucherServiceImpl implements VoucherService {
     
     @Override
     public void incrementUsed(String voucherId) {
-        Voucher voucher = getVoucherById(voucherId);
-        voucher.setUsed(voucher.getUsed() + 1);
-        voucherRepository.save(voucher);
+        // Fix lỗi E11000 duplicate key trên collection `vouchers` khi increment
+        // used counter sau khi tạo Order thành công.
+        //
+        // Bối cảnh: VoucherServiceImpl.getVoucherById() có "Phase 5 hotfix"
+        // chuyển _id từ ObjectId sang String trong raw Document để converter
+        // đọc được. Nhưng khi gọi voucherRepository.save() ngay sau đó,
+        // Spring Data query bằng String _id không match ObjectId _id trong DB
+        // → MongoDB hiểu là INSERT mới → trigger E11000 duplicate key trên
+        // unique index `code` (vd: code "PHASE12_TEST_001" đã tồn tại).
+        //
+        // Fix: dùng mongoTemplate.updateFirst() với Criteria chấp nhận CẢ 2
+        // kiểu _id (String lẫn ObjectId). Cách này:
+        //   1) Atomic — không cần load cả voucher
+        //   2) Không trigger unique-index conflict vì UPDATE không tạo document mới
+        //   3) An toàn với cả voucher cũ (_id ObjectId) lẫn voucher mới (_id String)
+        if (voucherId == null || voucherId.isBlank()) {
+            log.warn("incrementUsed: voucherId null/blank, bỏ qua");
+            return;
+        }
+        org.springframework.data.mongodb.core.query.Criteria idCriteria =
+                buildIdCriteria(voucherId);
+        org.springframework.data.mongodb.core.query.Query q =
+                new org.springframework.data.mongodb.core.query.Query(idCriteria);
+        org.springframework.data.mongodb.core.query.Update u =
+                new org.springframework.data.mongodb.core.query.Update().inc("used", 1);
+        var result = mongoTemplate.updateFirst(q, u, Voucher.class);
+        if (result.getMatchedCount() == 0L) {
+            // Voucher không tồn tại — log warning nhưng KHÔNG throw để tránh
+            // rollback Order đã tạo thành công. Lý do: voucher có thể bị xóa
+            // giữa lúc user apply và lúc createOrder chạy xong (race condition
+            // hiếm gặp nhưng có thể xảy ra trong môi trường có nhiều admin).
+            log.warn("incrementUsed: voucher {} không tìm thấy trong DB, bỏ qua", voucherId);
+        }
+    }
+
+    /**
+     * Build Criteria cho _id chấp nhận CẢ String lẫn ObjectId.
+     * Phase 5 hotfix: Voucher cũ trong DB có _id là ObjectId (24 hex chars);
+     * Voucher mới tạo qua Admin UI có _id là String UUID.
+     * Cả 2 trường hợp cần được query thành công bằng cùng một id truyền vào.
+     */
+    private org.springframework.data.mongodb.core.query.Criteria buildIdCriteria(String voucherId) {
+        org.springframework.data.mongodb.core.query.Criteria criteria =
+                org.springframework.data.mongodb.core.query.Criteria.where("_id").is(voucherId);
+        if (voucherId.length() == 24 && voucherId.matches("[0-9a-fA-F]+")) {
+            criteria = org.springframework.data.mongodb.core.query.Criteria.where("_id")
+                    .is(voucherId)
+                    .orOperator(
+                            org.springframework.data.mongodb.core.query.Criteria.where("_id")
+                                    .is(voucherId),
+                            org.springframework.data.mongodb.core.query.Criteria.where("_id")
+                                    .is(new org.bson.types.ObjectId(voucherId))
+                    );
+        }
+        return criteria;
     }
 
     @Override
     public boolean tryIncrementUsed(String voucherId) {
         if (voucherId == null) return false;
+        org.springframework.data.mongodb.core.query.Criteria idCriteria = buildIdCriteria(voucherId);
         org.springframework.data.mongodb.core.query.Query q = new org.springframework.data.mongodb.core.query.Query(
-                org.springframework.data.mongodb.core.query.Criteria.where("_id").is(voucherId)
+                idCriteria
                         .and("active").is(true)
                         .andOperator(org.springframework.data.mongodb.core.query.Criteria.where("$expr").is(
                                 new org.bson.Document("$lt",

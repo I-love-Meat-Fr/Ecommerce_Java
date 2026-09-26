@@ -1,7 +1,7 @@
 <aside class="sd-sidebar" th:fragment="sidebar" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/springsecurity6">
     <div class="sd-sidebar-header">
         <div class="sd-sidebar-logo">
-            <i class="fas fa-bolt"></i>
+            <img th:src="@{/images/logoCNJ70.jpg}" alt="CNJ70" class="sd-sidebar-logo-img">
         </div>
         <div class="sd-sidebar-brand">
             <span class="sd-sidebar-brand-name">CNJ70 Shop</span>
@@ -49,6 +49,10 @@
             <a th:if="${hasShop}" th:href="@{/vendor/vouchers}" class="sd-nav-item" data-match="/vendor/vouchers">
                 <i class="fas fa-ticket"></i>
                 <span class="sd-nav-label">Voucher</span>
+            </a>
+            <a th:href="@{/vendor/complaints}" class="sd-nav-item" data-match="/vendor/complaints">
+                <i class="fas fa-flag"></i>
+                <span class="sd-nav-label">Khiếu nại</span>
             </a>
         </div>
 

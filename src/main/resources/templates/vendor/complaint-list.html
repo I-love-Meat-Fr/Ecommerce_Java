@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/springsecurity6"
+      th:replace="~{layout/vendor-layout :: layout(title='Khiếu nại shop - CNJ70 Vendor', content=~{::main-content}, scripts=~{::page-scripts})}">
+<head>
+    <title>Khiếu nại shop - CNJ70 Vendor</title>
+</head>
+<body>
+<main th:fragment="main-content">
+
+    <!-- Flash message -->
+    <div th:if="${flashSuccess}" class="sd-flash sd-flash-success" style="margin-bottom:20px;">
+        <i class="fas fa-check-circle"></i>
+        <span th:text="${flashSuccess}">Success</span>
+    </div>
+
+    <!-- Page header -->
+    <div class="sd-page-head">
+        <div class="sd-page-head-title">
+            <h1><i class="fas fa-flag"></i> Khiếu nại của shop</h1>
+            <p>Danh sách khiếu nại từ khách hàng về shop của bạn. Phản hồi trong vòng 48 giờ.</p>
+        </div>
+        <div class="sd-page-head-meta">
+            <span class="sd-page-head-meta-label">Tổng số</span>
+            <span class="sd-page-head-meta-value" th:text="${totalItems}">0</span>
+        </div>
+    </div>
+
+    <!-- Quick stats -->
+    <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(160px, 1fr));gap:12px;margin-bottom:20px;">
+        <a th:href="@{/vendor/complaints(status='')}"
+           th:classappend="${statusFilter == null or statusFilter == '' ? 'sd-stat-card sd-stat-card-active' : 'sd-stat-card'}">
+            <i class="fas fa-list"></i>
+            <div>
+                <span class="sd-stat-label">Tất cả</span>
+                <span class="sd-stat-value" th:text="${totalItems}">0</span>
+            </div>
+        </a>
+        <a th:href="@{/vendor/complaints(status='OPEN')}"
+           th:classappend="${statusFilter == 'OPEN' ? 'sd-stat-card sd-stat-card-warn sd-stat-card-active' : 'sd-stat-card sd-stat-card-warn'}">
+            <i class="fas fa-hourglass-half"></i>
+            <div>
+                <span class="sd-stat-label">Chờ bạn</span>
+                <span class="sd-stat-value" th:text="${openCount}">0</span>
+            </div>
+        </a>
+        <a th:href="@{/vendor/complaints(status='VENDOR_RESPONDED')}"
+           th:classappend="${statusFilter == 'VENDOR_RESPONDED' ? 'sd-stat-card sd-stat-card-info sd-stat-card-active' : 'sd-stat-card sd-stat-card-info'}">
+            <i class="fas fa-comment-dots"></i>
+            <div>
+                <span class="sd-stat-label">Bạn đã phản hồi</span>
+                <span class="sd-stat-value" th:text="${respondedCount}">0</span>
+            </div>
+        </a>
+        <a th:href="@{/vendor/complaints(status='ESCALATED')}"
+           th:classappend="${statusFilter == 'ESCALATED' ? 'sd-stat-card sd-stat-card-purple sd-stat-card-active' : 'sd-stat-card sd-stat-card-purple'}">
+            <i class="fas fa-level-up-alt"></i>
+            <div>
+                <span class="sd-stat-label">Đã escalate</span>
+                <span class="sd-stat-value" th:text="${escalatedCount}">0</span>
+            </div>
+        </a>
+        <a th:href="@{/vendor/complaints(status='RESOLVED')}"
+           th:classappend="${statusFilter == 'RESOLVED' ? 'sd-stat-card sd-stat-card-success sd-stat-card-active' : 'sd-stat-card sd-stat-card-success'}">
+            <i class="fas fa-check-circle"></i>
+            <div>
+                <span class="sd-stat-label">Đã giải quyết</span>
+                <span class="sd-stat-value" th:text="${resolvedCount}">0</span>
+            </div>
+        </a>
+        <a th:href="@{/vendor/complaints(status='REJECTED')}"
+           th:classappend="${statusFilter == 'REJECTED' ? 'sd-stat-card sd-stat-card-danger sd-stat-card-active' : 'sd-stat-card sd-stat-card-danger'}">
+            <i class="fas fa-times-circle"></i>
+            <div>
+                <span class="sd-stat-label">Bị từ chối</span>
+                <span class="sd-stat-value" th:text="${rejectedCount}">0</span>
+            </div>
+        </a>
+    </div>
+
+    <!-- Table card -->
+    <div class="sd-card">
+        <div class="sd-card-body sd-card-body-flush">
+            <table class="sd-table">
+                <thead>
+                    <tr>
+                        <th class="sd-col-stt">#</th>
+                        <th>Mã khiếu nại</th>
+                        <th>Khách hàng</th>
+                        <th>Lý do</th>
+                        <th>Cấp</th>
+                        <th>Trạng thái</th>
+                        <th>Đơn hàng</th>
+                        <th>SLA</th>
+                        <th>Ngày tạo</th>
+                        <th style="text-align:right;">Thao tác</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr th:if="${#lists.isEmpty(complaints)}">
+                        <td colspan="10">
+                            <div class="sd-empty">
+                                <i class="fas fa-inbox"></i>
+                                <h3>Chưa có khiếu nại nào</h3>
+                                <p>Khi khách hàng gửi khiếu nại về shop, chúng sẽ xuất hiện ở đây.</p>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr th:each="c, iter : ${complaints}">
+                        <td class="sd-col-stt" th:text="${page * size + iter.count}">1</td>
+                        <td>
+                            <code class="sd-mono" th:text="${#strings.abbreviate(c.id, 10)}">ID</code>
+                        </td>
+                        <td>
+                            <div class="sd-table-title" th:text="${c.customerName != null ? c.customerName : '—'}">Customer</div>
+                            <div class="sd-table-sub" th:text="${c.customerEmail != null ? c.customerEmail : ''}">email</div>
+                        </td>
+                        <td>
+                            <span class="sd-badge sd-badge-slate"
+                                  th:text="${reasonLabels.get(c.reason) ?: (c.reason != null ? c.reason.name() : '—')}">
+                                Reason
+                            </span>
+                            <div th:if="${c.description != null and not c.description.isBlank()}"
+                                 class="sd-table-sub"
+                                 th:text="${#strings.abbreviate(c.description, 50)}">desc...</div>
+                        </td>
+                        <td>
+                            <span class="sd-badge"
+                                  th:classappend="${c.level.name() == 'LEVEL_0' ? 'sd-badge-amber' :
+                                                  (c.level.name() == 'LEVEL_1' ? 'sd-badge-sky' : 'sd-badge-red')}"
+                                  th:text="${levelLabels.get(c.level) ?: c.level.name()}">Level</span>
+                        </td>
+                        <td>
+                            <span class="sd-badge"
+                                  th:classappend="${c.status.name() == 'OPEN' ? 'sd-badge-amber' :
+                                                  (c.status.name() == 'VENDOR_RESPONDED' ? 'sd-badge-sky' :
+                                                  (c.status.name() == 'RESOLVED' ? 'sd-badge-green' :
+                                                  (c.status.name() == 'REJECTED' ? 'sd-badge-red' :
+                                                  (c.status.name() == 'ESCALATED' or c.status.name() == 'MODERATOR_REVIEW' or c.status.name() == 'ADMIN_REVIEW' ? 'sd-badge-purple' : 'sd-badge-slate'))))}"
+                                  th:text="${statusLabels.get(c.status) ?: c.status.name()}">Status</span>
+                        </td>
+                        <td>
+                            <code class="sd-mono"
+                                  th:text="${c.orderId != null ? #strings.abbreviate(c.orderId, 10) : '—'}">OID</code>
+                        </td>
+                        <td th:if="${c.vendorResponseDeadline != null and c.level.name() == 'LEVEL_0'
+                                    and (c.status.name() == 'OPEN' or c.status.name() == 'VENDOR_RESPONDED')}">
+                            <span class="sd-text-muted sd-table-sub">
+                                <i class="far fa-clock"></i>
+                                <th:block th:if="${c.vendorResponseDeadline != null and c.vendorResponseDeadline.isAfter(T(java.time.LocalDateTime).now())}">
+                                    còn <span th:text="${T(java.time.Duration).between(T(java.time.LocalDateTime).now(), c.vendorResponseDeadline).toHours()}">0</span>h
+                                </th:block>
+                                <th:block th:unless="${c.vendorResponseDeadline != null and c.vendorResponseDeadline.isAfter(T(java.time.LocalDateTime).now())}">
+                                    <span style="color:#dc2626;">quá hạn</span>
+                                </th:block>
+                            </span>
+                        </td>
+                        <td th:unless="${c.vendorResponseDeadline != null and c.level.name() == 'LEVEL_0'
+                                    and (c.status.name() == 'OPEN' or c.status.name() == 'VENDOR_RESPONDED')}">
+                            <span class="sd-text-muted">—</span>
+                        </td>
+                        <td class="sd-table-sub"
+                            th:text="${c.createdAt != null ? #temporals.format(c.createdAt, 'dd/MM/yyyy HH:mm') : '—'}">—</td>
+                        <td style="text-align:right; white-space:nowrap;">
+                            <a th:href="@{/vendor/complaints/{id}(id=${c.id}, page=${page}, size=${size}, status=${statusFilter})}"
+                               class="sd-btn sd-btn-primary sd-btn-sm">
+                                <i class="fas fa-eye"></i> Xem
+                            </a>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Pagination -->
+        <div class="sd-card-body" th:if="${totalPages > 0}"
+             style="display:flex;justify-content:center;border-top:1px solid var(--border,#e2e8f0);">
+            <nav class="sd-pagination" aria-label="Phân trang">
+                <a th:if="${hasPrev}"
+                   th:href="@{/vendor/complaints(page=${page - 1}, size=${size}, status=${statusFilter})}"
+                   class="sd-page-link">
+                    <i class="fas fa-chevron-left"></i> Trước
+                </a>
+                <span th:unless="${hasPrev}" class="sd-page-link sd-page-disabled">
+                    <i class="fas fa-chevron-left"></i> Trước
+                </span>
+
+                <span class="sd-page-link sd-page-active" th:text="${page + 1} + ' / ' + ${totalPages}">1 / 1</span>
+
+                <a th:if="${hasNext}"
+                   th:href="@{/vendor/complaints(page=${page + 1}, size=${size}, status=${statusFilter})}"
+                   class="sd-page-link">
+                    Sau <i class="fas fa-chevron-right"></i>
+                </a>
+                <span th:unless="${hasNext}" class="sd-page-link sd-page-disabled">
+                    Sau <i class="fas fa-chevron-right"></i>
+                </span>
+            </nav>
+        </div>
+    </div>
+
+</main>
+
+<th:block th:fragment="page-scripts">
+    <script>
+        // Auto-hide flash after 5s
+        setTimeout(function() {
+            const fl = document.querySelector('.sd-flash');
+            if (fl) {
+                fl.style.transition = 'opacity 0.4s';
+                fl.style.opacity = '0';
+                setTimeout(() => fl.remove(), 400);
+            }
+        }, 5000);
+    </script>
+    <style>
+        .sd-stat-card {
+            display:flex;align-items:center;gap:12px;padding:14px 16px;border:1px solid var(--border,#e2e8f0);
+            border-radius:8px;background:#fff;text-decoration:none;color:inherit;transition:all .15s ease;
+        }
+        .sd-stat-card:hover { box-shadow: 0 2px 8px rgba(0,0,0,0.06); transform: translateY(-1px); }
+        .sd-stat-card.active, .sd-stat-card-active { border-color: var(--primary,#0ea5e9); box-shadow: 0 0 0 2px rgba(14,165,233,0.1); }
+        .sd-stat-card i { font-size:24px; }
+        .sd-stat-card .sd-stat-label { display:block; font-size:12px;color: var(--text-muted,#64748b); }
+        .sd-stat-card .sd-stat-value { display:block; font-size:22px; font-weight:700; }
+        .sd-stat-card-warn { border-left: 4px solid #f59e0b; }
+        .sd-stat-card-warn i { color: #f59e0b; }
+        .sd-stat-card-info { border-left: 4px solid #0ea5e9; }
+        .sd-stat-card-info i { color: #0ea5e9; }
+        .sd-stat-card-purple { border-left: 4px solid #8b5cf6; }
+        .sd-stat-card-purple i { color: #8b5cf6; }
+        .sd-stat-card-success { border-left: 4px solid #22c55e; }
+        .sd-stat-card-success i { color: #22c55e; }
+        .sd-stat-card-danger { border-left: 4px solid #ef4444; }
+        .sd-stat-card-danger i { color: #ef4444; }
+        .sd-flash {
+            display:flex;align-items:center;gap:10px;padding:12px 16px;border-radius:6px;
+        }
+        .sd-flash-success { background:#ecfdf5;color:#065f46;border:1px solid #a7f3d0; }
+    </style>
+</th:block>
+</body>
+</html>

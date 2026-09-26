@@ -151,6 +151,8 @@
                             <artifactId>lombok</artifactId>
                         </exclude>
                     </excludes>
+                    <attach>false</attach>
+                    <classifier>exec</classifier>
                 </configuration>
             </plugin>
         </plugins>

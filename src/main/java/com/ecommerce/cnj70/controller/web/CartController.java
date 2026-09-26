@@ -2,8 +2,10 @@ package com.ecommerce.cnj70.controller.web;
 
 import com.ecommerce.cnj70.document.Cart;
 import com.ecommerce.cnj70.document.Voucher;
+import com.ecommerce.cnj70.dto.cart.CartItemValidation;
 import com.ecommerce.cnj70.enums.DiscountType;
 import com.ecommerce.cnj70.exception.BadRequestException;
+import com.ecommerce.cnj70.exception.ResourceNotFoundException;
 import com.ecommerce.cnj70.security.CustomUserDetails;
 import com.ecommerce.cnj70.service.CartService;
 import com.ecommerce.cnj70.service.VoucherService;
@@ -20,10 +22,13 @@ import org.springframework.web.bind.annotation.ResponseBody;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @Controller
@@ -47,6 +52,13 @@ public class CartController {
         }
 
         Cart cart = cartService.getCartByUserId(user.getId());
+
+        // ===== Validate real-time: Product/Shop status + stock =====
+        // Bất kỳ CartItem nào không còn ACTIVE hoặc Shop không hợp lệ sẽ
+        // bị đánh dấu invalid và Cart UI sẽ vô hiệu hóa nút Checkout.
+        Map<String, CartItemValidation> invalidItems = cartService.validateCartItems(cart);
+        boolean hasInvalidItems = !invalidItems.isEmpty();
+
         BigDecimal cartTotal = cartService.calculateTotal(cart);
         int totalQuantity = cart.getItems().stream().mapToInt(Cart.CartItem::getQuantity).sum();
 
@@ -55,6 +67,23 @@ public class CartController {
                         item -> item.getShopId() != null ? item.getShopId() : "default",
                         LinkedHashMap::new,
                         Collectors.toList()));
+
+        Map<String, BigDecimal> shopSubtotals = itemsByShop.entrySet().stream()
+                .collect(Collectors.toMap(
+                        Map.Entry::getKey,
+                        e -> e.getValue().stream()
+                                .map(Cart.CartItem::getSubtotal)
+                                .filter(Objects::nonNull)
+                                .reduce(BigDecimal.ZERO, BigDecimal::add),
+                        (a, b) -> a,
+                        LinkedHashMap::new));
+
+        Map<String, Integer> shopQuantities = itemsByShop.entrySet().stream()
+                .collect(Collectors.toMap(
+                        Map.Entry::getKey,
+                        e -> e.getValue().stream().mapToInt(Cart.CartItem::getQuantity).sum(),
+                        (a, b) -> a,
+                        LinkedHashMap::new));
 
         // Apply persisted voucher (nếu có). State đọc từ Cart document trong MongoDB (KHÔNG
         // từ HttpSession vì app chạy SessionCreationPolicy.STATELESS) - đảm bảo voucher
@@ -90,10 +119,16 @@ public class CartController {
         model.addAttribute("cartTotal", cartTotal);
         model.addAttribute("totalQuantity", totalQuantity);
         model.addAttribute("itemsByShop", itemsByShop);
+        model.addAttribute("shopSubtotals", shopSubtotals);
+        model.addAttribute("shopQuantities", shopQuantities);
+        model.addAttribute("shopCount", itemsByShop.size());
         model.addAttribute("shippingFee", SHIPPING_FEE);
         model.addAttribute("appliedVoucher", applied);
         model.addAttribute("discount", discount);
         model.addAttribute("finalTotal", finalTotal);
+        model.addAttribute("invalidItems", invalidItems);
+        model.addAttribute("hasInvalidItems", hasInvalidItems);
+        model.addAttribute("invalidItemCount", invalidItems.size());
 
         return "web/cart";
     }
@@ -173,6 +208,70 @@ public class CartController {
     }
 
     /**
+     * Bulk-remove tất cả CartItem không còn hợp lệ (Product không ACTIVE,
+     * Shop bị suspend, hết hàng, v.v.). UI gọi khi user bấm nút
+     * "Xóa sản phẩm không hợp lệ".
+     */
+    @PostMapping("/cart/remove-invalid")
+    public String removeInvalidItems(@AuthenticationPrincipal CustomUserDetails user,
+                                     HttpSession session) {
+        if (user == null) {
+            return "redirect:/auth/login";
+        }
+        cartService.removeInvalidItems(user.getId());
+        reEvaluateVoucher(session, user.getId());
+        return "redirect:/cart";
+    }
+
+    /**
+     * Bulk-remove tất cả CartItem thuộc về một Shop. UI gọi khi user bấm nút
+     * "Xóa tất cả sản phẩm của shop này" trong từng shop-group.
+     * <p>
+     * Lưu ý: shopId = "default" sẽ được map sang null khi filter (giữ tương thích
+     * với các cart item không có shopId).
+     */
+    @PostMapping("/cart/remove-by-shop")
+    public String removeByShop(@AuthenticationPrincipal CustomUserDetails user,
+                               @RequestParam String shopId,
+                               HttpSession session) {
+        if (user == null) {
+            return "redirect:/auth/login";
+        }
+        String effectiveShopId = "default".equals(shopId) ? null : shopId;
+        cartService.removeByShop(user.getId(), effectiveShopId);
+        reEvaluateVoucher(session, user.getId());
+        return "redirect:/cart";
+    }
+
+    /**
+     * API endpoint (AJAX) trả về JSON — cho phép UI làm bulk-remove không cần
+     * reload toàn trang. Trả về số lượng item đã xóa.
+     */
+    @PostMapping("/api/cart/remove-invalid")
+    @ResponseBody
+    public ResponseEntity<Map<String, Object>> removeInvalidItemsApi(
+            @AuthenticationPrincipal CustomUserDetails user,
+            HttpSession session) {
+        Map<String, Object> response = new HashMap<>();
+        if (user == null) {
+            response.put("success", false);
+            response.put("message", "Vui lòng đăng nhập");
+            return ResponseEntity.status(401).body(response);
+        }
+        Cart before = cartService.getCartByUserId(user.getId());
+        Map<String, CartItemValidation> invalidBefore = cartService.validateCartItems(before);
+        int invalidCount = invalidBefore.size();
+        cartService.removeInvalidItems(user.getId());
+        reEvaluateVoucher(session, user.getId());
+        response.put("success", true);
+        response.put("removedCount", invalidCount);
+        response.put("message", invalidCount > 0
+                ? "Đã xóa " + invalidCount + " sản phẩm không hợp lệ khỏi giỏ hàng."
+                : "Giỏ hàng không có sản phẩm không hợp lệ.");
+        return ResponseEntity.ok(response);
+    }
+
+    /**
      * Áp dụng voucher cho Cart.
      *
      * Cart chỉ gửi voucherCode từ client; subtotal và discount được tính phía server
@@ -244,6 +343,15 @@ public class CartController {
         } catch (BadRequestException e) {
             response.put("success", false);
             response.put("message", e.getMessage());
+            response.put("errorCode", classifyVoucherError(e.getMessage()));
+            response.put("cartSubtotal", cartSubtotal);
+            response.put("shippingFee", SHIPPING_FEE);
+            response.put("finalTotal", cartSubtotal.add(SHIPPING_FEE));
+            return ResponseEntity.ok(response);
+        } catch (ResourceNotFoundException e) {
+            response.put("success", false);
+            response.put("message", e.getMessage());
+            response.put("errorCode", "NOT_FOUND");
             response.put("cartSubtotal", cartSubtotal);
             response.put("shippingFee", SHIPPING_FEE);
             response.put("finalTotal", cartSubtotal.add(SHIPPING_FEE));
@@ -251,11 +359,29 @@ public class CartController {
         } catch (Exception e) {
             response.put("success", false);
             response.put("message", "Voucher không hợp lệ");
+            response.put("errorCode", "UNKNOWN");
             response.put("cartSubtotal", cartSubtotal);
             response.put("shippingFee", SHIPPING_FEE);
             response.put("finalTotal", cartSubtotal.add(SHIPPING_FEE));
             return ResponseEntity.ok(response);
         }
+    }
+
+    /**
+     * Phân loại lỗi voucher để UI chọn icon / màu phù hợp.
+     * Map theo message từ {@link com.ecommerce.cnj70.service.VoucherServiceImpl#validateForCheckout}.
+     */
+    private String classifyVoucherError(String message) {
+        if (message == null) return "UNKNOWN";
+        String m = message.toLowerCase();
+        if (m.contains("vô hiệu hóa")) return "INACTIVE";
+        if (m.contains("chưa bắt đầu")) return "NOT_STARTED";
+        if (m.contains("hết hạn")) return "EXPIRED";
+        if (m.contains("hết lượt")) return "EXHAUSTED";
+        if (m.contains("shop này")) return "SHOP_MISMATCH";
+        if (m.contains("sản phẩm này")) return "PRODUCT_MISMATCH";
+        if (m.contains("không tìm thấy")) return "NOT_FOUND";
+        return "INVALID";
     }
 
     /**
@@ -287,6 +413,211 @@ public class CartController {
         response.put("shippingFee", SHIPPING_FEE);
         response.put("finalTotal", finalTotal);
         return ResponseEntity.ok(response);
+    }
+
+    /**
+     * API liệt kê các voucher KHẢ DỤNG cho cart hiện tại, chia làm 2 nhóm:
+     *   1) WEB Voucher (toàn sàn) — áp dụng cho tổng đơn (subtotal + shipping)
+     *      - Nếu voucher có productIds: chỉ liệt kê khi cart có ít nhất 1 sản phẩm nằm trong danh sách
+     *      - Nếu productIds rỗng/null: áp dụng cho mọi đơn
+     *   2) SHOP Voucher (theo shop) — chỉ liệt kê voucher thuộc các shop hiện có trong cart;
+     *      phạm vi áp dụng = subtotal của shop đó + phần shipping chia theo tỉ lệ shop.
+     *
+     * Mỗi voucher card trả về:
+     *   - code, name, type (WEB|SHOP)
+     *   - discountType, discountValue, maxDiscountAmount, minOrderValue
+     *   - estimatedDiscount: số tiền giảm dự kiến (đã áp dụng minOrderValue + max cap)
+     *   - meetsMinOrder: true/false — UI dùng để khoá/mở nút "Áp dụng"
+     *   - remainingQuantity, scopeLabel ("Toàn sàn" / "Cửa hàng X" / "Sản phẩm cụ thể")
+     *   - applicableProductCount: số sản phẩm trong cart được voucher bao trùm (cho WEB có productIds)
+     *   - endDate: yyyy-MM-dd HH:mm
+     *
+     * Phục vụ Voucher UI: cho Customer chọn WEB/SHOP Voucher phù hợp, hiển thị rõ phạm vi
+     * và điều kiện (đơn tối thiểu, giảm tối đa, hạn dùng, còn lượt).
+     */
+    @GetMapping("/api/cart/available-vouchers")
+    @ResponseBody
+    public ResponseEntity<Map<String, Object>> availableVouchers(@AuthenticationPrincipal CustomUserDetails user) {
+        Map<String, Object> response = new HashMap<>();
+
+        if (user == null) {
+            response.put("success", false);
+            response.put("message", "Vui lòng đăng nhập");
+            return ResponseEntity.status(401).body(response);
+        }
+
+        Cart cart = cartService.getCartByUserId(user.getId());
+        BigDecimal cartSubtotal = cartService.calculateTotal(cart);
+
+        if (cartSubtotal.signum() <= 0) {
+            response.put("success", true);
+            response.put("cartSubtotal", BigDecimal.ZERO);
+            response.put("shippingFee", SHIPPING_FEE);
+            response.put("webVouchers", List.of());
+            response.put("shopVouchers", List.of());
+            response.put("appliedCode", cartService.getAppliedVoucherCode(user.getId()));
+            response.put("message", "Giỏ hàng trống");
+            return ResponseEntity.ok(response);
+        }
+
+        // Group cart items by shopId, build set of all productIds in cart
+        Map<String, List<Cart.CartItem>> itemsByShop = cart.getItems().stream()
+                .collect(Collectors.groupingBy(
+                        item -> item.getShopId() != null ? item.getShopId() : "default",
+                        LinkedHashMap::new,
+                        Collectors.toList()));
+
+        Set<String> cartProductIds = cart.getItems().stream()
+                .map(Cart.CartItem::getProductId)
+                .filter(Objects::nonNull)
+                .collect(Collectors.toSet());
+
+        // Subtotal theo shop (chỉ subtotal sản phẩm — không cộng shipping)
+        Map<String, BigDecimal> shopSubtotals = new LinkedHashMap<>();
+        for (Map.Entry<String, List<Cart.CartItem>> e : itemsByShop.entrySet()) {
+            BigDecimal sub = e.getValue().stream()
+                    .map(Cart.CartItem::getSubtotal)
+                    .filter(Objects::nonNull)
+                    .reduce(BigDecimal.ZERO, BigDecimal::add);
+            shopSubtotals.put(e.getKey(), sub);
+        }
+
+        // Tổng đơn (subtotal + shipping) cho áp dụng WEB Voucher
+        BigDecimal orderTotal = cartSubtotal.add(SHIPPING_FEE);
+
+        // ===== WEB Vouchers (toàn sàn) =====
+        List<Voucher> allWebVouchers = voucherService.getAvailableWebVouchersForCustomer();
+        List<Map<String, Object>> webVoucherList = new ArrayList<>();
+        for (Voucher v : allWebVouchers) {
+            // Scope check: nếu voucher giới hạn productIds, cart phải có ít nhất 1 sp khớp
+            int applicableProductCount = countApplicableProducts(v, cartProductIds);
+            boolean isAllProducts = (v.getProductIds() == null || v.getProductIds().isEmpty());
+            if (!isAllProducts && applicableProductCount == 0) {
+                continue; // bỏ qua — không áp dụng cho bất kỳ sản phẩm nào trong cart
+            }
+            String scopeLabel = isAllProducts
+                    ? "Toàn sàn"
+                    : "Sản phẩm cụ thể (" + applicableProductCount + "/" + v.getProductIds().size() + ")";
+            webVoucherList.add(toVoucherCard(v, orderTotal, "WEB", scopeLabel, applicableProductCount));
+        }
+
+        // ===== SHOP Vouchers (theo từng shop trong cart) =====
+        List<Map<String, Object>> shopVoucherList = new ArrayList<>();
+        for (Map.Entry<String, List<Cart.CartItem>> e : itemsByShop.entrySet()) {
+            String shopKey = e.getKey();
+            String shopId = "default".equals(shopKey) ? null : shopKey;
+            if (shopId == null) continue; // cart items không có shopId thì không liệt kê shop voucher
+
+            String shopName = e.getValue().get(0).getShopName() != null
+                    ? e.getValue().get(0).getShopName()
+                    : "Shop";
+            List<Voucher> shopVouchers = voucherService.getAvailableVouchersByShop(shopId);
+
+            List<Map<String, Object>> perShopList = new ArrayList<>();
+            for (Voucher v : shopVouchers) {
+                // Phạm vi áp dụng SHOP Voucher = subtotal của shop + phần shipping tỉ lệ theo shop
+                BigDecimal shopSub = shopSubtotals.getOrDefault(shopKey, BigDecimal.ZERO);
+                BigDecimal proportionalShipping = BigDecimal.ZERO;
+                if (cartSubtotal.signum() > 0) {
+                    proportionalShipping = SHIPPING_FEE.multiply(shopSub)
+                            .divide(cartSubtotal, 2, RoundingMode.HALF_UP);
+                }
+                BigDecimal shopOrderTotal = shopSub.add(proportionalShipping);
+
+                String scopeLabel = "Chỉ áp dụng cho " + shopName;
+                perShopList.add(toVoucherCard(v, shopOrderTotal, "SHOP", scopeLabel, null));
+            }
+
+            // Chỉ trả group khi shop có ít nhất 1 voucher (kể cả bị khoá do minOrderValue)
+            // để UI vẫn hiển thị khối shop + chip "Chưa đạt đơn tối thiểu"
+            if (!perShopList.isEmpty()) {
+                Map<String, Object> shopGroup = new LinkedHashMap<>();
+                shopGroup.put("shopId", shopId);
+                shopGroup.put("shopKey", shopKey);
+                shopGroup.put("shopName", shopName);
+                shopGroup.put("shopSubtotal", shopSubtotals.getOrDefault(shopKey, BigDecimal.ZERO));
+                shopGroup.put("vouchers", perShopList);
+                shopVoucherList.add(shopGroup);
+            }
+        }
+
+        response.put("success", true);
+        response.put("cartSubtotal", cartSubtotal);
+        response.put("shippingFee", SHIPPING_FEE);
+        response.put("webVouchers", webVoucherList);
+        response.put("shopVouchers", shopVoucherList);
+        response.put("appliedCode", cartService.getAppliedVoucherCode(user.getId()));
+        return ResponseEntity.ok(response);
+    }
+
+    /**
+     * Đếm số sản phẩm trong cart nằm trong productIds của voucher (nếu voucher có productIds).
+     * Trả về 0 nếu voucher không giới hạn sản phẩm.
+     */
+    private int countApplicableProducts(Voucher voucher, Set<String> cartProductIds) {
+        if (voucher.getProductIds() == null || voucher.getProductIds().isEmpty()) {
+            return 0;
+        }
+        int count = 0;
+        for (String pid : voucher.getProductIds()) {
+            if (cartProductIds.contains(pid)) count++;
+        }
+        return count;
+    }
+
+    /**
+     * Build một voucher card (Map) để trả về cho UI. Áp dụng:
+     *   - minOrderValue check
+     *   - maxDiscountAmount cap (PERCENT)
+     *   - estimatedDiscount preview
+     */
+    private Map<String, Object> toVoucherCard(Voucher v, BigDecimal applicableTotal,
+                                               String scopeType, String scopeLabel,
+                                               Integer applicableProductCount) {
+        Map<String, Object> card = new LinkedHashMap<>();
+        card.put("id", v.getId());
+        card.put("code", v.getCode());
+        card.put("name", v.getName());
+        card.put("scopeType", scopeType);          // "WEB" | "SHOP"
+        card.put("scopeLabel", scopeLabel);
+        card.put("discountType", v.getDiscountType() != null ? v.getDiscountType().name() : null);
+        card.put("discountValue", v.getDiscountValue());
+        card.put("maxDiscountAmount", v.getMaxDiscountAmount());
+        card.put("minOrderValue", v.getMinOrderValue());
+        card.put("remainingQuantity", v.getRemainingQuantity());
+        card.put("endDate", v.getEndDate());
+
+        String discountText;
+        if (v.getDiscountType() == DiscountType.PERCENT) {
+            discountText = "Giảm " + v.getDiscountValue().stripTrailingZeros().toPlainString() + "%";
+            if (v.getMaxDiscountAmount() != null) {
+                discountText += " (tối đa " + formatPlainMoney(v.getMaxDiscountAmount()) + ")";
+            }
+        } else {
+            discountText = "Giảm " + formatPlainMoney(v.getDiscountValue());
+        }
+        card.put("discountLabel", discountText);
+
+        boolean meetsMin = true;
+        if (v.getMinOrderValue() != null && applicableTotal.compareTo(v.getMinOrderValue()) < 0) {
+            meetsMin = false;
+        }
+
+        BigDecimal estimated = BigDecimal.ZERO;
+        if (meetsMin) {
+            estimated = computeDiscount(v, applicableTotal);
+            if (estimated.signum() <= 0) meetsMin = false;
+        }
+        card.put("estimatedDiscount", estimated);
+        card.put("meetsMinOrder", meetsMin);
+        card.put("applicableProductCount", applicableProductCount);
+        return card;
+    }
+
+    /** Format BigDecimal thành chuỗi có dấu phân cách hàng nghìn (vd: 50.000). */
+    private String formatPlainMoney(BigDecimal amount) {
+        if (amount == null) return "0";
+        return String.format("%,.0f", amount.doubleValue()).replace(",", ".");
     }
 
     /**

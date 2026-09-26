@@ -194,13 +194,7 @@
                     <i class="fas fa-chevron-left"></i> Trước
                 </span>
 
-                <th:block th:each="i : ${pageNumbers}" th:if="${i == page}">
-                    <span class="sd-page-link sd-page-active" th:text="${i + 1}">1</span>
-                </th:block>
-                <th:block th:each="i : ${pageNumbers}" th:unless="${i == page}">
-                    <a th:href="@{/moderator/cases(page=${i}, size=${size}, status=${statusFilter}, reason=${reasonFilter}, resourceType=${resourceTypeFilter})}"
-                       class="sd-page-link" th:text="${i + 1}">1</a>
-                </th:block>
+                <span class="sd-page-link sd-page-active" th:text="${page + 1} + ' / ' + ${totalPages}">1 / 1</span>
 
                 <a th:if="${hasNext}"
                    th:href="@{/moderator/cases(page=${page + 1}, size=${size}, status=${statusFilter}, reason=${reasonFilter}, resourceType=${resourceTypeFilter})}"

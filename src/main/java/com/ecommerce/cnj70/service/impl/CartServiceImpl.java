@@ -2,8 +2,13 @@ package com.ecommerce.cnj70.service.impl;
 
 import com.ecommerce.cnj70.document.Cart;
 import com.ecommerce.cnj70.document.Product;
+import com.ecommerce.cnj70.document.Shop;
+import com.ecommerce.cnj70.dto.cart.CartItemValidation;
+import com.ecommerce.cnj70.enums.ProductStatus;
+import com.ecommerce.cnj70.enums.ShopStatus;
 import com.ecommerce.cnj70.repository.CartRepository;
 import com.ecommerce.cnj70.repository.ProductRepository;
+import com.ecommerce.cnj70.repository.ShopRepository;
 import com.ecommerce.cnj70.service.CartService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -12,6 +17,10 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 @Service
@@ -20,6 +29,7 @@ public class CartServiceImpl implements CartService {
     
     private final CartRepository cartRepository;
     private final ProductRepository productRepository;
+    private final ShopRepository shopRepository;
     
     @Override
     public Cart getCartByUserId(String userId) {
@@ -182,5 +192,129 @@ public class CartServiceImpl implements CartService {
         }
         // Bare filename — prepend /uploads/
         return "/uploads/" + trimmed;
+    }
+
+    @Override
+    public Map<String, CartItemValidation> validateCartItems(Cart cart) {
+        Map<String, CartItemValidation> invalid = new LinkedHashMap<>();
+        if (cart == null || cart.getItems() == null || cart.getItems().isEmpty()) {
+            return invalid;
+        }
+
+        for (Cart.CartItem item : cart.getItems()) {
+            // 1) Product tồn tại?
+            Optional<Product> productOpt = productRepository.findById(item.getProductId());
+            if (productOpt.isEmpty()) {
+                invalid.put(item.getProductId(), CartItemValidation.invalid(
+                        "PRODUCT_NOT_FOUND",
+                        "Sản phẩm đã ngừng bán hoặc bị xóa khỏi hệ thống."));
+                continue;
+            }
+            Product product = productOpt.get();
+
+            // 2) Product phải ACTIVE
+            ProductStatus status = product.getStatus();
+            if (status == null || status != ProductStatus.ACTIVE) {
+                invalid.put(item.getProductId(), CartItemValidation.invalid(
+                        "INACTIVE_PRODUCT",
+                        String.format(
+                                "Sản phẩm không còn khả dụng (trạng thái: %s). Vui lòng xóa khỏi giỏ hàng.",
+                                status == null ? "Không xác định" : status)));
+                continue;
+            }
+
+            // 3) Shop tồn tại & active & APPROVED
+            if (product.getShopId() == null) {
+                invalid.put(item.getProductId(), CartItemValidation.invalid(
+                        "SHOP_NOT_FOUND",
+                        "Không xác định được cửa hàng bán sản phẩm này."));
+                continue;
+            }
+            Optional<Shop> shopOpt = shopRepository.findById(product.getShopId());
+            if (shopOpt.isEmpty()) {
+                invalid.put(item.getProductId(), CartItemValidation.invalid(
+                        "SHOP_NOT_FOUND",
+                        "Cửa hàng đã ngừng hoạt động hoặc bị xóa."));
+                continue;
+            }
+            Shop shop = shopOpt.get();
+            if (!shop.isActive()) {
+                invalid.put(item.getProductId(), CartItemValidation.invalid(
+                        "SHOP_INACTIVE",
+                        String.format("Cửa hàng '%s' hiện không hoạt động.", shop.getShopName())));
+                continue;
+            }
+            ShopStatus shopStatus = shop.getStatus();
+            if (shopStatus == ShopStatus.SUSPENDED) {
+                invalid.put(item.getProductId(), CartItemValidation.invalid(
+                        "SHOP_SUSPENDED",
+                        String.format("Cửa hàng '%s' đang bị tạm ngưng.", shop.getShopName())));
+                continue;
+            }
+            if (shopStatus != ShopStatus.APPROVED) {
+                invalid.put(item.getProductId(), CartItemValidation.invalid(
+                        "SHOP_NOT_APPROVED",
+                        String.format("Cửa hàng '%s' chưa được xác minh để bán hàng.",
+                                shop.getShopName())));
+                continue;
+            }
+
+            // 4) Stock đủ?
+            int stock = product.getStock();
+            int requested = item.getQuantity();
+            if (requested <= 0) {
+                invalid.put(item.getProductId(), CartItemValidation.invalid(
+                        "INVALID_QUANTITY",
+                        "Số lượng không hợp lệ."));
+                continue;
+            }
+            if (stock <= 0) {
+                invalid.put(item.getProductId(), CartItemValidation.invalid(
+                        "OUT_OF_STOCK",
+                        "Sản phẩm đã hết hàng."));
+                continue;
+            }
+            if (stock < requested) {
+                invalid.put(item.getProductId(), CartItemValidation.invalid(
+                        "INSUFFICIENT_STOCK",
+                        String.format("Chỉ còn %d sản phẩm trong kho (giỏ hàng: %d).",
+                                stock, requested)));
+                continue;
+            }
+        }
+        return invalid;
+    }
+
+    @Override
+    public Cart removeInvalidItems(String userId) {
+        Cart cart = getCartByUserId(userId);
+        if (cart == null || cart.getItems() == null || cart.getItems().isEmpty()) {
+            return cart;
+        }
+        Map<String, CartItemValidation> invalid = validateCartItems(cart);
+        if (invalid.isEmpty()) {
+            return cart;
+        }
+        cart.getItems().removeIf(item -> invalid.containsKey(item.getProductId()));
+        cart.setUpdatedAt(LocalDateTime.now());
+        return cartRepository.save(cart);
+    }
+
+    @Override
+    public Cart removeByShop(String userId, String shopId) {
+        Cart cart = getCartByUserId(userId);
+        if (cart == null || cart.getItems() == null || cart.getItems().isEmpty()) {
+            return cart;
+        }
+        // Nếu shopId null -> xóa các item không có shopId; ngược lại xóa đúng shopId.
+        cart.getItems().removeIf(item -> {
+            String itemShopId = item.getShopId();
+            if (shopId == null) {
+                return itemShopId == null;
+            }
+            return shopId.equals(itemShopId);
+        });
+        cart.setUpdatedAt(LocalDateTime.now());
+        return cartRepository.save(cart);
     }
 }

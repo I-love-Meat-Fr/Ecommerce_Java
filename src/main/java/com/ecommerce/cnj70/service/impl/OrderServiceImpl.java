@@ -1,15 +1,18 @@
 package com.ecommerce.cnj70.service.impl;
 
 import com.ecommerce.cnj70.document.*;
+import com.ecommerce.cnj70.dto.checkout.CheckoutValidationRes;
 import com.ecommerce.cnj70.dto.request.CheckoutReq;
 import com.ecommerce.cnj70.enums.DiscountType;
 import com.ecommerce.cnj70.enums.OrderStatus;
 import com.ecommerce.cnj70.enums.PaymentMethod;
+import com.ecommerce.cnj70.enums.PaymentStatus;
 import com.ecommerce.cnj70.enums.ProductStatus;
 import com.ecommerce.cnj70.enums.ShippingStatus;
 import com.ecommerce.cnj70.enums.ShopStatus;
 import com.ecommerce.cnj70.exception.BadRequestException;
 import com.ecommerce.cnj70.exception.ResourceNotFoundException;
+import com.ecommerce.cnj70.exception.UnauthorizedException;
 import com.ecommerce.cnj70.repository.CartRepository;
 import com.ecommerce.cnj70.repository.OrderRepository;
 import com.ecommerce.cnj70.repository.ProductRepository;
@@ -30,6 +33,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -144,6 +148,12 @@ public class OrderServiceImpl implements OrderService {
         BigDecimal totalBeforeDiscount = subtotal.add(shippingFee);
 
         // ===== TASK #13: áp dụng voucher (nếu có) =====
+        // Lưu ý: bất kỳ lỗi nào từ voucherService.validateForCheckout() đều phải
+        // được wrap với prefix "Voucher không hợp lệ:" để OrderController dễ dàng
+        // phát hiện và:
+        //   1) Clear appliedVoucher khỏi session
+        //   2) Hiển thị lỗi inline trên UI
+        //   3) KHÔNG tạo Order (đã được đảm bảo bởi @Transactional + throw ở đây)
         BigDecimal discount = BigDecimal.ZERO;
         Voucher appliedVoucher = null;
         if (request.getVoucherCode() != null && !request.getVoucherCode().isBlank()) {
@@ -154,6 +164,11 @@ public class OrderServiceImpl implements OrderService {
                         request.getVoucherCode().trim(), firstShopId, null);
                 discount = computeDiscount(appliedVoucher, totalBeforeDiscount);
             } catch (BadRequestException e) {
+                // Voucher tồn tại nhưng không thỏa điều kiện (hết hạn / hết lượt /
+                // không áp dụng cho shop này / sản phẩm này / bị vô hiệu hóa)
+                throw new BadRequestException("Voucher không hợp lệ: " + e.getMessage());
+            } catch (ResourceNotFoundException e) {
+                // Voucher không tồn tại trong hệ thống
                 throw new BadRequestException("Voucher không hợp lệ: " + e.getMessage());
             }
         }
@@ -183,6 +198,11 @@ public class OrderServiceImpl implements OrderService {
                 .voucherName(appliedVoucher != null ? appliedVoucher.getName() : null)
                 .status(OrderStatus.PENDING)
                 .paymentMethod(request.getPaymentMethod() != null ? request.getPaymentMethod() : PaymentMethod.COD)
+                // PENDING: mọi Order mới đều ở trạng thái chờ thanh toán.
+                // - COD: vendor sẽ set PAID khi thu tiền khi giao hàng
+                // - VNPAY: VNPAY callback sẽ set PAID/FAILED (Phase 3B+)
+                // Field paid được giữ đồng bộ với paymentStatus (paid == paymentStatus == PAID)
+                .paymentStatus(PaymentStatus.PENDING)
                 .paid(false)
                 .shopId(primaryShopId)
                 .shopName(primaryShopName)
@@ -206,6 +226,316 @@ public class OrderServiceImpl implements OrderService {
         }
 
         return savedOrder;
+    }
+
+    /**
+     * Pre-submit validation — đọc lại toàn bộ trạng thái (price, stock, shop, voucher)
+     * từ DB và so sánh với Cart snapshot. Trả về:
+     *
+     * <ul>
+     *   <li>{@code valid = false} nếu có lỗi nghiêm trọng (stock=0, shop suspended, product removed,
+     *       voucher exhausted/expired) — UI phải chặn submit</li>
+     *   <li>{@code changed = true} nếu bất kỳ trường nào (price, stock, shop status, voucher)
+     *       đã đổi so với Cart/session — UI cần refresh dữ liệu hiển thị</li>
+     *   <li>warnings: cảnh báo không chặn submit (giá tăng/giảm, stock sắp hết, voucher sắp hết lượt)</li>
+     * </ul>
+     *
+     * <p>Method này KHÔNG tạo Order, KHÔNG trừ stock, KHÔNG tăng used count.</p>
+     */
+    @Override
+    @Transactional(readOnly = true)
+    public CheckoutValidationRes validateCheckout(String userId, String voucherCode) {
+        CheckoutValidationRes.CheckoutValidationResBuilder response = CheckoutValidationRes.builder()
+                .valid(true)
+                .changed(false);
+
+        List<CheckoutValidationRes.ValidatedItem> validatedItems = new ArrayList<>();
+        List<String> errors = new ArrayList<>();
+        List<String> warnings = new ArrayList<>();
+
+        Cart cart = cartRepository.findByUserId(userId).orElse(null);
+        if (cart == null || cart.getItems() == null || cart.getItems().isEmpty()) {
+            // Cart trống → không thể checkout
+            response.valid(false);
+            response.errors(List.of("Giỏ hàng của bạn đang trống. Vui lòng thêm sản phẩm trước khi thanh toán."));
+            response.items(validatedItems);
+            response.warnings(warnings);
+            response.summary(CheckoutValidationRes.Summary.builder()
+                    .subtotal(BigDecimal.ZERO)
+                    .shippingFee(SHIPPING_FEE)
+                    .discount(BigDecimal.ZERO)
+                    .finalTotal(SHIPPING_FEE)
+                    .deltaFromPrevious(BigDecimal.ZERO)
+                    .build());
+            response.voucher(null);
+            return response.build();
+        }
+
+        BigDecimal subtotal = BigDecimal.ZERO;
+        boolean anyChanged = false;
+
+        for (Cart.CartItem cartItem : cart.getItems()) {
+            CheckoutValidationRes.ValidatedItem.ValidatedItemBuilder itemBuilder =
+                    CheckoutValidationRes.ValidatedItem.builder()
+                            .productId(cartItem.getProductId())
+                            .productName(cartItem.getProductName())
+                            .imageUrl(cartItem.getImageUrl())
+                            .shopId(cartItem.getShopId())
+                            .shopName(cartItem.getShopName())
+                            .oldPrice(cartItem.getPrice())
+                            .currentPrice(cartItem.getPrice())
+                            .priceChanged(false)
+                            .requestedQuantity(cartItem.getQuantity())
+                            .currentStock(cartItem.getStock() != null ? cartItem.getStock() : 0)
+                            .stockOk(true)
+                            .productStatus("ACTIVE")
+                            .shopActive(true)
+                            .shopCurrentName(cartItem.getShopName())
+                            .subtotal(cartItem.getSubtotal() != null ? cartItem.getSubtotal() : BigDecimal.ZERO)
+                            .valid(true);
+
+            // 1) Product tồn tại?
+            Optional<Product> productOpt = productRepository.findById(cartItem.getProductId());
+            if (productOpt.isEmpty()) {
+                itemBuilder.valid(false)
+                        .productStatus("NOT_FOUND")
+                        .reasonCode("PRODUCT_NOT_FOUND")
+                        .reasonMessage("Sản phẩm đã ngừng bán hoặc bị xóa khỏi hệ thống.");
+                errors.add(String.format("Sản phẩm \"%s\" đã ngừng bán.", cartItem.getProductName()));
+                validatedItems.add(itemBuilder.build());
+                response.valid(false);
+                continue;
+            }
+
+            Product product = productOpt.get();
+
+            // 2) Product phải ACTIVE
+            ProductStatus status = product.getStatus();
+            String statusStr = status != null ? status.name() : "UNKNOWN";
+            itemBuilder.productStatus(statusStr);
+            if (status == null || status != ProductStatus.ACTIVE) {
+                itemBuilder.valid(false)
+                        .reasonCode("INACTIVE_PRODUCT")
+                        .reasonMessage(String.format(
+                                "Sản phẩm không còn khả dụng (trạng thái: %s).",
+                                statusStr));
+                errors.add(String.format("Sản phẩm \"%s\" hiện không khả dụng (%s).",
+                        product.getName(), statusStr));
+                validatedItems.add(itemBuilder.build());
+                response.valid(false);
+                continue;
+            }
+
+            // 3) Shop phải active & APPROVED
+            boolean shopOk = false;
+            if (product.getShopId() != null) {
+                Optional<Shop> shopOpt = shopRepository.findById(product.getShopId());
+                if (shopOpt.isPresent()) {
+                    Shop shop = shopOpt.get();
+                    itemBuilder.shopCurrentName(shop.getShopName());
+                    if (shop.isActive() && shop.getStatus() == ShopStatus.APPROVED) {
+                        shopOk = true;
+                        itemBuilder.shopActive(true);
+                    } else {
+                        itemBuilder.shopActive(false);
+                        String reasonCode = !shop.isActive() ? "SHOP_INACTIVE"
+                                : (shop.getStatus() == ShopStatus.SUSPENDED ? "SHOP_SUSPENDED"
+                                : "SHOP_NOT_APPROVED");
+                        itemBuilder.reasonCode(reasonCode)
+                                .valid(false)
+                                .reasonMessage(String.format(
+                                        "Cửa hàng \"%s\" hiện không hoạt động.",
+                                        shop.getShopName()));
+                        errors.add(String.format("Cửa hàng \"%s\" hiện không hoạt động. "
+                                + "Không thể đặt hàng.", shop.getShopName()));
+                    }
+                } else {
+                    itemBuilder.shopActive(false)
+                            .valid(false)
+                            .reasonCode("SHOP_NOT_FOUND")
+                            .reasonMessage("Cửa hàng đã ngừng hoạt động hoặc bị xóa.");
+                    errors.add(String.format("Cửa hàng bán \"%s\" đã ngừng hoạt động.",
+                            product.getName()));
+                }
+            } else {
+                itemBuilder.shopActive(false)
+                        .valid(false)
+                        .reasonCode("SHOP_NOT_FOUND")
+                        .reasonMessage("Không xác định được cửa hàng bán sản phẩm này.");
+                errors.add(String.format("Không xác định được cửa hàng bán \"%s\".",
+                        product.getName()));
+            }
+            if (!shopOk) {
+                validatedItems.add(itemBuilder.build());
+                response.valid(false);
+                continue;
+            }
+
+            // 4) Price drift detection — so sánh price cũ (cart snapshot) vs hiện tại (DB)
+            BigDecimal currentPrice = product.getPrice() != null ? product.getPrice() : BigDecimal.ZERO;
+            BigDecimal oldPrice = cartItem.getPrice() != null ? cartItem.getPrice() : BigDecimal.ZERO;
+            itemBuilder.currentPrice(currentPrice);
+            if (currentPrice.compareTo(oldPrice) != 0) {
+                itemBuilder.priceChanged(true);
+                anyChanged = true;
+                if (currentPrice.compareTo(oldPrice) > 0) {
+                    warnings.add(String.format(
+                            "Giá sản phẩm \"%s\" đã tăng từ %s₫ lên %s₫.",
+                            product.getName(),
+                            formatVnd(oldPrice), formatVnd(currentPrice)));
+                } else {
+                    warnings.add(String.format(
+                            "Giá sản phẩm \"%s\" đã giảm từ %s₫ xuống %s₫.",
+                            product.getName(),
+                            formatVnd(oldPrice), formatVnd(currentPrice)));
+                }
+            }
+
+            // 5) Stock check
+            int currentStock = Math.max(0, product.getStock());
+            int requested = cartItem.getQuantity();
+            itemBuilder.currentStock(currentStock);
+            if (currentStock <= 0) {
+                itemBuilder.stockOk(false)
+                        .valid(false)
+                        .reasonCode("OUT_OF_STOCK")
+                        .reasonMessage("Sản phẩm đã hết hàng.");
+                errors.add(String.format("Sản phẩm \"%s\" đã hết hàng.", product.getName()));
+                validatedItems.add(itemBuilder.build());
+                response.valid(false);
+                continue;
+            }
+            if (currentStock < requested) {
+                itemBuilder.stockOk(false)
+                        .valid(false)
+                        .reasonCode("INSUFFICIENT_STOCK")
+                        .reasonMessage(String.format(
+                                "Chỉ còn %d sản phẩm trong kho (giỏ hàng: %d).",
+                                currentStock, requested));
+                errors.add(String.format(
+                        "Sản phẩm \"%s\" chỉ còn %d (giỏ: %d).",
+                        product.getName(), currentStock, requested));
+                validatedItems.add(itemBuilder.build());
+                response.valid(false);
+                continue;
+            }
+            if (currentStock - requested <= 3) {
+                warnings.add(String.format(
+                        "Sản phẩm \"%s\" chỉ còn %d trong kho sau khi đặt.",
+                        product.getName(), currentStock - requested));
+            }
+
+            // 6) Subtotal theo currentPrice
+            BigDecimal itemSubtotal = currentPrice.multiply(BigDecimal.valueOf(requested));
+            itemBuilder.subtotal(itemSubtotal);
+            subtotal = subtotal.add(itemSubtotal);
+            validatedItems.add(itemBuilder.build());
+        }
+
+        BigDecimal shippingFee = SHIPPING_FEE;
+        BigDecimal totalBeforeDiscount = subtotal.add(shippingFee);
+
+        // ===== Voucher validation (nếu có) =====
+        CheckoutValidationRes.VoucherState voucherState = null;
+        BigDecimal discount = BigDecimal.ZERO;
+        if (voucherCode != null && !voucherCode.isBlank()) {
+            try {
+                // Lấy shopId đầu tiên của cart (nếu có) để validate SHOP voucher
+                String firstShopId = cart.getItems().isEmpty() ? null
+                        : cart.getItems().get(0).getShopId();
+                Voucher voucher = voucherService.validateForCheckout(
+                        voucherCode.trim(), firstShopId, null);
+                discount = computeDiscount(voucher, totalBeforeDiscount);
+                if (discount.signum() <= 0) {
+                    // Voucher tồn tại nhưng subtotal < minOrderValue → không được giảm
+                    voucherState = CheckoutValidationRes.VoucherState.builder()
+                            .code(voucher.getCode())
+                            .voucherId(voucher.getId())
+                            .voucherName(voucher.getName())
+                            .valid(false)
+                            .discount(BigDecimal.ZERO)
+                            .reasonCode("MIN_ORDER_NOT_MET")
+                            .reasonMessage(String.format(
+                                    "Đơn hàng chưa đạt giá trị tối thiểu %s₫ để áp dụng voucher.",
+                                    formatVnd(voucher.getMinOrderValue())))
+                            .build();
+                    warnings.add(voucherState.getReasonMessage());
+                    anyChanged = true;
+                } else {
+                    voucherState = CheckoutValidationRes.VoucherState.builder()
+                            .code(voucher.getCode())
+                            .voucherId(voucher.getId())
+                            .voucherName(voucher.getName())
+                            .valid(true)
+                            .discount(discount)
+                            .reasonCode(null)
+                            .reasonMessage(null)
+                            .build();
+                }
+            } catch (BadRequestException e) {
+                voucherState = CheckoutValidationRes.VoucherState.builder()
+                        .code(voucherCode)
+                        .valid(false)
+                        .discount(BigDecimal.ZERO)
+                        .reasonCode("VOUCHER_INVALID")
+                        .reasonMessage(e.getMessage())
+                        .build();
+                errors.add("Voucher không hợp lệ: " + e.getMessage());
+                response.valid(false);
+                anyChanged = true;
+            } catch (Exception e) {
+                voucherState = CheckoutValidationRes.VoucherState.builder()
+                        .code(voucherCode)
+                        .valid(false)
+                        .discount(BigDecimal.ZERO)
+                        .reasonCode("VOUCHER_NOT_FOUND")
+                        .reasonMessage("Voucher không tồn tại hoặc đã bị xóa.")
+                        .build();
+                errors.add("Voucher không tồn tại hoặc đã bị xóa.");
+                response.valid(false);
+                anyChanged = true;
+            }
+        }
+
+        BigDecimal finalTotal = totalBeforeDiscount.subtract(discount);
+        if (finalTotal.compareTo(BigDecimal.ZERO) < 0) {
+            finalTotal = BigDecimal.ZERO;
+        }
+
+        // deltaFromPrevious: so sánh finalTotal mới với tổng từ Cart snapshot (price × qty)
+        BigDecimal previousSubtotal = cart.getItems().stream()
+                .map(Cart.CartItem::getSubtotal)
+                .filter(java.util.Objects::nonNull)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+        BigDecimal previousFinalTotal = previousSubtotal.add(shippingFee)
+                .subtract(BigDecimal.ZERO) // không có voucher cũ để so sánh
+                .max(BigDecimal.ZERO);
+        BigDecimal deltaFromPrevious = previousFinalTotal.subtract(finalTotal);
+
+        // Nếu có bất kỳ thay đổi nào về price/voucher → mark changed = true
+        if (!warnings.isEmpty() || voucherState != null || !errors.isEmpty()) {
+            anyChanged = true;
+        }
+
+        response.items(validatedItems)
+                .errors(errors)
+                .warnings(warnings)
+                .changed(anyChanged)
+                .summary(CheckoutValidationRes.Summary.builder()
+                        .subtotal(subtotal)
+                        .shippingFee(shippingFee)
+                        .discount(discount)
+                        .finalTotal(finalTotal)
+                        .deltaFromPrevious(deltaFromPrevious)
+                        .build())
+                .voucher(voucherState);
+
+        return response.build();
+    }
+
+    private static String formatVnd(BigDecimal amount) {
+        if (amount == null) return "0";
+        return new java.text.DecimalFormat("#,###").format(amount);
     }
 
     @Override

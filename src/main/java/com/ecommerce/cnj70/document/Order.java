@@ -2,6 +2,7 @@ package com.ecommerce.cnj70.document;
 
 import com.ecommerce.cnj70.enums.OrderStatus;
 import com.ecommerce.cnj70.enums.PaymentMethod;
+import com.ecommerce.cnj70.enums.PaymentStatus;
 import com.ecommerce.cnj70.enums.ShippingStatus;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -78,8 +79,38 @@ public class Order {
 
     private PaymentMethod paymentMethod;
 
+    /**
+     * Trạng thái thanh toán của Order — tách biệt khỏi {@link #status} (workflow đơn hàng)
+     * và {@code shippingByShop[*].status} (vận chuyển theo shop).
+     *
+     * <p>Lifecycle: PENDING → PAID / FAILED → REFUNDED (optional, terminal).</p>
+     *
+     * <p>Field {@link #paid} được giữ để tương thích ngược với code cũ — sẽ được sync
+     * theo {@code paymentStatus == PAID} trong service layer.</p>
+     */
+    @Builder.Default
+    private PaymentStatus paymentStatus = PaymentStatus.PENDING;
+
+    /**
+     * Legacy boolean flag — được giữ để tương thích ngược. Mọi code mới phải dùng
+     * {@link #paymentStatus} thay thế. Service layer đảm bảo
+     * {@code paid == (paymentStatus == PAID)} tại mọi thời điểm.
+     */
     @Builder.Default
     private boolean paid = false;
+
+    /**
+     * Thời điểm thanh toán thành công (paymentStatus chuyển sang PAID).
+     * Null nếu chưa thanh toán. Dùng để hiển thị "Đã thanh toán lúc HH:mm dd/MM/yyyy"
+     * trên UI.
+     */
+    private LocalDateTime paidAt;
+
+    /**
+     * Thời điểm hoàn tiền (paymentStatus chuyển sang REFUNDED).
+     * Null nếu chưa hoàn tiền.
+     */
+    private LocalDateTime refundedAt;
 
     private String shopId;
 
@@ -117,6 +148,10 @@ public class Order {
 
     /**
      * Thông tin vận chuyển cho phần của 1 shop trong đơn hàng (sub-order).
+     *
+     * <p>Mỗi shop có trạng thái vận chuyển + phí ship + tracking riêng vì vendor tự xử lý
+     * phần của mình. Phí ship được phân bổ từ {@link Order#getShippingFee()} tổng khi tạo
+     * Order (chia đều cho các shop, shop cuối nhận phần dư để tổng luôn khớp).</p>
      */
     @Data
     @Builder
@@ -127,6 +162,9 @@ public class Order {
         private String shopName;
         @Builder.Default
         private ShippingStatus status = ShippingStatus.PENDING;
+        /** Phí vận chuyển được phân bổ cho sub-order của shop này. */
+        @Builder.Default
+        private BigDecimal shippingFee = BigDecimal.ZERO;
         private String trackingNumber;
         private String carrier;
         private LocalDateTime shippedAt;

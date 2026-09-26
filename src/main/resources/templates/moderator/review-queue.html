@@ -159,13 +159,7 @@
                     <i class="fas fa-chevron-left"></i> Trước
                 </span>
 
-                <th:block th:each="i : ${pageNumbers}" th:if="${i == page}">
-                    <span class="sd-page-link sd-page-active" th:text="${i + 1}">1</span>
-                </th:block>
-                <th:block th:each="i : ${pageNumbers}" th:unless="${i == page}">
-                    <a th:href="@{/moderator/reviews(page=${i}, size=${size}, moderationStatus=${moderationStatus}, rating=${rating}, q=${q})}"
-                       class="sd-page-link" th:text="${i + 1}">1</a>
-                </th:block>
+                <span class="sd-page-link sd-page-active" th:text="${page + 1} + ' / ' + ${totalPages}">1 / 1</span>
 
                 <a th:if="${hasNext}"
                    th:href="@{/moderator/reviews(page=${page + 1}, size=${size}, moderationStatus=${moderationStatus}, rating=${rating}, q=${q})}"

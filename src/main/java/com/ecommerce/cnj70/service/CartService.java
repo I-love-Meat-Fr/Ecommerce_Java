@@ -1,9 +1,11 @@
 package com.ecommerce.cnj70.service;
 
 import com.ecommerce.cnj70.document.Cart;
+import com.ecommerce.cnj70.dto.cart.CartItemValidation;
 
 import java.math.BigDecimal;
 import java.util.Collection;
+import java.util.Map;
 
 public interface CartService {
 
@@ -44,4 +46,43 @@ public interface CartService {
     int countItems(String userId);
 
     BigDecimal calculateTotal(Cart cart);
+
+    /**
+     * Kiểm tra real-time trạng thái của từng item trong Cart dựa trên Product/Shop hiện tại.
+     * <p>
+     * Trả về map {@code productId -> CartItemValidation} (chỉ chứa các item KHÔNG hợp lệ).
+     * Item hợp lệ sẽ không xuất hiện trong map (dùng {@link CartItemValidation#VALID}
+     * làm sentinel để thêm vào kết quả nếu cần).
+     *
+     * <p><b>Quy tắc không hợp lệ:</b>
+     * <ul>
+     *   <li>Product bị xóa khỏi DB</li>
+     *   <li>Product.status != ACTIVE (DRAFT/HIDDEN/OUT_OF_STOCK)</li>
+     *   <li>Shop bị xóa / không active / chưa APPROVED / SUSPENDED</li>
+     *   <li>Product.stock < cartItem.quantity</li>
+     * </ul>
+     *
+     * @param cart Cart hiện tại của user
+     * @return Map productId → lý do không hợp lệ (chỉ chứa các item invalid)
+     */
+    Map<String, CartItemValidation> validateCartItems(Cart cart);
+
+    /**
+     * Xóa tất cả CartItem không còn hợp lệ (dựa trên {@link #validateCartItems(Cart)}).
+     * Dùng khi user bấm "Xóa sản phẩm không hợp lệ" trên Cart UI.
+     *
+     * @param userId user hiện tại
+     * @return Cart sau khi đã loại bỏ invalid items
+     */
+    Cart removeInvalidItems(String userId);
+
+    /**
+     * Xóa tất cả CartItem thuộc về một shop cụ thể.
+     * Dùng khi user bấm "Xóa tất cả sản phẩm của shop này" trên header shop-group.
+     *
+     * @param userId  user hiện tại
+     * @param shopId  shopId cần xóa (null = các item không có shopId)
+     * @return Cart sau khi đã loại bỏ items của shop
+     */
+    Cart removeByShop(String userId, String shopId);
 }

@@ -58,7 +58,7 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class ComplaintApiController {
 
-    private final ComplaintService complaintService;
+    private ComplaintService complaintService;
 
     // =========== Customer (Level 0) ===========
 

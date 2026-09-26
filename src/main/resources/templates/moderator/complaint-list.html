@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/springsecurity6"
+      th:replace="~{layout/moderator-layout :: layout(title='Khiếu nại Level 1 - CNJ70 Moderator', content=~{::main-content}, scripts=~{::page-scripts})}">
+<head>
+    <title>Khiếu nại Level 1 - CNJ70 Moderator</title>
+</head>
+<body>
+<main th:fragment="main-content">
+
+    <!-- Page header -->
+    <div class="sd-page-head">
+        <div class="sd-page-head-title">
+            <h1><i class="fas fa-shield-halved"></i> Khiếu nại Level 1</h1>
+            <p>Xem xét các khiếu nại đã được Customer / Shop escalate lên Moderator.</p>
+        </div>
+        <div class="sd-page-head-meta">
+            <span class="sd-page-head-meta-label">Tổng số</span>
+            <span class="sd-page-head-meta-value" th:text="${totalItems}">0</span>
+        </div>
+    </div>
+
+    <!-- Quick stats -->
+    <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(160px, 1fr));gap:12px;margin-bottom:20px;">
+        <a th:href="@{/moderator/complaints(status='')}"
+           th:classappend="${statusFilter == null or statusFilter == '' ? 'sd-stat-card sd-stat-card-active' : 'sd-stat-card'}">
+            <i class="fas fa-list"></i>
+            <div>
+                <span class="sd-stat-label">Tất cả</span>
+                <span class="sd-stat-value" th:text="${totalItems}">0</span>
+            </div>
+        </a>
+        <a th:href="@{/moderator/complaints(status='ESCALATED')}"
+           th:classappend="${statusFilter == 'ESCALATED' ? 'sd-stat-card sd-stat-card-warn sd-stat-card-active' : 'sd-stat-card sd-stat-card-warn'}">
+            <i class="fas fa-hourglass-half"></i>
+            <div>
+                <span class="sd-stat-label">Chờ claim</span>
+                <span class="sd-stat-value" th:text="${escalatedCount}">0</span>
+            </div>
+        </a>
+        <a th:href="@{/moderator/complaints(status='MODERATOR_REVIEW')}"
+           th:classappend="${statusFilter == 'MODERATOR_REVIEW' ? 'sd-stat-card sd-stat-card-info sd-stat-card-active' : 'sd-stat-card sd-stat-card-info'}">
+            <i class="fas fa-user-shield"></i>
+            <div>
+                <span class="sd-stat-label">Đang xem xét</span>
+                <span class="sd-stat-value" th:text="${inReviewCount}">0</span>
+            </div>
+        </a>
+        <a th:href="@{/moderator/complaints(status='ESCALATED_L2')}"
+           th:classappend="${statusFilter == 'ESCALATED_L2' ? 'sd-stat-card sd-stat-card-purple sd-stat-card-active' : 'sd-stat-card sd-stat-card-purple'}">
+            <i class="fas fa-shield-alt"></i>
+            <div>
+                <span class="sd-stat-label">Đã escalate Admin</span>
+                <span class="sd-stat-value" th:text="${escalatedL2Count}">0</span>
+            </div>
+        </a>
+        <a th:href="@{/moderator/complaints(status='RESOLVED')}"
+           th:classappend="${statusFilter == 'RESOLVED' ? 'sd-stat-card sd-stat-card-success sd-stat-card-active' : 'sd-stat-card sd-stat-card-success'}">
+            <i class="fas fa-check-circle"></i>
+            <div>
+                <span class="sd-stat-label">Đã giải quyết</span>
+                <span class="sd-stat-value" th:text="${resolvedCount}">0</span>
+            </div>
+        </a>
+        <a th:href="@{/moderator/complaints(status='REJECTED')}"
+           th:classappend="${statusFilter == 'REJECTED' ? 'sd-stat-card sd-stat-card-danger sd-stat-card-active' : 'sd-stat-card sd-stat-card-danger'}">
+            <i class="fas fa-times-circle"></i>
+            <div>
+                <span class="sd-stat-label">Bị từ chối</span>
+                <span class="sd-stat-value" th:text="${rejectedCount}">0</span>
+            </div>
+        </a>
+    </div>
+
+    <!-- Toolbar -->
+    <div class="sd-card sd-toolbar" style="margin-bottom:20px;">
+        <div class="sd-card-body">
+            <form th:action="@{/moderator/complaints}" method="get" class="sd-toolbar-form">
+                <select name="status" class="sd-select sd-toolbar-select"
+                        style="padding:8px 10px;border:1px solid var(--border,#e2e8f0);border-radius:6px;">
+                    <option th:each="c : ${statusChoices}"
+                            th:value="${c.key}"
+                            th:text="${c.value}"
+                            th:selected="${statusFilter == c.key}"></option>
+                </select>
+                <button type="submit" class="sd-btn sd-btn-primary sd-btn-sm sd-toolbar-btn">
+                    <i class="fas fa-filter"></i> Lọc
+                </button>
+                <a th:href="@{/moderator/complaints}" class="sd-btn sd-btn-secondary sd-btn-sm sd-toolbar-btn">
+                    <i class="fas fa-rotate-left"></i> Đặt lại
+                </a>
+            </form>
+        </div>
+    </div>
+
+    <!-- Table card -->
+    <div class="sd-card">
+        <div class="sd-card-body sd-card-body-flush">
+            <table class="sd-table">
+                <thead>
+                    <tr>
+                        <th class="sd-col-stt">#</th>
+                        <th>Mã khiếu nại</th>
+                        <th>Khách hàng</th>
+                        <th>Shop</th>
+                        <th>Lý do</th>
+                        <th>Trạng thái</th>
+                        <th>Đơn hàng</th>
+                        <th>Ngày tạo</th>
+                        <th style="text-align:right;">Thao tác</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr th:if="${#lists.isEmpty(complaints)}">
+                        <td colspan="9">
+                            <div class="sd-empty">
+                                <i class="fas fa-inbox"></i>
+                                <h3>Chưa có khiếu nại Level 1</h3>
+                                <p>Khiếu nại sẽ xuất hiện ở đây khi Customer hoặc Shop escalate.</p>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr th:each="c, iter : ${complaints}">
+                        <td class="sd-col-stt" th:text="${page * size + iter.count}">1</td>
+                        <td>
+                            <code class="sd-mono" th:text="${#strings.abbreviate(c.id, 10)}">ID</code>
+                        </td>
+                        <td>
+                            <div class="sd-table-title" th:text="${c.customerName != null ? c.customerName : '—'}">Customer</div>
+                            <div class="sd-table-sub" th:text="${c.customerEmail != null ? c.customerEmail : ''}">email</div>
+                        </td>
+                        <td>
+                            <div class="sd-table-title" th:text="${c.shopName != null ? c.shopName : '—'}">Shop</div>
+                            <div class="sd-table-sub" th:text="${c.vendorId != null ? c.vendorId : ''}">vendor</div>
+                        </td>
+                        <td>
+                            <span class="sd-badge sd-badge-slate"
+                                  th:text="${reasonLabels.get(c.reason) ?: (c.reason != null ? c.reason.name() : '—')}">
+                                Reason
+                            </span>
+                            <div th:if="${c.description != null and not c.description.isBlank()}"
+                                 class="sd-table-sub"
+                                 th:text="${#strings.abbreviate(c.description, 50)}">desc</div>
+                        </td>
+                        <td>
+                            <span class="sd-badge"
+                                  th:classappend="${c.status.name() == 'ESCALATED' ? 'sd-badge-amber' :
+                                                  (c.status.name() == 'MODERATOR_REVIEW' ? 'sd-badge-sky' :
+                                                  (c.status.name() == 'ADMIN_REVIEW' or c.status.name() == 'ESCALATED_L2' ? 'sd-badge-red' :
+                                                  (c.status.name() == 'RESOLVED' ? 'sd-badge-green' :
+                                                  (c.status.name() == 'REJECTED' ? 'sd-badge-slate' : 'sd-badge-slate'))))}"
+                                  th:text="${statusLabels.get(c.status) ?: c.status.name()}">Status</span>
+                        </td>
+                        <td>
+                            <code class="sd-mono" th:text="${c.orderId != null ? #strings.abbreviate(c.orderId, 10) : '—'}">OID</code>
+                        </td>
+                        <td class="sd-table-sub"
+                            th:text="${c.createdAt != null ? #temporals.format(c.createdAt, 'dd/MM/yyyy HH:mm') : '—'}">—</td>
+                        <td style="text-align:right; white-space:nowrap;">
+                            <a th:href="@{/moderator/complaints/{id}(id=${c.id}, page=${page}, size=${size}, status=${statusFilter})}"
+                               class="sd-btn sd-btn-primary sd-btn-sm">
+                                <i class="fas fa-eye"></i> Xem
+                            </a>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="sd-card-body" th:if="${totalPages > 0}"
+             style="display:flex;justify-content:center;border-top:1px solid var(--border,#e2e8f0);">
+            <nav class="sd-pagination" aria-label="Phân trang">
+                <a th:if="${hasPrev}"
+                   th:href="@{/moderator/complaints(page=${page - 1}, size=${size}, status=${statusFilter})}"
+                   class="sd-page-link">
+                    <i class="fas fa-chevron-left"></i> Trước
+                </a>
+                <span th:unless="${hasPrev}" class="sd-page-link sd-page-disabled">
+                    <i class="fas fa-chevron-left"></i> Trước
+                </span>
+
+                <span class="sd-page-link sd-page-active" th:text="${page + 1} + ' / ' + ${totalPages}">1 / 1</span>
+
+                <a th:if="${hasNext}"
+                   th:href="@{/moderator/complaints(page=${page + 1}, size=${size}, status=${statusFilter})}"
+                   class="sd-page-link">
+                    Sau <i class="fas fa-chevron-right"></i>
+                </a>
+                <span th:unless="${hasNext}" class="sd-page-link sd-page-disabled">
+                    Sau <i class="fas fa-chevron-right"></i>
+                </span>
+            </nav>
+        </div>
+    </div>
+
+</main>
+
+<th:block th:fragment="page-scripts">
+    <style>
+        .sd-stat-card {
+            display:flex;align-items:center;gap:12px;padding:14px 16px;border:1px solid var(--border,#e2e8f0);
+            border-radius:8px;background:#fff;text-decoration:none;color:inherit;transition:all .15s ease;
+        }
+        .sd-stat-card:hover { box-shadow: 0 2px 8px rgba(0,0,0,0.06); transform: translateY(-1px); }
+        .sd-stat-card.active, .sd-stat-card-active { border-color: var(--primary,#6366f1); box-shadow: 0 0 0 2px rgba(99,102,241,0.1); }
+        .sd-stat-card i { font-size:24px; }
+        .sd-stat-card .sd-stat-label { display:block; font-size:12px;color: var(--text-muted,#64748b); }
+        .sd-stat-card .sd-stat-value { display:block; font-size:22px; font-weight:700; }
+        .sd-stat-card-warn { border-left: 4px solid #f59e0b; }
+        .sd-stat-card-warn i { color: #f59e0b; }
+        .sd-stat-card-info { border-left: 4px solid #0ea5e9; }
+        .sd-stat-card-info i { color: #0ea5e9; }
+        .sd-stat-card-purple { border-left: 4px solid #8b5cf6; }
+        .sd-stat-card-purple i { color: #8b5cf6; }
+        .sd-stat-card-success { border-left: 4px solid #22c55e; }
+        .sd-stat-card-success i { color: #22c55e; }
+        .sd-stat-card-danger { border-left: 4px solid #ef4444; }
+        .sd-stat-card-danger i { color: #ef4444; }
+    </style>
+</th:block>
+</body>
+</html>
