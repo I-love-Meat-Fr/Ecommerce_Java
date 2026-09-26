@@ -120,7 +120,7 @@
             </div>
         </div>
         <div class="dash-stats dash-stats-financial">
-            <div class="dash-stat-card dash-stat-soft-info">
+            <div class="dash-stat-card dash-stat-info">
                 <div class="dash-stat-icon-wrap">
                     <div class="dash-stat-icon"><i class="fas fa-money-bill-trend-up"></i></div>
                 </div>
@@ -128,7 +128,7 @@
                 <div class="dash-stat-label">GMV (Gross Merchandise Value)</div>
                 <div class="dash-stat-sub">Sum of DELIVERED order totals (all-time)</div>
             </div>
-            <div class="dash-stat-card dash-stat-soft-purple">
+            <div class="dash-stat-card dash-stat-purple">
                 <div class="dash-stat-icon-wrap">
                     <div class="dash-stat-icon"><i class="fas fa-coins"></i></div>
                 </div>
@@ -136,7 +136,7 @@
                 <div class="dash-stat-label">Platform Revenue</div>
                 <div class="dash-stat-sub">Commission / fee earned by platform</div>
             </div>
-            <div class="dash-stat-card dash-stat-soft-slate" th:classappend="${stats.availability == null or !stats.availability.vendorSales} ? 'dash-stat-na'">
+            <div class="dash-stat-card dash-stat-slate" th:classappend="${stats.availability == null or !stats.availability.vendorSales} ? 'dash-stat-na' : ''">
                 <div class="dash-stat-icon-wrap">
                     <div class="dash-stat-icon"><i class="fas fa-receipt"></i></div>
                     <span class="dash-na-badge" th:if="${stats.availability == null or !stats.availability.vendorSales}">N/A</span>
@@ -145,7 +145,7 @@
                 <div class="dash-stat-label">Vendor Sales</div>
                 <div class="dash-stat-sub">Vendor Finance backend — INTEGRATION-READY</div>
             </div>
-            <div class="dash-stat-card dash-stat-soft-slate" th:classappend="${stats.availability == null or !stats.availability.vendorPayable} ? 'dash-stat-na'">
+            <div class="dash-stat-card dash-stat-slate" th:classappend="${stats.availability == null or !stats.availability.vendorPayable} ? 'dash-stat-na' : ''">
                 <div class="dash-stat-icon-wrap">
                     <div class="dash-stat-icon"><i class="fas fa-hand-holding-dollar"></i></div>
                     <span class="dash-na-badge" th:if="${stats.availability == null or !stats.availability.vendorPayable}">N/A</span>
@@ -154,7 +154,7 @@
                 <div class="dash-stat-label">Vendor Payable</div>
                 <div class="dash-stat-sub">Settlement backend — INTEGRATION-READY</div>
             </div>
-            <div class="dash-stat-card dash-stat-soft-slate" th:classappend="${stats.availability == null or !stats.availability.refund} ? 'dash-stat-na'">
+            <div class="dash-stat-card dash-stat-slate" th:classappend="${stats.availability == null or !stats.availability.refund} ? 'dash-stat-na' : ''">
                 <div class="dash-stat-icon-wrap">
                     <div class="dash-stat-icon"><i class="fas fa-rotate-left"></i></div>
                     <span class="dash-na-badge" th:if="${stats.availability == null or !stats.availability.refund}">N/A</span>
@@ -175,52 +175,51 @@
             </div>
         </div>
         <div class="dash-stats dash-stats-compliance">
-            <a th:href="@{/admin/users}" class="dash-stat-card dash-stat-soft-amber dash-stat-link"
-               th:classappend="${stats.pendingKyc == null} ? 'dash-stat-na'">
+            <a th:href="@{/admin/users}" class="dash-stat-card dash-stat-amber dash-stat-link"
+               th:classappend="${stats.pendingKyc == null} ? 'dash-stat-na' : ''">
                 <div class="dash-stat-icon-wrap">
                     <div class="dash-stat-icon"><i class="fas fa-id-card"></i></div>
                     <span class="dash-na-badge" th:if="${stats.pendingKyc == null}">N/A</span>
-                    <span class="dash-stat-link-indicator"><i class="fas fa-arrow-right"></i></span>
                 </div>
                 <div class="dash-stat-value" th:text="${stats.pendingKyc != null} ? ${stats.pendingKyc} : 'N/A'">0</div>
                 <div class="dash-stat-label">Pending KYC</div>
                 <div class="dash-stat-sub">KycStatus.PENDING_KYC</div>
+                <div class="dash-stat-link-indicator" th:if="${stats.pendingKyc != null}"><i class="fas fa-arrow-right"></i></div>
             </a>
-            <a th:href="@{/admin/products}" class="dash-stat-card dash-stat-soft-info dash-stat-link">
+            <div class="dash-stat-card dash-stat-info">
                 <div class="dash-stat-icon-wrap">
                     <div class="dash-stat-icon"><i class="fas fa-eye"></i></div>
-                    <span class="dash-stat-link-indicator"><i class="fas fa-arrow-right"></i></span>
                 </div>
                 <div class="dash-stat-value" th:text="${stats.pendingModeration != null} ? ${stats.pendingModeration} : '0'">0</div>
                 <div class="dash-stat-label">Pending Moderation</div>
                 <div class="dash-stat-sub">Product + Review awaiting Moderator</div>
-            </a>
-            <a th:href="@{/admin/escalations}" class="dash-stat-card dash-stat-soft-danger dash-stat-link">
+            </div>
+            <a th:href="@{/admin/escalations}" class="dash-stat-card dash-stat-red dash-stat-link">
                 <div class="dash-stat-icon-wrap">
                     <div class="dash-stat-icon"><i class="fas fa-triangle-exclamation"></i></div>
-                    <span class="dash-stat-link-indicator"><i class="fas fa-arrow-right"></i></span>
                 </div>
                 <div class="dash-stat-value" th:text="${stats.openEscalation != null} ? ${stats.openEscalation} : '0'">0</div>
                 <div class="dash-stat-label">Open Escalation</div>
                 <div class="dash-stat-sub">Phase 3A: PENDING + IN_REVIEW</div>
+                <div class="dash-stat-link-indicator"><i class="fas fa-arrow-right"></i></div>
             </a>
-            <a th:href="@{/admin/violations}" class="dash-stat-card dash-stat-soft-red dash-stat-link">
+            <a th:href="@{/admin/violations}" class="dash-stat-card dash-stat-red dash-stat-link">
                 <div class="dash-stat-icon-wrap">
                     <div class="dash-stat-icon"><i class="fas fa-exclamation-circle"></i></div>
-                    <span class="dash-stat-link-indicator"><i class="fas fa-arrow-right"></i></span>
                 </div>
                 <div class="dash-stat-value" th:text="${stats.openViolation != null} ? ${stats.openViolation} : '0'">0</div>
                 <div class="dash-stat-label">Open Violation</div>
                 <div class="dash-stat-sub">Phase 3C: OPEN + UNDER_REVIEW + APPEALED</div>
+                <div class="dash-stat-link-indicator"><i class="fas fa-arrow-right"></i></div>
             </a>
-            <a th:href="@{/admin/shops}" class="dash-stat-card dash-stat-soft-dark dash-stat-link">
+            <a th:href="@{/admin/shops}" class="dash-stat-card dash-stat-dark dash-stat-link">
                 <div class="dash-stat-icon-wrap">
                     <div class="dash-stat-icon"><i class="fas fa-store-slash"></i></div>
-                    <span class="dash-stat-link-indicator"><i class="fas fa-arrow-right"></i></span>
                 </div>
                 <div class="dash-stat-value" th:text="${stats.suspendedShops != null} ? ${stats.suspendedShops} : '0'">0</div>
                 <div class="dash-stat-label">Suspended Shops</div>
                 <div class="dash-stat-sub">ShopStatus.SUSPENDED + RESTRICTED (Phase 3A)</div>
+                <div class="dash-stat-link-indicator"><i class="fas fa-arrow-right"></i></div>
             </a>
         </div>
     </div>
