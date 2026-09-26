@@ -14,7 +14,7 @@ import lombok.NoArgsConstructor;
  * Lưu ý: KHÔNG dùng @AssertTrue trên manual getter (vì sẽ xung đột với
  * Lombok-generated `getAcceptTerms()` cho Boolean field — Hibernate Validator
  * gặp lỗi khi có 2 getter cho cùng 1 property với 2 kiểu trả về khác nhau).
- * Việc check acceptTerms/acceptPrivacy sẽ được thực hiện trong AuthController.
+ * Việc check acceptTerms sẽ được thực hiện trong AuthServiceImpl.register().
  */
 @Data
 @Builder
@@ -39,10 +39,10 @@ public class RegisterReq {
 
     private String role;
 
-    // ===== TASK #22: Bắt buộc accept Terms + Privacy =====
+    // ===== TASK #22: Bắt buộc đồng ý Điều khoản sử dụng + Chính sách bảo mật (1 checkbox duy nhất) =====
     // Check thủ công trong AuthController (xem comment ở đầu class).
+    // Khi user tick "Tôi đồng ý...", server vẫn ghi nhận accepted*Version cho cả TERMS và PRIVACY.
     private Boolean acceptTerms;
-    private Boolean acceptPrivacy;
 
     /** Optional: opt-in nhận email marketing */
     @Builder.Default

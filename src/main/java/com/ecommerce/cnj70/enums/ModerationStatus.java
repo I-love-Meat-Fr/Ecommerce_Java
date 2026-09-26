@@ -28,5 +28,8 @@ public enum ModerationStatus {
     AUTO_REJECTED,
     APPROVED,
     REJECTED,
-    ESCALATED
+    ESCALATED,
+    // --- BACKWARD-COMPAT: documents created before Phase 2A refactor may hold this value ---
+    @Deprecated
+    PENDING_AUTO
 }

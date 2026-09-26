@@ -738,18 +738,41 @@
     border-radius: var(--auth-radius);
     border: 1px solid var(--auth-teal-border);
     display: flex;
-    flex-direction: column;
-    gap: 8px;
+    flex-direction: row;
+    align-items: flex-start;
+    gap: 10px;
+    cursor: pointer;
+    position: relative;
+    z-index: 5;
 }
 
-.form-terms .checkbox-wrapper {
+.form-terms .native-checkbox {
+    width: 18px;
+    height: 18px;
+    min-width: 18px;
+    margin: 2px 0 0 0;
+    accent-color: var(--auth-teal);
+    cursor: pointer;
+    flex-shrink: 0;
+    /* QUAN TRỌNG: cho phép nhận click trên mọi trình duyệt */
+    pointer-events: auto !important;
+    opacity: 1 !important;
+    display: inline-block !important;
+}
+
+.form-terms .terms-label {
     font-size: 12px;
     line-height: 1.5;
+    color: var(--auth-ink-soft);
+    cursor: pointer;
+    user-select: none;
+    flex: 1;
 }
 
 .form-terms a {
     color: var(--auth-teal-deep);
     font-weight: 600;
+    text-decoration: underline;
 }
 
 /* ============================================================
