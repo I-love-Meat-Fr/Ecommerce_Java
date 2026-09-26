@@ -75,7 +75,8 @@ public class ModeratorProductServiceImpl implements ModeratorProductService {
 
     /** States that still need moderator attention (queue candidates). */
     private static final Set<ModerationStatus> QUEUE_STATUSES = Collections.unmodifiableSet(
-            EnumSet.of(ModerationStatus.PENDING_MANUAL,
+            EnumSet.of(ModerationStatus.PENDING_AUTO,
+                       ModerationStatus.PENDING_MANUAL,
                        ModerationStatus.AUTO_PASSED,
                        ModerationStatus.AUTO_REJECTED));
 

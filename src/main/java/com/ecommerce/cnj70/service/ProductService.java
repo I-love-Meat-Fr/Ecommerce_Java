@@ -13,7 +13,19 @@ public interface ProductService {
     Product createProduct(ProductFormReq request, String shopId, String shopName);
     
     Product updateProduct(String id, ProductFormReq request);
-    
+
+    /**
+     * Phase 4 — Vendor gửi lại Product đã bị Moderator REJECTED vào queue
+     * để Moderator xem xét lại. Đặt moderationStatus về PENDING_AUTO
+     * (chờ Auto Moderation engine chạy lại), clear moderationReason/Actor/At.
+     *
+     * <p>Pre-condition: product.moderationStatus == REJECTED và product
+     * thuộc shop của vendor hiện tại. Nếu không, throw {@code BadRequestException}.</p>
+     *
+     * @return Product đã được cập nhật.
+     */
+    Product resubmitProduct(String id);
+
     void deleteProduct(String id);
     
     Product getProductById(String id);

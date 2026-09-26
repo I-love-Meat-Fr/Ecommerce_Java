@@ -24,6 +24,81 @@
 
     <div th:if="${error}" class="sd-alert sd-alert-danger"><i class="fas fa-triangle-exclamation"></i><span th:text="${error}"></span></div>
 
+    <!-- Phase 4 §30 — Vendor thấy trạng thái kiểm duyệt + lý do (nếu bị từ chối) -->
+    <div th:if="${product != null and product.moderationStatus != null}"
+         class="sd-card"
+         style="max-width:880px;margin-bottom:18px;border-left:4px solid;"
+         th:classappend="${product.moderationStatus.name() == 'APPROVED' ? 'border-color:#10b981;' :
+                         (product.moderationStatus.name() == 'REJECTED' ? 'border-color:#ef4444;background:#fef2f2;' :
+                         (product.moderationStatus.name() == 'AUTO_REJECTED' ? 'border-color:#ef4444;background:#fef2f2;' :
+                         (product.moderationStatus.name() == 'PENDING_MANUAL' ? 'border-color:#f59e0b;background:#fffbeb;' :
+                         (product.moderationStatus.name() == 'PENDING_AUTO' ? 'border-color:#64748b;background:#f8fafc;' :
+                         (product.moderationStatus.name() == 'AUTO_PASSED' ? 'border-color:#3b82f6;background:#eff6ff;' :
+                         'border-color:#64748b;background:#f8fafc;'))))}">
+        <div class="sd-card-body">
+            <div style="display:flex;align-items:flex-start;gap:12px;">
+                <i class="fas"
+                   th:classappend="${product.moderationStatus.name() == 'APPROVED' ? 'fa-circle-check' :
+                                   (product.moderationStatus.name() == 'REJECTED' ? 'fa-circle-xmark' :
+                                   (product.moderationStatus.name() == 'AUTO_REJECTED' ? 'fa-circle-xmark' :
+                                   (product.moderationStatus.name() == 'PENDING_MANUAL' ? 'fa-clock' :
+                                   (product.moderationStatus.name() == 'PENDING_AUTO' ? 'fa-robot' :
+                                   (product.moderationStatus.name() == 'AUTO_PASSED' ? 'fa-thumbs-up' :
+                                   'fa-arrow-up-right-from-square')))))}"
+                   style="font-size:24px;margin-top:2px;"
+                   th:styleappend="${product.moderationStatus.name() == 'APPROVED' ? 'color:#10b981;' :
+                                    (product.moderationStatus.name() == 'REJECTED' ? 'color:#ef4444;' :
+                                    (product.moderationStatus.name() == 'AUTO_REJECTED' ? 'color:#ef4444;' :
+                                    (product.moderationStatus.name() == 'PENDING_MANUAL' ? 'color:#f59e0b;' :
+                                    (product.moderationStatus.name() == 'PENDING_AUTO' ? 'color:#64748b;' :
+                                    (product.moderationStatus.name() == 'AUTO_PASSED' ? 'color:#3b82f6;' :
+                                    'color:#64748b;')))))}"></i>
+                <div style="flex:1;">
+                    <div style="font-weight:600;font-size:15px;margin-bottom:4px;">
+                        Trạng thái kiểm duyệt:
+                        <span th:text="${product.moderationStatus.name() == 'PENDING_AUTO' ? 'Chờ Auto Moderation' :
+                                       (product.moderationStatus.name() == 'PENDING_MANUAL' ? 'Chờ Moderator duyệt' :
+                                       (product.moderationStatus.name() == 'AUTO_PASSED' ? 'Auto Moderation: Đạt' :
+                                       (product.moderationStatus.name() == 'AUTO_REJECTED' ? 'Auto Moderation: Cảnh báo' :
+                                       (product.moderationStatus.name() == 'APPROVED' ? 'Đã được duyệt' :
+                                       (product.moderationStatus.name() == 'REJECTED' ? 'BỊ TỪ CHỐI' :
+                                       (product.moderationStatus.name() == 'ESCALATED' ? 'Đã leo thang lên Admin' :
+                                       product.moderationStatus.name()))))))}">
+                            PENDING_MANUAL
+                        </span>
+                    </div>
+                    <div th:if="${product.moderationReason != null and !#strings.isEmpty(product.moderationReason)}"
+                         style="font-size:14px;line-height:1.5;color:#475569;">
+                        <strong th:if="${product.moderationStatus.name() == 'REJECTED' or product.moderationStatus.name() == 'AUTO_REJECTED'}"
+                                style="color:#b91c1c;">
+                            <i class="fas fa-info-circle"></i> Lý do:
+                        </strong>
+                        <span th:if="${product.moderationStatus.name() == 'REJECTED' or product.moderationStatus.name() == 'AUTO_REJECTED'}"
+                              th:text="${product.moderationReason}">Lý do</span>
+                        <strong th:unless="${product.moderationStatus.name() == 'REJECTED' or product.moderationStatus.name() == 'AUTO_REJECTED'}"
+                                style="color:#475569;">
+                            Ghi chú:
+                        </strong>
+                        <span th:unless="${product.moderationStatus.name() == 'REJECTED' or product.moderationStatus.name() == 'AUTO_REJECTED'}"
+                              th:text="${product.moderationReason}">Ghi chú</span>
+                    </div>
+                    <div th:if="${product.moderationAt != null}"
+                         style="margin-top:6px;font-size:12px;color:#94a3b8;">
+                        <i class="fas fa-calendar"></i>
+                        Cập nhật lúc:
+                        <span th:text="${#temporals.format(product.moderationAt, 'dd/MM/yyyy HH:mm')}">—</span>
+                    </div>
+                    <div th:if="${product.moderationStatus.name() == 'REJECTED'}"
+                         style="margin-top:10px;padding-top:10px;border-top:1px dashed #fecaca;">
+                        <i class="fas fa-lightbulb"></i>
+                        <strong>Hướng xử lý:</strong> Sửa lại nội dung sản phẩm rồi nhấn <em>Lưu sản phẩm</em> để tự động gửi lại Moderator,
+                        HOẶC bấm nút <em>Gửi lại để duyệt</em> trong trang danh sách.
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <form id="productForm"
           th:action="${product != null ? '/vendor/products/edit/' + product.id : '/vendor/products/create'}"
           th:object="${productFormReq}" method="post" enctype="multipart/form-data">
@@ -174,6 +249,14 @@
 
         <div style="display:flex;gap:8px;justify-content:flex-end;max-width:880px;margin:18px 0 32px;">
             <a th:href="@{/vendor/products}" class="sd-btn sd-btn-secondary"><i class="fas fa-xmark"></i> Hủy</a>
+            <!-- Phase 4 — Resubmit button (khi edit sản phẩm đang bị REJECTED) -->
+            <form th:if="${product != null and product.moderationStatus != null and product.moderationStatus.name() == 'REJECTED'}"
+                  th:action="@{/vendor/products/{id}/resubmit(id=${product.id})}"
+                  method="post"
+                  style="display:inline;"
+                  onsubmit="return confirm('Gửi lại sản phẩm này để Moderator kiểm tra?');">
+                <button type="submit" class="sd-btn sd-btn-primary"><i class="fas fa-paper-plane"></i> Gửi lại để duyệt</button>
+            </form>
             <button type="submit" class="sd-btn sd-btn-cta"><i class="fas fa-save"></i> Lưu sản phẩm</button>
         </div>
     </form>
