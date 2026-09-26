@@ -964,6 +964,9 @@ a.cart-shop-name:hover::after {
 
 .cart-empty-illustration {
     margin-bottom: 24px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
 }
 
 .cart-empty-state h2 {
