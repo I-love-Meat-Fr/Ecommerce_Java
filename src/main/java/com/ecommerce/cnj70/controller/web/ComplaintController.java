@@ -56,7 +56,7 @@ import java.util.Optional;
  * </ul>
  */
 @Slf4j
-@Controller
+@Controller("complaintWebController")
 @RequiredArgsConstructor
 public class ComplaintController {
 

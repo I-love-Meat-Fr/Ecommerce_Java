@@ -18,6 +18,20 @@
         </div>
     </div>
 
+    <!-- Flash Messages -->
+    <div th:if="${flashSuccess != null}" class="sd-alert sd-alert-success" style="margin-bottom:16px;">
+        <i class="fas fa-circle-check"></i>
+        <span th:text="${flashSuccess}">flashSuccess</span>
+    </div>
+    <div th:if="${flashError != null}" class="sd-alert sd-alert-error" style="margin-bottom:16px;">
+        <i class="fas fa-circle-exclamation"></i>
+        <span th:text="${flashError}">flashError</span>
+    </div>
+    <div th:if="${flashInfo != null}" class="sd-alert sd-alert-info" style="margin-bottom:16px;">
+        <i class="fas fa-circle-info"></i>
+        <span th:text="${flashInfo}">flashInfo</span>
+    </div>
+
     <!-- Search + Filter bar -->
     <div class="sd-card sd-toolbar" style="margin-bottom:20px;">
         <div class="sd-card-body">
@@ -78,13 +92,14 @@
                         <th>Khách hàng</th>
                         <th>Nội dung</th>
                         <th>Rating</th>
+                        <th>Trạng thái</th>
                         <th>Ngày tạo</th>
                         <th style="text-align:right;">Thao tác</th>
                     </tr>
                 </thead>
                 <tbody>
                     <tr th:if="${#lists.isEmpty(reviews)}">
-                        <td colspan="7">
+                        <td colspan="8">
                             <div class="sd-empty">
                                 <i class="fas fa-comment-slash"></i>
                                 <h3 th:if="${(q != null and !#strings.isEmpty(q)) or (rating != null and !#strings.isEmpty(rating))}">Không tìm thấy đánh giá</h3>
@@ -117,6 +132,11 @@
                             </span>
                         </td>
                         <td>
+                            <span class="sd-badge"
+                                  th:classappend="${review.hidden ? 'sd-badge-slate' : 'sd-badge-green'}"
+                                  th:text="${review.hidden ? 'Đã ẩn' : 'Hiển thị'}">status</span>
+                        </td>
+                        <td>
                             <span th:if="${review.createdAt != null}"
                                   th:text="${#temporals.format(review.createdAt, 'dd/MM/yyyy HH:mm')}">—</span>
                             <span th:unless="${review.createdAt != null}">—</span>
@@ -126,6 +146,23 @@
                                class="sd-btn sd-btn-secondary sd-btn-sm">
                                 <i class="fas fa-eye"></i> Xem
                             </a>
+                            <form th:if="${!review.hidden}"
+                                  th:action="@{/admin/reviews/{id}/hide(id=${review.id}, page=${page}, size=${size}, q=${q}, rating=${rating})}"
+                                  method="post"
+                                  style="display:inline;"
+                                  onsubmit="return confirm('Ẩn đánh giá này khỏi hiển thị công khai?');">
+                                <button type="submit" class="sd-btn sd-btn-warning sd-btn-sm">
+                                    <i class="fas fa-eye-slash"></i> Ẩn
+                                </button>
+                            </form>
+                            <form th:if="${review.hidden}"
+                                  th:action="@{/admin/reviews/{id}/restore(id=${review.id}, page=${page}, size=${size}, q=${q}, rating=${rating})}"
+                                  method="post"
+                                  style="display:inline;">
+                                <button type="submit" class="sd-btn sd-btn-primary sd-btn-sm">
+                                    <i class="fas fa-eye"></i> Hiện
+                                </button>
+                            </form>
                             <form th:action="@{/admin/reviews/{id}/delete(id=${review.id}, page=${page}, size=${size}, q=${q}, rating=${rating})}"
                                   method="post"
                                   style="display:inline;"

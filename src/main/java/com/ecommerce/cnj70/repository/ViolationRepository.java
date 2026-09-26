@@ -21,6 +21,17 @@ public interface ViolationRepository extends MongoRepository<Violation, String> 
 
     Page<Violation> findByShopIdAndType(String shopId, ViolationType type, Pageable pageable);
 
+    // Filter-only paths (no shop filter) — Phase 2 Fix BUG-V1.
+    // Used by Admin + Moderator violation list when no shopId is provided
+    // but severity/type filter is applied.
+    Page<Violation> findBySeverity(ViolationSeverity severity, Pageable pageable);
+
+    Page<Violation> findByType(ViolationType type, Pageable pageable);
+
+    Page<Violation> findBySeverityAndType(ViolationSeverity severity,
+                                          ViolationType type,
+                                          Pageable pageable);
+
     long countByShopId(String shopId);
 
     long countByShopIdAndResolvedAtIsNull(String shopId);

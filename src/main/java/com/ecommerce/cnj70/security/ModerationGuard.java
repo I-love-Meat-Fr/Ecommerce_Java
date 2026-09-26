@@ -45,9 +45,9 @@ public final class ModerationGuard {
             throw new BusinessException(
                     "Quyền không hợp lệ — Moderator only.");
         }
-        if (role != UserRole.MODERATOR) {
+        if (role != UserRole.MODERATOR && role != UserRole.ADMIN) {
             throw new BusinessException(
-                    "Admin chỉ có quyền xem. Thao tác này chỉ Moderator mới được thực hiện.");
+                    "Hành động này chỉ Admin hoặc Moderator mới được thực hiện.");
         }
     }
 }

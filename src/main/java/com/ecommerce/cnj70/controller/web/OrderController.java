@@ -3,15 +3,20 @@ package com.ecommerce.cnj70.controller.web;
 import com.ecommerce.cnj70.document.Cart;
 import com.ecommerce.cnj70.document.Order;
 import com.ecommerce.cnj70.document.User;
+import com.ecommerce.cnj70.document.Voucher;
 import com.ecommerce.cnj70.dto.checkout.CheckoutValidationRes;
 import com.ecommerce.cnj70.dto.request.CheckoutReq;
 import com.ecommerce.cnj70.dto.response.OrderHistoryRes;
 import com.ecommerce.cnj70.enums.PaymentStatus;
 import com.ecommerce.cnj70.enums.ShippingStatus;
+import com.ecommerce.cnj70.enums.VoucherType;
+import com.ecommerce.cnj70.exception.BadRequestException;
+import com.ecommerce.cnj70.exception.ResourceNotFoundException;
 import com.ecommerce.cnj70.repository.UserRepository;
 import com.ecommerce.cnj70.security.CustomUserDetails;
 import com.ecommerce.cnj70.service.CartService;
 import com.ecommerce.cnj70.service.OrderService;
+import com.ecommerce.cnj70.service.VoucherService;
 import jakarta.servlet.http.HttpSession;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -48,6 +53,7 @@ public class OrderController {
     private final OrderService orderService;
     private final UserRepository userRepository;
     private final CartService cartService;
+    private final VoucherService voucherService;
 
     @GetMapping("/checkout")
     public String checkoutPage(@AuthenticationPrincipal CustomUserDetails user,
@@ -90,6 +96,31 @@ public class OrderController {
                         LinkedHashMap::new,
                         Collectors.toList()));
 
+        // ===== Pre-flight voucher check (server-side revalidate) =====
+        // Phát hiện voucher đã hết hạn / hết lượt / bị deactivate / không còn khả dụng
+        // từ lúc user apply trên Cart. Nếu invalid → clear cart.appliedVoucherCode +
+        // session ngay để:
+        //   1) UI không hiển thị discount sai cho user
+        //   2) Không phải đợi tới lúc POST /checkout mới phát hiện
+        //   3) User thấy banner lỗi rõ ràng ngay khi vào trang Checkout
+        //
+        // KHÔNG validate giá/stock ở đây — phần đó đã có validateCheckout (pre-submit)
+        // và stock check trong OrderServiceImpl.createOrder. Pre-flight này chỉ loại
+        // bỏ "voucher stale" — đây là class lỗi duy nhất xảy ra khi user đứng yên
+        // trên Cart rồi quay lại Checkout sau vài phút.
+        PreflightResult preflight = preflightVoucherCheck(user.getId(), cart, session);
+        String voucherError = preflight != null ? preflight.errorMessage : null;
+        // Recompute total without voucher if it was cleared
+        if (voucherError != null) {
+            cartTotal = cartService.calculateTotal(cart);
+            cart = cartService.getCartByUserId(user.getId()); // reload after clear
+            itemsByShop = cart.getItems().stream()
+                    .collect(Collectors.groupingBy(
+                            item -> item.getShopId() != null ? item.getShopId() : "default",
+                            LinkedHashMap::new,
+                            Collectors.toList()));
+        }
+
         // Đọc voucher từ session (đã được CartController lưu khi user apply)
         CartController.AppliedVoucher appliedVoucher = readAppliedVoucher(session);
         BigDecimal discount = appliedVoucher != null ? appliedVoucher.getDiscount() : BigDecimal.ZERO;
@@ -118,8 +149,69 @@ public class OrderController {
         model.addAttribute("appliedVoucher", appliedVoucher);
         model.addAttribute("discount", discount);
         model.addAttribute("finalTotal", finalTotal);
+        if (voucherError != null) {
+            model.addAttribute("voucherError", voucherError);
+            model.addAttribute("error", voucherError);
+        }
 
         return "web/checkout";
+    }
+
+    /**
+     * Helper kiểm tra voucher đã lưu trong cart còn khả dụng không. Nếu không:
+     *   - Clear cart.appliedVoucherCode (MongoDB)
+     *   - Clear SESSION_APPLIED_VOUCHER
+     *   - Trả về error message để render lên banner
+     *
+     * Trả về {@code null} nếu không có voucher, voucher còn hợp lệ, hoặc không có
+     * gì cần clear.
+     */
+    private PreflightResult preflightVoucherCheck(String userId, Cart cart, HttpSession session) {
+        String appliedCode = cartService.getAppliedVoucherCode(userId);
+        if (appliedCode == null || appliedCode.isBlank()) {
+            return null; // không có voucher
+        }
+        // Lấy shopId đầu tiên để validate SHOP voucher (giống OrderServiceImpl.createOrder)
+        String firstShopId = cart.getItems().isEmpty()
+                ? null
+                : cart.getItems().get(0).getShopId();
+        try {
+            voucherService.validateForCheckout(appliedCode, firstShopId, null);
+            return null; // voucher vẫn hợp lệ
+        } catch (BadRequestException | ResourceNotFoundException e) {
+            // Voucher không còn khả dụng → clear tất cả state
+            cartService.setAppliedVoucherCode(userId, null);
+            if (session != null) {
+                session.removeAttribute(SESSION_APPLIED_VOUCHER);
+            }
+            // Lấy tên voucher (nếu tìm được) để message thân thiện hơn
+            String friendlyMsg = buildVoucherErrorMessage(appliedCode, e.getMessage());
+            return new PreflightResult(friendlyMsg);
+        } catch (Exception e) {
+            // Bất kỳ lỗi nào khác (vd: MongoDB down) — KHÔNG clear state, để POST /checkout
+            // xử lý. Đây là lỗi hạ tầng, không phải lỗi voucher invalid.
+            return null;
+        }
+    }
+
+    /**
+     * Format error message thân thiện cho user khi voucher bị reject ở pre-flight.
+     * Giữ prefix "Voucher không hợp lệ:" để OrderController.checkout (POST) nhận diện
+     * được nếu user submit sau khi reload.
+     */
+    private String buildVoucherErrorMessage(String code, String serverMsg) {
+        return "Voucher không hợp lệ: Mã \"" + code + "\" — " + serverMsg
+                + " Voucher đã được gỡ khỏi giỏ hàng.";
+    }
+
+    /**
+     * Holder cho pre-flight result (chỉ dùng trong checkoutPage).
+     */
+    private static final class PreflightResult {
+        final String errorMessage;
+        PreflightResult(String errorMessage) {
+            this.errorMessage = errorMessage;
+        }
     }
 
     @PostMapping("/checkout")
@@ -222,7 +314,12 @@ public class OrderController {
                     && errorMessage.startsWith("Voucher không hợp lệ");
 
             if (isVoucherError) {
+                // ===== Clear ALL voucher state (session + persisted cart) =====
+                // Session: tránh user retry với cùng voucher
+                // Cart.appliedVoucherCode (MongoDB): tránh trạng thái "stale" — nếu user
+                // back về /cart, voucher cũ không hiển thị như đang được áp dụng
                 session.removeAttribute(SESSION_APPLIED_VOUCHER);
+                cartService.setAppliedVoucherCode(user.getId(), null);
 
                 // Tính lại finalTotal không có discount
                 BigDecimal recomputedFinal = cartTotal.add(SHIPPING_FEE);
@@ -311,7 +408,17 @@ public class OrderController {
 
         List<Order> orders = orderService.getOrdersByUserId(user.getId());
         List<OrderHistoryRes> orderHistory = orders.stream()
-                .map(this::buildOrderHistoryRes)
+                .map(order -> OrderHistoryRes.builder()
+                        .orderId(order.getId())
+                        .orderDate(order.getCreatedAt())
+                        .status(order.getStatus())
+                        .totalAmount(order.getTotalAmount())
+                        .totalItemCount(order.getItems().size())
+                        .shopName(order.getShopName())
+                        .productImages(order.getItems().stream()
+                                .map(Order.OrderItem::getImageUrl)
+                                .collect(Collectors.toList()))
+                        .build())
                 .collect(Collectors.toList());
 
         model.addAttribute("orders", orderHistory);

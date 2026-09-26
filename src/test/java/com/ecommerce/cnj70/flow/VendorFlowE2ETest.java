@@ -44,6 +44,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.junit.jupiter.MockitoSettings;
 import org.mockito.quality.Strictness;
+import org.springframework.data.mongodb.core.MongoTemplate;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
@@ -86,6 +87,7 @@ class VendorFlowE2ETest {
     @Mock private KycProfileRepository kycProfileRepository;
     @Mock private ThirdPartyKycVerifier thirdPartyKycVerifier;
     @Mock private StorageService storageService;
+    @Mock private MongoTemplate mongoTemplate;
 
     private VendorService vendorService;
     private VendorKycService kycService;
@@ -108,9 +110,9 @@ class VendorFlowE2ETest {
         kycService = new VendorKycServiceImpl(userRepository, kycProfileRepository,
                 thirdPartyKycVerifier, storageService, shopRepository);
 
-        adminKycService = new AdminKycServiceImpl(kycProfileRepository, userRepository);
+        adminKycService = new AdminKycServiceImpl(kycProfileRepository, userRepository, mongoTemplate);
 
-        adminShopService = new AdminShopServiceImpl(shopRepository, mock(com.ecommerce.cnj70.service.AuditLogService.class));
+        adminShopService = new AdminShopServiceImpl(shopRepository, mock(com.ecommerce.cnj70.service.AuditLogService.class), mongoTemplate);
 
         productService = new ProductServiceImpl(productRepository,
                 mock(com.ecommerce.cnj70.repository.CategoryRepository.class),

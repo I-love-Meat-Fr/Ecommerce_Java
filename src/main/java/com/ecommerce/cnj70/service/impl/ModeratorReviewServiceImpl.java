@@ -69,6 +69,7 @@ public class ModeratorReviewServiceImpl implements ModeratorReviewService {
     private final ProductRepository productRepository;
     private final UserRepository userRepository;
     private final ShopRepository shopRepository;
+    private final org.springframework.data.mongodb.core.MongoTemplate mongoTemplate;
     private final VerifiedPurchaseGateway verifiedPurchaseGateway;
     private final ReviewReportGateway reviewReportGateway;
     private final ReviewViolationContextProvider reviewViolationContextProvider;
@@ -439,9 +440,39 @@ public class ModeratorReviewServiceImpl implements ModeratorReviewService {
         if (!StringUtils.hasText(reviewId)) {
             throw new BadRequestException("Review ID không hợp lệ");
         }
-        return reviewRepository.findById(reviewId)
-                .orElseThrow(() -> new ResourceNotFoundException(
-                        "Không tìm thấy đánh giá với ID: " + reviewId));
+        // Phase 4 fix: support BOTH String _id and ObjectId _id.
+        // Bug history: reviewRepository.findById(String) silently fails to match a
+        // String _id stored in MongoDB because Spring Data's query translator
+        // sends `{"id": "<hex>"}` (Java field name) instead of `{"_id": "<hex>"}`.
+        // Workaround: query the collection directly via MongoTemplate. String
+        // lookup FIRST, then ObjectId.
+        Review review = reviewRepository.findById(reviewId).orElse(null);
+        if (review == null) {
+            org.bson.Document raw = mongoTemplate.getCollection("reviews")
+                    .find(new org.bson.Document("_id", reviewId))
+                    .first();
+            if (raw == null && reviewId.length() == 24 && reviewId.matches("[0-9a-fA-F]+")) {
+                org.bson.types.ObjectId oid = new org.bson.types.ObjectId(reviewId);
+                raw = mongoTemplate.getCollection("reviews")
+                        .find(new org.bson.Document("_id", oid))
+                        .first();
+            }
+            if (raw != null) {
+                if (!raw.containsKey("_class")) {
+                    raw.put("_class", Review.class.getName());
+                }
+                review = mongoTemplate.getConverter().read(Review.class, raw);
+                if (review.getId() == null) {
+                    review.setId(raw.get("_id") instanceof org.bson.types.ObjectId
+                            ? raw.get("_id").toString()
+                            : (String) raw.get("_id"));
+                }
+            }
+        }
+        if (review == null) {
+            throw new ResourceNotFoundException("Không tìm thấy đánh giá với ID: " + reviewId);
+        }
+        return review;
     }
 
     private static boolean isFinalState(ModerationStatus status) {

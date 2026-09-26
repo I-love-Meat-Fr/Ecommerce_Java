@@ -4,9 +4,22 @@ target/
 *.jar
 *.war
 
+# Node
+node_modules/
+
 # Logs
 *.log
+*.out
+*.err
 logs/
+app.out
+app.err
+
+# Dev / runtime artifacts
+cookies.txt
+admin-cookies.txt
+admin-login.html
+codeflash-sale.txt
 
 # IDE
 .idea/

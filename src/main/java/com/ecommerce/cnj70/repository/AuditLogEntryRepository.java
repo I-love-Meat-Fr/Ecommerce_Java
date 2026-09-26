@@ -13,7 +13,7 @@ import java.util.List;
 /**
  * Phase 3C — Admin read-only query repository for {@link AuditLogEntry}.
  *
- * <p>Uses the {@code audit_log} collection. The data is written by
+ * <p>Uses the {@code audit_logs} collection. The data is written by
  * {@code AuditEventWriter} integration seam; this repository is the
  * Admin read view.</p>
  */

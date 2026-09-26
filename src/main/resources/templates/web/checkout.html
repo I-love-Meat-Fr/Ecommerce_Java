@@ -200,6 +200,95 @@
                                         </div>
                                         <div class="payment-option-check"></div>
                                     </label>
+
+                                    <label class="payment-option" data-value="BANK_QR">
+                                        <input type="radio" th:field="*{paymentMethod}" value="BANK_QR">
+                                        <div class="payment-option-content">
+                                            <div class="payment-option-icon">
+                                                <i class="fas fa-university"></i>
+                                            </div>
+                                            <div>
+                                                <div class="payment-option-name">Chuyển khoản ngân hàng (QR)</div>
+                                                <div class="payment-option-desc">Quét QR bằng app ngân hàng — MB Bank, STK 0386267692</div>
+                                            </div>
+                                        </div>
+                                        <div class="payment-option-check"></div>
+                                    </label>
+                                </div>
+
+                                <!-- ============================================================
+                                     BANK_QR PREVIEW CARD
+                                     Hiển thị QR code tương ứng với tổng tiền khi KH chọn
+                                     "Chuyển khoản ngân hàng". QR sử dụng VietQR API theo
+                                     chuẩn EMVCo NAPAS — app ngân hàng Việt Nam quét được
+                                     và tự điền số tiền + nội dung.
+                                     ============================================================ -->
+                                <div id="bank-qr-preview" class="bank-qr-preview" hidden>
+                                    <header class="bank-qr-preview-header">
+                                        <i class="fas fa-qrcode"></i>
+                                        <h4>Quét QR để thanh toán</h4>
+                                        <span class="bank-qr-preview-tag">VietQR · MB Bank</span>
+                                    </header>
+                                    <div class="bank-qr-preview-body">
+                                        <div class="bank-qr-preview-qr">
+                                            <img id="bank-qr-img"
+                                                 alt="Mã QR thanh toán"
+                                                 loading="lazy"
+                                                 onerror="this.parentElement.classList.add('bank-qr-preview-qr-error'); this.alt='Không tải được QR';">
+                                        </div>
+                                        <div class="bank-qr-preview-info">
+                                            <div class="bank-qr-preview-row">
+                                                <span class="bank-qr-preview-label">Ngân hàng</span>
+                                                <strong>MB Bank (Quân đội)</strong>
+                                            </div>
+                                            <div class="bank-qr-preview-row">
+                                                <span class="bank-qr-preview-label">Số tài khoản</span>
+                                                <strong class="bank-qr-account">
+                                                    <span id="bank-qr-account">0386267692</span>
+                                                    <button type="button" class="bank-qr-copy-btn"
+                                                            id="bank-qr-copy-account" title="Sao chép">
+                                                        <i class="fas fa-copy"></i>
+                                                    </button>
+                                                </strong>
+                                            </div>
+                                            <div class="bank-qr-preview-row">
+                                                <span class="bank-qr-preview-label">Chủ tài khoản</span>
+                                                <strong>TRAN ANH QUAN</strong>
+                                            </div>
+                                            <div class="bank-qr-preview-row bank-qr-preview-row-amount">
+                                                <span class="bank-qr-preview-label">Số tiền</span>
+                                                <strong class="bank-qr-amount" id="bank-qr-amount">0₫</strong>
+                                            </div>
+                                            <div class="bank-qr-preview-row">
+                                                <span class="bank-qr-preview-label">Nội dung CK</span>
+                                                <strong class="bank-qr-content">
+                                                    <span id="bank-qr-content">CNJ70</span>
+                                                    <button type="button" class="bank-qr-copy-btn"
+                                                            id="bank-qr-copy-content" title="Sao chép">
+                                                        <i class="fas fa-copy"></i>
+                                                    </button>
+                                                </strong>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="bank-qr-preview-steps">
+                                        <div class="bank-qr-step">
+                                            <span class="bank-qr-step-num">1</span>
+                                            <span>Mở app ngân hàng (MB Bank hoặc app có hỗ trợ VietQR)</span>
+                                        </div>
+                                        <div class="bank-qr-step">
+                                            <span class="bank-qr-step-num">2</span>
+                                            <span>Quét QR — app sẽ tự điền số tiền &amp; nội dung</span>
+                                        </div>
+                                        <div class="bank-qr-step">
+                                            <span class="bank-qr-step-num">3</span>
+                                            <span>Xác nhận chuyển khoản &amp; giữ lại biên lai</span>
+                                        </div>
+                                    </div>
+                                    <div class="bank-qr-preview-note">
+                                        <i class="fas fa-info-circle"></i>
+                                        <span>Đơn hàng sẽ được xử lý sau khi hệ thống xác nhận đã nhận được thanh toán.</span>
+                                    </div>
                                 </div>
 
                                 <!-- Place order button -->
@@ -342,6 +431,127 @@
 <th:block th:fragment="page-scripts">
     <script th:src="@{/js/home.js}" defer></script>
     <script th:inline="none">
+        // ============================================================
+        // BANK_QR — VietQR Integration
+        // Khi KH chọn "Chuyển khoản ngân hàng", hiển thị QR động
+        // theo tổng tiền đơn hàng. QR được generate bằng VietQR API
+        // (chuẩn EMVCo NAPAS) — app ngân hàng VN quét được và tự điền.
+        //
+        // Cấu hình:
+        //   - BIN ngân hàng: 970422 (MB Bank / Military Commercial Joint Stock Bank)
+        //   - Số tài khoản:  0386267692
+        //   - Chủ tài khoản:  TRAN ANH QUAN
+        //   - Template:       compact2 (có logo MB ở giữa)
+        //
+        // VietQR docs: https://www.vietqr.io/danh-sach-api/
+        // ============================================================
+
+        const BANK_QR_CONFIG = {
+            bankBin: '970422',
+            accountNo: '0386267692',
+            accountName: 'TRAN ANH QUAN',
+            template: 'compact2',
+            // Nội dung CK mặc định — server sẽ override sau khi tạo Order
+            // (thành "DH<orderId>") để admin/vendor đối chiếu khi nhận tiền.
+            defaultContent: 'CNJ70'
+        };
+
+        function getCurrentPaymentMethod() {
+            const radio = document.querySelector('input[name="paymentMethod"]:checked');
+            return radio ? radio.value : null;
+        }
+
+        function getFinalTotalAmount() {
+            const el = document.getElementById('final-total-amount');
+            if (!el) return 0;
+            // textContent dạng "12.345.678₫" → parse ra số
+            const raw = el.textContent || '';
+            const cleaned = raw.replace(/[^\d]/g, '');
+            return parseInt(cleaned, 10) || 0;
+        }
+
+        function buildVietQrUrl(amount, content) {
+            const params = new URLSearchParams({
+                amount: String(amount || 0),
+                addInfo: content || BANK_QR_CONFIG.defaultContent,
+                accountName: BANK_QR_CONFIG.accountName
+            });
+            return 'https://img.vietqr.io/image/'
+                + BANK_QR_CONFIG.bankBin + '-'
+                + BANK_QR_CONFIG.accountNo + '-'
+                + BANK_QR_CONFIG.template + '.png?'
+                + params.toString();
+        }
+
+        function refreshBankQr() {
+            const img = document.getElementById('bank-qr-img');
+            const amountEl = document.getElementById('bank-qr-amount');
+            if (!img || !amountEl) return;
+
+            const amount = getFinalTotalAmount();
+            amountEl.textContent = formatVnd(amount);
+
+            // Tạo URL VietQR. Nội dung CK dùng default vì Order ID chưa có
+            // (chỉ có sau khi submit form). Sau khi Order tạo, server sẽ
+            // render lại Order detail với content = DH<id>.
+            const url = buildVietQrUrl(amount, BANK_QR_CONFIG.defaultContent);
+            img.src = url;
+        }
+
+        function showBankQrPreview() {
+            const card = document.getElementById('bank-qr-preview');
+            if (!card) return;
+            card.hidden = false;
+            refreshBankQr();
+            // Cuộn nhẹ tới QR để KH thấy luôn
+            setTimeout(() => {
+                card.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            }, 60);
+        }
+
+        function hideBankQrPreview() {
+            const card = document.getElementById('bank-qr-preview');
+            if (card) card.hidden = true;
+        }
+
+        /**
+         * Sao chép text vào clipboard với fallback cho browser cũ.
+         * @param {string} text
+         * @returns {Promise<boolean>}
+         */
+        async function copyToClipboard(text) {
+            try {
+                if (navigator.clipboard && navigator.clipboard.writeText) {
+                    await navigator.clipboard.writeText(text);
+                    return true;
+                }
+            } catch (_) { /* fallback */ }
+            try {
+                const ta = document.createElement('textarea');
+                ta.value = text;
+                ta.style.position = 'fixed';
+                ta.style.opacity = '0';
+                document.body.appendChild(ta);
+                ta.select();
+                const ok = document.execCommand('copy');
+                document.body.removeChild(ta);
+                return ok;
+            } catch (_) {
+                return false;
+            }
+        }
+
+        function flashCopyBtn(btn) {
+            if (!btn) return;
+            const original = btn.innerHTML;
+            btn.innerHTML = '<i class="fas fa-check"></i>';
+            btn.classList.add('is-copied');
+            setTimeout(() => {
+                btn.innerHTML = original;
+                btn.classList.remove('is-copied');
+            }, 1400);
+        }
+
         // ============================================================
         // Checkout Pre-submit Validation
         // Trước khi gửi CheckoutReq, gọi POST /api/checkout/validate
@@ -593,6 +803,14 @@
                 finalTotal.textContent = formatVnd(summary.finalTotal);
             }
 
+            // 4b) Nếu KH đang chọn BANK_QR, refresh QR amount theo finalTotal mới.
+            // Bắt buộc gọi SAU khi update #final-total-amount để getFinalTotalAmount()
+            // đọc được giá trị mới nhất. Nếu KH chưa chọn BANK_QR thì refreshBankQr()
+            // chỉ chạy vô hại (img ẩn), không ảnh hưởng UX.
+            if (getCurrentPaymentMethod() === 'BANK_QR') {
+                refreshBankQr();
+            }
+
             // 5) Sync hidden fields để form submit dùng giá trị mới
             // QUAN TRỌNG: khi voucher invalid (voucher.valid === false), phải clear
             // hidden field để form re-submit KHÔNG gửi lại mã bị reject.
@@ -657,8 +875,44 @@
                     this.classList.add('selected');
                     const radio = this.querySelector('input[type="radio"]');
                     if (radio) radio.checked = true;
+
+                    // Hiển thị / ẩn QR preview theo phương thức thanh toán
+                    const value = this.getAttribute('data-value');
+                    if (value === 'BANK_QR') {
+                        showBankQrPreview();
+                    } else {
+                        hideBankQrPreview();
+                    }
                 });
             });
+
+            // ===== Copy buttons cho thông tin ngân hàng =====
+            const copyAccountBtn = document.getElementById('bank-qr-copy-account');
+            if (copyAccountBtn) {
+                copyAccountBtn.addEventListener('click', async function() {
+                    const account = (document.getElementById('bank-qr-account') || {}).textContent || '';
+                    const ok = await copyToClipboard(account.trim());
+                    if (ok) {
+                        flashCopyBtn(copyAccountBtn);
+                        showToast('success', 'Đã sao chép số tài khoản');
+                    } else {
+                        showToast('error', 'Không thể sao chép. Vui lòng copy thủ công.');
+                    }
+                });
+            }
+            const copyContentBtn = document.getElementById('bank-qr-copy-content');
+            if (copyContentBtn) {
+                copyContentBtn.addEventListener('click', async function() {
+                    const content = (document.getElementById('bank-qr-content') || {}).textContent || '';
+                    const ok = await copyToClipboard(content.trim());
+                    if (ok) {
+                        flashCopyBtn(copyContentBtn);
+                        showToast('success', 'Đã sao chép nội dung chuyển khoản');
+                    } else {
+                        showToast('error', 'Không thể sao chép. Vui lòng copy thủ công.');
+                    }
+                });
+            }
 
             // ----- "Bỏ voucher" buttons -----
             // Cả 2 phiên bản (server-rendered + client-rendered) đều gọi cùng endpoint

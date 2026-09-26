@@ -104,13 +104,11 @@
                         <th>Resource</th>
                         <th>Severity</th>
                         <th>Reason</th>
-                        <th>IP</th>
-                        <th style="text-align:right;">Thao tác</th>
                     </tr>
                 </thead>
                 <tbody>
-                    <tr th:if="${#lists.isEmpty(logs)}">
-                        <td colspan="9">
+                    <tr th:if="${#lists.isEmpty(entries)}">
+                        <td colspan="7">
                             <div class="sd-empty">
                                 <i class="fas fa-clipboard"></i>
                                 <h3>Không có audit log nào</h3>
@@ -118,7 +116,7 @@
                             </div>
                         </td>
                     </tr>
-                    <tr th:each="e, iter : ${logs}">
+                    <tr th:each="e, iter : ${entries}">
                         <td class="sd-table-sub"
                             th:text="${e.createdAt != null} ? ${#temporals.format(e.createdAt, 'yyyy-MM-dd HH:mm:ss')} : '—'">—</td>
                         <td>
@@ -136,13 +134,6 @@
                             <div th:text="${e.reason != null and #strings.length(e.reason) > 60}
                                           ? ${#strings.substring(e.reason, 0, 60)} + '...'
                                           : ${e.reason}">reason</div>
-                        </td>
-                        <td class="sd-table-sub sd-mono" th:text="${e.ip != null ? e.ip : '—'}">—</td>
-                        <td style="text-align:right; white-space:nowrap;">
-                            <a th:href="@{/admin/audit/{id}(id=${e.id}, page=${page}, size=${size}, role=${roleFilter}, actorId=${actorId}, from=${from}, to=${to})}"
-                               class="sd-btn sd-btn-primary sd-btn-sm">
-                                <i class="fas fa-eye"></i> Chi tiết
-                            </a>
                         </td>
                     </tr>
                 </tbody>

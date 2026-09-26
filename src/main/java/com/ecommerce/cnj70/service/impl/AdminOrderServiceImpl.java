@@ -10,9 +10,11 @@ import com.ecommerce.cnj70.repository.ShopRepository;
 import com.ecommerce.cnj70.service.AdminOrderService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.bson.Document;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -29,6 +31,7 @@ public class AdminOrderServiceImpl implements AdminOrderService {
 
     private final OrderRepository orderRepository;
     private final ShopRepository shopRepository;
+    private final MongoTemplate mongoTemplate;
 
     @Override
     public Page<Order> listOrders(Pageable pageable) {
@@ -80,8 +83,37 @@ public class AdminOrderServiceImpl implements AdminOrderService {
 
     @Override
     public Order getOrderById(String id) {
-        return orderRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Order", "id", id));
+        if (id == null || id.isBlank()) {
+            throw new ResourceNotFoundException("Order", "id", id);
+        }
+        // Phase 2 fix: Hỗ trợ CẢ 2 kiểu _id (String lẫn ObjectId).
+        // Tương tự Voucher/Category/Shop: document có _id là ObjectId (24 hex) khi
+        // insert bằng Compass/script — nếu chỉ query bằng String thì miss → trả
+        // null → ném ResourceNotFoundException("Order không tồn tại").
+        // Fix: thử String trước, fallback ObjectId nếu id là hex 24 ký tự.
+        Document raw = mongoTemplate.getCollection("orders")
+                .find(new Document("_id", id))
+                .first();
+        if (raw == null && id.length() == 24 && id.matches("[0-9a-fA-F]+")) {
+            org.bson.types.ObjectId oid = new org.bson.types.ObjectId(id);
+            raw = mongoTemplate.getCollection("orders")
+                    .find(new Document("_id", oid))
+                    .first();
+            if (raw != null) {
+                raw.put("_id", id);
+            }
+        }
+        if (raw == null) {
+            throw new ResourceNotFoundException("Order", "id", id);
+        }
+        if (!raw.containsKey("_class")) {
+            raw.put("_class", Order.class.getName());
+        }
+        Order order = mongoTemplate.getConverter().read(Order.class, raw);
+        if (order.getId() == null) {
+            order.setId(id);
+        }
+        return order;
     }
 
     @Override

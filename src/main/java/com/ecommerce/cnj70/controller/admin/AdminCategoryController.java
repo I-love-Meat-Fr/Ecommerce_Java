@@ -68,10 +68,10 @@ public class AdminCategoryController {
                                  RedirectAttributes redirectAttributes) {
         try {
             Category created = adminCategoryService.createCategory(name, description);
-            redirectAttributes.addAttribute("flashSuccess",
+            redirectAttributes.addFlashAttribute("flashSuccess",
                     "Đã thêm danh mục \"" + created.getName() + "\"");
         } catch (BusinessException ex) {
-            redirectAttributes.addAttribute("flashError", ex.getMessage());
+            redirectAttributes.addFlashAttribute("flashError", ex.getMessage());
         }
         redirectAttributes.addAttribute("page", page);
         redirectAttributes.addAttribute("size", size);
@@ -113,7 +113,7 @@ public class AdminCategoryController {
             model.addAttribute("pageNumbers", computePageRange(result.getNumber(), result.getTotalPages()));
             return "admin/category-manage";
         } catch (BusinessException ex) {
-            redirectAttributes.addAttribute("flashError", ex.getMessage());
+            redirectAttributes.addFlashAttribute("flashError", ex.getMessage());
             redirectAttributes.addAttribute("page", page);
             redirectAttributes.addAttribute("size", size);
             if (q != null) redirectAttributes.addAttribute("q", q);
@@ -133,10 +133,10 @@ public class AdminCategoryController {
                                  RedirectAttributes redirectAttributes) {
         try {
             Category updated = adminCategoryService.updateCategory(id, name, description);
-            redirectAttributes.addAttribute("flashSuccess",
+            redirectAttributes.addFlashAttribute("flashSuccess",
                     "Đã cập nhật danh mục \"" + updated.getName() + "\"");
         } catch (BusinessException ex) {
-            redirectAttributes.addAttribute("flashError", ex.getMessage());
+            redirectAttributes.addFlashAttribute("flashError", ex.getMessage());
         }
         redirectAttributes.addAttribute("page", page);
         redirectAttributes.addAttribute("size", size);
@@ -156,10 +156,10 @@ public class AdminCategoryController {
             Category category = adminCategoryService.getCategoryById(id);
             String name = category.getName();
             adminCategoryService.deleteCategory(id);
-            redirectAttributes.addAttribute("flashSuccess",
+            redirectAttributes.addFlashAttribute("flashSuccess",
                     "Đã xóa danh mục \"" + name + "\"");
         } catch (BusinessException | ResourceNotFoundException ex) {
-            redirectAttributes.addAttribute("flashError", ex.getMessage());
+            redirectAttributes.addFlashAttribute("flashError", ex.getMessage());
         }
         redirectAttributes.addAttribute("page", page);
         redirectAttributes.addAttribute("size", size);

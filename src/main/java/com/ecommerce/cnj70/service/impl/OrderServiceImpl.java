@@ -69,7 +69,7 @@ public class OrderServiceImpl implements OrderService {
         // Nếu request.items rỗng/null -> checkout toàn bộ Cart
         // Nếu có items -> chỉ checkout các productId trong items (partial)
         Set<String> requestedIds = new HashSet<>();
-        Map<String, Integer> requestedQty = new HashMap<>();
+        Map<String, Integer> requestedQty = new java.util.HashMap<>();
         if (request.getItems() != null && !request.getItems().isEmpty()) {
             for (CheckoutReq.CheckoutItemReq it : request.getItems()) {
                 if (it.getProductId() == null || it.getProductId().isBlank()) {
@@ -95,6 +95,7 @@ public class OrderServiceImpl implements OrderService {
             throw new BadRequestException("Không có sản phẩm hợp lệ trong giỏ hàng để thanh toán");
         }
 
+        // ===== TASK #8: validate Product + stock =====
         List<Order.OrderItem> orderItems = new ArrayList<>();
         Map<String, String> shopNames = new HashMap<>();
         BigDecimal subtotal = BigDecimal.ZERO;
@@ -111,26 +112,6 @@ public class OrderServiceImpl implements OrderService {
 
             if (buyQty <= 0) {
                 throw new BadRequestException("Số lượng mua phải > 0 cho sản phẩm " + product.getName());
-            }
-
-            // ===== TASK #16 (vendors-module): validate product status + shop active/verified =====
-            if (product.getStatus() != null && product.getStatus() != ProductStatus.ACTIVE) {
-                throw new BadRequestException(String.format(
-                        "Sản phẩm '%s' không thể mua (trạng thái: %s).",
-                        product.getName(), product.getStatus()));
-            }
-
-            Shop shop = shopRepository.findById(product.getShopId())
-                    .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy cửa hàng: " + product.getShopId()));
-            if (!shop.isActive()) {
-                throw new BadRequestException(String.format(
-                        "Cửa hàng '%s' hiện không hoạt động. Không thể đặt hàng.",
-                        shop.getShopName()));
-            }
-            if (!shop.isVerified() || shop.getStatus() != ShopStatus.APPROVED) {
-                throw new BadRequestException(String.format(
-                        "Cửa hàng '%s' chưa được xác minh. Không thể đặt hàng.",
-                        shop.getShopName()));
             }
 
             if (product.getStock() < buyQty) {
@@ -154,7 +135,6 @@ public class OrderServiceImpl implements OrderService {
 
             orderItems.add(orderItem);
             subtotal = subtotal.add(itemSubtotal);
-            shopNames.put(product.getShopId(), product.getShopName());
 
             // Trừ stock (sẽ rollback nếu có lỗi ở bước sau nhờ @Transactional)
             product.setStock(product.getStock() - buyQty);
@@ -202,34 +182,6 @@ public class OrderServiceImpl implements OrderService {
         String primaryShopId = itemsToCheckout.get(0).getShopId();
         String primaryShopName = itemsToCheckout.get(0).getShopName();
 
-        // ===== vendors-module: shippingByShop khởi tạo cho mỗi shop (sub-order) =====
-        // Mỗi shop có shippingFee riêng — phân bổ đều từ SHIPPING_FEE tổng của Order.
-        // Shop cuối nhận phần dư (remainder) để tổng các sub-order luôn khớp với Order.shippingFee.
-        Map<String, Order.SubOrderShipping> shippingByShop = new HashMap<>();
-        List<Map.Entry<String, String>> shopEntries = new ArrayList<>(shopNames.entrySet());
-        int shopCount = shopEntries.size();
-        BigDecimal perShopFee = shopCount > 0
-                ? shippingFee.divide(BigDecimal.valueOf(shopCount), 2, RoundingMode.HALF_UP)
-                : BigDecimal.ZERO;
-        BigDecimal allocatedSoFar = BigDecimal.ZERO;
-        for (int i = 0; i < shopEntries.size(); i++) {
-            Map.Entry<String, String> entry = shopEntries.get(i);
-            // Shop cuối: lấy remainder để đảm bảo tổng bằng shippingFee
-            BigDecimal subFee;
-            if (i == shopEntries.size() - 1) {
-                subFee = shippingFee.subtract(allocatedSoFar).max(BigDecimal.ZERO);
-            } else {
-                subFee = perShopFee;
-                allocatedSoFar = allocatedSoFar.add(perShopFee);
-            }
-            shippingByShop.put(entry.getKey(), Order.SubOrderShipping.builder()
-                    .shopId(entry.getKey())
-                    .shopName(entry.getValue())
-                    .status(ShippingStatus.PENDING)
-                    .shippingFee(subFee)
-                    .build());
-        }
-
         Order order = Order.builder()
                 .userId(userId)
                 .userName(user.getFullName())
@@ -254,7 +206,6 @@ public class OrderServiceImpl implements OrderService {
                 .paid(false)
                 .shopId(primaryShopId)
                 .shopName(primaryShopName)
-                .shippingByShop(shippingByShop)
                 .build();
 
         Order savedOrder = orderRepository.save(order);
@@ -593,34 +544,11 @@ public class OrderServiceImpl implements OrderService {
                 .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy đơn hàng"));
     }
 
-    /**
-     * Customer-facing variant — chỉ trả về Order nếu thuộc về {@code userId}.
-     *
-     * <p><b>Quan trọng (IDOR fix):</b> Method {@link #getOrderById(String)} gốc trả về bất kỳ
-     * Order nào theo ID. Trong các flow Customer-facing (vd: ComplaintController load Order
-     * để hiển thị sản phẩm khiếu nại), nếu Controller quên check ownership thì service sẽ
-     * lộ dữ liệu. Method này enforce ownership ngay tại service layer — nếu customer A
-     * cố tình request orderId của customer B, throw UnauthorizedException.</p>
-     *
-     * <p><b>Phòng thủ nhiều lớp (defense-in-depth):</b> vẫn khuyến khích Controller cũng
-     * check ownership, nhưng service check đảm bảo không có flow nào có thể leak qua
-     * service-layer.</p>
-     *
-     * @throws ResourceNotFoundException nếu order không tồn tại
-     * @throws UnauthorizedException     nếu order.userId != userId
-     */
     @Override
-    public Order getOrderByIdForCustomer(String orderId, String userId) {
-        if (orderId == null || orderId.isBlank()) {
-            throw new BadRequestException("orderId không hợp lệ");
-        }
-        if (userId == null || userId.isBlank()) {
-            throw new UnauthorizedException("Không xác định được Customer");
-        }
-        Order order = orderRepository.findById(orderId)
-                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy đơn hàng"));
-        if (order.getUserId() == null || !order.getUserId().equals(userId)) {
-            throw new UnauthorizedException("Đơn hàng không thuộc về Customer");
+    public Order getOrderByIdForCustomer(String orderId, String customerId) {
+        Order order = getOrderById(orderId);
+        if (customerId == null || !customerId.equals(order.getUserId())) {
+            throw new ResourceNotFoundException("Không tìm thấy đơn hàng");
         }
         return order;
     }

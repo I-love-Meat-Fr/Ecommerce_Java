@@ -223,7 +223,7 @@ a.dash-stat-card,
 
 a.dash-stat-card:focus-visible,
 .dash-stat-link:focus-visible {
-    outline: 3px solid rgba(99, 102, 241, 0.6);
+    outline: 3px solid rgba(15, 181, 176, 0.6);
     outline-offset: 3px;
 }
 
@@ -857,7 +857,7 @@ a.dash-stat-card:focus-visible .dash-stat-link-indicator,
 .dash-period-select:focus {
     outline: none;
     border-color: var(--dash-primary);
-    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15);
+    box-shadow: 0 0 0 3px rgba(15, 181, 176, 0.15);
 }
 
 .dash-revenue-period {
@@ -883,7 +883,7 @@ a.dash-stat-card:focus-visible .dash-stat-link-indicator,
 }
 
 .dash-period-btn:hover {
-    background: rgba(99, 102, 241, 0.1);
+    background: rgba(15, 181, 176, 0.1);
     color: var(--dash-text, #0f172a);
 }
 
@@ -915,7 +915,7 @@ a.dash-activity-item,
 
 a.dash-activity-item:hover,
 .dash-activity-link:hover {
-    background: var(--dash-primary-soft, rgba(99, 102, 241, 0.06));
+    background: var(--dash-primary-soft, rgba(15, 181, 176, 0.06));
     transform: translateX(2px);
 }
 

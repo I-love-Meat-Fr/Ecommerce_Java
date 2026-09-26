@@ -57,7 +57,7 @@ import java.util.List;
 @RequiredArgsConstructor
 public class ModeratorReviewController {
 
-    private static final int DEFAULT_PAGE_SIZE = 20;
+    private static final int DEFAULT_PAGE_SIZE = 10;
 
     private final ModeratorReviewService moderatorReviewService;
 
@@ -65,7 +65,7 @@ public class ModeratorReviewController {
 
     @GetMapping
     public String listReviews(@RequestParam(defaultValue = "0") int page,
-                              @RequestParam(defaultValue = "20") int size,
+                              @RequestParam(defaultValue = "10") int size,
                               @RequestParam(required = false) String q,
                               @RequestParam(required = false) ModerationStatus moderationStatus,
                               @RequestParam(required = false) Integer rating,
@@ -102,7 +102,7 @@ public class ModeratorReviewController {
     @GetMapping("/{id}")
     public String reviewDetail(@PathVariable String id,
                                @RequestParam(defaultValue = "0") int page,
-                               @RequestParam(defaultValue = "20") int size,
+                               @RequestParam(defaultValue = "10") int size,
                                @RequestParam(required = false) String q,
                                @RequestParam(required = false) String moderationStatus,
                                @RequestParam(required = false) String rating,
@@ -126,7 +126,7 @@ public class ModeratorReviewController {
     @PostMapping("/{id}/approve")
     public String approve(@PathVariable String id,
                           @RequestParam(defaultValue = "0") int page,
-                          @RequestParam(defaultValue = "20") int size,
+                          @RequestParam(defaultValue = "10") int size,
                           @RequestParam(required = false) String q,
                           @RequestParam(required = false) String moderationStatus,
                           @RequestParam(required = false) String rating,
@@ -157,7 +157,7 @@ public class ModeratorReviewController {
     public String reject(@PathVariable String id,
                          @Valid @org.springframework.web.bind.annotation.ModelAttribute ReviewModerationReq body,
                          @RequestParam(defaultValue = "0") int page,
-                         @RequestParam(defaultValue = "20") int size,
+                         @RequestParam(defaultValue = "10") int size,
                          @RequestParam(required = false) String q,
                          @RequestParam(required = false) String moderationStatus,
                          @RequestParam(required = false) String rating,
@@ -190,7 +190,7 @@ public class ModeratorReviewController {
     public String hide(@PathVariable String id,
                        @Valid @org.springframework.web.bind.annotation.ModelAttribute ReviewModerationReq body,
                        @RequestParam(defaultValue = "0") int page,
-                       @RequestParam(defaultValue = "20") int size,
+                       @RequestParam(defaultValue = "10") int size,
                        @RequestParam(required = false) String q,
                        @RequestParam(required = false) String moderationStatus,
                        @RequestParam(required = false) String rating,
@@ -222,7 +222,7 @@ public class ModeratorReviewController {
     @PostMapping("/{id}/unhide")
     public String unhide(@PathVariable String id,
                          @RequestParam(defaultValue = "0") int page,
-                         @RequestParam(defaultValue = "20") int size,
+                         @RequestParam(defaultValue = "10") int size,
                          @RequestParam(required = false) String q,
                          @RequestParam(required = false) String moderationStatus,
                          @RequestParam(required = false) String rating,
@@ -253,7 +253,7 @@ public class ModeratorReviewController {
     public String escalate(@PathVariable String id,
                            @Valid @org.springframework.web.bind.annotation.ModelAttribute ReviewModerationReq body,
                            @RequestParam(defaultValue = "0") int page,
-                           @RequestParam(defaultValue = "20") int size,
+                           @RequestParam(defaultValue = "10") int size,
                            @RequestParam(required = false) String q,
                            @RequestParam(required = false) String moderationStatus,
                            @RequestParam(required = false) String rating,
@@ -303,3 +303,4 @@ public class ModeratorReviewController {
         return out;
     }
 }
+

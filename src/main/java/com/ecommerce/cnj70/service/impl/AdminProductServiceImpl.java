@@ -94,9 +94,29 @@ public class AdminProductServiceImpl implements AdminProductService {
         if (!StringUtils.hasText(id)) {
             throw new BadRequestException("ID sản phẩm không hợp lệ");
         }
-        return productRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException(
-                        "Không tìm thấy sản phẩm với ID: " + id));
+        // Phase 4 + Phase 3 fix — Hỗ trợ CẢ 2 kiểu _id (String lẫn ObjectId).
+        // KHÔNG ép raw.put("_id", id) vì sẽ làm save() insert document mới
+        // khi DB lưu _id là ObjectId → duplicate key error (E11000).
+        org.bson.Document raw = mongoTemplate.getCollection("products")
+                .find(new org.bson.Document("_id", id))
+                .first();
+        if (raw == null && id.length() == 24 && id.matches("[0-9a-fA-F]+")) {
+            org.bson.types.ObjectId oid = new org.bson.types.ObjectId(id);
+            raw = mongoTemplate.getCollection("products")
+                    .find(new org.bson.Document("_id", oid))
+                    .first();
+        }
+        if (raw == null) {
+            throw new ResourceNotFoundException("Không tìm thấy sản phẩm với ID: " + id);
+        }
+        if (!raw.containsKey("_class")) {
+            raw.put("_class", Product.class.getName());
+        }
+        Product product = mongoTemplate.getConverter().read(Product.class, raw);
+        if (product.getId() == null) {
+            product.setId(id);
+        }
+        return product;
     }
 
     @Override
@@ -104,17 +124,32 @@ public class AdminProductServiceImpl implements AdminProductService {
     public Product hideProduct(String id) {
         Product product = getProductById(id);
 
-        // Validate theo Contract Phase 14:
-        // Hide ≠ Delete: Document vẫn tồn tại, chỉ set status = HIDDEN.
-        // Vendor vẫn quản lý được Product (xem theo Vendor ownership).
-
         if (product.getStatus() == ProductStatus.HIDDEN) {
             throw new BadRequestException(
                     "Sản phẩm \"" + product.getName() + "\" đã ở trạng thái Ẩn");
         }
 
-        product.setStatus(ProductStatus.HIDDEN);
-        Product saved = productRepository.save(product);
+        // Phase 3 critical fix: atomic update trực tiếp trên collection (bypass
+        // entity mapping) để tránh E11000 duplicate key khi DB lưu _id là ObjectId.
+        Object nativeId = resolveIdForQuery(id, product);
+        org.bson.Document update = new org.bson.Document("$set",
+                new org.bson.Document("status", ProductStatus.HIDDEN.name())
+                        .append("updatedAt", java.util.Date.from(java.time.LocalDateTime.now()
+                                .atZone(java.time.ZoneId.systemDefault()).toInstant())));
+        long matched = mongoTemplate.getCollection("products")
+                .updateOne(new org.bson.Document("_id", nativeId), update)
+                .getMatchedCount();
+        if (matched == 0) {
+            // Fallback to entity save (defensive)
+            log.warn("AdminProductService.hideProduct: atomic update not matched, falling back");
+            product.setStatus(ProductStatus.HIDDEN);
+            Product saved = productRepository.save(product);
+            log.info("AdminProductService.hideProduct: id={} name={} -> HIDDEN",
+                    saved.getId(), saved.getName());
+            return saved;
+        }
+        // Reload to return latest state
+        Product saved = getProductById(id);
         log.info("AdminProductService.hideProduct: id={} name={} -> HIDDEN",
                 saved.getId(), saved.getName());
         return saved;
@@ -130,9 +165,24 @@ public class AdminProductServiceImpl implements AdminProductService {
                     "Sản phẩm \"" + product.getName() + "\" hiện không ở trạng thái Ẩn");
         }
 
-        // Sau Unhide -> ACTIVE. KHÔNG đổi các field khác.
-        product.setStatus(ProductStatus.ACTIVE);
-        Product saved = productRepository.save(product);
+        // Phase 3 critical fix: atomic update (xem hideProduct).
+        Object nativeId = resolveIdForQuery(id, product);
+        org.bson.Document update = new org.bson.Document("$set",
+                new org.bson.Document("status", ProductStatus.ACTIVE.name())
+                        .append("updatedAt", java.util.Date.from(java.time.LocalDateTime.now()
+                                .atZone(java.time.ZoneId.systemDefault()).toInstant())));
+        long matched = mongoTemplate.getCollection("products")
+                .updateOne(new org.bson.Document("_id", nativeId), update)
+                .getMatchedCount();
+        if (matched == 0) {
+            log.warn("AdminProductService.unhideProduct: atomic update not matched, falling back");
+            product.setStatus(ProductStatus.ACTIVE);
+            Product saved = productRepository.save(product);
+            log.info("AdminProductService.unhideProduct: id={} name={} -> ACTIVE",
+                    saved.getId(), saved.getName());
+            return saved;
+        }
+        Product saved = getProductById(id);
         log.info("AdminProductService.unhideProduct: id={} name={} -> ACTIVE",
                 saved.getId(), saved.getName());
         return saved;
@@ -141,13 +191,36 @@ public class AdminProductServiceImpl implements AdminProductService {
     @Override
     @Transactional
     public void deleteProduct(String id) {
-        // TASK 14.11 — Delete Violation = hard delete theo Contract Phase 14.
-        // KHÔNG cascade Order/Review/Cart (LOCK 7).
-        // Order lịch sử giữ nguyên productId reference (chỉ là ID string).
         Product product = getProductById(id);
 
-        productRepository.deleteById(product.getId());
+        // Phase 3 critical fix: dùng native _id (ObjectId hoặc String) để delete,
+        // tránh silent miss khi DB lưu _id là ObjectId.
+        Object nativeId = resolveIdForQuery(id, product);
+        org.bson.Document query = new org.bson.Document("_id", nativeId);
+        long deleted = mongoTemplate.getCollection("products")
+                .deleteOne(query).getDeletedCount();
+        if (deleted == 0) {
+            log.warn("AdminProductService.deleteProduct: atomic delete not matched, falling back to repo");
+            productRepository.deleteById(product.getId());
+        }
         log.info("AdminProductService.deleteProduct: removed id={} name={}",
                 product.getId(), product.getName());
+    }
+
+    /**
+     * Phase 3 critical fix: trả về _id dạng native (ObjectId hoặc String) để
+     * Mongo query match đúng document trong DB, tránh E11000 duplicate key
+     * do save() insert document mới khi entity._id là String hex.
+     */
+    private Object resolveIdForQuery(String id, Product product) {
+        if (id.length() == 24 && id.matches("[0-9a-fA-F]+")) {
+            org.bson.Document raw = mongoTemplate.getCollection("products")
+                    .find(new org.bson.Document("_id", new org.bson.types.ObjectId(id)))
+                    .first();
+            if (raw != null) {
+                return new org.bson.types.ObjectId(id);
+            }
+        }
+        return id;
     }
 }

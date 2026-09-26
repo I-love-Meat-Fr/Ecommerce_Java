@@ -19,6 +19,20 @@
         </div>
     </div>
 
+    <!-- Flash messages — Phase 2: support flashSuccess/flashError/flashInfo -->
+    <div th:if="${flashSuccess}" class="sd-alert sd-alert-success" style="margin-bottom:16px;">
+        <i class="fas fa-circle-check"></i>
+        <span th:text="${flashSuccess}">Thành công</span>
+    </div>
+    <div th:if="${flashError}" class="sd-alert sd-alert-danger" style="margin-bottom:16px;">
+        <i class="fas fa-circle-exclamation"></i>
+        <span th:text="${flashError}">Lỗi</span>
+    </div>
+    <div th:if="${flashInfo}" class="sd-alert sd-alert-info" style="margin-bottom:16px;">
+        <i class="fas fa-circle-info"></i>
+        <span th:text="${flashInfo}">Thông tin</span>
+    </div>
+
     <div class="sd-card" style="margin-bottom:20px;">
         <div class="sd-card-head">
             <div>

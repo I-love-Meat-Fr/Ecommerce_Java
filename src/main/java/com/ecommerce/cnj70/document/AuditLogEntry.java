@@ -37,7 +37,7 @@ import java.time.LocalDateTime;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@Document(collection = "audit_log")
+@Document(collection = "audit_logs")
 @CompoundIndexes({
     @CompoundIndex(name = "actor_created_idx", def = "{'actorId': 1, 'createdAt': -1}"),
     @CompoundIndex(name = "resource_type_id_idx", def = "{'resourceType': 1, 'resourceId': 1}"),

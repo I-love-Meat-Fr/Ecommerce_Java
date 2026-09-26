@@ -83,11 +83,18 @@ public class Complaint {
     @Builder.Default
     private ComplaintLevel level = ComplaintLevel.LEVEL_0;
 
-    /** Vendor response text (Level 0). */
+    /** Vendor response text (Level 0) — append-mode cho phép nhiều lần phản hồi. */
     private String vendorResponse;
     private LocalDateTime vendorRespondedAt;
     private String vendorRespondedById;
     private String vendorRespondedByEmail;
+
+    /**
+     * Số lần Vendor đã gửi phản hồi. Đếm các lần append vào {@link #vendorResponse}.
+     * Phase 3A §47.
+     */
+    @Builder.Default
+    private int vendorReplyCount = 0;
 
     /** Moderator assigned (Level 1). */
     private String assignedModeratorId;

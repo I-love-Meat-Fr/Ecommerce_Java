@@ -93,10 +93,13 @@
                         <label class="sd-form-label" style="color:#047857;">Verified Purchase</label>
                         <div>
                             <strong>Đã mua hàng:</strong>
-                            <span th:text="${ctx.verifiedPurchase.verified ? 'YES' : 'NO'}">—</span>
+                            <span th:text="${ctx.verifiedPurchase.verified() ? 'YES' : 'NO'}">—</span>
                         </div>
-                        <div th:if="${ctx.verifiedPurchase.reason != null}">
-                            <strong>Lý do:</strong> <span th:text="${ctx.verifiedPurchase.reason}">—</span>
+                        <div th:if="${ctx.verifiedPurchase.orderId() != null}">
+                            <strong>Order:</strong> <span th:text="${ctx.verifiedPurchase.orderId()}">—</span>
+                        </div>
+                        <div th:if="${ctx.verifiedPurchase.deliveredAt() != null}">
+                            <strong>Delivered at:</strong> <span th:text="${ctx.verifiedPurchase.deliveredAt()}">—</span>
                         </div>
                     </div>
 
@@ -217,7 +220,7 @@
             </div>
 
             <!-- Report Info (integration seam) -->
-            <div class="sd-card" th:if="${ctx.reportSummary != null and ctx.reportSummary.totalReports != null and ctx.reportSummary.totalReports > 0}">
+            <div class="sd-card" th:if="${ctx.reportSummary != null and ctx.reportSummary.reportCount() > 0}">
                 <div class="sd-card-header">
                     <h3 class="sd-card-title">
                         <i class="fas fa-flag" style="color:#ef4444;"></i>
@@ -227,14 +230,14 @@
                 <div class="sd-card-body">
                     <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px;">
                         <div style="font-size:32px;font-weight:700;color:#ef4444;"
-                             th:text="${ctx.reportSummary.totalReports}">0</div>
+                             th:text="${ctx.reportSummary.reportCount()}">0</div>
                         <div style="font-size:13px;color:#64748b;">lượt report</div>
                     </div>
                 </div>
             </div>
 
             <!-- Violation context (integration seam) -->
-            <div class="sd-card" th:if="${ctx.violationContext != null and ctx.violationContext.totalViolations != null and ctx.violationContext.totalViolations > 0}">
+            <div class="sd-card" th:if="${ctx.violationContext != null and ctx.violationContext.status() != null and ctx.violationContext.status() != 'NOT_AVAILABLE'}">
                 <div class="sd-card-header">
                     <h3 class="sd-card-title">
                         <i class="fas fa-triangle-exclamation" style="color:#f59e0b;"></i>
@@ -243,8 +246,12 @@
                 </div>
                 <div class="sd-card-body">
                     <div>
-                        <strong>Total violations:</strong>
-                        <span th:text="${ctx.violationContext.totalViolations}">0</span>
+                        <strong>Severity:</strong>
+                        <span th:text="${ctx.violationContext.severity() != null ? ctx.violationContext.severity() : '—'}">—</span>
+                    </div>
+                    <div>
+                        <strong>Reason:</strong>
+                        <span th:text="${ctx.violationContext.reason() != null ? ctx.violationContext.reason() : '—'}">—</span>
                     </div>
                 </div>
             </div>

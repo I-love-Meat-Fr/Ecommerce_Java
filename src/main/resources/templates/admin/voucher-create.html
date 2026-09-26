@@ -20,7 +20,11 @@
         </div>
     </div>
 
-    <!-- Flash messages -->
+    <!-- Flash messages — Phase 1: use flashSuccess/flashError consistently with other admin modules -->
+    <div th:if="${flashSuccess}" class="sd-alert sd-alert-success" style="margin-bottom:16px;">
+        <i class="fas fa-circle-check"></i>
+        <span th:text="${flashSuccess}">Thành công</span>
+    </div>
     <div th:if="${success}" class="sd-alert sd-alert-success" style="margin-bottom:16px;">
         <i class="fas fa-circle-check"></i>
         <span th:text="${success}">Thành công</span>
@@ -41,7 +45,11 @@
         </div>
     </div>
 
-    <!-- Error alert -->
+    <!-- Error alert — Phase 1: support both flashError and error flash keys -->
+    <div th:if="${flashError}" class="sd-alert sd-alert-danger" style="margin-bottom: 16px;">
+        <i class="fas fa-circle-exclamation"></i>
+        <span th:text="${flashError}">Lỗi</span>
+    </div>
     <div th:if="${error}" class="sd-alert sd-alert-danger" style="margin-bottom: 16px;">
         <i class="fas fa-circle-exclamation"></i>
         <span th:text="${error}">Lỗi</span>
@@ -55,6 +63,10 @@
             </div>
             <div class="sd-card-body">
                 <form th:action="@{/admin/vouchers/create}" th:object="${voucherForm}" method="post">
+                    <!-- Phase 1 — Explicit marker for hidden type form field.
+                         Service.createWebVoucher() forcibly sets type=WEB regardless of form input,
+                         so this hidden field is documentary; it also helps when debugging / auditing. -->
+                    <input type="hidden" name="type" value="WEB"/>
                     <!-- Mã voucher -->
                     <div class="sd-form-group">
                         <label for="v-code">Mã voucher <span style="color: #ef4444;">*</span></label>
@@ -189,13 +201,13 @@
             transition: all 0.2s;
             text-align: center;
         }
-        .sd-radio-card:hover { border-color: #6366f1; }
-        .sd-radio-card.selected { border-color: #6366f1; background: #eef2ff; }
+        .sd-radio-card:hover { border-color: #0fb5b0; }
+        .sd-radio-card.selected { border-color: #0fb5b0; background: #e6f8f7; }
         .sd-radio-card input { display: none; }
-        .sd-radio-icon { font-size: 24px; margin-bottom: 8px; color: #6366f1; }
+        .sd-radio-icon { font-size: 24px; margin-bottom: 8px; color: #0fb5b0; }
         .sd-radio-title { font-weight: 600; color: #1e293b; font-size: 14px; }
         .sd-voucher-preview {
-            background: linear-gradient(135deg, #6366f1, #8b5cf6);
+            background: linear-gradient(135deg, #0fb5b0, #0a8a87);
             border-radius: 12px;
             padding: 24px;
             color: white;

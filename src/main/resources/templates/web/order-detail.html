@@ -345,7 +345,11 @@
                         <div class="od-meta-card" th:if="${order.paymentMethod != null}">
                             <i class="fas fa-credit-card"></i>
                             <span class="od-meta-card-label">Thanh toán</span>
-                            <span class="od-meta-card-value" th:text="${order.paymentMethod == 'COD' ? 'Thanh toán khi nhận hàng (COD)' : order.paymentMethod}">Payment</span>
+                            <span class="od-meta-card-value"
+                                  th:text="${order.paymentMethod == 'COD' ? 'Thanh toán khi nhận hàng (COD)' :
+                                            order.paymentMethod == 'VNPAY' ? 'Thanh toán qua VNPAY' :
+                                            order.paymentMethod == 'BANK_QR' ? 'Chuyển khoản ngân hàng (QR)' :
+                                            order.paymentMethod}">Payment</span>
                         </div>
 
                         <!-- ==================================================
@@ -397,6 +401,11 @@
                                 <i class="fas fa-info-circle"></i>
                                 Đang chờ xác nhận từ cổng VNPAY.
                             </small>
+                            <small class="od-payment-status-note"
+                                   th:if="${ps == 'PENDING' and order.paymentMethod == 'BANK_QR'}">
+                                <i class="fas fa-info-circle"></i>
+                                Vui lòng quét QR bên dưới để hoàn tất chuyển khoản.
+                            </small>
                         </div>
                         <div class="od-meta-card" th:if="${order.userName != null}">
                             <i class="fas fa-user"></i>
@@ -418,6 +427,98 @@
                         </div>
                     </div>
                 </div>
+            </div>
+        </section>
+
+        <!-- ==================================================
+             BANK_QR PAYMENT SECTION
+             Hiển thị QR code VietQR + thông tin ngân hàng khi
+             KH chọn phương thức "Chuyển khoản ngân hàng" và
+             đơn hàng còn ở trạng thái chờ thanh toán.
+             QR được generate bằng VietQR API (chuẩn EMVCo NAPAS).
+             Nội dung CK = DH<orderId> để admin/vendor đối chiếu.
+             ================================================== -->
+        <section class="od-bank-qr-section"
+                 th:if="${order.paymentMethod == 'BANK_QR' and order.paymentStatus == 'PENDING'}">
+            <div class="od-section-header">
+                <h2><i class="fas fa-university"></i> Thanh toán chuyển khoản</h2>
+                <p class="od-section-sub">Quét mã QR bên dưới bằng app ngân hàng (MB Bank hoặc app có hỗ trợ VietQR) để hoàn tất thanh toán cho đơn hàng này.</p>
+            </div>
+            <div class="od-bank-qr-card">
+                <div class="od-bank-qr-left">
+                    <!--
+                        QR dùng VietQR API theo chuẩn EMVCo NAPAS. Dùng plain th:src
+                        (KHÔNG dùng @{...}) vì đây là URL tuyệt đối bên ngoài — @{...}
+                        sẽ prepend context path. Dùng '&' plain vì Thymeleaf tự
+                        HTML-encode khi ghi vào attribute (browser sẽ decode lại).
+                    -->
+                    <img class="od-bank-qr-img"
+                         th:src="'https://img.vietqr.io/image/970422-0386267692-compact2.png?amount=' + ${order.totalAmount} + '&addInfo=DH' + ${order.orderId} + '&accountName=TRAN ANH QUAN'"
+                         alt="QR thanh toán"
+                         onerror="this.classList.add('od-bank-qr-img-error'); this.alt='Không tải được QR';">
+                    <small class="od-bank-qr-img-hint">
+                        <i class="fas fa-shield-alt"></i> QR theo chuẩn VietQR · an toàn &amp; bảo mật
+                    </small>
+                </div>
+                <div class="od-bank-qr-right">
+                    <div class="od-bank-qr-info">
+                        <div class="od-bank-qr-row">
+                            <span class="od-bank-qr-label">Ngân hàng</span>
+                            <strong>MB Bank (Ngân hàng Quân đội)</strong>
+                        </div>
+                        <div class="od-bank-qr-row">
+                            <span class="od-bank-qr-label">Số tài khoản</span>
+                            <strong class="od-bank-qr-account"
+                                    id="od-bank-qr-account">0386267692</strong>
+                            <button type="button" class="od-bank-qr-copy-btn"
+                                    id="od-bank-qr-copy-account" title="Sao chép">
+                                <i class="fas fa-copy"></i>
+                            </button>
+                        </div>
+                        <div class="od-bank-qr-row">
+                            <span class="od-bank-qr-label">Chủ tài khoản</span>
+                            <strong>TRAN ANH QUAN</strong>
+                        </div>
+                        <div class="od-bank-qr-row od-bank-qr-row-amount">
+                            <span class="od-bank-qr-label">Số tiền</span>
+                            <strong class="od-bank-qr-amount"
+                                    th:text="${@money.format(order.totalAmount)}">0₫</strong>
+                        </div>
+                        <div class="od-bank-qr-row">
+                            <span class="od-bank-qr-label">Nội dung CK</span>
+                            <strong class="od-bank-qr-content"
+                                    th:id="'od-bank-qr-content-' + ${order.orderId}"
+                                    th:text="'DH' + ${order.orderId}">DH...</strong>
+                            <button type="button" class="od-bank-qr-copy-btn"
+                                th:attr="data-copy-target=${'od-bank-qr-content-' + order.orderId}"
+                                title="Sao chép">
+                                <i class="fas fa-copy"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="od-bank-qr-steps">
+                        <div class="od-bank-qr-step">
+                            <span class="od-bank-qr-step-num">1</span>
+                            <span>Mở app ngân hàng có hỗ trợ VietQR (MB Bank, Vietcombank, Techcombank, ...)</span>
+                        </div>
+                        <div class="od-bank-qr-step">
+                            <span class="od-bank-qr-step-num">2</span>
+                            <span>Quét QR — app tự điền số tiền, tài khoản nhận và nội dung</span>
+                        </div>
+                        <div class="od-bank-qr-step">
+                            <span class="od-bank-qr-step-num">3</span>
+                            <span>Xác nhận chuyển khoản và giữ lại biên lai</span>
+                        </div>
+                        <div class="od-bank-qr-step">
+                            <span class="od-bank-qr-step-num">4</span>
+                            <span>Đơn hàng sẽ được xử lý sau khi hệ thống xác nhận đã nhận tiền</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="od-bank-qr-note">
+                <i class="fas fa-exclamation-triangle"></i>
+                <span>Quan trọng: vui lòng giữ nguyên <strong>nội dung chuyển khoản</strong> để admin/vendor đối chiếu nhanh chóng. Nếu nội dung bị lệch, đơn hàng có thể bị xử lý chậm.</span>
             </div>
         </section>
 
@@ -448,6 +549,80 @@
 
 <th:block th:fragment="page-scripts">
     <script th:src="@{/js/home.js}" defer></script>
+    <script th:inline="none">
+        // ============================================================
+        // Copy buttons cho thông tin ngân hàng (order detail)
+        // ============================================================
+        async function odCopyToClipboard(text) {
+            try {
+                if (navigator.clipboard && navigator.clipboard.writeText) {
+                    await navigator.clipboard.writeText(text);
+                    return true;
+                }
+            } catch (_) { /* fallback */ }
+            try {
+                const ta = document.createElement('textarea');
+                ta.value = text;
+                ta.style.position = 'fixed';
+                ta.style.opacity = '0';
+                document.body.appendChild(ta);
+                ta.select();
+                const ok = document.execCommand('copy');
+                document.body.removeChild(ta);
+                return ok;
+            } catch (_) {
+                return false;
+            }
+        }
+        function odFlashCopyBtn(btn) {
+            if (!btn) return;
+            const original = btn.innerHTML;
+            btn.innerHTML = '<i class="fas fa-check"></i>';
+            btn.classList.add('is-copied');
+            setTimeout(() => {
+                btn.innerHTML = original;
+                btn.classList.remove('is-copied');
+            }, 1400);
+        }
+        function odShowToast(type, message) {
+            if (typeof window.showToast === 'function') {
+                try { window.showToast(type, message); return; } catch (_) {}
+            }
+            console.log('Toast:', type, message);
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            const accountBtn = document.getElementById('od-bank-qr-copy-account');
+            if (accountBtn) {
+                accountBtn.addEventListener('click', async function() {
+                    const el = document.getElementById('od-bank-qr-account');
+                    const text = el ? el.textContent.trim() : '';
+                    const ok = await odCopyToClipboard(text);
+                    if (ok) {
+                        odFlashCopyBtn(accountBtn);
+                        odShowToast('success', 'Đã sao chép số tài khoản');
+                    } else {
+                        odShowToast('error', 'Không thể sao chép. Vui lòng copy thủ công.');
+                    }
+                });
+            }
+            // Copy content buttons (data-copy-target attribute)
+            document.querySelectorAll('.od-bank-qr-copy-btn[data-copy-target]').forEach(function(btn) {
+                btn.addEventListener('click', async function() {
+                    const targetId = btn.getAttribute('data-copy-target');
+                    const el = targetId ? document.getElementById(targetId) : null;
+                    const text = el ? el.textContent.trim() : '';
+                    const ok = await odCopyToClipboard(text);
+                    if (ok) {
+                        odFlashCopyBtn(btn);
+                        odShowToast('success', 'Đã sao chép nội dung chuyển khoản');
+                    } else {
+                        odShowToast('error', 'Không thể sao chép. Vui lòng copy thủ công.');
+                    }
+                });
+            });
+        });
+    </script>
 </th:block>
 </body>
 </html>

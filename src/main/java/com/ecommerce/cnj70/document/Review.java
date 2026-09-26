@@ -13,6 +13,8 @@ import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 @Data
 @Builder
@@ -37,6 +39,17 @@ public class Review {
     private int rating;
 
     private String comment;
+
+    /**
+     * TASK #26 — Danh sách ảnh đính kèm Review.
+     * Mỗi phần tử là URL path trỏ tới /uploads/{uuid}.{ext}.
+     * Giới hạn tối đa {@code MAX_IMAGES_PER_REVIEW} ảnh (enforced trong service).
+     * Mỗi ảnh upload qua {@code FileUploadUtil} đã validate size/MIME/extension.
+     *
+     * <p>Chỉ owner Review mới được thêm/xoá ảnh (enforced trong service).</p>
+     */
+    @Builder.Default
+    private List<String> images = new ArrayList<>();
 
     // ===== TASK #15 Review Moderation =====
 

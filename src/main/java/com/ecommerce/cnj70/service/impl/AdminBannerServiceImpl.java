@@ -144,9 +144,29 @@ public class AdminBannerServiceImpl implements AdminBannerService {
         if (!StringUtils.hasText(id)) {
             throw new BadRequestException("ID banner không hợp lệ");
         }
-        return bannerRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException(
-                        "Không tìm thấy banner với ID: " + id));
+        // Phase 5 + Phase 3 fix: Hỗ trợ CẢ 2 kiểu _id (String lẫn ObjectId).
+        // KHÔNG ép raw.put("_id", id) vì sẽ làm save() insert document mới
+        // khi DB lưu _id là ObjectId → duplicate key error (E11000).
+        org.bson.Document raw = mongoTemplate.getCollection("banners")
+                .find(new org.bson.Document("_id", id))
+                .first();
+        if (raw == null && id.length() == 24 && id.matches("[0-9a-fA-F]+")) {
+            org.bson.types.ObjectId oid = new org.bson.types.ObjectId(id);
+            raw = mongoTemplate.getCollection("banners")
+                    .find(new org.bson.Document("_id", oid))
+                    .first();
+        }
+        if (raw == null) {
+            throw new ResourceNotFoundException("Không tìm thấy banner với ID: " + id);
+        }
+        if (!raw.containsKey("_class")) {
+            raw.put("_class", Banner.class.getName());
+        }
+        Banner banner = mongoTemplate.getConverter().read(Banner.class, raw);
+        if (banner.getId() == null) {
+            banner.setId(id);
+        }
+        return banner;
     }
 
     /* ==== CREATE ==== */
@@ -237,9 +257,25 @@ public class AdminBannerServiceImpl implements AdminBannerService {
             throw new BadRequestException("Banner đã ở trạng thái Published");
         }
 
+        // Phase 3 critical fix: atomic update để tránh E11000 duplicate key khi DB
+        // lưu _id là ObjectId (save() sẽ insert document mới với _id String hex).
         Banner before = snapshotBanner(banner);
-        banner.setStatus(BannerStatus.PUBLISHED);
-        Banner saved = bannerRepository.save(banner);
+        Object nativeId = resolveIdForQuery(id);
+        org.bson.Document update = new org.bson.Document("$set",
+                new org.bson.Document("status", BannerStatus.PUBLISHED)
+                        .append("updatedAt", java.util.Date.from(java.time.LocalDateTime.now()
+                                .atZone(java.time.ZoneId.systemDefault()).toInstant())));
+        long matched = mongoTemplate.getCollection("banners")
+                .updateOne(new org.bson.Document("_id", nativeId), update)
+                .getMatchedCount();
+        Banner saved;
+        if (matched == 0) {
+            log.warn("AdminBannerService.publishBanner: atomic update not matched, falling back");
+            banner.setStatus(BannerStatus.PUBLISHED);
+            saved = bannerRepository.save(banner);
+        } else {
+            saved = getBannerById(id);
+        }
         log.info("AdminBannerService.publishBanner: id={} → PUBLISHED", saved.getId());
         emitAudit("BANNER_PUBLISHED", before, saved, "Admin published Banner");
         return saved;
@@ -254,9 +290,24 @@ public class AdminBannerServiceImpl implements AdminBannerService {
             throw new BadRequestException("Banner hiện không ở trạng thái Published");
         }
 
+        // Phase 3 critical fix: atomic update (xem publishBanner).
         Banner before = snapshotBanner(banner);
-        banner.setStatus(BannerStatus.UNPUBLISHED);
-        Banner saved = bannerRepository.save(banner);
+        Object nativeId = resolveIdForQuery(id);
+        org.bson.Document update = new org.bson.Document("$set",
+                new org.bson.Document("status", BannerStatus.UNPUBLISHED)
+                        .append("updatedAt", java.util.Date.from(java.time.LocalDateTime.now()
+                                .atZone(java.time.ZoneId.systemDefault()).toInstant())));
+        long matched = mongoTemplate.getCollection("banners")
+                .updateOne(new org.bson.Document("_id", nativeId), update)
+                .getMatchedCount();
+        Banner saved;
+        if (matched == 0) {
+            log.warn("AdminBannerService.unpublishBanner: atomic update not matched, falling back");
+            banner.setStatus(BannerStatus.UNPUBLISHED);
+            saved = bannerRepository.save(banner);
+        } else {
+            saved = getBannerById(id);
+        }
         log.info("AdminBannerService.unpublishBanner: id={} → UNPUBLISHED", saved.getId());
         emitAudit("BANNER_UNPUBLISHED", before, saved, "Admin unpublished Banner");
         return saved;
@@ -270,10 +321,34 @@ public class AdminBannerServiceImpl implements AdminBannerService {
         Banner banner = getBannerById(id);
         // Phase 17 LOCK 9: KHÔNG cascade delete Order/Product/Customer/Review.
         // Phase 17 LOCK 8: KHÔNG xóa file ảnh trong /uploads/.
-        bannerRepository.deleteById(banner.getId());
+        // Phase 3 critical fix: atomic delete với native _id.
+        Object nativeId = resolveIdForQuery(id);
+        long deleted = mongoTemplate.getCollection("banners")
+                .deleteOne(new org.bson.Document("_id", nativeId))
+                .getDeletedCount();
+        if (deleted == 0) {
+            log.warn("AdminBannerService.deleteBanner: atomic delete not matched, falling back to repo");
+            bannerRepository.deleteById(banner.getId());
+        }
         log.info("AdminBannerService.deleteBanner: removed id={} title={}",
                 banner.getId(), banner.getTitle());
         emitAudit("BANNER_DELETED", banner, null, "Admin deleted Banner");
+    }
+
+    /**
+     * Phase 3 critical fix: trả về _id dạng native (ObjectId hoặc String) để
+     * Mongo query match đúng document trong DB, tránh E11000 duplicate key.
+     */
+    private Object resolveIdForQuery(String id) {
+        if (id.length() == 24 && id.matches("[0-9a-fA-F]+")) {
+            org.bson.Document raw = mongoTemplate.getCollection("banners")
+                    .find(new org.bson.Document("_id", new org.bson.types.ObjectId(id)))
+                    .first();
+            if (raw != null) {
+                return new org.bson.types.ObjectId(id);
+            }
+        }
+        return id;
     }
 
     /* ==== Validation helpers ==== */

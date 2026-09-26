@@ -1,0 +1,393 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/springsecurity6"
+      th:replace="~{layout/moderator-layout :: layout(title='Chi tiết khiếu nại - CNJ70 Moderator', content=~{::main-content}, scripts=~{::page-scripts})}">
+<head>
+    <title>Chi tiết khiếu nại - CNJ70 Moderator</title>
+</head>
+<body>
+<main th:fragment="main-content">
+
+    <!-- Page header -->
+    <div class="sd-page-head">
+        <div class="sd-page-head-title">
+            <h1><i class="fas fa-shield-halved"></i>
+                <span>Chi tiết khiếu nại</span>
+                <code class="sd-mono" style="font-size:18px;" th:if="${complaint != null}" th:text="${complaint.id}">ID</code>
+            </h1>
+            <p th:if="${complaint != null}">
+                <span th:text="${reasonLabel}">Reason</span>
+                • Khách: <strong th:text="${complaint.customerName != null ? complaint.customerName : '—'}">C</strong>
+                • Shop: <strong th:text="${complaint.shopName != null ? complaint.shopName : '—'}">S</strong>
+            </p>
+        </div>
+        <div class="sd-page-head-actions">
+            <a th:href="@{/moderator/complaints(page=${page}, size=${size}, status=${statusFilter})}"
+               class="sd-btn sd-btn-secondary sd-btn-sm">
+                <i class="fas fa-arrow-left"></i>
+                <span>Quay lại danh sách</span>
+            </a>
+        </div>
+    </div>
+
+    <!-- Error -->
+    <div th:if="${error}" class="sd-card sd-card-danger" style="margin-bottom:20px;border-left:4px solid #ef4444;">
+        <div class="sd-card-body" style="display:flex;align-items:center;gap:10px;">
+            <i class="fas fa-exclamation-circle" style="color:#ef4444;font-size:20px;"></i>
+            <div>
+                <strong>Không thể xử lý yêu cầu</strong>
+                <p style="margin:4px 0 0;" th:text="${error}">Error</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- If detail exists -->
+    <div th:if="${complaint != null}">
+
+        <!-- Status badges row -->
+        <div class="sd-card" style="margin-bottom:20px;">
+            <div class="sd-card-body" style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
+                <span class="sd-badge sd-badge-slate" th:text="'ID: ' + ${complaint.id}">ID</span>
+                <span class="sd-badge"
+                      th:classappend="${complaint.status.name() == 'ESCALATED' ? 'sd-badge-amber' :
+                                      (complaint.status.name() == 'MODERATOR_REVIEW' ? 'sd-badge-sky' :
+                                      (complaint.status.name() == 'ADMIN_REVIEW' or complaint.status.name() == 'ESCALATED_L2' ? 'sd-badge-red' :
+                                      (complaint.status.name() == 'RESOLVED' ? 'sd-badge-green' :
+                                      (complaint.status.name() == 'REJECTED' ? 'sd-badge-slate' : 'sd-badge-slate'))))}"
+                      th:text="${statusLabel}">Status</span>
+                <span class="sd-badge"
+                      th:classappend="${complaint.level.name() == 'LEVEL_0' ? 'sd-badge-amber' :
+                                      (complaint.level.name() == 'LEVEL_1' ? 'sd-badge-sky' : 'sd-badge-red')}"
+                      th:text="${levelLabel}">Level</span>
+                <span class="sd-badge sd-badge-blue" th:text="${reasonLabel}">Reason</span>
+                <span class="sd-badge sd-badge-slate" th:if="${complaint.escalationCount > 0}">
+                    Đã escalate <span th:text="${complaint.escalationCount}">0</span> lần
+                </span>
+                <span class="sd-badge sd-badge-green" th:if="${isClaimed}">
+                    <i class="fas fa-hand-holding-hand"></i> Bạn đã claim
+                </span>
+            </div>
+        </div>
+
+        <div style="display:grid;grid-template-columns:1fr 320px;gap:20px;">
+
+            <!-- Main column -->
+            <div>
+                <!-- Customer + Shop info -->
+                <div class="sd-card" style="margin-bottom:20px;">
+                    <div class="sd-card-head">
+                        <div>
+                            <h3><i class="fas fa-users"></i> Hai bên liên quan</h3>
+                        </div>
+                    </div>
+                    <div class="sd-card-body">
+                        <div class="sd-detail-grid">
+                            <div class="sd-detail-item">
+                                <div class="sd-detail-label">Khách hàng</div>
+                                <div class="sd-detail-value" th:text="${complaint.customerName != null ? complaint.customerName : '—'}">Customer</div>
+                                <small th:text="${complaint.customerEmail != null ? complaint.customerEmail : ''}">email</small>
+                            </div>
+                            <div class="sd-detail-item">
+                                <div class="sd-detail-label">Shop / Vendor</div>
+                                <div class="sd-detail-value" th:text="${complaint.shopName != null ? complaint.shopName : '—'}">Shop</div>
+                                <small th:text="${complaint.vendorId != null ? 'Vendor: ' + complaint.vendorId : ''}">vendor</small>
+                            </div>
+                            <div class="sd-detail-item">
+                                <div class="sd-detail-label">Mã đơn hàng</div>
+                                <div class="sd-detail-value sd-mono" th:text="${complaint.orderId}">OID</div>
+                            </div>
+                            <div class="sd-detail-item">
+                                <div class="sd-detail-label">Số sản phẩm bị khiếu nại</div>
+                                <div class="sd-detail-value" th:text="${complaint.orderItemIds != null ? complaint.orderItemIds.size() : 0}">0</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Description -->
+                <div class="sd-card" style="margin-bottom:20px;">
+                    <div class="sd-card-head">
+                        <div>
+                            <h3><i class="fas fa-message"></i> Mô tả của khách hàng</h3>
+                        </div>
+                    </div>
+                    <div class="sd-card-body">
+                        <p style="margin:0;white-space:pre-wrap;"
+                           th:text="${complaint.description != null and not complaint.description.isBlank() ? complaint.description : '(Không có mô tả.)'}">
+                            Description
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Vendor response -->
+                <div class="sd-card" th:if="${complaint.vendorResponse != null}" style="margin-bottom:20px;">
+                    <div class="sd-card-head">
+                        <div>
+                            <h3><i class="fas fa-store"></i> Phản hồi từ shop</h3>
+                            <p th:if="${complaint.vendorRespondedAt != null}">
+                                Gửi lúc <span th:text="${#temporals.format(complaint.vendorRespondedAt, 'dd/MM/yyyy HH:mm')}">Time</span>
+                            </p>
+                        </div>
+                    </div>
+                    <div class="sd-card-body">
+                        <p style="margin:0;white-space:pre-wrap;" th:text="${complaint.vendorResponse}">Response</p>
+                        <div th:if="${complaint.vendorRespondedByEmail != null}" style="margin-top:8px;color:#64748b;font-size:13px;">
+                            <i class="fas fa-user"></i> Bởi: <strong th:text="${complaint.vendorRespondedByEmail}">email</strong>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Evidence -->
+                <div class="sd-card" th:if="${complaint.evidence != null and not complaint.evidence.isEmpty()}"
+                     style="margin-bottom:20px;">
+                    <div class="sd-card-head">
+                        <div>
+                            <h3>
+                                <i class="fas fa-paperclip"></i>
+                                Bằng chứng
+                                <small th:text="'(' + ${complaint.evidence.size()} + ')'">(0)</small>
+                            </h3>
+                        </div>
+                    </div>
+                    <div class="sd-card-body">
+                        <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:10px;">
+                            <a th:each="ev : ${complaint.evidence}"
+                               th:href="${ev}" target="_blank" rel="noopener"
+                               style="position:relative;display:block;border:1px solid var(--border);border-radius:6px;overflow:hidden;height:140px;background:#f8fafc;">
+                                <img th:if="${#strings.endsWith(ev, '.jpg') or #strings.endsWith(ev, '.jpeg') or #strings.endsWith(ev, '.png') or #strings.endsWith(ev, '.webp')}"
+                                     th:src="${ev}" alt="evidence"
+                                     style="width:100%;height:100%;object-fit:cover;">
+                                <div th:unless="${#strings.endsWith(ev, '.jpg') or #strings.endsWith(ev, '.jpeg') or #strings.endsWith(ev, '.png') or #strings.endsWith(ev, '.webp')}"
+                                     style="display:flex;align-items:center;justify-content:center;height:100%;color:#64748b;font-size:32px;">
+                                    <i class="fas fa-file-pdf"></i>
+                                </div>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Action: Claim -->
+                <div class="sd-card" th:if="${canClaim and not isClaimed}"
+                     style="margin-bottom:20px;border-left:4px solid #6366f1;">
+                    <div class="sd-card-head">
+                        <div>
+                            <h3><i class="fas fa-hand-holding-hand"></i> Bước 1 — Claim case</h3>
+                            <p>Claim để đánh dấu bạn đang xử lý case này. Người khác sẽ thấy trạng thái đã claim.</p>
+                        </div>
+                    </div>
+                    <div class="sd-card-body">
+                        <form th:action="@{/moderator/complaints/{id}/act(id=${complaint.id})}" method="post">
+                            <input type="hidden" name="page" th:value="${page}">
+                            <input type="hidden" name="size" th:value="${size}">
+                            <input type="hidden" name="status" th:value="${statusFilter}">
+                            <input type="hidden" name="action" value="CLAIM">
+                            <button type="submit" class="sd-btn sd-btn-primary">
+                                <i class="fas fa-hand-holding-hand"></i> Claim case này
+                            </button>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Action: Resolve / Reject / Escalate L2 -->
+                <div class="sd-card" th:if="${isClaimed and (canResolve or canReject or canEscalateL2)}"
+                     style="margin-bottom:20px;border-left:4px solid #6366f1;">
+                    <div class="sd-card-head">
+                        <div>
+                            <h3><i class="fas fa-gavel"></i> Hành động xử lý</h3>
+                            <p>Bạn đã claim. Chọn hành động cuối cùng cho case này.</p>
+                        </div>
+                    </div>
+                    <div class="sd-card-body">
+
+                        <!-- RESOLVE -->
+                        <form th:action="@{/moderator/complaints/{id}/act(id=${complaint.id})}" method="post"
+                              style="margin-bottom:16px;padding:14px;border:1px solid var(--border);border-radius:6px;background:#f0fdf4;"
+                              onsubmit="return confirm('Xác nhận giải quyết khiếu nại này?');">
+                            <input type="hidden" name="page" th:value="${page}">
+                            <input type="hidden" name="size" th:value="${size}">
+                            <input type="hidden" name="status" th:value="${statusFilter}">
+                            <input type="hidden" name="action" value="RESOLVE">
+                            <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
+                                <i class="fas fa-check-circle" style="color:#22c55e;font-size:20px;"></i>
+                                <strong style="color:#15803d;">Giải quyết (RESOLVE)</strong>
+                            </div>
+                            <p style="margin:0 0 10px;color:#64748b;font-size:13px;">
+                                Khiếu nại kết thúc ở Cấp 1, đơn vị giải quyết là Moderator.
+                            </p>
+                            <textarea name="reason" required minlength="5" placeholder="Lý do giải quyết (bắt buộc, hiển thị cho cả Customer và Shop)..."
+                                      style="width:100%;min-height:80px;padding:10px;border:1px solid var(--border);border-radius:6px;font:inherit;margin-bottom:10px;"></textarea>
+                            <textarea name="note" placeholder="Ghi chú nội bộ (tùy chọn)..."
+                                      style="width:100%;min-height:60px;padding:10px;border:1px solid var(--border);border-radius:6px;font:inherit;margin-bottom:10px;"></textarea>
+                            <button type="submit" class="sd-btn sd-btn-success">
+                                <i class="fas fa-check-circle"></i> Xác nhận giải quyết
+                            </button>
+                        </form>
+
+                        <!-- REJECT -->
+                        <form th:action="@{/moderator/complaints/{id}/act(id=${complaint.id})}" method="post"
+                              style="margin-bottom:16px;padding:14px;border:1px solid var(--border);border-radius:6px;background:#fef2f2;"
+                              onsubmit="return confirm('Xác nhận từ chối khiếu nại này?');">
+                            <input type="hidden" name="page" th:value="${page}">
+                            <input type="hidden" name="size" th:value="${size}">
+                            <input type="hidden" name="status" th:value="${statusFilter}">
+                            <input type="hidden" name="action" value="REJECT">
+                            <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
+                                <i class="fas fa-times-circle" style="color:#ef4444;font-size:20px;"></i>
+                                <strong style="color:#b91c1c;">Từ chối (REJECT)</strong>
+                            </div>
+                            <p style="margin:0 0 10px;color:#64748b;font-size:13px;">
+                                Khiếu nại không hợp lệ — sẽ chuyển sang trạng thái REJECTED.
+                            </p>
+                            <textarea name="reason" required minlength="5" placeholder="Lý do từ chối (bắt buộc)..."
+                                      style="width:100%;min-height:80px;padding:10px;border:1px solid var(--border);border-radius:6px;font:inherit;margin-bottom:10px;"></textarea>
+                            <button type="submit" class="sd-btn sd-btn-danger">
+                                <i class="fas fa-times-circle"></i> Xác nhận từ chối
+                            </button>
+                        </form>
+
+                        <!-- ESCALATE to Admin -->
+                        <form th:action="@{/moderator/complaints/{id}/act(id=${complaint.id})}" method="post"
+                              style="margin-bottom:0;padding:14px;border:1px solid var(--border);border-radius:6px;background:#faf5ff;"
+                              onsubmit="return confirm('Chuyển khiếu nại này lên Admin xem xét?');">
+                            <input type="hidden" name="page" th:value="${page}">
+                            <input type="hidden" name="size" th:value="${size}">
+                            <input type="hidden" name="status" th:value="${statusFilter}">
+                            <input type="hidden" name="action" value="ESCALATE">
+                            <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
+                                <i class="fas fa-shield-alt" style="color:#8b5cf6;font-size:20px;"></i>
+                                <strong style="color:#7c3aed;">Escalate lên Admin (Level 2)</strong>
+                            </div>
+                            <p style="margin:0 0 10px;color:#64748b;font-size:13px;">
+                                Khi cần phán quyết cuối cùng từ Admin (vd: tài chính lớn, policy nghiêm trọng).
+                            </p>
+                            <textarea name="reason" required minlength="5" placeholder="Lý do escalate lên Admin (bắt buộc)..."
+                                      style="width:100%;min-height:80px;padding:10px;border:1px solid var(--border);border-radius:6px;font:inherit;margin-bottom:10px;"></textarea>
+                            <button type="submit" class="sd-btn sd-btn-warning">
+                                <i class="fas fa-shield-alt"></i> Escalate lên Admin
+                            </button>
+                        </form>
+
+                    </div>
+                </div>
+
+                <!-- Decision card (if RESOLVED / REJECTED) -->
+                <div class="sd-card" th:if="${complaint.status.name() == 'RESOLVED' or complaint.status.name() == 'REJECTED'}"
+                     style="margin-bottom:20px;"
+                     th:classappend="${complaint.status.name() == 'RESOLVED' ? 'sd-card-success' : 'sd-card-danger'}">
+                    <div class="sd-card-head">
+                        <div>
+                            <h3>
+                                <i th:classappend="${complaint.status.name() == 'RESOLVED' ? 'fas fa-check-circle' : 'fas fa-times-circle'}"></i>
+                                <span th:text="${complaint.status.name() == 'RESOLVED' ? 'Đã giải quyết' : 'Bị từ chối'}">Result</span>
+                            </h3>
+                            <small th:if="${complaint.resolvedAt != null}" th:text="${#temporals.format(complaint.resolvedAt, 'dd/MM/yyyy HH:mm')}">Date</small>
+                        </div>
+                    </div>
+                    <div class="sd-card-body">
+                        <p style="margin:0;" th:if="${complaint.decisionReason != null}" th:text="${complaint.decisionReason}">Reason</p>
+                        <div style="margin-top:8px;color:#64748b;font-size:13px;" th:if="${complaint.resolvedByEmail != null}">
+                            <i class="fas fa-user-shield"></i>
+                            Xử lý bởi: <strong th:text="${complaint.resolvedByEmail}">email</strong>
+                            (<span th:text="${complaint.resolvedByRole}">role</span>)
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Conversation thread -->
+                <div class="sd-card" th:if="${conversation != null and not #lists.isEmpty(conversation)}" style="margin-bottom:20px;">
+                    <div class="sd-card-head">
+                        <div>
+                            <h3>
+                                <i class="fas fa-comments"></i>
+                                Lịch sử hội thoại
+                                <small th:text="'(' + ${#lists.size(conversation)} + ')'">(0)</small>
+                            </h3>
+                        </div>
+                    </div>
+                    <div class="sd-card-body" style="display:flex;flex-direction:column;gap:12px;">
+                        <div th:each="msg : ${conversation}"
+                             style="display:flex;gap:12px;padding:12px;border-radius:6px;border:1px solid var(--border);"
+                             th:styleappend="${msg.actorRole == 'CUSTOMER' ? 'background:#fef3c7;' :
+                                              (msg.actorRole == 'VENDOR' ? 'background:#ecfeff;' :
+                                              (msg.actorRole == 'MODERATOR' ? 'background:#f5f3ff;' : 'background:#fef2f2;'))}">
+                            <div style="font-size:20px;color:#64748b;">
+                                <i th:classappend="${msg.icon}"></i>
+                            </div>
+                            <div style="flex:1;">
+                                <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;">
+                                    <strong th:text="${msg.actorLabel}">Actor</strong>
+                                    <span style="color:#64748b;font-size:13px;" th:text="${msg.actorName}">Name</span>
+                                    <small style="color:#94a3b8;font-size:12px;margin-left:auto;"
+                                           th:if="${msg.timestamp != null}"
+                                           th:text="${#temporals.format(msg.timestamp, 'dd/MM/yyyy HH:mm')}">Time</small>
+                                </div>
+                                <p style="margin:0;white-space:pre-wrap;" th:text="${msg.content}">Content</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Side column -->
+            <aside>
+                <!-- Handler card -->
+                <div class="sd-card" th:if="${handler != null}" style="margin-bottom:20px;">
+                    <div class="sd-card-head">
+                        <div>
+                            <h3><i class="fas fa-user-tie"></i> Đang xử lý</h3>
+                        </div>
+                    </div>
+                    <div class="sd-card-body" style="text-align:center;">
+                        <div style="font-size:32px;color:#6366f1;margin-bottom:8px;">
+                            <i th:classappend="${handler.iconClass}"></i>
+                        </div>
+                        <strong style="display:block;"
+                                th:text="${
+                                    handler.role == 'MODERATOR' ? 'Moderator (Bạn)' :
+                                    (handler.role == 'ADMIN' ? 'Admin' :
+                                    (handler.role == 'RESOLVED' ? 'Đã giải quyết' : 'Đã đóng'))
+                                }">Role</strong>
+                        <span style="color:#64748b;" th:text="${handler.displayName}">Name</span>
+                    </div>
+                </div>
+
+                <!-- Timeline -->
+                <div class="sd-card">
+                    <div class="sd-card-head">
+                        <div>
+                            <h3><i class="fas fa-timeline"></i> Lịch sử thay đổi</h3>
+                        </div>
+                    </div>
+                    <div class="sd-card-body">
+                        <ul style="list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:12px;">
+                            <li th:each="ev : ${timeline}" style="display:flex;gap:10px;">
+                                <div style="width:32px;height:32px;border-radius:50%;background:#f1f5f9;display:flex;align-items:center;justify-content:center;color:#6366f1;flex-shrink:0;">
+                                    <i th:classappend="${ev.icon}"></i>
+                                </div>
+                                <div style="flex:1;">
+                                    <strong style="display:block;font-size:14px;" th:text="${ev.title}">Title</strong>
+                                    <p style="margin:2px 0;color:#64748b;font-size:13px;" th:text="${ev.description}">Description</p>
+                                    <small style="color:#94a3b8;" th:if="${ev.timestamp != null}"
+                                           th:text="${#temporals.format(ev.timestamp, 'dd/MM/yyyy HH:mm')}">Date</small>
+                                </div>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </aside>
+        </div>
+    </div>
+
+</main>
+
+<th:block th:fragment="page-scripts">
+    <style>
+        .sd-card-success { border-left: 4px solid #22c55e; }
+        .sd-card-danger { border-left: 4px solid #ef4444; }
+        .sd-btn-success { background:#22c55e;color:#fff;border:none;padding:8px 14px;border-radius:6px;cursor:pointer;font-weight:600; }
+        .sd-btn-warning { background:#f59e0b;color:#fff;border:none;padding:8px 14px;border-radius:6px;cursor:pointer;font-weight:600; }
+        .sd-btn-danger { background:#ef4444;color:#fff;border:none;padding:8px 14px;border-radius:6px;cursor:pointer;font-weight:600; }
+    </style>
+</th:block>
+</body>
+</html>

@@ -272,6 +272,13 @@
                             </div>
                             <!-- Voucher error message -->
                             <div id="voucher-error" class="voucher-error" style="display:none;"></div>
+                            <!-- Picker button: mở modal liệt kê voucher khả dụng (WEB + SHOP) -->
+                            <button type="button" class="btn-pick-voucher" id="btn-open-voucher-picker"
+                                    th:disabled="${cartTotal == null or cartTotal.signum() <= 0}">
+                                <i class="fas fa-ticket-alt"></i>
+                                <span>Chọn voucher khả dụng</span>
+                                <i class="fas fa-chevron-right btn-pick-voucher-arrow"></i>
+                            </button>
                         </div>
                         <!-- Discount row -->
                         <div id="discount-row" class="summary-row summary-row-discount" th:style="${appliedVoucher != null ? 'display:flex' : 'display:none'}">
@@ -331,6 +338,79 @@
         </div>
     </section>
 
+    <!-- ============================================================
+         VOUCHER PICKER MODAL
+         Liệt kê voucher khả dụng (WEB + SHOP) với điều kiện rõ ràng,
+         cho phép Customer chọn trực tiếp thay vì phải nhớ mã.
+         ============================================================ -->
+    <div class="voucher-picker-overlay" id="voucher-picker-overlay" aria-hidden="true">
+        <div class="voucher-picker-modal" role="dialog" aria-modal="true" aria-labelledby="voucher-picker-title">
+            <header class="voucher-picker-header">
+                <div class="voucher-picker-header-text">
+                    <h3 id="voucher-picker-title">
+                        <i class="fas fa-ticket-alt"></i> Chọn voucher
+                    </h3>
+                    <p class="voucher-picker-subtitle">
+                        Chọn voucher phù hợp cho giỏ hàng của bạn. Voucher đúng phạm vi và đủ điều kiện mới có thể áp dụng.
+                    </p>
+                </div>
+                <button type="button" class="voucher-picker-close" id="voucher-picker-close" aria-label="Đóng">
+                    <i class="fas fa-times"></i>
+                </button>
+            </header>
+
+            <!-- Tabs: WEB (toàn sàn) vs SHOP (theo shop) -->
+            <nav class="voucher-picker-tabs" id="voucher-picker-tabs" role="tablist">
+                <button type="button" class="voucher-picker-tab is-active" role="tab"
+                        data-tab="web" aria-selected="true">
+                    <i class="fas fa-globe-asia"></i>
+                    <span>Voucher toàn sàn</span>
+                    <span class="voucher-picker-tab-count" id="voucher-tab-count-web">0</span>
+                </button>
+                <button type="button" class="voucher-picker-tab" role="tab"
+                        data-tab="shop" aria-selected="false">
+                    <i class="fas fa-store"></i>
+                    <span>Voucher theo shop</span>
+                    <span class="voucher-picker-tab-count" id="voucher-tab-count-shop">0</span>
+                </button>
+            </nav>
+
+            <div class="voucher-picker-body" id="voucher-picker-body">
+                <!-- Loading skeleton -->
+                <div class="voucher-picker-loading" id="voucher-picker-loading">
+                    <i class="fas fa-spinner fa-spin"></i>
+                    <span>Đang tải danh sách voucher...</span>
+                </div>
+
+                <!-- WEB section -->
+                <section class="voucher-picker-section" data-section="web" hidden>
+                    <div class="voucher-picker-empty" id="voucher-picker-empty-web" hidden>
+                        <i class="fas fa-info-circle"></i>
+                        <p>Hiện chưa có voucher toàn sàn nào khả dụng cho giỏ hàng của bạn.</p>
+                    </div>
+                    <div class="voucher-picker-list" id="voucher-picker-list-web"></div>
+                </section>
+
+                <!-- SHOP section -->
+                <section class="voucher-picker-section" data-section="shop" hidden>
+                    <div class="voucher-picker-empty" id="voucher-picker-empty-shop" hidden>
+                        <i class="fas fa-info-circle"></i>
+                        <p>Giỏ hàng của bạn không có sản phẩm từ shop nào có voucher khả dụng.</p>
+                    </div>
+                    <div class="voucher-picker-list" id="voucher-picker-list-shop"></div>
+                </section>
+            </div>
+
+            <footer class="voucher-picker-footer">
+                <span class="voucher-picker-footer-hint">
+                    <i class="fas fa-shield-alt"></i>
+                    Voucher đã được hệ thống kiểm tra phạm vi và điều kiện trước khi áp dụng.
+                </span>
+                <button type="button" class="voucher-picker-done" id="voucher-picker-done">Đóng</button>
+            </footer>
+        </div>
+    </div>
+
 </main>
 
 <th:block th:fragment="page-scripts">
@@ -346,11 +426,59 @@
         }
 
         function showToast(type, message) {
-            // Best-effort: dùng global showToast nếu có, fallback alert
-            if (typeof window.showToast === 'function') {
+            // Local function declaration also rebinds window.showToast, so we
+            // must skip self-delegation to avoid infinite recursion.
+            if (typeof window.showToast === 'function' && window.showToast !== showToast) {
                 window.showToast(type, message);
-            } else {
-                console[type === 'error' ? 'error' : 'log']('Toast:', message);
+            }
+        }
+
+        function showVoucherError(message) {
+            showVoucherErrorWithCode(message, null);
+        }
+
+        /**
+         * Hiển thị error banner với icon phân loại theo errorCode từ server.
+         * errorCode: EXPIRED | EXHAUSTED | INACTIVE | NOT_STARTED | SHOP_MISMATCH |
+         *            PRODUCT_MISMATCH | NOT_FOUND | INVALID | UNKNOWN
+         */
+        function showVoucherErrorWithCode(message, errorCode) {
+            const errorEl = document.getElementById('voucher-error');
+            if (!errorEl) return;
+            errorEl.className = 'voucher-error voucher-error-show';
+            const iconHtml = voucherErrorIconHtml(errorCode);
+            errorEl.innerHTML = '<span class="voucher-error-icon">' + iconHtml + '</span>'
+                + '<span class="voucher-error-text">' + escapeHtml(message || 'Voucher không hợp lệ') + '</span>'
+                + '<button type="button" class="voucher-error-dismiss" aria-label="Đóng lỗi" title="Đóng">'
+                + '<i class="fas fa-times"></i></button>';
+            errorEl.dataset.errorCode = errorCode || 'UNKNOWN';
+            errorEl.style.display = 'flex';
+            // Wire dismiss button (idempotent)
+            const dismissBtn = errorEl.querySelector('.voucher-error-dismiss');
+            if (dismissBtn && !dismissBtn.__wired) {
+                dismissBtn.__wired = true;
+                dismissBtn.addEventListener('click', hideVoucherError);
+            }
+        }
+
+        function voucherErrorIconHtml(errorCode) {
+            // Mỗi errorCode có icon phù hợp để user nhận biết nhanh nguyên nhân
+            switch ((errorCode || '').toUpperCase()) {
+                case 'EXPIRED':
+                    return '<i class="fas fa-clock"></i>';
+                case 'EXHAUSTED':
+                    return '<i class="fas fa-fire"></i>';
+                case 'INACTIVE':
+                    return '<i class="fas fa-ban"></i>';
+                case 'NOT_STARTED':
+                    return '<i class="fas fa-hourglass-half"></i>';
+                case 'SHOP_MISMATCH':
+                case 'PRODUCT_MISMATCH':
+                    return '<i class="fas fa-store-slash"></i>';
+                case 'NOT_FOUND':
+                    return '<i class="fas fa-question-circle"></i>';
+                default:
+                    return '<i class="fas fa-exclamation-triangle"></i>';
             }
         }
 
@@ -360,7 +488,7 @@
             const code = input ? input.value.trim() : '';
 
             if (!code) {
-                showToast('error', 'Vui lòng nhập mã giảm giá');
+                showVoucherErrorWithCode('Vui lòng nhập mã giảm giá', 'INVALID');
                 return;
             }
 
@@ -368,6 +496,7 @@
                 btn.disabled = true;
                 btn.textContent = 'Đang xử lý...';
             }
+            hideVoucherError();
 
             try {
                 const formData = new FormData();
@@ -388,15 +517,17 @@
 
                 if (data.success) {
                     showToast('success', data.message || 'Áp dụng voucher thành công');
-                    // Reload page để render lại từ session + server
-                    setTimeout(() => window.location.reload(), 300);
+                    // Update DOM inline với discount/finalTotal trả về từ server — không cần reload.
+                    // Reload trước đây tạo cảm giác "lỗi" trong khoảng 300ms chờ vì page chưa phản ánh
+                    // trạng thái mới; cập nhật DOM trực tiếp giúp UX tức thì và không phải F5 thủ công.
+                    applyVoucherToDom(data);
                 } else {
-                    showVoucherError(data.message || 'Voucher không hợp lệ');
+                    showVoucherErrorWithCode(data.message || 'Voucher không hợp lệ', data.errorCode);
                     showToast('error', data.message || 'Voucher không hợp lệ');
                 }
             } catch (err) {
                 console.error('Voucher error:', err);
-                showVoucherError('Có lỗi xảy ra, vui lòng thử lại');
+                showVoucherErrorWithCode('Có lỗi xảy ra, vui lòng thử lại', 'UNKNOWN');
                 showToast('error', 'Có lỗi xảy ra');
             } finally {
                 if (btn) {
@@ -406,11 +537,47 @@
             }
         }
 
+        function applyVoucherToDom(data) {
+            // Ẩn form nhập mã, hiện khối "voucher đã áp dụng" với tên voucher.
+            const form = document.querySelector('.summary-coupon-form');
+            if (form) form.style.display = 'none';
+            const applied = document.getElementById('voucher-applied-info');
+            if (applied) {
+                const nameEl = document.getElementById('voucher-applied-name');
+                if (nameEl) {
+                    nameEl.textContent = (data.voucherName && data.voucherName.trim())
+                        ? data.voucherName
+                        : (data.voucherCode || '');
+                }
+                applied.style.display = 'flex';
+            }
+            // Hiện discount row với số tiền giảm.
+            const discRow = document.getElementById('discount-row');
+            const discAmt = document.getElementById('discount-amount');
+            if (discRow) discRow.style.display = 'flex';
+            if (discAmt && typeof data.discount !== 'undefined') {
+                discAmt.textContent = '-' + formatMoney(data.discount);
+            }
+            // Cập nhật final total.
+            const finalEl = document.getElementById('final-total-amount');
+            if (finalEl && typeof data.finalTotal !== 'undefined') {
+                finalEl.textContent = formatMoney(data.finalTotal);
+            }
+        }
+
         function showVoucherError(message) {
             const errorEl = document.getElementById('voucher-error');
             if (errorEl) {
                 errorEl.textContent = message;
                 errorEl.style.display = 'block';
+            }
+        }
+
+        function hideVoucherError() {
+            const errorEl = document.getElementById('voucher-error');
+            if (errorEl) {
+                errorEl.textContent = '';
+                errorEl.style.display = 'none';
             }
         }
 
@@ -432,13 +599,448 @@
                 const data = await response.json();
                 if (data.success) {
                     showToast('success', 'Đã hủy voucher');
-                    setTimeout(() => window.location.reload(), 200);
+                    // Update DOM inline — không cần reload.
+                    removeVoucherFromDom();
                 }
             } catch (err) {
                 console.error('Remove voucher error:', err);
                 showToast('error', 'Có lỗi xảy ra');
             } finally {
                 if (btn) btn.disabled = false;
+            }
+        }
+
+        function removeVoucherFromDom() {
+            const applied = document.getElementById('voucher-applied-info');
+            if (applied) applied.style.display = 'none';
+            const form = document.querySelector('.summary-coupon-form');
+            if (form) form.style.display = '';
+            const discRow = document.getElementById('discount-row');
+            if (discRow) discRow.style.display = 'none';
+            // Reset subtotal/final total bằng cartTotal từ server-render nếu cần;
+            // để tránh phụ thuộc vào state DOM, reload nhẹ nhàng để re-sync giá.
+            setTimeout(() => window.location.reload(), 200);
+        }
+
+        // ============================================================
+        // VOUCHER PICKER MODAL
+        // Cho Customer chọn WEB/SHOP Voucher phù hợp với cart.
+        // ============================================================
+
+        // Cache cho response của /api/cart/available-vouchers
+        let __voucherPickerCache = null;
+        let __voucherPickerCacheTs = 0;
+
+        async function fetchAvailableVouchers(force) {
+            const now = Date.now();
+            if (!force && __voucherPickerCache && (now - __voucherPickerCacheTs) < 5000) {
+                return __voucherPickerCache;
+            }
+            const res = await fetch('/api/cart/available-vouchers', {
+                method: 'GET',
+                headers: { 'X-Requested-With': 'XMLHttpRequest' }
+            });
+            if (res.status === 401) {
+                window.location.href = '/auth/login';
+                return null;
+            }
+            const data = await res.json();
+            __voucherPickerCache = data;
+            __voucherPickerCacheTs = now;
+            return data;
+        }
+
+        function showLocalToast(type, message) {
+            // Ưu tiên dùng window.showToast nếu có (do layout khác đăng ký)
+            if (typeof window.showToast === 'function' && window.showToast !== showLocalToast) {
+                try { window.showToast(type, message); return; } catch (_) {}
+            }
+            // Fallback: tự render một toast nhỏ ở góc phải
+            let el = document.querySelector('.voucher-picker-toast');
+            if (!el) {
+                el = document.createElement('div');
+                el.className = 'voucher-picker-toast';
+                document.body.appendChild(el);
+            }
+            el.className = 'voucher-picker-toast is-' + (type || 'success') + ' is-visible';
+            const icon = type === 'error' ? 'fa-times-circle' : 'fa-check-circle';
+            el.innerHTML = '<i class="fas ' + icon + '"></i><span>' + escapeHtml(message) + '</span>';
+            setTimeout(() => el.classList.remove('is-visible'), 2500);
+        }
+
+        function escapeHtml(str) {
+            if (str == null) return '';
+            return String(str)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#39;');
+        }
+
+        function formatEndDate(isoString) {
+            if (!isoString) return '';
+            try {
+                const d = new Date(isoString);
+                if (isNaN(d.getTime())) return '';
+                const dd = String(d.getDate()).padStart(2, '0');
+                const mm = String(d.getMonth() + 1).padStart(2, '0');
+                const yyyy = d.getFullYear();
+                const hh = String(d.getHours()).padStart(2, '0');
+                const mi = String(d.getMinutes()).padStart(2, '0');
+                return `${dd}/${mm}/${yyyy} ${hh}:${mi}`;
+            } catch (_) {
+                return '';
+            }
+        }
+
+        function formatDiscountType(card) {
+            const t = card.discountType;
+            const v = card.discountValue;
+            if (t === 'PERCENT') {
+                const num = (v != null) ? (Number(v).toLocaleString('vi-VN')) : '';
+                let txt = 'Giảm ' + num + '%';
+                if (card.maxDiscountAmount) {
+                    txt += '<br><small style="opacity:0.85;font-weight:600;">tối đa ' + formatMoneyShort(card.maxDiscountAmount) + '</small>';
+                }
+                return txt;
+            }
+            return 'Giảm<br>' + formatMoneyShort(v);
+        }
+
+        function formatMoneyShort(amount) {
+            if (amount == null) return '0₫';
+            try {
+                const n = Number(amount);
+                if (!isFiniteOr(n)) return '0₫';
+                // BigDecimal serialized as plain number -> display 1.000.000
+                return new Intl.NumberFormat('vi-VN').format(Math.round(n)) + '₫';
+            } catch (_) {
+                return amount + '';
+            }
+        }
+
+        function isFiniteOr(n) {
+            return typeof n === 'number' && isFinite(n);
+        }
+
+        function buildScopeBadge(card) {
+            const isShop = card.scopeType === 'SHOP';
+            const isProduct = (card.applicableProductCount != null && card.applicableProductCount > 0);
+            const cls = isShop ? 'scope-shop' : (isProduct ? 'scope-product' : 'scope-web');
+            const icon = isShop ? 'fa-store' : (isProduct ? 'fa-box' : 'fa-globe-asia');
+            return `<span class="voucher-picker-card-scope ${cls}">
+                <i class="fas ${icon}"></i> ${escapeHtml(card.scopeLabel || (isShop ? 'Theo shop' : 'Toàn sàn'))}
+            </span>`;
+        }
+
+        function buildConditionsHtml(card) {
+            const chips = [];
+            // Đơn tối thiểu
+            if (card.minOrderValue && Number(card.minOrderValue) > 0) {
+                const meets = !!card.meetsMinOrder;
+                chips.push(`<span class="voucher-picker-chip ${meets ? '' : 'is-warning'}">
+                    <i class="fas fa-receipt"></i> Đơn tối thiểu ${formatMoneyShort(card.minOrderValue)}
+                    ${meets ? '' : ' (chưa đạt)'}
+                </span>`);
+            }
+            // Còn lượt
+            if (card.remainingQuantity != null) {
+                const low = card.remainingQuantity <= 5;
+                chips.push(`<span class="voucher-picker-chip ${low ? 'is-danger' : ''}">
+                    <i class="fas fa-fire"></i> Còn ${card.remainingQuantity} lượt
+                </span>`);
+            }
+            // Hạn dùng
+            if (card.endDate) {
+                chips.push(`<span class="voucher-picker-chip">
+                    <i class="fas fa-clock"></i> HSD: ${formatEndDate(card.endDate)}
+                </span>`);
+            }
+            // Sản phẩm áp dụng (chỉ WEB có productIds)
+            if (card.applicableProductCount != null && card.applicableProductCount > 0) {
+                chips.push(`<span class="voucher-picker-chip is-warning">
+                    <i class="fas fa-info-circle"></i> ${card.applicableProductCount} sp khớp trong giỏ
+                </span>`);
+            }
+            return chips.join('');
+        }
+
+        function buildEstimateHtml(card) {
+            const est = Number(card.estimatedDiscount || 0);
+            if (est > 0) {
+                return `<div class="voucher-picker-card-estimate">
+                    <i class="fas fa-hand-holding-usd"></i>
+                    Giảm dự kiến: <strong>-${formatMoneyShort(est)}</strong>
+                </div>`;
+            }
+            return `<div class="voucher-picker-card-estimate is-zero">
+                <i class="fas fa-info-circle"></i> Không đủ điều kiện áp dụng
+            </div>`;
+        }
+
+        function renderVoucherCard(card, opts) {
+            opts = opts || {};
+            const isSelected = !!opts.isSelected;
+            const locked = !card.meetsMinOrder;
+            return `
+                <div class="voucher-picker-card ${locked ? 'is-locked' : ''} ${isSelected ? 'is-selected' : ''}"
+                     data-code="${escapeHtml(card.code)}">
+                    <div class="voucher-picker-card-discount">
+                        <div class="voucher-picker-card-discount-value">
+                            ${card.discountType === 'PERCENT' ? Number(card.discountValue).toLocaleString('vi-VN') + '%' : formatMoneyShort(card.discountValue)}
+                        </div>
+                        <div class="voucher-picker-card-discount-suffix">OFF</div>
+                    </div>
+                    <div class="voucher-picker-card-body">
+                        <h4 class="voucher-picker-card-name" title="${escapeHtml(card.name || card.code)}">
+                            ${escapeHtml(card.name || card.code)}
+                        </h4>
+                        <div class="voucher-picker-card-code">
+                            <i class="fas fa-hashtag"></i> ${escapeHtml(card.code)}
+                        </div>
+                        ${buildScopeBadge(card)}
+                        <div class="voucher-picker-card-conditions">
+                            ${buildConditionsHtml(card)}
+                        </div>
+                        ${buildEstimateHtml(card)}
+                    </div>
+                    <div class="voucher-picker-card-action">
+                        <button type="button"
+                                class="btn-voucher-apply ${isSelected ? 'is-selected' : ''}"
+                                data-code="${escapeHtml(card.code)}"
+                                ${locked ? 'disabled' : ''}>
+                            <i class="fas ${isSelected ? 'fa-check' : 'fa-check-circle'}"></i>
+                            ${isSelected ? 'Đang dùng' : (locked ? 'Không đủ ĐK' : 'Áp dụng')}
+                        </button>
+                        ${locked ? '<small class="voucher-picker-card-lock-hint">Đơn chưa đạt tối thiểu</small>' : ''}
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderShopGroup(group, appliedCode) {
+            const subtotalText = formatMoneyShort(group.shopSubtotal);
+            const items = (group.vouchers || []).map(v => renderVoucherCard(v, { isSelected: v.code === appliedCode })).join('');
+            return `
+                <div class="voucher-picker-shop-group" data-shop-id="${escapeHtml(group.shopId || '')}">
+                    <header class="voucher-picker-shop-header">
+                        <span class="voucher-picker-shop-icon"><i class="fas fa-store"></i></span>
+                        <div class="voucher-picker-shop-info">
+                            <div class="voucher-picker-shop-name">${escapeHtml(group.shopName || 'Shop')}</div>
+                            <div class="voucher-picker-shop-sub">Tạm tính shop: <strong>${subtotalText}</strong></div>
+                        </div>
+                    </header>
+                    <div class="voucher-picker-list">${items}</div>
+                </div>
+            `;
+        }
+
+        function renderPicker(data) {
+            const webList = document.getElementById('voucher-picker-list-web');
+            const shopList = document.getElementById('voucher-picker-list-shop');
+            const emptyWeb = document.getElementById('voucher-picker-empty-web');
+            const emptyShop = document.getElementById('voucher-picker-empty-shop');
+            const tabCountWeb = document.getElementById('voucher-tab-count-web');
+            const tabCountShop = document.getElementById('voucher-tab-count-shop');
+            if (!webList || !shopList) return;
+
+            const appliedCode = (data && data.appliedCode) || '';
+            const web = (data && data.webVouchers) || [];
+            const shops = (data && data.shopVouchers) || [];
+
+            // Counts: tính cả voucher locked để user thấy chúng (giúp minh bạch điều kiện)
+            tabCountWeb.textContent = web.length;
+            tabCountShop.textContent = shops.reduce((acc, g) => acc + (g.vouchers || []).length, 0);
+
+            if (web.length === 0) {
+                webList.innerHTML = '';
+                emptyWeb.hidden = false;
+            } else {
+                emptyWeb.hidden = true;
+                webList.innerHTML = web.map(v => renderVoucherCard(v, { isSelected: v.code === appliedCode })).join('');
+            }
+
+            if (shops.length === 0 || shops.every(g => (g.vouchers || []).length === 0)) {
+                shopList.innerHTML = '';
+                emptyShop.hidden = false;
+            } else {
+                emptyShop.hidden = true;
+                shopList.innerHTML = shops.map(g => renderShopGroup(g, appliedCode)).join('');
+            }
+
+            // Disable tab khi không có voucher
+            const tabShop = document.querySelector('.voucher-picker-tab[data-tab="shop"]');
+            if (tabShop) {
+                tabShop.disabled = Number(tabCountShop.textContent) === 0;
+                tabShop.style.opacity = tabShop.disabled ? '0.5' : '';
+                tabShop.style.cursor = tabShop.disabled ? 'not-allowed' : '';
+            }
+        }
+
+        function switchPickerTab(tabName) {
+            const tabs = document.querySelectorAll('.voucher-picker-tab');
+            tabs.forEach(t => {
+                const isActive = t.dataset.tab === tabName;
+                t.classList.toggle('is-active', isActive);
+                t.setAttribute('aria-selected', isActive ? 'true' : 'false');
+            });
+            document.querySelectorAll('.voucher-picker-section').forEach(s => {
+                s.hidden = s.dataset.section !== tabName;
+            });
+        }
+
+        async function openVoucherPicker() {
+            const overlay = document.getElementById('voucher-picker-overlay');
+            const loading = document.getElementById('voucher-picker-loading');
+            const body = document.getElementById('voucher-picker-body');
+            if (!overlay) return;
+
+            overlay.setAttribute('aria-hidden', 'false');
+            document.body.classList.add('voucher-picker-open');
+            if (loading) loading.style.display = 'flex';
+            if (body) {
+                // Ẩn các section trong khi loading
+                document.querySelectorAll('.voucher-picker-section').forEach(s => s.hidden = true);
+            }
+
+            try {
+                const data = await fetchAvailableVouchers(true);
+                if (!data) return;
+                if (loading) loading.style.display = 'none';
+                renderPicker(data);
+                // Mở tab WEB mặc định
+                switchPickerTab('web');
+            } catch (err) {
+                console.error('Voucher picker load error:', err);
+                if (loading) {
+                    loading.innerHTML = '<i class="fas fa-exclamation-triangle" style="color:#b45309"></i> Không tải được voucher. Vui lòng thử lại.';
+                }
+            }
+        }
+
+        function closeVoucherPicker() {
+            const overlay = document.getElementById('voucher-picker-overlay');
+            if (!overlay) return;
+            overlay.setAttribute('aria-hidden', 'true');
+            document.body.classList.remove('voucher-picker-open');
+        }
+
+        async function applyVoucherFromPicker(code, btnEl) {
+            if (!code) return;
+            const allBtns = document.querySelectorAll('.btn-voucher-apply');
+            allBtns.forEach(b => { b.disabled = true; });
+            // Tìm card chứa nút để hiển thị inline error nếu fail
+            const failedCard = btnEl ? btnEl.closest('.voucher-picker-card') : null;
+            // Clear error cũ trên card trước khi apply
+            if (failedCard) clearCardInlineError(failedCard);
+
+            if (btnEl) {
+                btnEl.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Đang áp dụng';
+            }
+            try {
+                const formData = new FormData();
+                formData.append('code', code);
+                const res = await fetch('/api/cart/apply-voucher', {
+                    method: 'POST',
+                    body: formData,
+                    headers: { 'X-Requested-With': 'XMLHttpRequest' }
+                });
+                if (res.status === 401) {
+                    window.location.href = '/auth/login';
+                    return;
+                }
+                const data = await res.json();
+                if (data.success) {
+                    showLocalToast('success', data.message || 'Áp dụng voucher thành công');
+                    // Cập nhật DOM summary + đóng modal + reload nhẹ để re-sync cartSubtotal nếu có
+                    applyVoucherToDom(data);
+                    // Đồng bộ input nếu user gõ tay
+                    const input = document.getElementById('coupon-input');
+                    if (input) input.value = data.voucherCode || code;
+                    // Đóng modal sau 200ms
+                    setTimeout(() => {
+                        closeVoucherPicker();
+                        // Refresh data nhẹ để cập nhật appliedCode trên picker nếu user mở lại
+                        __voucherPickerCache = null;
+                    }, 250);
+                } else {
+                    // Voucher bị backend từ chối — GIỮ MODAL MỞ, highlight card lỗi,
+                    // hiển thị lý do inline trên card. User có thể chọn voucher khác
+                    // hoặc click "Bỏ chọn" để đóng modal mà không retry.
+                    if (failedCard) {
+                        renderCardInlineError(failedCard, data.message, data.errorCode);
+                    }
+                    // Cũng hiển thị toast + inline error trên summary để dễ thấy
+                    showLocalToast('error', data.message || 'Voucher không hợp lệ');
+                    showVoucherErrorWithCode(data.message || 'Voucher không hợp lệ', data.errorCode);
+                }
+            } catch (err) {
+                console.error('applyVoucherFromPicker error:', err);
+                showLocalToast('error', 'Có lỗi xảy ra, vui lòng thử lại');
+                if (failedCard) {
+                    renderCardInlineError(failedCard, 'Có lỗi xảy ra, vui lòng thử lại', 'UNKNOWN');
+                }
+            } finally {
+                // Re-enable các nút không bị khoá
+                setTimeout(() => {
+                    document.querySelectorAll('.btn-voucher-apply').forEach(b => {
+                        if (!b.classList.contains('is-selected')) b.disabled = false;
+                    });
+                    if (btnEl && !btnEl.classList.contains('is-selected')
+                            && !btnEl.closest('.voucher-picker-card.is-failed')) {
+                        btnEl.innerHTML = '<i class="fas fa-check-circle"></i> Áp dụng';
+                    }
+                }, 300);
+            }
+        }
+
+        /**
+         * Render inline error trên voucher card trong picker modal khi apply fail.
+         * Thêm class is-failed để CSS đổi viền đỏ + icon lỗi.
+         */
+        function renderCardInlineError(cardEl, message, errorCode) {
+            if (!cardEl) return;
+            cardEl.classList.add('is-failed');
+            const iconHtml = voucherErrorIconHtml(errorCode);
+            // Action area: thay nút "Áp dụng" thành nút "Đã lỗi" + cho phép retry
+            const action = cardEl.querySelector('.voucher-picker-card-action');
+            if (action) {
+                const btn = action.querySelector('.btn-voucher-apply');
+                if (btn) {
+                    btn.disabled = false;
+                    btn.classList.remove('is-selected');
+                    btn.innerHTML = '<i class="fas fa-redo"></i> Thử lại';
+                }
+                // Thêm inline error message dưới nút (nếu chưa có)
+                let errBox = action.querySelector('.voucher-picker-card-failed-msg');
+                if (!errBox) {
+                    errBox = document.createElement('div');
+                    errBox.className = 'voucher-picker-card-failed-msg';
+                    action.appendChild(errBox);
+                }
+                errBox.innerHTML = '<span class="voucher-picker-card-failed-icon">' + iconHtml + '</span>'
+                    + '<span>' + escapeHtml(message || 'Voucher không hợp lệ') + '</span>';
+                // Cho phép click error để retry
+                errBox.style.cursor = 'pointer';
+                errBox.title = 'Bấm để thử lại';
+                errBox.onclick = function() {
+                    cardEl.classList.remove('is-failed');
+                    const btn2 = action.querySelector('.btn-voucher-apply');
+                    if (btn2) btn2.click();
+                };
+            }
+        }
+
+        function clearCardInlineError(cardEl) {
+            if (!cardEl) return;
+            cardEl.classList.remove('is-failed');
+            const action = cardEl.querySelector('.voucher-picker-card-action');
+            if (action) {
+                const errBox = action.querySelector('.voucher-picker-card-failed-msg');
+                if (errBox) {
+                    errBox.remove();
+                }
             }
         }
 
@@ -460,6 +1062,53 @@
                     }
                 });
             }
+
+            // ===== Voucher Picker =====
+            const openPickerBtn = document.getElementById('btn-open-voucher-picker');
+            if (openPickerBtn) {
+                openPickerBtn.addEventListener('click', openVoucherPicker);
+            }
+            const closePickerBtn = document.getElementById('voucher-picker-close');
+            if (closePickerBtn) closePickerBtn.addEventListener('click', closeVoucherPicker);
+            const donePickerBtn = document.getElementById('voucher-picker-done');
+            if (donePickerBtn) donePickerBtn.addEventListener('click', closeVoucherPicker);
+
+            // Click overlay ngoài modal để đóng
+            const overlay = document.getElementById('voucher-picker-overlay');
+            if (overlay) {
+                overlay.addEventListener('click', function(e) {
+                    if (e.target === overlay) closeVoucherPicker();
+                });
+            }
+
+            // Switch tabs
+            document.querySelectorAll('.voucher-picker-tab').forEach(tab => {
+                tab.addEventListener('click', function() {
+                    if (this.disabled) return;
+                    switchPickerTab(this.dataset.tab);
+                });
+            });
+
+            // Apply voucher từ card (event delegation)
+            const pickerBody = document.getElementById('voucher-picker-body');
+            if (pickerBody) {
+                pickerBody.addEventListener('click', function(e) {
+                    const btn = e.target.closest('.btn-voucher-apply');
+                    if (!btn || btn.disabled) return;
+                    const code = btn.getAttribute('data-code');
+                    applyVoucherFromPicker(code, btn);
+                });
+            }
+
+            // Esc đóng modal
+            document.addEventListener('keydown', function(e) {
+                if (e.key === 'Escape') {
+                    const overlayEl = document.getElementById('voucher-picker-overlay');
+                    if (overlayEl && overlayEl.getAttribute('aria-hidden') === 'false') {
+                        closeVoucherPicker();
+                    }
+                }
+            });
         });
     </script>
 </th:block>

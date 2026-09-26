@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/springsecurity6"
+      th:replace="~{layout/web-layout :: layout(title='Đánh giá của tôi - CNJ70 Shop', content=~{::main-content}, scripts=~{::page-scripts}, pageStyles=~{::page-styles})}">
+<head>
+    <title>Đánh giá của tôi - CNJ70 Shop</title>
+    <th:block th:fragment="page-styles">
+        <link rel="stylesheet" th:href="@{/css/product-detail.css}">
+        <style>
+            .my-reviews-page { max-width: 960px; margin: 0 auto; padding: 32px 20px; }
+            .my-reviews-header { margin-bottom: 24px; }
+            .my-reviews-header h1 { font-size: 24px; font-weight: 700; color: #111827; margin: 0; }
+            .my-reviews-header p  { font-size: 14px; color: #6b7280; margin: 4px 0 0; }
+            .my-reviews-empty { text-align: center; padding: 60px 20px; background: #f9fafb; border-radius: 12px; color: #6b7280; }
+            .my-reviews-empty i { font-size: 36px; color: #d1d5db; display: block; margin-bottom: 12px; }
+            .my-reviews-empty a { color: var(--teal, #0d9488); font-weight: 600; text-decoration: none; }
+            .my-reviews-card {
+                background: #fff; border: 1px solid #e5e7eb; border-radius: 12px;
+                padding: 16px 20px; margin-bottom: 16px;
+                transition: box-shadow 0.15s ease;
+            }
+            .my-reviews-card:hover { box-shadow: 0 4px 16px rgba(0,0,0,0.06); }
+            .my-reviews-card-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+            .my-reviews-card-product { font-weight: 600; color: #111827; font-size: 15px; }
+            .my-reviews-card-date   { font-size: 12px; color: #6b7280; }
+            .my-reviews-card-stars i { color: #facc15; font-size: 14px; }
+            .my-reviews-card-text { color: #374151; font-size: 14px; line-height: 1.55; margin: 6px 0 0; }
+            .my-reviews-card-actions { display: flex; gap: 8px; margin-top: 12px; }
+            .my-reviews-card-actions a {
+                padding: 6px 12px; border-radius: 6px; font-size: 13px;
+                font-weight: 500; text-decoration: none;
+                display: inline-flex; align-items: center; gap: 6px;
+            }
+            .my-reviews-action-view { background: #ecfeff; color: #0e7490; border: 1px solid #a5f3fc; }
+            .my-reviews-action-edit { background: #eef2ff; color: #4338ca; border: 1px solid #c7d2fe; }
+            .my-reviews-action-delete { background: #fef2f2; color: #b91c1c; border: 1px solid #fecaca; }
+            .my-reviews-images-strip {
+                display: flex; gap: 6px; margin-top: 10px; flex-wrap: wrap;
+            }
+            .my-reviews-images-strip img {
+                width: 64px; height: 64px; object-fit: cover;
+                border-radius: 6px; border: 1px solid #e5e7eb;
+            }
+        </style>
+    </th:block>
+</head>
+<body>
+<main th:fragment="main-content" class="my-reviews-page">
+
+    <div class="my-reviews-header">
+        <h1><i class="fas fa-star"></i> Đánh giá của tôi</h1>
+        <p>Tất cả đánh giá bạn đã viết cho các sản phẩm đã mua.</p>
+    </div>
+
+    <div th:if="${reviews == null or #lists.isEmpty(reviews)}" class="my-reviews-empty">
+        <i class="fas fa-comment-dots"></i>
+        <p>Bạn chưa có đánh giá nào.</p>
+        <p>Hãy <a th:href="@{/products}">khám phá sản phẩm</a> và mua sắm để viết đánh giá nhé!</p>
+    </div>
+
+    <div th:each="review : ${reviews}" class="my-reviews-card">
+        <div class="my-reviews-card-head">
+            <a th:href="@{/products/{id}(id=${review.productId})}" class="my-reviews-card-product">
+                <i class="fas fa-box"></i>
+                Sản phẩm #<span th:text="${review.productId}">P001</span>
+            </a>
+            <span class="my-reviews-card-date"
+                  th:text="${review.createdAt != null} ? ${#temporals.format(review.createdAt, 'dd/MM/yyyy HH:mm')} : ''">01/01/2024</span>
+        </div>
+
+        <div class="my-reviews-card-stars">
+            <th:block th:each="i : ${#numbers.sequence(1, 5)}">
+                <i class="fas fa-star" th:classappend="${i <= review.rating} ? 'filled' : ''"
+                   th:style="${i <= review.rating} ? 'color:#facc15' : 'color:#e5e7eb'"></i>
+            </th:block>
+        </div>
+
+        <div class="my-reviews-card-text" th:text="${review.comment}">Nội dung đánh giá...</div>
+
+        <div th:if="${review.images != null and !#lists.isEmpty(review.images)}" class="my-reviews-images-strip">
+            <th:block th:each="img : ${review.images}">
+                <a th:href="${img}" target="_blank" rel="noopener noreferrer">
+                    <img th:src="${img}" alt="Ảnh review" loading="lazy" />
+                </a>
+            </th:block>
+        </div>
+
+        <!-- Moderation badge -->
+        <div th:if="${review.moderationStatus != null}" style="margin-top: 10px;">
+            <span th:if="${review.moderationStatus.name() == 'REPORTED'}"
+                  class="pdp-review-badge pdp-review-badge-reported"
+                  th:title="'Review đang được xem xét (' + ${review.reportCount} + ' lượt báo cáo)'">
+                <i class="fas fa-flag"></i> Đang chờ kiểm duyệt
+            </span>
+            <span th:if="${review.moderationStatus.name() == 'HIDDEN'}"
+                  class="pdp-review-badge pdp-review-badge-hidden"
+                  th:title="${review.moderationReason != null} ? ${review.moderationReason} : 'Review đã bị ẩn bởi Moderator'">
+                <i class="fas fa-eye-slash"></i> Đã ẩn bởi Moderator
+            </span>
+        </div>
+
+        <div class="my-reviews-card-actions">
+            <a th:href="@{/products/{id}(id=${review.productId}) + '#review-' + ${review.id}}"
+               class="my-reviews-action-view">
+                <i class="fas fa-external-link-alt"></i> Xem trên sản phẩm
+            </a>
+            <form th:action="@{/reviews/{id}/delete(id=${review.id})}" method="post" style="display:inline;"
+                  onsubmit="return confirm('Bạn có chắc muốn xóa đánh giá này?');">
+                <button type="submit" class="my-reviews-action-delete"
+                        style="cursor:pointer;border:1px solid #fecaca;">
+                    <i class="fas fa-trash-alt"></i> Xóa
+                </button>
+            </form>
+        </div>
+    </div>
+
+</main>
+<th:block th:fragment="page-scripts">
+</th:block>
+</body>
+</html>

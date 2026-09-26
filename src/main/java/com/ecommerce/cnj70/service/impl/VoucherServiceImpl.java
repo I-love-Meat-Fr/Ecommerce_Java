@@ -2,15 +2,11 @@ package com.ecommerce.cnj70.service.impl;
 
 import com.ecommerce.cnj70.document.Voucher;
 import com.ecommerce.cnj70.dto.request.VoucherFormReq;
-import com.ecommerce.cnj70.dto.moderation.AuditEvent;
 import com.ecommerce.cnj70.enums.DiscountType;
-import com.ecommerce.cnj70.enums.UserRole;
 import com.ecommerce.cnj70.enums.VoucherType;
 import com.ecommerce.cnj70.exception.BadRequestException;
-import com.ecommerce.cnj70.exception.ConflictException;
 import com.ecommerce.cnj70.exception.ResourceNotFoundException;
 import com.ecommerce.cnj70.repository.VoucherRepository;
-import com.ecommerce.cnj70.service.AuditEventWriter;
 import com.ecommerce.cnj70.service.VoucherService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -19,7 +15,6 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
-import org.springframework.data.mongodb.core.query.Update;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
@@ -39,36 +34,6 @@ public class VoucherServiceImpl implements VoucherService {
 
     private final VoucherRepository voucherRepository;
     private final MongoTemplate mongoTemplate;
-    private final AuditEventWriter auditEventWriter;
-
-    /* === Phase 4B — Audit event helpers (read-only Audit seam) === */
-
-    private void emitAudit(String action, Voucher before, Voucher after, String reason, String actorId) {
-        try {
-            String beforeStr = before != null
-                    ? "code=" + before.getCode() + ";active=" + before.isActive()
-                            + ";used=" + before.getUsed() + ";quantity=" + before.getQuantity()
-                    : null;
-            String afterStr = after != null
-                    ? "code=" + after.getCode() + ";active=" + after.isActive()
-                            + ";used=" + after.getUsed() + ";quantity=" + after.getQuantity()
-                    : null;
-            AuditEvent ev = AuditEvent.builder()
-                    .actorId(actorId)
-                    .role(UserRole.ADMIN)
-                    .action("VOUCHER_" + action)
-                    .resourceType("VOUCHER")
-                    .resourceId(after != null ? after.getId() : (before != null ? before.getId() : null))
-                    .reason(reason)
-                    .before(beforeStr)
-                    .after(afterStr)
-                    .createdAt(LocalDateTime.now())
-                    .build();
-            auditEventWriter.write(ev);
-        } catch (Exception ex) {
-            log.warn("Audit emission failed for voucher action {}: {}", action, ex.getMessage());
-        }
-    }
     
     @Override
     public Voucher createVoucher(VoucherFormReq request, String shopId, String shopName, String createdBy) {
@@ -114,9 +79,8 @@ public class VoucherServiceImpl implements VoucherService {
     
     @Override
     public Voucher createWebVoucher(VoucherFormReq request, String createdBy) {
-        // Phase 4B — duplicate code → 409 Conflict (was 400 BadRequest).
         if (voucherRepository.existsByCode(request.getCode())) {
-            throw new ConflictException("Mã voucher '" + request.getCode() + "' đã tồn tại trong hệ thống. Vui lòng chọn mã khác.");
+            throw new BadRequestException("Mã voucher đã tồn tại");
         }
 
         if (request.getDiscountType() == DiscountType.PERCENT) {
@@ -125,16 +89,7 @@ public class VoucherServiceImpl implements VoucherService {
             }
         }
 
-        if (request.getDiscountValue() == null
-                || request.getDiscountValue().compareTo(java.math.BigDecimal.ZERO) <= 0) {
-            throw new BadRequestException("Giá trị giảm phải lớn hơn 0");
-        }
-
-        if (request.getQuantity() <= 0) {
-            throw new BadRequestException("Tổng số lượt phải lớn hơn 0");
-        }
-
-        // Phase 11 — Bổ sung validation endDate >= startDate
+        // Phase 11 — Bổ sung validation endDate >= startDate (thiếu trong source cũ)
         if (request.getEndDate() != null && request.getStartDate() != null
             && request.getEndDate().isBefore(request.getStartDate())) {
             throw new BadRequestException("Ngày kết thúc phải sau ngày bắt đầu");
@@ -159,9 +114,7 @@ public class VoucherServiceImpl implements VoucherService {
                 .createdBy(createdBy)
                 .build();
 
-        Voucher saved = voucherRepository.save(voucher);
-        emitAudit("CREATED", null, saved, "Admin created WEB Voucher", createdBy);
-        return saved;
+        return voucherRepository.save(voucher);
     }
     
     @Override
@@ -244,34 +197,27 @@ public class VoucherServiceImpl implements VoucherService {
     public Voucher activateWebVoucher(String voucherId) {
         Voucher voucher = getVoucherById(voucherId);
         requireWebVoucher(voucher);
-        Voucher before = cloneVoucher(voucher);
         voucher.setActive(true);
-        Voucher saved = voucherRepository.save(voucher);
-        emitAudit("ACTIVATED", before, saved, "Admin activated WEB Voucher", before.getCreatedBy());
-        return saved;
+        return voucherRepository.save(voucher);
     }
 
     @Override
     public Voucher deactivateWebVoucher(String voucherId) {
         Voucher voucher = getVoucherById(voucherId);
         requireWebVoucher(voucher);
-        Voucher before = cloneVoucher(voucher);
         voucher.setActive(false);
-        Voucher saved = voucherRepository.save(voucher);
-        emitAudit("DEACTIVATED", before, saved, "Admin deactivated WEB Voucher", before.getCreatedBy());
-        return saved;
+        return voucherRepository.save(voucher);
     }
 
     @Override
     public Voucher updateWebVoucher(String voucherId, VoucherFormReq request) {
         Voucher voucher = getVoucherById(voucherId);
         requireWebVoucher(voucher);
-        Voucher before = cloneVoucher(voucher);
 
-        // Phase 4B — duplicate code → 409 Conflict
+        // Phase 11 — Validate code (nếu đổi)
         if (request.getCode() != null && !request.getCode().equalsIgnoreCase(voucher.getCode())) {
             if (voucherRepository.existsByCode(request.getCode())) {
-                throw new ConflictException("Mã voucher '" + request.getCode() + "' đã tồn tại trong hệ thống.");
+                throw new BadRequestException("Mã voucher đã tồn tại");
             }
             voucher.setCode(request.getCode().toUpperCase());
         }
@@ -326,49 +272,64 @@ public class VoucherServiceImpl implements VoucherService {
         voucher.setShopId(null);
         voucher.setShopName(null);
 
-        Voucher saved = voucherRepository.save(voucher);
-        emitAudit("UPDATED", before, saved, "Admin updated WEB Voucher", before.getCreatedBy());
-        return saved;
-    }
-
-    private Voucher cloneVoucher(Voucher src) {
-        return Voucher.builder()
-                .id(src.getId())
-                .code(src.getCode())
-                .name(src.getName())
-                .type(src.getType())
-                .shopId(src.getShopId())
-                .shopName(src.getShopName())
-                .productIds(src.getProductIds() != null ? new ArrayList<>(src.getProductIds()) : null)
-                .discountType(src.getDiscountType())
-                .discountValue(src.getDiscountValue())
-                .maxDiscountAmount(src.getMaxDiscountAmount())
-                .minOrderValue(src.getMinOrderValue())
-                .quantity(src.getQuantity())
-                .used(src.getUsed())
-                .startDate(src.getStartDate())
-                .endDate(src.getEndDate())
-                .active(src.isActive())
-                .createdBy(src.getCreatedBy())
-                .createdAt(src.getCreatedAt())
-                .updatedAt(src.getUpdatedAt())
-                .build();
+        return voucherRepository.save(voucher);
     }
 
     @Override
     public void deleteWebVoucher(String voucherId) {
         Voucher voucher = getVoucherById(voucherId);
         requireWebVoucher(voucher);
-        Voucher before = cloneVoucher(voucher);
         voucher.setActive(false);
-        Voucher saved = voucherRepository.save(voucher);
-        emitAudit("DELETED", before, saved, "Admin soft-deleted WEB Voucher", before.getCreatedBy());
+        voucherRepository.save(voucher);
     }
     
     @Override
     public Voucher getVoucherById(String id) {
-        return voucherRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy voucher"));
+        if (id == null || id.isBlank()) {
+            throw new ResourceNotFoundException("Không tìm thấy voucher");
+        }
+        // Phase 5 fix + Phase 1 hotfix: Hỗ trợ CẢ 2 kiểu _id (String lẫn ObjectId).
+        // Nhiều bản ghi voucher trong DB có _id là ObjectId (24 hex) do insert
+        // bằng Compass / script / Spring Data. Nếu chỉ tìm bằng String thì miss →
+        // trả null → ném ResourceNotFoundException("Không tìm thấy voucher").
+        //
+        // FIX (Sep 2026): KHÔNG chuyển _id từ ObjectId sang String trong raw
+        // Document nữa. Lý do: nếu caller sau đó gọi save() (vd: incrementUsed),
+        // Spring Data sẽ query bằng String _id, không match ObjectId _id trong DB
+        // → MongoDB tưởng là INSERT mới → trigger E11000 duplicate key trên
+        // unique index `code`. Cách an toàn:
+        //   1) Dùng mongoTemplate.findById(oid, Voucher.class) — converter tự
+        //      convert ObjectId → String cho Voucher.id, nhưng KHÔNG modify raw doc
+        //   2) Nếu caller cần save lại, họ nên dùng updateFirst() (atomic, không
+        //      bị bug này) — xem incrementUsed().
+        //
+        // Cách 1) thử String _id trước (cho voucher mới tạo qua Spring Data)
+        org.bson.Document raw = mongoTemplate.getCollection("vouchers")
+                .find(new org.bson.Document("_id", id))
+                .first();
+        // Cách 2) Fallback ObjectId _id (cho voucher cũ insert bằng Compass)
+        if (raw == null && id.length() == 24 && id.matches("[0-9a-fA-F]+")) {
+            org.bson.types.ObjectId oid = new org.bson.types.ObjectId(id);
+            raw = mongoTemplate.getCollection("vouchers")
+                    .find(new org.bson.Document("_id", oid))
+                    .first();
+            // QUAN TRỌNG: KHÔNG gọi raw.put("_id", id) — giữ nguyên ObjectId _id
+            // để converter đọc đúng và để save() (nếu có) không bị duplicate key.
+        }
+        if (raw == null) {
+            throw new ResourceNotFoundException("Không tìm thấy voucher");
+        }
+        // Ensure _class is set so MappingMongoConverter reads as Voucher.
+        if (!raw.containsKey("_class")) {
+            raw.put("_class", Voucher.class.getName());
+        }
+        Voucher voucher = mongoTemplate.getConverter().read(Voucher.class, raw);
+        // Fallback: nếu _id trong DB không phải ObjectId (vd: voucher rỗng/legacy
+        // data), set id từ parameter để caller có thể dùng.
+        if (voucher.getId() == null) {
+            voucher.setId(id);
+        }
+        return voucher;
     }
     
     @Override
@@ -384,7 +345,17 @@ public class VoucherServiceImpl implements VoucherService {
     
     @Override
     public List<Voucher> getWebVouchers() {
-        return voucherRepository.findByType(VoucherType.WEB);
+        // Phase 1 hotfix — Dùng MongoTemplate để match CẢ 2 kiểu:
+        //   1. type = "WEB" (enum được persist đúng)
+        //   2. type IS NULL (data cũ import từ script ngoài chưa có field)
+        // Tránh việc admin thấy trắng bảng dù DB có hàng chục voucher.
+        Criteria criteria = new Criteria().orOperator(
+                Criteria.where("type").is("WEB"),
+                Criteria.where("type").is(VoucherType.WEB.name()),
+                Criteria.where("type").exists(false),
+                Criteria.where("type").is(null)
+        );
+        return mongoTemplate.find(Query.query(criteria), Voucher.class);
     }
 
     @Override
@@ -393,28 +364,46 @@ public class VoucherServiceImpl implements VoucherService {
         boolean hasQ = StringUtils.hasText(q);
         boolean hasActive = (active != null);
 
+        // Build baseCriteria: type=WEB OR type missing OR type null
+        Criteria typeCriteria = new Criteria().orOperator(
+                Criteria.where("type").is("WEB"),
+                Criteria.where("type").is(VoucherType.WEB.name()),
+                Criteria.where("type").exists(false),
+                Criteria.where("type").is(null)
+        );
+
         if (!hasQ && !hasActive) {
-            return voucherRepository.findByType(VoucherType.WEB, pageable);
+            Query query = Query.query(typeCriteria).with(pageable);
+            long total = mongoTemplate.count(Query.query(typeCriteria), Voucher.class);
+            List<Voucher> content = mongoTemplate.find(query, Voucher.class);
+            return new PageImpl<>(content, pageable, total);
         }
 
         if (hasQ && !hasActive) {
-            return searchWebVouchers(q.trim(), null, pageable);
+            return searchWebVouchers(q.trim(), null, pageable, typeCriteria);
         }
 
         if (!hasQ && hasActive) {
-            return voucherRepository.findByTypeAndActive(VoucherType.WEB, active, pageable);
+            Criteria combined = new Criteria().andOperator(
+                    typeCriteria,
+                    Criteria.where("active").is(active)
+            );
+            Query query = Query.query(combined).with(pageable);
+            long total = mongoTemplate.count(Query.query(combined), Voucher.class);
+            List<Voucher> content = mongoTemplate.find(query, Voucher.class);
+            return new PageImpl<>(content, pageable, total);
         }
 
         // search + filter
-        return searchWebVouchers(q.trim(), active, pageable);
+        return searchWebVouchers(q.trim(), active, pageable, typeCriteria);
     }
 
     /**
      * Tìm WEB Voucher theo keyword (code/name) kết hợp optional active.
-     * Dùng MongoTemplate vì cần AND logic giữa type=WEB + search criteria.
+     * Dùng MongoTemplate vì cần AND logic giữa type=WEB (fallback) + search criteria.
      */
     private org.springframework.data.domain.Page<Voucher> searchWebVouchers(
-            String q, Boolean active, Pageable pageable) {
+            String q, Boolean active, Pageable pageable, Criteria typeCriteria) {
         Pattern codePattern = Pattern.compile(Pattern.quote(q), Pattern.CASE_INSENSITIVE);
         Pattern namePattern = Pattern.compile(Pattern.quote(q), Pattern.CASE_INSENSITIVE);
 
@@ -424,7 +413,7 @@ public class VoucherServiceImpl implements VoucherService {
         );
 
         Criteria baseCriteria = new Criteria().andOperator(
-                Criteria.where("type").is("WEB"),
+                typeCriteria,
                 searchOr
         );
 
@@ -457,10 +446,19 @@ public class VoucherServiceImpl implements VoucherService {
 
     @Override
     public List<Voucher> getAvailableWebVouchersForCustomer() {
-        // Phase 12: Chỉ trả WEB Voucher khả dụng cho Customer website.
-        // Lọc: type=WEB, active=true, còn hạn, còn lượt.
-        // SHOP Voucher KHÔNG hiển thị trên website công khai.
-        return voucherRepository.findByTypeAndActiveTrue(VoucherType.WEB).stream()
+        // Phase 12 + Phase 1 hotfix: Chỉ trả WEB Voucher khả dụng cho Customer website.
+        // Match CẢ type=WEB (enum persist đúng) và type=null (data cũ).
+        Criteria typeCriteria = new Criteria().orOperator(
+                Criteria.where("type").is("WEB"),
+                Criteria.where("type").is(VoucherType.WEB.name()),
+                Criteria.where("type").exists(false),
+                Criteria.where("type").is(null)
+        );
+        Criteria criteria = new Criteria().andOperator(
+                typeCriteria,
+                Criteria.where("active").is(true)
+        );
+        return mongoTemplate.find(Query.query(criteria), Voucher.class).stream()
                 .filter(Voucher::isAvailable)
                 .collect(Collectors.toList());
     }
@@ -481,63 +479,102 @@ public class VoucherServiceImpl implements VoucherService {
     }
     
     @Override
-    @Deprecated
     public void incrementUsed(String voucherId) {
-        Voucher voucher = getVoucherById(voucherId);
-        voucher.setUsed(voucher.getUsed() + 1);
-        voucherRepository.save(voucher);
+        // Fix lỗi E11000 duplicate key trên collection `vouchers` khi increment
+        // used counter sau khi tạo Order thành công.
+        //
+        // Bối cảnh: VoucherServiceImpl.getVoucherById() có "Phase 5 hotfix"
+        // chuyển _id từ ObjectId sang String trong raw Document để converter
+        // đọc được. Nhưng khi gọi voucherRepository.save() ngay sau đó,
+        // Spring Data query bằng String _id không match ObjectId _id trong DB
+        // → MongoDB hiểu là INSERT mới → trigger E11000 duplicate key trên
+        // unique index `code` (vd: code "PHASE12_TEST_001" đã tồn tại).
+        //
+        // Fix: dùng mongoTemplate.updateFirst() với Criteria chấp nhận CẢ 2
+        // kiểu _id (String lẫn ObjectId). Cách này:
+        //   1) Atomic — không cần load cả voucher
+        //   2) Không trigger unique-index conflict vì UPDATE không tạo document mới
+        //   3) An toàn với cả voucher cũ (_id ObjectId) lẫn voucher mới (_id String)
+        if (voucherId == null || voucherId.isBlank()) {
+            log.warn("incrementUsed: voucherId null/blank, bỏ qua");
+            return;
+        }
+        org.springframework.data.mongodb.core.query.Criteria idCriteria =
+                buildIdCriteria(voucherId);
+        org.springframework.data.mongodb.core.query.Query q =
+                new org.springframework.data.mongodb.core.query.Query(idCriteria);
+        org.springframework.data.mongodb.core.query.Update u =
+                new org.springframework.data.mongodb.core.query.Update().inc("used", 1);
+        var result = mongoTemplate.updateFirst(q, u, Voucher.class);
+        if (result.getMatchedCount() == 0L) {
+            // Voucher không tồn tại — log warning nhưng KHÔNG throw để tránh
+            // rollback Order đã tạo thành công. Lý do: voucher có thể bị xóa
+            // giữa lúc user apply và lúc createOrder chạy xong (race condition
+            // hiếm gặp nhưng có thể xảy ra trong môi trường có nhiều admin).
+            log.warn("incrementUsed: voucher {} không tìm thấy trong DB, bỏ qua", voucherId);
+        }
     }
 
     /**
-     * Phase 4B — Atomic usedCount increment (race-safe).
-     *
-     * <p>Performs Mongo conditional update:
-     * {@code WHERE _id = ? AND active = true AND used < quantity SET used = used + 1}</p>
-     *
-     * <p>If matchedCount == 0, the voucher is either exhausted, deactivated,
-     * or doesn't exist. Caller MUST treat this as "voucher could not be applied".</p>
+     * Build Criteria cho _id chấp nhận CẢ String lẫn ObjectId.
+     * Phase 5 hotfix: Voucher cũ trong DB có _id là ObjectId (24 hex chars);
+     * Voucher mới tạo qua Admin UI có _id là String UUID.
+     * Cả 2 trường hợp cần được query thành công bằng cùng một id truyền vào.
      */
+    private org.springframework.data.mongodb.core.query.Criteria buildIdCriteria(String voucherId) {
+        org.springframework.data.mongodb.core.query.Criteria criteria =
+                org.springframework.data.mongodb.core.query.Criteria.where("_id").is(voucherId);
+        if (voucherId.length() == 24 && voucherId.matches("[0-9a-fA-F]+")) {
+            criteria = org.springframework.data.mongodb.core.query.Criteria.where("_id")
+                    .is(voucherId)
+                    .orOperator(
+                            org.springframework.data.mongodb.core.query.Criteria.where("_id")
+                                    .is(voucherId),
+                            org.springframework.data.mongodb.core.query.Criteria.where("_id")
+                                    .is(new org.bson.types.ObjectId(voucherId))
+                    );
+        }
+        return criteria;
+    }
+
     @Override
     public boolean tryIncrementUsed(String voucherId) {
-        if (voucherId == null || voucherId.isBlank()) return false;
-        Query q = new Query(Criteria.where("_id").is(voucherId)
-                .and("active").is(true)
-                .andOperator(Criteria.where("$expr").is(
-                        new org.bson.Document("$lt",
-                                java.util.List.of("$used", "$quantity")))));
-        Update u = new Update().inc("used", 1);
+        if (voucherId == null) return false;
+        org.springframework.data.mongodb.core.query.Criteria idCriteria = buildIdCriteria(voucherId);
+        org.springframework.data.mongodb.core.query.Query q = new org.springframework.data.mongodb.core.query.Query(
+                idCriteria
+                        .and("active").is(true)
+                        .andOperator(org.springframework.data.mongodb.core.query.Criteria.where("$expr").is(
+                                new org.bson.Document("$lt",
+                                        java.util.List.of("$used", "$quantity"))))
+        );
+        org.springframework.data.mongodb.core.query.Update u = new org.springframework.data.mongodb.core.query.Update()
+                .inc("used", 1);
         var result = mongoTemplate.updateFirst(q, u, Voucher.class);
-        boolean ok = result.getModifiedCount() == 1L;
-        if (ok) {
-            log.info("Voucher {} used++ (atomic)", voucherId);
-        } else {
-            log.warn("Voucher {} atomic increment failed (exhausted/inactive/missing)", voucherId);
+        if (result.getMatchedCount() == 0L) {
+            log.debug("tryIncrementUsed: voucher {} exhausted/inactive/missing", voucherId);
+            return false;
         }
-        return ok;
+        return true;
     }
 
-    /**
-     * Phase 4B — Atomic usedCount decrement (cancel/reversal seam).
-     *
-     * <p>Performs Mongo conditional update:
-     * {@code WHERE _id = ? AND used > 0 SET used = used - 1}</p>
-     */
     @Override
     public boolean tryDecrementUsed(String voucherId) {
-        if (voucherId == null || voucherId.isBlank()) return false;
-        Query q = new Query(Criteria.where("_id").is(voucherId)
-                .andOperator(Criteria.where("$expr").is(
-                        new org.bson.Document("$gt",
-                                java.util.List.of("$used", 0)))));
-        Update u = new Update().inc("used", -1);
+        if (voucherId == null) return false;
+        org.springframework.data.mongodb.core.query.Query q = new org.springframework.data.mongodb.core.query.Query(
+                org.springframework.data.mongodb.core.query.Criteria.where("_id").is(voucherId)
+                        .andOperator(org.springframework.data.mongodb.core.query.Criteria.where("$expr").is(
+                                new org.bson.Document("$gt",
+                                        java.util.List.of("$used", 0))))
+        );
+        org.springframework.data.mongodb.core.query.Update u = new org.springframework.data.mongodb.core.query.Update()
+                .inc("used", -1);
         var result = mongoTemplate.updateFirst(q, u, Voucher.class);
-        boolean ok = result.getModifiedCount() == 1L;
-        if (ok) {
-            log.info("Voucher {} used-- (atomic reversal)", voucherId);
-        } else {
-            log.warn("Voucher {} atomic decrement failed (already 0/missing)", voucherId);
+        if (result.getMatchedCount() == 0L) {
+            log.debug("tryDecrementUsed: voucher {} already at 0 / missing", voucherId);
+            return false;
         }
-        return ok;
+        return true;
     }
     
     @Override

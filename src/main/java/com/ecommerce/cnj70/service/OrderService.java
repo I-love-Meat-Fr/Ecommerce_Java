@@ -33,24 +33,10 @@ public interface OrderService {
     Order getOrderById(String id);
 
     /**
-     * Customer-facing variant của {@link #getOrderById(String)} — enforce ownership tại service layer.
-     *
-     * <p>Trước đây {@code getOrderById(String)} trả về bất kỳ Order nào theo ID mà không check
-     * customer ownership — đây là IDOR vulnerability. Khi Customer A cố tình truy cập
-     * {@code /complaints/{id}} của Customer B (hoặc bất kỳ flow nào gọi method này trực tiếp),
-     * service sẽ âm thầm trả về Order của người khác.</p>
-     *
-     * <p>Method này chỉ trả về Order nếu {@code order.userId == userId}. Nếu không khớp,
-     * throw {@link com.ecommerce.cnj70.exception.UnauthorizedException} — đảm bảo
-     * customer không bao giờ đọc được thông tin đơn hàng của người khác.</p>
-     *
-     * @param orderId Mongo _id của Order cần đọc
-     * @param userId  ID của Customer hiện tại (lấy từ {@code @AuthenticationPrincipal})
-     * @return Order nếu thuộc về user
-     * @throws com.ecommerce.cnj70.exception.ResourceNotFoundException nếu orderId không tồn tại
-     * @throws com.ecommerce.cnj70.exception.UnauthorizedException   nếu order thuộc customer khác
+     * Ownership-checked fetch. Returns the order only when it belongs to the given
+     * customerId; throws otherwise (defense against IDOR).
      */
-    Order getOrderByIdForCustomer(String orderId, String userId);
+    Order getOrderByIdForCustomer(String orderId, String customerId);
 
     List<Order> getOrdersByUserId(String userId);
 
@@ -59,6 +45,21 @@ public interface OrderService {
     void updateOrderStatus(String orderId, OrderStatus status);
 
     void cancelOrder(String orderId);
+
+    /**
+     * Cập nhật trạng thái vận chuyển cho phần của shop trong Order.
+     * Mỗi shop có trạng thái vận chuyển riêng trong {@code Order.shippingByShop}.
+     *
+     * @param orderId        id của Order
+     * @param shopId         shop cập nhật (key trong shippingByShop)
+     * @param status         trạng thái vận chuyển mới
+     * @param trackingNumber số vận đơn (optional)
+     * @param carrier        đơn vị vận chuyển (optional)
+     * @param note           ghi chú (optional)
+     * @return Order sau khi cập nhật
+     */
+    Order updateShippingStatus(String orderId, String shopId, ShippingStatus status,
+                               String trackingNumber, String carrier, String note);
 
     /**
      * TASK #14/#20/#21 — Kiểm tra Customer đã mua và ĐÃ NHẬN được Product chưa.
@@ -77,11 +78,4 @@ public interface OrderService {
      * @return true nếu Order không CANCELLED và chứa productId
      */
     boolean hasUserPurchasedProduct(String userId, String productId);
-
-    /**
-     * Cập nhật shipping status của 1 shop trong đơn hàng (sub-order).
-     * Vendor gọi method này để cập nhật trạng thái vận chuyển phần của mình.
-     */
-    Order updateShippingStatus(String orderId, String shopId, ShippingStatus status,
-                               String trackingNumber, String carrier, String note);
 }

@@ -133,8 +133,10 @@ public class ProductController {
         Product product = productService.getProductById(id);
         model.addAttribute("product", product);
 
-        // Get reviews using ReviewService
-        List<Review> reviews = reviewService.getReviewsByProductId(id);
+        // Get reviews using ReviewService.
+        // Dùng overload viewer-aware: DELETED ẩn với tất cả, HIDDEN chỉ owner thấy.
+        String viewerId = (user != null) ? user.getId() : null;
+        List<Review> reviews = reviewService.getVisibleReviewsByProductId(id, viewerId);
         List<ReviewRes> reviewList = reviews.stream()
                 .map(review -> ReviewRes.builder()
                         .id(review.getId())
@@ -145,6 +147,11 @@ public class ProductController {
                         .rating(review.getRating())
                         .comment(review.getComment())
                         .createdAt(review.getCreatedAt() != null ? review.getCreatedAt() : LocalDateTime.now())
+                        // TASK #26 — Trả ảnh + moderation status để template render.
+                        .images(review.getImages())
+                        .moderationStatus(review.getModerationStatus())
+                        .moderationReason(review.getModerationReason())
+                        .reportCount(review.getReportCount())
                         .build())
                 .collect(Collectors.toList());
         // #region DEBUG: server-side trace - reviews loaded
@@ -167,10 +174,29 @@ public class ProductController {
         // #endregion
         model.addAttribute("reviews", reviewList);
 
-        // Check if current user has reviewed
+        // Check review eligibility for current user.
+        //
+        // 3 trạng thái có thể có (chỉ áp dụng khi user đã đăng nhập):
+        //   1. hasReviewed=true        → đã review rồi
+        //   2. canReview=true          → đã nhận hàng, chưa review, đủ điều kiện
+        //   3. canReview=false         → CHƯA đủ điều kiện (chưa mua / chưa nhận / đã hủy)
+        //
+        // Backend `reviewService.canUserReviewProduct` đã enforce:
+        //   order.status == DELIVERED && !hasReviewed
+        //
+        // Nếu UI cho phép nhập form khi backend từ chối → user submit sẽ bị
+        // BadRequestException → redirect kèm ?error=... (xấu + có thể bị mất khi share link).
+        // Fix: chỉ render form khi canReview=true; các trường hợp khác hiển thị message
+        // tương ứng ("đã đánh giá" / "cần mua và nhận hàng trước").
         if (user != null) {
             boolean hasReviewed = reviewService.hasUserReviewedProduct(user.getId(), id);
+            boolean canReview = !hasReviewed && reviewService.canUserReviewProduct(user.getId(), id);
             model.addAttribute("hasReviewed", hasReviewed);
+            model.addAttribute("canReview", canReview);
+        } else {
+            // Anonymous user — không cho review, không có flag nào.
+            model.addAttribute("hasReviewed", false);
+            model.addAttribute("canReview", false);
         }
 
         // Get related products from same category
