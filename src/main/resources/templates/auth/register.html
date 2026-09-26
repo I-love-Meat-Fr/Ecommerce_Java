@@ -233,12 +233,23 @@
                             </div>
                         </div>
 
-                        <!-- Terms -->
+                        <!-- Terms & Privacy (TASK #22 — bind từng checkbox với field của RegisterReq) -->
                         <div class="form-terms">
                             <label class="checkbox-wrapper">
-                                <input type="checkbox" required>
+                                <input type="checkbox"
+                                       name="acceptTerms"
+                                       th:field="*{acceptTerms}"
+                                       required>
                                 <span class="checkmark"></span>
-                                <span>Tôi đồng ý với <a href="#">Điều khoản sử dụng</a> và <a href="#">Chính sách bảo mật</a></span>
+                                <span>Tôi đồng ý với <a href="#" target="_blank" rel="noopener">Điều khoản sử dụng</a></span>
+                            </label>
+                            <label class="checkbox-wrapper">
+                                <input type="checkbox"
+                                       name="acceptPrivacy"
+                                       th:field="*{acceptPrivacy}"
+                                       required>
+                                <span class="checkmark"></span>
+                                <span>Tôi đồng ý với <a href="#" target="_blank" rel="noopener">Chính sách bảo mật</a></span>
                             </label>
                         </div>
 

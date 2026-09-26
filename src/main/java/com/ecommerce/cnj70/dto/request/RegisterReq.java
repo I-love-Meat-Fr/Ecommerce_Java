@@ -1,7 +1,5 @@
 package com.ecommerce.cnj70.dto.request;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
-import jakarta.validation.constraints.AssertTrue;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
@@ -13,12 +11,10 @@ import lombok.NoArgsConstructor;
 /**
  * TASK #22 — Register request với bắt buộc accept Terms + Privacy.
  *
- * Quy tắc:
- * - acceptTerms: PHẢI true để đăng ký thành công
- * - acceptPrivacy: PHẢI true để đăng ký thành công
- * - marketingOptIn: optional, mặc định false
- *
- * User cũ (chưa có acceptedTermsAt): xử lý backward-compatible theo Phase.
+ * Lưu ý: KHÔNG dùng @AssertTrue trên manual getter (vì sẽ xung đột với
+ * Lombok-generated `getAcceptTerms()` cho Boolean field — Hibernate Validator
+ * gặp lỗi khi có 2 getter cho cùng 1 property với 2 kiểu trả về khác nhau).
+ * Việc check acceptTerms/acceptPrivacy sẽ được thực hiện trong AuthController.
  */
 @Data
 @Builder
@@ -44,19 +40,7 @@ public class RegisterReq {
     private String role;
 
     // ===== TASK #22: Bắt buộc accept Terms + Privacy =====
-
-    @AssertTrue(message = "Bạn phải đồng ý với Điều khoản sử dụng để đăng ký")
-    @JsonProperty("acceptTerms")
-    public boolean isAcceptTerms() {
-        return acceptTerms != null && acceptTerms;
-    }
-
-    @AssertTrue(message = "Bạn phải đồng ý với Chính sách bảo mật để đăng ký")
-    @JsonProperty("acceptPrivacy")
-    public boolean isAcceptPrivacy() {
-        return acceptPrivacy != null && acceptPrivacy;
-    }
-
+    // Check thủ công trong AuthController (xem comment ở đầu class).
     private Boolean acceptTerms;
     private Boolean acceptPrivacy;
 

@@ -737,6 +737,9 @@
     background: var(--auth-teal-soft);
     border-radius: var(--auth-radius);
     border: 1px solid var(--auth-teal-border);
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
 }
 
 .form-terms .checkbox-wrapper {
