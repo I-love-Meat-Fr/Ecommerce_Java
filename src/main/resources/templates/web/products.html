@@ -170,15 +170,46 @@
                                 <span class="pl-product-review-count" th:if="${product.reviewCount > 0}">
                                     (<th:block th:text="${product.reviewCount}">0</th:block>)
                                 </span>
-                                <span class="pl-product-stock" th:if="${product.stock > 0}">
-                                    <i class="fas fa-check-circle"></i> Còn hàng
+                                <span class="pl-product-stock"
+                                      th:if="${product.stock > 0}"
+                                      th:classappend="${product.stock <= 5} ? 'pl-stock-low' : ''">
+                                    <i class="fas fa-check-circle"></i>
+                                    <th:block th:text="${product.stock <= 5} ? 'Sắp hết' : 'Còn hàng'">Còn hàng</th:block>
                                 </span>
                             </div>
-                            <span class="pl-product-arrow" aria-hidden="true">
-                                <i class="fas fa-arrow-right"></i>
-                            </span>
                         </div>
                     </a>
+                    <div class="pl-product-actions"
+                         th:classappend="${product.stock > 0} ? '' : 'pl-product-actions-disabled'">
+                        <!-- Authenticated user: AJAX submit qua /api/cart/add -->
+                        <form th:action="@{/api/cart/add}" method="post"
+                              class="pl-add-cart-form add-to-cart-form"
+                              th:if="${product.stock > 0}"
+                              sec:authorize="isAuthenticated()">
+                            <input type="hidden" name="productId" th:value="${product.id}">
+                            <input type="hidden" name="quantity" value="1">
+                            <button type="submit" class="pl-add-cart-btn"
+                                    th:attr="data-product-name=${product.name}">
+                                <i class="fas fa-cart-plus"></i>
+                                <span>Thêm vào giỏ hàng</span>
+                            </button>
+                        </form>
+                        <!-- Unauthenticated user: chuyển sang trang đăng nhập -->
+                        <a th:href="@{/auth/login}"
+                           class="pl-add-cart-btn pl-add-cart-btn-login"
+                           th:if="${product.stock > 0}"
+                           sec:authorize="!isAuthenticated()">
+                            <i class="fas fa-sign-in-alt"></i>
+                            <span>Đăng nhập để mua</span>
+                        </a>
+                        <!-- Hết hàng: disabled state -->
+                        <button type="button" class="pl-add-cart-btn pl-add-cart-btn-disabled"
+                                th:if="${product.stock <= 0}" disabled
+                                aria-disabled="true">
+                            <i class="fas fa-ban"></i>
+                            <span>Hết hàng</span>
+                        </button>
+                    </div>
                 </div>
             </div>
 

@@ -110,21 +110,29 @@
                     <p>Hệ thống chưa ghi nhận vi phạm nào.</p>
                 </div>
 
-                <div th:if="${totalPages > 1}" style="display:flex;justify-content:center;gap:6px;padding:16px;">
-                    <a th:if="${hasPrev}"
-                        th:href="@{/moderator/violations(page=${page - 1}, size=${size}, shopId=${shopId}, severity=${severity}, type=${type})}"
-                        class="sd-btn sd-btn-secondary sd-btn-sm">
-                        <i class="fas fa-chevron-left"></i> Trước
-                    </a>
-                    <span class="sd-badge sd-badge-slate">
-                        Trang <th:block th:text="${page + 1}"></th:block> / <th:block th:text="${totalPages}">
-                        </th:block>
-                    </span>
-                    <a th:if="${hasNext}"
-                        th:href="@{/moderator/violations(page=${page + 1}, size=${size}, shopId=${shopId}, severity=${severity}, type=${type})}"
-                        class="sd-btn sd-btn-secondary sd-btn-sm">
-                        Sau <i class="fas fa-chevron-right"></i>
-                    </a>
+                <div class="sd-card-body" th:if="${totalPages > 0}"
+                     style="display:flex;justify-content:center;border-top:1px solid var(--border,#e2e8f0);">
+                    <nav class="sd-pagination" aria-label="Phân trang">
+                        <a th:if="${hasPrev}"
+                           th:href="@{/moderator/violations(page=${page - 1}, size=${size}, shopId=${shopId}, severity=${severity}, type=${type})}"
+                           class="sd-page-link">
+                            <i class="fas fa-chevron-left"></i> Trước
+                        </a>
+                        <span th:unless="${hasPrev}" class="sd-page-link sd-page-disabled">
+                            <i class="fas fa-chevron-left"></i> Trước
+                        </span>
+
+                        <span class="sd-page-link sd-page-active" th:text="${page + 1} + ' / ' + ${totalPages}">1 / 1</span>
+
+                        <a th:if="${hasNext}"
+                           th:href="@{/moderator/violations(page=${page + 1}, size=${size}, shopId=${shopId}, severity=${severity}, type=${type})}"
+                           class="sd-page-link">
+                            Sau <i class="fas fa-chevron-right"></i>
+                        </a>
+                        <span th:unless="${hasNext}" class="sd-page-link sd-page-disabled">
+                            Sau <i class="fas fa-chevron-right"></i>
+                        </span>
+                    </nav>
                 </div>
             </div>
         </div>

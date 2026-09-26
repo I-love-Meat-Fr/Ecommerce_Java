@@ -433,9 +433,10 @@
 .pl-product-link {
     display: flex;
     flex-direction: column;
-    height: 100%;
+    flex: 1;
     text-decoration: none;
     color: inherit;
+    min-height: 0;
 }
 
 .pl-product-badge {
@@ -561,7 +562,7 @@
     font-weight: 900;
     color: var(--teal);
     letter-spacing: -0.02em;
-    margin: 0;
+    margin: 0 0 4px 0;
 }
 
 .pl-product-meta {
@@ -610,29 +611,97 @@
     font-size: 9px;
 }
 
-.pl-product-arrow {
-    position: absolute;
-    right: 12px;
-    bottom: 12px;
-    width: 28px;
-    height: 28px;
-    border-radius: 50%;
-    background: var(--teal-soft);
-    color: var(--teal);
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 11px;
-    opacity: 0;
-    transform: translateY(4px);
-    transition: opacity 0.2s, transform 0.2s, background 0.2s, color 0.2s;
+/* Add to Cart button (luôn hiển thị, không cần hover) */
+.pl-product-actions {
+    padding: 0 12px 12px;
+    background: var(--bg);
+    border-top: 1px solid var(--bg-alt);
+    margin-top: auto;
 }
 
-.pl-product-card:hover .pl-product-arrow {
-    opacity: 1;
-    transform: translateY(0);
+.pl-add-cart-form {
+    margin: 0;
+    width: 100%;
+}
+
+.pl-add-cart-btn {
+    width: 100%;
+    height: 38px;
+    margin-top: 10px;
     background: var(--teal);
+    border: 1px solid var(--teal);
+    border-radius: var(--radius-sm);
     color: #fff;
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    cursor: pointer;
+    transition: background 0.2s, color 0.2s, border-color 0.2s, box-shadow 0.2s, transform 0.2s;
+    text-decoration: none;
+    user-select: none;
+}
+
+.pl-add-cart-btn i {
+    font-size: 13px;
+}
+
+.pl-add-cart-btn:hover {
+    background: var(--teal-deep);
+    border-color: var(--teal-deep);
+    box-shadow: 0 4px 12px var(--teal-glow);
+    transform: translateY(-1px);
+}
+
+.pl-add-cart-btn:active {
+    transform: translateY(0);
+    box-shadow: 0 2px 6px var(--teal-glow);
+}
+
+.pl-add-cart-btn:focus-visible {
+    outline: 2px solid var(--teal);
+    outline-offset: 2px;
+}
+
+.pl-add-cart-btn:disabled,
+.pl-add-cart-btn-disabled {
+    background: var(--bg-alt);
+    border-color: var(--line);
+    color: var(--muted);
+    cursor: not-allowed;
+    box-shadow: none;
+    transform: none;
+}
+
+.pl-add-cart-btn:disabled:hover,
+.pl-add-cart-btn-disabled:hover {
+    background: var(--bg-alt);
+    border-color: var(--line);
+    color: var(--muted);
+    box-shadow: none;
+    transform: none;
+}
+
+/* Unauthenticated CTA — outline variant vẫn nhấn teal để không lạc tone */
+.pl-add-cart-btn-login {
+    background: var(--bg);
+    color: var(--teal-deep);
+    border-color: var(--teal-border);
+}
+
+.pl-add-cart-btn-login:hover {
+    background: var(--teal-soft);
+    color: var(--teal-deep);
+    border-color: var(--teal);
+}
+
+/* Stock low badge — đỏ cam nhẹ để báo sắp hết */
+.pl-stock-low {
+    color: #d97706 !important;
+    background: rgba(245, 158, 11, 0.1) !important;
 }
 
 .pl-product-price-row {
@@ -705,70 +774,6 @@
     border-radius: var(--radius-sm);
 }
 
-/* Stock Badge */
-.pl-product-stock {
-    margin-top: 4px;
-}
-
-.pl-stock-badge {
-    display: inline-flex;
-    align-items: center;
-    gap: 4px;
-    font-size: 10px;
-    font-weight: 600;
-    padding: 2px 6px;
-    border-radius: var(--radius-sm);
-}
-
-.pl-stock-in {
-    background: var(--green-soft);
-    color: var(--green);
-}
-
-.pl-stock-out {
-    background: var(--red-soft);
-    color: var(--accent-red);
-}
-
-.pl-product-actions {
-    padding: 0 12px 12px;
-    opacity: 0;
-    transform: translateY(4px);
-    transition: opacity 0.2s, transform 0.2s;
-}
-
-.pl-product-card:hover .pl-product-actions {
-    opacity: 1;
-    transform: translateY(0);
-}
-
-.pl-add-cart-form {
-    margin: 0;
-}
-
-.pl-add-cart-btn {
-    width: 100%;
-    height: 34px;
-    background: var(--teal-soft);
-    border: 1px solid var(--teal-border);
-    border-radius: var(--radius-sm);
-    color: var(--teal-deep);
-    font-size: 12px;
-    font-weight: 700;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 6px;
-    cursor: pointer;
-    transition: all 0.2s;
-}
-
-.pl-add-cart-btn:hover {
-    background: var(--teal);
-    color: #fff;
-    border-color: var(--teal);
-}
-
 /* ---------- List View ---------- */
 .pl-products-grid.pl-view-list {
     grid-template-columns: 1fr;
@@ -777,7 +782,13 @@
 
 .pl-products-grid.pl-view-list .pl-product-card {
     flex-direction: row;
-    align-items: center;
+    align-items: stretch;
+}
+
+.pl-products-grid.pl-view-list .pl-product-link {
+    flex-direction: row;
+    flex: 1;
+    min-width: 0;
 }
 
 .pl-products-grid.pl-view-list .pl-product-image {
@@ -787,20 +798,28 @@
 }
 
 .pl-products-grid.pl-view-list .pl-product-image img {
-    height: 120px;
+    height: 100%;
 }
 
 .pl-products-grid.pl-view-list .pl-product-content {
     flex: 1;
     padding: 16px;
+    min-width: 0;
 }
 
 .pl-products-grid.pl-view-list .pl-product-actions {
-    width: 160px;
+    width: 200px;
     flex-shrink: 0;
-    padding: 0 16px 16px;
-    opacity: 1;
-    transform: none;
+    padding: 16px;
+    margin-top: 0;
+    border-top: none;
+    border-left: 1px solid var(--bg-alt);
+    display: flex;
+    align-items: center;
+}
+
+.pl-products-grid.pl-view-list .pl-add-cart-btn {
+    margin-top: 0;
 }
 
 /* ---------- Empty State ---------- */

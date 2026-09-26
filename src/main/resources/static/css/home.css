@@ -89,6 +89,33 @@
     transition: background 0.2s, transform 0.2s;
 }
 
+.home-logo-img {
+    width: 36px;
+    height: 36px;
+    border-radius: 6px;
+    object-fit: contain;
+    background: #ffffff;
+    flex-shrink: 0;
+    display: block;
+    box-shadow: 0 1px 2px rgba(15, 23, 42, 0.08);
+    padding: 3px;
+}
+
+.home-logo-link:hover .home-logo-img {
+    transform: scale(1.04);
+    transition: transform 0.2s;
+}
+
+.home-mobile-logo-img {
+    width: 32px;
+    height: 32px;
+    border-radius: 6px;
+    object-fit: contain;
+    background: #ffffff;
+    flex-shrink: 0;
+    padding: 2px;
+}
+
 .home-logo-link:hover .home-logo-icon {
     background: var(--teal-deep);
     transform: rotate(-4deg) scale(1.05);
