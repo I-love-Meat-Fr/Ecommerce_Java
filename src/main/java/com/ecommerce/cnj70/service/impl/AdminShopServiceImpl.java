@@ -210,25 +210,13 @@ public class AdminShopServiceImpl implements AdminShopService {
     }
 
     @Override
-<<<<<<< HEAD
-    public void deactivateShop(String id, String actorId, String actorUsername) {
-=======
     public void deactivateShop(String id, String reason, String adminUsername) {
->>>>>>> 105fc32050ccebc9b92d94f41bbd9d97b7536ace
         Shop shop = getShopById(id);
 
         if (!shop.isActive()) {
             throw new BusinessException("Shop đang ở trạng thái ngừng hoạt động, không thay đổi");
         }
 
-<<<<<<< HEAD
-        shop.setActive(false);
-        // reason không nằm trong interface signature → clear lý do cũ, không set mới
-        shop.setDeactivationReason(null);
-        shop.setActionBy(actorUsername);
-        shop.setActionAt(LocalDateTime.now());
-        shopRepository.save(shop);
-=======
         // Phase 2 critical fix: atomic update tránh E11000 (xem approveShop).
         Object nativeId = resolveIdForQuery(id, shop);
         org.bson.Document update = new org.bson.Document("$set",
@@ -250,7 +238,6 @@ public class AdminShopServiceImpl implements AdminShopService {
             shop.setActionAt(LocalDateTime.now());
             shopRepository.save(shop);
         }
->>>>>>> 105fc32050ccebc9b92d94f41bbd9d97b7536ace
 
         if (adminUsername != null || reason != null) {
             auditLogService.logWarning(
@@ -265,28 +252,11 @@ public class AdminShopServiceImpl implements AdminShopService {
             );
         }
 
-<<<<<<< HEAD
-        log.info("AdminShopService.deactivateShop: shop {} deactivated", id);
-    }
-
-    @Override
-    public void rejectShop(String id) {
-        rejectShop(id, null, null, null);
-    }
-
-    @Override
-    public void rejectShop(String id, String reason, String actorUsername) {
-        // Convenience overload: bridge test signature (id, reason, actorUsername).
-        // Production code dùng 4-arg overload với actorId đầy đủ.
-        rejectShop(id, null, actorUsername, reason);
-    }
-=======
         log.info("AdminShopService.deactivateShop: shop {} deactivated by {} - reason: {}",
                 id, adminUsername, reason);
     }
 
     // ===== rejectShop =====
->>>>>>> 105fc32050ccebc9b92d94f41bbd9d97b7536ace
 
     @Override
     public void rejectShop(String id) {
@@ -303,13 +273,6 @@ public class AdminShopServiceImpl implements AdminShopService {
             return;
         }
 
-<<<<<<< HEAD
-        shop.setStatus(ShopStatus.REJECTED);
-        shop.setRejectionReason(StringUtils.hasText(reason) ? reason : null);
-        shop.setActionBy(actorUsername);
-        shop.setActionAt(LocalDateTime.now());
-        shopRepository.save(shop);
-=======
         // Phase 2 critical fix: atomic update tránh E11000 (xem approveShop).
         Object nativeId = resolveIdForQuery(id, shop);
         org.bson.Document update = new org.bson.Document("$set",
@@ -331,7 +294,6 @@ public class AdminShopServiceImpl implements AdminShopService {
             shop.setActionAt(LocalDateTime.now());
             shopRepository.save(shop);
         }
->>>>>>> 105fc32050ccebc9b92d94f41bbd9d97b7536ace
 
         if (adminUsername != null || reason != null) {
             auditLogService.logWarning(
@@ -346,9 +308,6 @@ public class AdminShopServiceImpl implements AdminShopService {
             );
         }
 
-<<<<<<< HEAD
-        log.info("AdminShopService.rejectShop: shop {} rejected (was {})", id, beforeStatus);
-=======
         log.info("AdminShopService.rejectShop: shop {} rejected by {} - reason: {}",
                 id, adminUsername, reason);
     }
@@ -374,6 +333,5 @@ public class AdminShopServiceImpl implements AdminShopService {
             }
         }
         return id;
->>>>>>> 105fc32050ccebc9b92d94f41bbd9d97b7536ace
     }
 }

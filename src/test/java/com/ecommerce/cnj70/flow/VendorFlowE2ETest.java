@@ -106,12 +106,14 @@ class VendorFlowE2ETest {
                 orderRepository, kycService);
 
         kycService = new VendorKycServiceImpl(userRepository, kycProfileRepository,
-                thirdPartyKycVerifier, storageService);
+                thirdPartyKycVerifier, storageService, shopRepository);
 
-        adminKycService = new AdminKycServiceImpl(kycProfileRepository, userRepository);
+        adminKycService = new AdminKycServiceImpl(kycProfileRepository, userRepository,
+                mock(org.springframework.data.mongodb.core.MongoTemplate.class));
 
         adminShopService = new AdminShopServiceImpl(shopRepository,
-                mock(com.ecommerce.cnj70.service.AuditLogService.class));
+                mock(com.ecommerce.cnj70.service.AuditLogService.class),
+                mock(org.springframework.data.mongodb.core.MongoTemplate.class));
 
         productService = new ProductServiceImpl(productRepository,
                 mock(com.ecommerce.cnj70.repository.CategoryRepository.class),

@@ -78,16 +78,10 @@ public class User {
      */
     private Boolean marketingOptIn;
 
-<<<<<<< HEAD
-=======
-    // ===== KycProfile (denormalized từ KycProfile để check nhanh) =====
-    /** Trạng thái KYC (đồng bộ từ KycProfile.status bởi VendorKycService/ThirdPartyKycVerifier/AdminKycService). */
-    @Builder.Default
-    private KycStatus kycStatus = KycStatus.NOT_SUBMITTED;
-
     /**
      * Phase 3A — Admin who most recently enforced on this user
      * (Ban / Reinstate).
+     * Field {@code kycStatus} đã có ở đầu class (TASK #16), không khai báo lại.
      */
     private String enforcementActorId;
 
@@ -101,7 +95,6 @@ public class User {
      */
     private LocalDateTime enforcementAt;
 
->>>>>>> 105fc32050ccebc9b92d94f41bbd9d97b7536ace
     @CreatedDate
     private LocalDateTime createdAt;
 

@@ -47,4 +47,17 @@ public interface ProductRepository extends MongoRepository<Product, String> {
     long countByModerationStatus(ModerationStatus status);
 
     long countByModerationStatusIn(Collection<ModerationStatus> statuses);
+
+    // === Phase D — Duplicate Product Detection (Auto Moderation) ===
+
+    /**
+     * Tìm product khác có cùng imageUrl trong {@code imageUrls}.
+     * Dùng cho {@code DuplicateProductCheck} (C3) — phát hiện khi vendor
+     * upload trùng ảnh với product đã tồn tại.
+     *
+     * @param url       imageUrl cần so sánh
+     * @param excludeId id product hiện tại (loại trừ khỏi kết quả)
+     * @return product đầu tiên có chứa url, hoặc empty nếu không trùng
+     */
+    java.util.Optional<Product> findFirstByImageUrlsContainingAndIdNot(String url, String excludeId);
 }

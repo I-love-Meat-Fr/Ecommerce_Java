@@ -1,39 +1,23 @@
 package com.ecommerce.cnj70.service.impl;
 
 import com.ecommerce.cnj70.document.Category;
-import com.ecommerce.cnj70.document.ModerationHistory;
 import com.ecommerce.cnj70.document.Product;
 import com.ecommerce.cnj70.document.ProductSpecification;
 import com.ecommerce.cnj70.document.ProductVariant;
-import com.ecommerce.cnj70.dto.moderation.AuditEvent;
-import com.ecommerce.cnj70.dto.moderation.AutoModerationResult;
 import com.ecommerce.cnj70.dto.request.ProductFormReq;
-<<<<<<< HEAD
 import com.ecommerce.cnj70.dto.request.ReportCaseCreateReq;
 import com.ecommerce.cnj70.enums.AuditAction;
 import com.ecommerce.cnj70.enums.AuditSeverity;
-import com.ecommerce.cnj70.enums.ProductStatus;
-import com.ecommerce.cnj70.enums.ReportTargetType;
-=======
-import com.ecommerce.cnj70.enums.AutoModerationStatus;
-import com.ecommerce.cnj70.enums.ModerationAction;
 import com.ecommerce.cnj70.enums.ModerationStatus;
 import com.ecommerce.cnj70.enums.ProductStatus;
-import com.ecommerce.cnj70.enums.UserRole;
->>>>>>> 105fc32050ccebc9b92d94f41bbd9d97b7536ace
+import com.ecommerce.cnj70.enums.ReportTargetType;
 import com.ecommerce.cnj70.exception.BadRequestException;
 import com.ecommerce.cnj70.exception.ResourceNotFoundException;
 import com.ecommerce.cnj70.exception.UnauthorizedException;
 import com.ecommerce.cnj70.repository.CategoryRepository;
-import com.ecommerce.cnj70.repository.ModerationHistoryRepository;
 import com.ecommerce.cnj70.repository.ProductRepository;
-<<<<<<< HEAD
 import com.ecommerce.cnj70.service.AutoModerationService;
 import com.ecommerce.cnj70.service.AuditLogService;
-=======
-import com.ecommerce.cnj70.service.AutoModerationResultProvider;
-import com.ecommerce.cnj70.service.AuditEventWriter;
->>>>>>> 105fc32050ccebc9b92d94f41bbd9d97b7536ace
 import com.ecommerce.cnj70.service.ProductService;
 import com.ecommerce.cnj70.service.ReportCaseService;
 import com.ecommerce.cnj70.service.automation.AutoModerationResult;
@@ -50,12 +34,8 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
-<<<<<<< HEAD
 import java.util.Map;
 import java.util.Objects;
-=======
-import java.util.Optional;
->>>>>>> 105fc32050ccebc9b92d94f41bbd9d97b7536ace
 
 @Slf4j
 @Service
@@ -67,15 +47,9 @@ public class ProductServiceImpl implements ProductService {
 
     private final ProductRepository productRepository;
     private final CategoryRepository categoryRepository;
-<<<<<<< HEAD
     private final AutoModerationService autoModerationService;
     private final ReportCaseService reportCaseService;
     private final AuditLogService auditLogService;
-=======
-    private final ModerationHistoryRepository historyRepository;
-    private final AutoModerationResultProvider autoModerationResultProvider;
-    private final AuditEventWriter auditEventWriter;
->>>>>>> 105fc32050ccebc9b92d94f41bbd9d97b7536ace
 
     @Override
     @Transactional
@@ -111,19 +85,14 @@ public class ProductServiceImpl implements ProductService {
                 .variants(variants)
                 .shopId(shopId)
                 .shopName(shopName)
-<<<<<<< HEAD
                 // C1 — FORCE PENDING_AUTO. Vendor KHÔNG được bypass pipeline
                 // bằng cách set thẳng ACTIVE qua request.getStatus().
                 // Status được quyết định bởi AutoModerationService sau khi pipeline chạy.
                 .status(ProductStatus.PENDING_AUTO)
-=======
-                .status(request.getStatus() != null ? request.getStatus() : ProductStatus.ACTIVE)
-                // Phase 2 §13 — mọi Product mới phải vào Moderation queue.
-                // Auto Moderation contract sẽ (khi wire vào real backend) nâng cấp
-                // thành AUTO_PASSED / AUTO_REJECTED; nếu không có backend thật
-                // thì giữ PENDING_MANUAL và Moderator xử lý thủ công.
+                // (Additive từ merge origin/main) Moderation queue state machine bổ sung.
+                // Khi pipeline hoàn tất, runAutoModerationPipeline có thể set moderationStatus
+                // nếu logic downstream cần (không bắt buộc cho happy-path PENDING_AUTO).
                 .moderationStatus(ModerationStatus.PENDING_MANUAL)
->>>>>>> 105fc32050ccebc9b92d94f41bbd9d97b7536ace
                 .build();
 
         if (product.getImageUrls() != null && !product.getImageUrls().isEmpty()) {
@@ -132,58 +101,11 @@ public class ProductServiceImpl implements ProductService {
 
         Product saved = productRepository.save(product);
 
-<<<<<<< HEAD
         log.info("[Product] Created product id={} name='{}' shopId={} — entering Auto Moderation Pipeline",
                 saved.getId(), saved.getName(), saved.getShopId());
 
         // C1 — chạy pipeline + apply kết quả
         return runAutoModerationPipeline(saved);
-=======
-        // Phase 2 §13 + §57 — thử lấy Auto Moderation result (best-effort).
-        // Nếu không có real backend (NoopAutoModerationResultProvider) → Optional.empty()
-        // và Product giữ PENDING_MANUAL. KHÔNG fake production data.
-        try {
-            Optional<AutoModerationResult> auto = autoModerationResultProvider.getResult(saved.getId());
-            if (auto.isPresent()) {
-                AutoModerationResult result = auto.get();
-                ModerationStatus next = mapAutoStatus(result);
-                saved.setModerationStatus(next);
-                saved.setModerationReason(result.getReason());
-                saved.setModerationAt(result.getCheckedAt() != null ? result.getCheckedAt() : LocalDateTime.now());
-                saved = productRepository.save(saved);
-            }
-        } catch (RuntimeException ex) {
-            log.warn("AutoModeration lookup failed for productId={}: {}", saved.getId(), ex.getMessage());
-        }
-
-        // Phase 2 §13 — emit History + Audit khi Product submit vào queue
-        recordSubmissionHistory(saved);
-        emitSubmissionAudit(saved);
-
-        return saved;
-    }
-
-    /**
-     * Map AutoModerationResult.status sang Product.moderationStatus.
-     * AutoModerationStatus hiện có: AUTO_PASSED / AUTO_REJECTED / PENDING_MANUAL.
-     * Các giá trị APPROVED/REJECTED của ModerationStatus không suy ra từ AutoModerationStatus
-     * (Auto engine chỉ quyết định pass/reject/manual-review).
-     */
-    private static ModerationStatus mapAutoStatus(AutoModerationResult result) {
-        if (result == null || result.getStatus() == null) {
-            return ModerationStatus.PENDING_MANUAL;
-        }
-        AutoModerationStatus s = result.getStatus();
-        switch (s) {
-            case AUTO_PASSED:
-                return ModerationStatus.AUTO_PASSED;
-            case AUTO_REJECTED:
-                return ModerationStatus.AUTO_REJECTED;
-            case PENDING_MANUAL:
-            default:
-                return ModerationStatus.PENDING_MANUAL;
-        }
->>>>>>> 105fc32050ccebc9b92d94f41bbd9d97b7536ace
     }
 
     @Override
@@ -191,7 +113,12 @@ public class ProductServiceImpl implements ProductService {
     public Product updateProduct(String id, ProductFormReq request) {
         Product product = getProductById(id);
 
-<<<<<<< HEAD
+        // Phase 2 §47 — Backend ownership guard (defense-in-depth).
+        // (Additive từ merge origin/main) VendorService.validateProductOwnership() được
+        // controller gọi trước, nhưng service cũng enforce để phòng khi controller bypass
+        // (API trực tiếp, internal call, batch job).
+        enforceOwnership(product);
+
         // Capture trạng thái + các field "significant" TRƯỚC khi apply để
         // quyết định re-run pipeline.
         ProductStatus oldStatus = product.getStatus();
@@ -203,14 +130,6 @@ public class ProductServiceImpl implements ProductService {
         String oldCategoryId = product.getCategoryId();
 
         // ===== Apply field updates (KHÔNG apply status — vendor bypass bị chặn) =====
-=======
-        // Phase 2 §47 — Backend ownership guard (defense-in-depth).
-        // VendorService.validateProductOwnership() được controller gọi trước,
-        // nhưng service cũng enforce để phòng khi controller bypass (API trực tiếp,
-        // internal call, batch job).
-        enforceOwnership(product);
-
->>>>>>> 105fc32050ccebc9b92d94f41bbd9d97b7536ace
         if (request.getName() != null && !request.getName().isBlank()) {
             product.setName(request.getName());
         }
@@ -289,9 +208,22 @@ public class ProductServiceImpl implements ProductService {
             return runAutoModerationPipeline(product);
         }
 
-<<<<<<< HEAD
         // Không thay đổi significant → chỉ save thông thường.
-        return productRepository.save(product);
+        Product savedProduct = productRepository.save(product);
+
+        // (Additive từ merge origin/main) Resubmit flow — khi vendor sửa Product
+        // đang REJECTED (chỉ áp dụng khi KHÔNG trigger re-run pipeline ở trên),
+        // đưa vào lại Moderation queue. APPROVED/AUTO_PASSED giữ nguyên.
+        if (savedProduct.getModerationStatus() == ModerationStatus.REJECTED) {
+            savedProduct.setModerationStatus(ModerationStatus.PENDING_MANUAL);
+            savedProduct.setModerationReason(null);
+            savedProduct.setModerationAt(null);
+            savedProduct.setModerationActorId(null);
+            log.info("Product resubmitted to moderator queue: productId={}", savedProduct.getId());
+            return productRepository.save(savedProduct);
+        }
+
+        return savedProduct;
     }
 
     // ===== C1 helper: chạy pipeline + apply + audit + ReportCase (nếu cần) =====
@@ -414,67 +346,6 @@ public class ProductServiceImpl implements ProductService {
             if (!Objects.equals(oldList.get(i), newList.get(i))) return true;
         }
         return false;
-=======
-        // Phase 2 §13 (Resubmit flow) — Khi vendor sửa Product đang REJECTED,
-        // đưa vào lại Moderation queue. APPROVED/ESCALATED giữ nguyên (không tự ý chuyển).
-        boolean shouldResubmit = product.getModerationStatus() == ModerationStatus.REJECTED;
-        if (shouldResubmit) {
-            product.setModerationStatus(ModerationStatus.PENDING_MANUAL);
-            product.setModerationReason(null);
-            product.setModerationAt(null);
-            product.setModerationActorId(null);
-            log.info("Product resubmitted to moderator queue: productId={}", product.getId());
-        }
-
-        return productRepository.save(product);
-    }
-
-    /**
-     * Phase 2 §13 — Ghi ModerationHistory khi Product submit vào queue lần đầu.
-     */
-    private void recordSubmissionHistory(Product product) {
-        try {
-            ModerationHistory history = ModerationHistory.builder()
-                    .resourceType("PRODUCT")
-                    .resourceId(product.getId())
-                    .resourceName(product.getName())
-                    .action(ModerationAction.APPROVE) // marker = "submission" trước khi có action enum riêng
-                    .beforeStatus(null)
-                    .afterStatus(ModerationStatus.PENDING_MANUAL)
-                    .reason("Vendor tạo Product mới")
-                    .moderatorRole(UserRole.VENDOR)
-                    .moderatorEmail(product.getShopId())
-                    .build();
-            historyRepository.save(history);
-        } catch (RuntimeException ex) {
-            log.warn("Failed to record submission history for productId={}: {}",
-                    product.getId(), ex.getMessage());
-        }
-    }
-
-    /**
-     * Phase 2 §13 — Emit AuditEvent khi Product được submit vào Moderation queue.
-     */
-    private void emitSubmissionAudit(Product product) {
-        try {
-            AuditEvent event = AuditEvent.builder()
-                    .actorId(product.getShopId())
-                    .actorEmail(product.getShopId())
-                    .role(UserRole.VENDOR)
-                    .action("PRODUCT_SUBMIT")
-                    .resourceType("PRODUCT")
-                    .resourceId(product.getId())
-                    .before("DRAFT")
-                    .after(ModerationStatus.PENDING_MANUAL.name())
-                    .reason("Vendor submit Product vào Moderation queue")
-                    .createdAt(LocalDateTime.now())
-                    .build();
-            auditEventWriter.write(event);
-        } catch (RuntimeException ex) {
-            log.warn("Failed to emit submission audit for productId={}: {}",
-                    product.getId(), ex.getMessage());
-        }
->>>>>>> 105fc32050ccebc9b92d94f41bbd9d97b7536ace
     }
 
     private List<ProductSpecification> sanitizeSpecifications(List<ProductSpecification> specs) {

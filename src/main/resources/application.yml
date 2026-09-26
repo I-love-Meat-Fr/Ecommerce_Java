@@ -68,3 +68,20 @@ kyc:
     # PENDING_THIRD_PARTY: giữ nguyên chờ 3rd-party (an toàn, admin duyệt tay nếu fail)
     # APPROVE: tự động coi như 3rd-party OK → chờ admin duyệt (dev/demo)
     on-error: APPROVE
+
+# Product Auto Moderation Pipeline (PHASE B-I)
+# Mặc định trống = không có keyword/category cấm nào. Thay đổi qua
+# environment-specific profile (application-staging.yml, application-prod.yml).
+moderation:
+  auto:
+    # BlacklistKeywordCheck (C2 / task #3.0)
+    blacklist-keywords: ${MODERATION_BLACKLIST_KEYWORDS:}
+    # ForbiddenCategoryPolicy (C6 / task #7.0) — list categoryId bị cấm
+    forbidden-category-ids: ${MODERATION_FORBIDDEN_CATEGORY_IDS:}
+    # ImageHashCheck (C5 / task #6.0) — whitelist image extensions
+    allowed-image-extensions: jpg,jpeg,png,webp
+    # PriceAnomalyCheck (C4 / task #5.0) — median + MAD anomaly detection
+    price-history-window-days: 30
+    price-anomaly-z-threshold: 3.0
+    price-anomaly-min-samples: 5
+    price-anomaly-mad-epsilon: 1.0

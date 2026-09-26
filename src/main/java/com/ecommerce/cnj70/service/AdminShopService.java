@@ -22,31 +22,13 @@ public interface AdminShopService {
     // ===== activateShop =====
     void activateShop(String id);
 
-<<<<<<< HEAD
-=======
     /** TASK #24: với AuditLog actor tracking */
->>>>>>> 105fc32050ccebc9b92d94f41bbd9d97b7536ace
     void activateShop(String id, String actorId, String actorUsername);
 
     // ===== deactivateShop =====
     /** Backward-compat: chỉ id. */
     void deactivateShop(String id);
 
-<<<<<<< HEAD
-    void deactivateShop(String id, String actorId, String actorUsername);
-
-    void rejectShop(String id);
-
-    /** TASK #24: với AuditLog actor tracking + reason */
-    void rejectShop(String id, String actorId, String actorUsername, String reason);
-
-    /**
-     * Convenience overload cho test/dev: truyền {@code (id, reason, actorUsername)}
-     * thay vì {@code (id, actorId, actorUsername, reason)} — actorId = null.
-     * Không thay đổi business logic; chỉ bridge signature mismatch với tests cũ.
-     */
-    void rejectShop(String id, String reason, String actorUsername);
-=======
     /**
      * TASK #24 + feature/vendors-module: deactivate kèm reason + adminUsername.
      * - Lưu deactivationReason, actionBy, actionAt lên Shop document (vendors-module).
@@ -65,5 +47,4 @@ public interface AdminShopService {
      * - Ghi AuditLog SHOP_REJECTED với adminUsername làm actor (feature/admin).
      */
     void rejectShop(String id, String reason, String adminUsername);
->>>>>>> 105fc32050ccebc9b92d94f41bbd9d97b7536ace
 }

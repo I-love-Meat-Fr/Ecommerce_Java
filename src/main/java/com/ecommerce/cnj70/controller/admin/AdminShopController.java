@@ -204,15 +204,12 @@ public class AdminShopController {
         }
 
         try {
-<<<<<<< HEAD
-            adminShopService.deactivateShop(id, currentActorId(userDetails), currentActorId(userDetails));
-=======
             // Signature mới (merge feature/admin + feature/vendors-module):
             //   deactivateShop(id, reason, adminUsername) - vừa lưu reason/actionBy/actionAt
             //   lên Shop, vừa ghi AuditLog SHOP_SUSPENDED với adminUsername làm actor.
+            // currentActorId() trả về user.getUsername() (xem helper ở đầu class).
             String actorId = currentActorId(userDetails);
             adminShopService.deactivateShop(id, reason, actorId);
->>>>>>> 105fc32050ccebc9b92d94f41bbd9d97b7536ace
             redirectAttributes.addFlashAttribute("flashSuccess",
                     "Đã ngừng hoạt động shop \"" + shop.getShopName() + "\"");
         } catch (BusinessException ex) {
@@ -246,13 +243,11 @@ public class AdminShopController {
         }
 
         try {
-<<<<<<< HEAD
-            adminShopService.rejectShop(id, currentActorId(userDetails), currentActorId(userDetails), reason);
-=======
+            // Signature mới: rejectShop(id, reason, adminUsername).
             // Gộp cả reason + actorId/actorUsername.
+            // currentActorId() trả về user.getUsername() nên truyền trực tiếp vào adminUsername.
             String actorId = currentActorId(userDetails);
             adminShopService.rejectShop(id, reason, actorId);
->>>>>>> 105fc32050ccebc9b92d94f41bbd9d97b7536ace
             redirectAttributes.addFlashAttribute("flashSuccess",
                     "Đã từ chối shop \"" + shop.getShopName() + "\"");
         } catch (BusinessException ex) {

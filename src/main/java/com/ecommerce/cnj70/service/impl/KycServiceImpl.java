@@ -210,12 +210,10 @@ public class KycServiceImpl implements KycService {
             case ADMIN_REJECTED -> "Admin từ chối: " +
                     (shop.getKycRejectionReason() != null ? shop.getKycRejectionReason() : "Không rõ lý do");
             case SUSPENDED -> "KYC đã bị tạm ngưng";
-            // Legacy / new workflow values mở rộng
-            case NOT_SUBMITTED -> "Chưa nộp hồ sơ";
-            case PENDING_THIRD_PARTY -> "Đang chờ bên thứ ba xác minh";
-            case PENDING_ADMIN -> "Đang chờ admin duyệt";
-            case THIRD_PARTY_REJECTED -> "Bên thứ ba từ chối";
-            case ADMIN_REJECTED -> "Admin từ chối";
+            // Legacy values (giữ để build pass với enum mở rộng sau merge origin/main)
+            case PENDING_KYC -> "Chưa nộp KYC (legacy)";
+            case PENDING_PROVIDER -> "Đang xác minh (legacy)";
+            case KYC_REJECTED -> "KYC bị từ chối (legacy)";
         };
 
         return KycStatusResponse.builder()

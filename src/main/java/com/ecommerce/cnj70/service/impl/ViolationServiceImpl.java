@@ -1,10 +1,13 @@
 package com.ecommerce.cnj70.service.impl;
 
 import com.ecommerce.cnj70.document.Violation;
+import com.ecommerce.cnj70.enums.AuditAction;
+import com.ecommerce.cnj70.enums.AuditSeverity;
 import com.ecommerce.cnj70.enums.ViolationSeverity;
 import com.ecommerce.cnj70.enums.ViolationType;
 import com.ecommerce.cnj70.exception.ResourceNotFoundException;
 import com.ecommerce.cnj70.repository.ViolationRepository;
+import com.ecommerce.cnj70.service.AuditLogService;
 import com.ecommerce.cnj70.service.ViolationService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -25,6 +28,7 @@ public class ViolationServiceImpl implements ViolationService {
 
     private final ViolationRepository violationRepository;
     private final MongoTemplate mongoTemplate;
+    private final AuditLogService auditLogService;
 
     @Override
     public Page<Violation> getViolationsByShopId(String shopId, Pageable pageable) {
@@ -100,7 +104,41 @@ public class ViolationServiceImpl implements ViolationService {
         }
         violation.setResolvedAt(null);
         violation.setResolvedBy(null);
-        return violationRepository.save(violation);
+        Violation saved = violationRepository.save(violation);
+
+        // ===== PHASE J — Audit log VIOLATION_CREATED =====
+        // Mapping action theo AuditAction enum hiện có (không thêm enum mới).
+        // Severity INFO cho violation thường, CRITICAL cho violation CRITICAL
+        // để Admin Audit Log Viewer lọc được.
+        try {
+            AuditSeverity severity = saved.getSeverity() == ViolationSeverity.CRITICAL
+                    ? AuditSeverity.CRITICAL
+                    : AuditSeverity.WARNING;
+            String reason = "Tạo violation cho shop=" + saved.getShopId()
+                    + " type=" + saved.getType()
+                    + " severity=" + saved.getSeverity()
+                    + (saved.getProductId() != null
+                        ? " product=" + saved.getProductId()
+                        : (saved.getOrderId() != null
+                            ? " order=" + saved.getOrderId()
+                            : ""));
+            auditLogService.log(
+                    AuditAction.VIOLATION_CREATED,
+                    "VIOLATION",
+                    saved.getId(),
+                    saved.getResolvedBy(),   // actor (null nếu auto/system)
+                    null,                    // actorUsername — không có context ở đây
+                    "SYSTEM",                // role best-effort: SYSTEM cho auto/admin không truyền
+                    severity,
+                    reason,
+                    null);
+        } catch (Exception ex) {
+            // Audit log lỗi KHÔNG được phá flow business — đã lưu Violation thành công.
+            log.warn("Failed to write VIOLATION_CREATED audit for violation {}: {}",
+                    saved.getId(), ex.getMessage());
+        }
+
+        return saved;
     }
 
     @Override
@@ -110,10 +148,33 @@ public class ViolationServiceImpl implements ViolationService {
             log.info("Violation {} already resolved, skip", violationId);
             return violation;
         }
-        violation.setResolvedAt(LocalDateTime.now());
+        LocalDateTime now = LocalDateTime.now();
+        violation.setResolvedAt(now);
         violation.setResolvedBy(resolvedBy);
         violation.setResolutionNote(note);
-        return violationRepository.save(violation);
+        Violation saved = violationRepository.save(violation);
+
+        // ===== PHASE J — Audit log VIOLATION_RESOLVED =====
+        try {
+            String reason = "Resolve violation shop=" + saved.getShopId()
+                    + " type=" + saved.getType()
+                    + " severity=" + saved.getSeverity()
+                    + (note != null && !note.isBlank() ? " note=" + note : "");
+            auditLogService.logInfo(
+                    AuditAction.VIOLATION_RESOLVED,
+                    "VIOLATION",
+                    saved.getId(),
+                    resolvedBy,
+                    null,
+                    resolvedBy != null ? "ADMIN" : "SYSTEM",
+                    reason);
+        } catch (Exception ex) {
+            // KHÔNG throw — Violation đã được resolve thành công trước đó.
+            log.warn("Failed to write VIOLATION_RESOLVED audit for violation {}: {}",
+                    violationId, ex.getMessage());
+        }
+
+        return saved;
     }
 
     @Override

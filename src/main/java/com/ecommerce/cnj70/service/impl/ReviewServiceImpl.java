@@ -78,6 +78,22 @@ public class ReviewServiceImpl implements ReviewService {
 
         updateProductRating(product.getId());
 
+        // ===== PHASE J — Audit log REVIEW_CREATED (user-facing) =====
+        try {
+            auditLogService.logInfo(
+                    AuditAction.REVIEW_CREATED,
+                    "REVIEW",
+                    savedReview.getId(),
+                    userId,
+                    user.getFullName(),
+                    "CUSTOMER",
+                    "Customer tạo review cho productId=" + savedReview.getProductId()
+                            + " rating=" + savedReview.getRating());
+        } catch (Exception ex) {
+            log.warn("Failed to write REVIEW_CREATED audit for review {}: {}",
+                    savedReview.getId(), ex.getMessage());
+        }
+
         return savedReview;
     }
 
@@ -121,6 +137,21 @@ public class ReviewServiceImpl implements ReviewService {
         reviewRepository.delete(review);
 
         updateProductRating(productId);
+
+        // ===== PHASE J — Audit log REVIEW_DELETED (user-facing) =====
+        try {
+            auditLogService.logWarning(
+                    AuditAction.REVIEW_DELETED,
+                    "REVIEW",
+                    reviewId,
+                    userId,
+                    null,
+                    "CUSTOMER",
+                    "Customer tự xóa review của mình (productId=" + productId + ")");
+        } catch (Exception ex) {
+            log.warn("Failed to write REVIEW_DELETED audit for review {}: {}",
+                    reviewId, ex.getMessage());
+        }
     }
 
     @Override
