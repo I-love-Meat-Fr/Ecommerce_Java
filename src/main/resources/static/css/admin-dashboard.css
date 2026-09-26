@@ -187,6 +187,236 @@
 }
 
 /* ============================================
+   SECTION SPACING — hero → top stats → sections → main grid → quick actions
+   ============================================ */
+.dash-card-section,
+.dash-card-quick {
+    margin-bottom: 24px;
+}
+
+/* ============================================
+   FINANCIAL OVERVIEW + COMPLIANCE & RISK SECTIONS
+   - 5-column grid (desktop), 3 cols (≤1200), 1 col (≤768)
+   - Cards: pastel tinted bg, colored icon circle, value+label+sub,
+     link indicator (only on <a> cards), N/A overlay (muted + badge).
+   ============================================ */
+.dash-stats-financial,
+.dash-stats-compliance {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 16px;
+    padding: 20px 24px 24px;
+}
+
+.dash-stats-financial .dash-stat-card,
+.dash-stats-compliance .dash-stat-card {
+    min-height: 190px;
+    padding: 20px;
+    border-radius: var(--dash-radius-lg);
+    border: 1px solid transparent;
+    box-shadow: var(--dash-shadow-sm);
+    transition: transform 200ms ease, box-shadow 200ms ease, border-color 200ms ease;
+}
+
+.dash-stats-financial .dash-stat-icon-wrap,
+.dash-stats-compliance .dash-stat-icon-wrap {
+    margin-bottom: 14px;
+    min-height: 48px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.dash-stats-financial .dash-stat-icon,
+.dash-stats-compliance .dash-stat-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: var(--dash-radius);
+    font-size: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.dash-stats-financial .dash-stat-value,
+.dash-stats-compliance .dash-stat-value {
+    font-size: 28px;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    line-height: 1.05;
+    margin-bottom: 6px;
+}
+
+.dash-stats-financial .dash-stat-label,
+.dash-stats-compliance .dash-stat-label {
+    font-size: 13.5px;
+    font-weight: 600;
+    line-height: 1.3;
+    opacity: 0.9;
+}
+
+.dash-stats-financial .dash-stat-sub,
+.dash-stats-compliance .dash-stat-sub {
+    margin-top: auto;
+    padding-top: 10px;
+    font-size: 11.5px;
+    font-weight: 500;
+    line-height: 1.4;
+}
+
+/* Solid color variants — used by Financial/Compliance cards */
+.dash-stat-info {
+    background: var(--dash-info-soft) !important;
+    border-color: transparent !important;
+}
+.dash-stat-info .dash-stat-icon {
+    background: rgba(255, 255, 255, 0.75) !important;
+    color: var(--dash-info) !important;
+}
+.dash-stat-info .dash-stat-value,
+.dash-stat-info .dash-stat-label {
+    color: #0369a1 !important;
+}
+
+.dash-stat-purple {
+    background: rgba(168, 85, 247, 0.08) !important;
+    border-color: transparent !important;
+}
+.dash-stat-purple .dash-stat-icon {
+    background: rgba(255, 255, 255, 0.75) !important;
+    color: #9333ea !important;
+}
+.dash-stat-purple .dash-stat-value,
+.dash-stat-purple .dash-stat-label {
+    color: #6b21a8 !important;
+}
+
+.dash-stat-slate {
+    background: var(--dash-border-light) !important;
+    border-color: var(--dash-border) !important;
+}
+.dash-stat-slate .dash-stat-icon {
+    background: rgba(255, 255, 255, 0.7) !important;
+    color: var(--dash-text-secondary) !important;
+}
+.dash-stat-slate .dash-stat-value,
+.dash-stat-slate .dash-stat-label {
+    color: var(--dash-text-secondary) !important;
+}
+
+.dash-stat-amber {
+    background: var(--dash-warning-soft) !important;
+    border-color: transparent !important;
+}
+.dash-stat-amber .dash-stat-icon {
+    background: rgba(255, 255, 255, 0.75) !important;
+    color: var(--dash-warning) !important;
+}
+.dash-stat-amber .dash-stat-value,
+.dash-stat-amber .dash-stat-label {
+    color: #92400e !important;
+}
+.dash-stat-amber:hover,
+a.dash-stat-amber:hover {
+    border-color: var(--dash-warning) !important;
+    box-shadow: 0 8px 20px -8px rgba(245, 158, 11, 0.4) !important;
+}
+
+.dash-stat-red {
+    background: var(--dash-danger-soft) !important;
+    border-color: transparent !important;
+}
+.dash-stat-red .dash-stat-icon {
+    background: rgba(255, 255, 255, 0.75) !important;
+    color: var(--dash-danger) !important;
+}
+.dash-stat-red .dash-stat-value,
+.dash-stat-red .dash-stat-label {
+    color: #991b1b !important;
+}
+.dash-stat-red:hover,
+a.dash-stat-red:hover {
+    border-color: var(--dash-danger) !important;
+    box-shadow: 0 8px 20px -8px rgba(239, 68, 68, 0.4) !important;
+}
+
+.dash-stat-dark {
+    background: #f1f5f9 !important;
+    border-color: var(--dash-border) !important;
+}
+.dash-stat-dark .dash-stat-icon {
+    background: rgba(255, 255, 255, 0.7) !important;
+    color: #334155 !important;
+}
+.dash-stat-dark .dash-stat-value,
+.dash-stat-dark .dash-stat-label {
+    color: #334155 !important;
+}
+.dash-stat-dark:hover,
+a.dash-stat-dark:hover {
+    border-color: #334155 !important;
+    box-shadow: 0 8px 20px -8px rgba(51, 65, 85, 0.4) !important;
+}
+
+/* N/A state — used on Vendor Sales / Vendor Payable / Refund */
+.dash-stat-na {
+    opacity: 0.82;
+}
+.dash-stat-na .dash-stat-value {
+    color: var(--dash-text-muted);
+}
+
+.dash-na-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    height: 22px;
+    padding: 0 10px;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.6);
+    color: var(--dash-text-secondary);
+    font-size: 10.5px;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    border: 1px solid var(--dash-border);
+}
+
+/* Hover/focus polisher — Financial/Compliance cards are mostly <a> links */
+.dash-stats-financial a.dash-stat-card:hover,
+.dash-stats-compliance a.dash-stat-card:hover {
+    border-color: var(--dash-primary);
+    box-shadow: 0 8px 20px -8px rgba(15, 181, 176, 0.4);
+    transform: translateY(-2px);
+}
+
+.dash-stats-financial .dash-stat-card,
+.dash-stats-compliance .dash-stat-card {
+    transition: transform 200ms ease, box-shadow 200ms ease, border-color 200ms ease;
+}
+
+@media (max-width: 1200px) {
+    .dash-stats-financial,
+    .dash-stats-compliance {
+        grid-template-columns: repeat(3, 1fr);
+    }
+}
+
+@media (max-width: 768px) {
+    .dash-stats-financial,
+    .dash-stats-compliance {
+        grid-template-columns: 1fr;
+        padding: 16px;
+        gap: 12px;
+    }
+
+    .dash-stats-financial .dash-stat-card,
+    .dash-stats-compliance .dash-stat-card {
+        min-height: auto;
+    }
+}
+
+/* ============================================
    STATS GRID
    ============================================ */
 .dash-stats {
@@ -314,250 +544,6 @@ a.dash-stat-card:focus-visible .dash-stat-link-indicator,
 .dash-stat-danger .dash-stat-label { color: rgba(255, 255, 255, 0.92); }
 .dash-stat-danger svg path { stroke: rgba(255, 255, 255, 0.45) !important; }
 
-/* ============================================
-   SOFT-TINTED STATS — used by Financial Overview
-   and Compliance & Risk sections. White surface
-   with colored icon block, accent value text,
-   consistent hierarchy with the rest of the page.
-   ============================================ */
-.dash-stat-soft-info,
-.dash-stat-soft-purple,
-.dash-stat-soft-slate,
-.dash-stat-soft-amber,
-.dash-stat-soft-danger,
-.dash-stat-soft-red,
-.dash-stat-soft-dark {
-    background: var(--dash-surface);
-    border: 1px solid var(--dash-border);
-    box-shadow: var(--dash-shadow-sm);
-    color: var(--dash-text);
-    overflow: hidden;
-    display: flex;
-    flex-direction: column;
-}
-
-.dash-stat-soft-info .dash-stat-icon,
-.dash-stat-soft-purple .dash-stat-icon,
-.dash-stat-soft-slate .dash-stat-icon,
-.dash-stat-soft-amber .dash-stat-icon,
-.dash-stat-soft-danger .dash-stat-icon,
-.dash-stat-soft-red .dash-stat-icon,
-.dash-stat-soft-dark .dash-stat-icon {
-    width: 44px;
-    height: 44px;
-    border-radius: var(--dash-radius);
-    font-size: 18px;
-}
-
-.dash-stat-soft-info .dash-stat-link-indicator,
-.dash-stat-soft-purple .dash-stat-link-indicator,
-.dash-stat-soft-slate .dash-stat-link-indicator,
-.dash-stat-soft-amber .dash-stat-link-indicator,
-.dash-stat-soft-danger .dash-stat-link-indicator,
-.dash-stat-soft-red .dash-stat-link-indicator,
-.dash-stat-soft-dark .dash-stat-link-indicator {
-    color: var(--dash-text-faint);
-    background: transparent;
-    opacity: 1;
-    transform: none;
-    width: 22px;
-    height: 22px;
-    font-size: 11px;
-    border-radius: 6px;
-    transition: var(--dash-transition);
-}
-
-/* info (sky) */
-.dash-stat-soft-info .dash-stat-icon {
-    background: var(--dash-info-soft);
-    color: var(--dash-info);
-}
-.dash-stat-soft-info .dash-stat-value { color: var(--dash-info); }
-
-/* purple (platform revenue) */
-.dash-stat-soft-purple {
-    --dash-variant: #8b5cf6;
-    --dash-variant-soft: rgba(139, 92, 246, 0.12);
-}
-.dash-stat-soft-purple .dash-stat-icon {
-    background: var(--dash-variant-soft);
-    color: var(--dash-variant);
-}
-.dash-stat-soft-purple .dash-stat-value { color: var(--dash-variant); }
-
-/* slate (vendor / finance N/A) */
-.dash-stat-soft-slate {
-    --dash-variant: #64748b;
-    --dash-variant-soft: rgba(100, 116, 139, 0.12);
-}
-.dash-stat-soft-slate .dash-stat-icon {
-    background: var(--dash-variant-soft);
-    color: var(--dash-variant);
-}
-.dash-stat-soft-slate .dash-stat-value { color: var(--dash-text-muted); }
-
-/* amber (KYC) */
-.dash-stat-soft-amber {
-    --dash-variant: #f59e0b;
-    --dash-variant-soft: rgba(245, 158, 11, 0.14);
-}
-.dash-stat-soft-amber .dash-stat-icon {
-    background: var(--dash-variant-soft);
-    color: var(--dash-variant);
-}
-.dash-stat-soft-amber .dash-stat-value { color: var(--dash-variant); }
-
-/* danger (escalation) */
-.dash-stat-soft-danger {
-    --dash-variant: #ef4444;
-    --dash-variant-soft: rgba(239, 68, 68, 0.12);
-}
-.dash-stat-soft-danger .dash-stat-icon {
-    background: var(--dash-variant-soft);
-    color: var(--dash-variant);
-}
-.dash-stat-soft-danger .dash-stat-value { color: var(--dash-variant); }
-
-/* red (violation — deep) */
-.dash-stat-soft-red {
-    --dash-variant: #dc2626;
-    --dash-variant-soft: rgba(220, 38, 38, 0.12);
-}
-.dash-stat-soft-red .dash-stat-icon {
-    background: var(--dash-variant-soft);
-    color: var(--dash-variant);
-}
-.dash-stat-soft-red .dash-stat-value { color: var(--dash-variant); }
-
-/* dark (suspended) */
-.dash-stat-soft-dark {
-    --dash-variant: #475569;
-    --dash-variant-soft: rgba(71, 85, 105, 0.12);
-}
-.dash-stat-soft-dark .dash-stat-icon {
-    background: var(--dash-variant-soft);
-    color: var(--dash-variant);
-}
-.dash-stat-soft-dark .dash-stat-value { color: var(--dash-text); }
-
-/* ============================================
-   5-COL FINANCIAL & COMPLIANCE GRIDS
-   ============================================ */
-.dash-stats-financial,
-.dash-stats-compliance {
-    grid-template-columns: repeat(5, minmax(0, 1fr));
-    gap: 16px;
-    padding: 20px 24px 24px;
-    margin: 0;
-}
-
-.dash-stats-financial .dash-stat-card,
-.dash-stats-compliance .dash-stat-card {
-    padding: 20px 18px 22px;
-    border-radius: var(--dash-radius-lg);
-    min-height: 168px;
-    height: 100%;
-    display: flex;
-    flex-direction: column;
-}
-
-.dash-stats-financial .dash-stat-icon-wrap,
-.dash-stats-compliance .dash-stat-icon-wrap {
-    margin-bottom: 14px;
-    min-height: 44px;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 8px;
-}
-
-.dash-stats-financial .dash-stat-icon,
-.dash-stats-compliance .dash-stat-icon {
-    width: 44px;
-    height: 44px;
-    border-radius: var(--dash-radius);
-    font-size: 18px;
-    flex-shrink: 0;
-}
-
-.dash-stats-financial .dash-stat-value,
-.dash-stats-compliance .dash-stat-value {
-    font-size: 26px;
-    font-weight: 800;
-    letter-spacing: -0.02em;
-    line-height: 1.2;
-    margin-bottom: 6px;
-    word-break: break-word;
-}
-
-.dash-stats-financial .dash-stat-label,
-.dash-stats-compliance .dash-stat-label {
-    font-size: 13px;
-    font-weight: 600;
-    opacity: 1;
-    color: var(--dash-text);
-    margin-bottom: 8px;
-    line-height: 1.35;
-}
-
-.dash-stats-compliance .dash-stat-card:hover .dash-stat-link-indicator,
-.dash-stats-financial .dash-stat-card:hover .dash-stat-link-indicator {
-    background: var(--dash-primary-soft);
-    color: var(--dash-primary);
-    transform: translateX(2px);
-}
-
-/* Hover: subtle elevation + accent border glow */
-.dash-stats-financial a.dash-stat-card:hover,
-.dash-stats-compliance a.dash-stat-card:hover {
-    border-color: var(--dash-primary);
-    box-shadow: var(--dash-shadow);
-}
-
-/* Subtitle text under the label */
-.dash-stat-sub {
-    font-size: 12px;
-    color: var(--dash-text-muted);
-    font-weight: 400;
-    line-height: 1.45;
-    margin-top: auto;
-    padding-top: 8px;
-}
-
-/* N/A badge — small chip in top-right */
-.dash-na-badge {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    height: 22px;
-    padding: 0 9px;
-    border-radius: 999px;
-    background: var(--dash-border-light);
-    color: var(--dash-text-muted);
-    font-size: 11px;
-    font-weight: 700;
-    letter-spacing: 0.04em;
-    line-height: 1;
-    align-self: flex-start;
-}
-
-.dash-stat-na .dash-stat-icon {
-    background: var(--dash-border-light) !important;
-    color: var(--dash-text-faint) !important;
-}
-
-.dash-stat-na.dash-stat-card:hover {
-    transform: none;
-    cursor: default;
-    box-shadow: var(--dash-shadow-sm);
-    border-color: var(--dash-border);
-}
-
-.dash-stat-na.dash-stat-soft-slate .dash-stat-value,
-.dash-stat-na .dash-stat-value {
-    color: var(--dash-text-faint) !important;
-}
-
 .dash-stat-icon-wrap {
     display: flex;
     align-items: flex-start;
@@ -639,15 +625,6 @@ a.dash-stat-card:focus-visible .dash-stat-link-indicator,
     box-shadow: var(--dash-shadow-sm);
     overflow: hidden;
     transition: var(--dash-transition);
-}
-
-.dash-card-section,
-.dash-card-quick {
-    margin-bottom: 24px;
-}
-
-.dash-card-quick {
-    margin-bottom: 0;
 }
 
 .dash-card:hover {
@@ -954,14 +931,9 @@ a.dash-stat-card:focus-visible .dash-stat-link-indicator,
     .dash-stats {
         grid-template-columns: repeat(2, 1fr);
     }
-
+    
     .dash-main-grid {
         grid-template-columns: 1fr;
-    }
-
-    .dash-stats-financial,
-    .dash-stats-compliance {
-        grid-template-columns: repeat(3, minmax(0, 1fr));
     }
 }
 
@@ -969,11 +941,11 @@ a.dash-stat-card:focus-visible .dash-stat-link-indicator,
     .dash-quick-grid {
         grid-template-columns: repeat(2, 1fr);
     }
-
+    
     .dash-hero {
         padding: 24px;
     }
-
+    
     .dash-greeting h1 {
         font-size: 24px;
     }
@@ -983,63 +955,38 @@ a.dash-stat-card:focus-visible .dash-stat-link-indicator,
     .dash-stats {
         grid-template-columns: 1fr;
     }
-
+    
     .dash-stat-value {
         font-size: 32px;
     }
-
+    
     .dash-revenue-value {
         font-size: 32px;
     }
-
+    
     .dash-quick-grid {
         grid-template-columns: 1fr;
         padding: 16px;
         gap: 12px;
     }
-
+    
     .dash-hero-content {
         flex-direction: column;
         align-items: flex-start;
     }
-
+    
     .dash-hero-actions {
         width: 100%;
     }
-
+    
     .dash-btn {
         flex: 1;
         justify-content: center;
     }
-
+    
     .dash-card-header {
         flex-direction: column;
         align-items: flex-start;
-    }
-
-    .dash-stats-financial,
-    .dash-stats-compliance {
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-        padding: 16px;
-        gap: 12px;
-    }
-
-    .dash-stats-financial .dash-stat-card,
-    .dash-stats-compliance .dash-stat-card {
-        min-height: 0;
-        padding: 16px;
-    }
-
-    .dash-stats-financial .dash-stat-value,
-    .dash-stats-compliance .dash-stat-value {
-        font-size: 22px;
-    }
-}
-
-@media (max-width: 480px) {
-    .dash-stats-financial,
-    .dash-stats-compliance {
-        grid-template-columns: 1fr;
     }
 }
 
@@ -1061,7 +1008,6 @@ a.dash-stat-card:focus-visible .dash-stat-link-indicator,
 .dash-stats .dash-stat-card:nth-child(2) { animation: dashFadeIn 0.4s ease-out 0.2s both; }
 .dash-stats .dash-stat-card:nth-child(3) { animation: dashFadeIn 0.4s ease-out 0.3s both; }
 .dash-stats .dash-stat-card:nth-child(4) { animation: dashFadeIn 0.4s ease-out 0.4s both; }
-.dash-stats .dash-stat-card:nth-child(5) { animation: dashFadeIn 0.4s ease-out 0.5s both; }
 
 .dash-main-grid .dash-card:nth-child(1) { animation: dashFadeIn 0.5s ease-out 0.3s both; }
 .dash-main-grid .dash-card:nth-child(2) { animation: dashFadeIn 0.5s ease-out 0.4s both; }
