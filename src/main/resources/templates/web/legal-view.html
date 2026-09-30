@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout/web-layout :: layout(title=${doc.title} + ' - CNJ70 Shop', content=~{::main-content}, scripts=~{::page-scripts}, pageStyles=~{::page-styles})}">
+<head>
+    <title th:text="${doc.title} + ' - CNJ70 Shop'">Legal - CNJ70 Shop</title>
+    <th:block th:fragment="page-styles">
+        <link rel="stylesheet" th:href="@{/css/legal.css}">
+    </th:block>
+</head>
+<body>
+<main th:fragment="main-content">
+    <div class="legal-page">
+        <div class="legal-container">
+            <div class="legal-breadcrumb">
+                <a th:href="@{/}"><i class="fas fa-home"></i> Trang chủ</a>
+                <span>/</span>
+                <a th:href="@{/legal}">Điều khoản &amp; Chính sách</a>
+                <span>/</span>
+                <strong th:text="${doc.title}">Điều khoản sử dụng</strong>
+            </div>
+
+            <article class="legal-article">
+                <header class="legal-header">
+                    <h1 class="legal-title" th:text="${doc.title}">Điều khoản sử dụng</h1>
+                    <div class="legal-meta">
+                        <span class="legal-badge">
+                            <i class="fas fa-code-branch"></i>
+                            Phiên bản <strong th:text="${doc.version}">1</strong>
+                        </span>
+                        <span class="legal-badge">
+                            <i class="fas fa-calendar-check"></i>
+                            Có hiệu lực từ
+                            <strong th:text="${#temporals.format(doc.effectiveDate, 'dd/MM/yyyy')}">01/01/2025</strong>
+                        </span>
+                        <span class="legal-badge" th:if="${doc.updatedBy != null and doc.updatedBy != 'SYSTEM'}">
+                            <i class="fas fa-user-edit"></i>
+                            Cập nhật bởi: <strong th:text="${doc.updatedBy}">admin</strong>
+                        </span>
+                    </div>
+                </header>
+
+                <div class="legal-body" th:utext="${doc.content}">
+                    <!-- Nội dung tài liệu (HTML đã được sanitize bởi author) -->
+                </div>
+
+                <footer class="legal-footer">
+                    <p>
+                        <i class="fas fa-info-circle"></i>
+                        Nếu có câu hỏi về tài liệu này, vui lòng liên hệ
+                        <a th:href="@{/contact}">bộ phận hỗ trợ</a> của CNJ70 Shop.
+                    </p>
+                </footer>
+            </article>
+
+            <aside class="legal-sidebar">
+                <h3><i class="fas fa-book"></i> Tài liệu khác</h3>
+                <ul class="legal-nav">
+                    <li th:each="t : ${T(com.ecommerce.cnj70.enums.LegalDocumentType).values()}">
+                        <a th:href="@{/legal/{type}(type=${t.name().toLowerCase()})}"
+                           th:classappend="${t.name() == type.name() ? 'active' : ''}">
+                            <i class="fas fa-chevron-right"></i>
+                            <span th:switch="${t.name()}">
+                                <span th:case="'TERMS'">Điều khoản sử dụng</span>
+                                <span th:case="'PRIVACY'">Chính sách bảo mật</span>
+                                <span th:case="'RETURN'">Chính sách đổi trả</span>
+                                <span th:case="'SHIPPING'">Chính sách vận chuyển</span>
+                                <span th:case="'WARRANTY'">Chính sách bảo hành</span>
+                                <span th:case="'COMPLAINT'">Quy định khiếu nại</span>
+                                <span th:case="'PAYMENT'">Phương thức thanh toán</span>
+                                <span th:case="'SITEMAP'">Sơ đồ website</span>
+                                <span th:case="*" th:text="${t.name()}">Tài liệu</span>
+                            </span>
+                        </a>
+                    </li>
+                </ul>
+            </aside>
+        </div>
+    </div>
+</main>
+
+<th:block th:fragment="page-scripts"></th:block>
+</body>
+</html>

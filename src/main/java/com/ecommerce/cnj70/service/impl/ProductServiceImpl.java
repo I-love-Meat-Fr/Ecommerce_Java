@@ -14,6 +14,11 @@ import com.ecommerce.cnj70.enums.ReportTargetType;
 import com.ecommerce.cnj70.exception.BadRequestException;
 import com.ecommerce.cnj70.exception.ResourceNotFoundException;
 import com.ecommerce.cnj70.exception.UnauthorizedException;
+import com.ecommerce.cnj70.moderation.ModerationContext;
+import com.ecommerce.cnj70.moderation.ModerationDecision;
+import com.ecommerce.cnj70.moderation.ModerationPipelineResult;
+import com.ecommerce.cnj70.moderation.ModerationPipelineService;
+import com.ecommerce.cnj70.moderation.ProductModerationContext;
 import com.ecommerce.cnj70.repository.CategoryRepository;
 import com.ecommerce.cnj70.repository.ProductRepository;
 import com.ecommerce.cnj70.service.AutoModerationService;
@@ -50,6 +55,8 @@ public class ProductServiceImpl implements ProductService {
     private final AutoModerationService autoModerationService;
     private final ReportCaseService reportCaseService;
     private final AuditLogService auditLogService;
+    /** Yêu cầu #1 — Auto Moderation Pipeline mới (Chain of Responsibility). */
+    private final ModerationPipelineService moderationPipelineService;
 
     @Override
     @Transactional
@@ -254,10 +261,18 @@ public class ProductServiceImpl implements ProductService {
         product.setStatus(result.getTargetStatus());
         Product finalized = productRepository.save(product);
 
+        // ===== Yêu cầu #1 — chạy thêm lớp Moderation Pipeline mới =====
+        // Lớp cũ (AutoModerationService) chạy các check legacy như PriceAnomaly,
+        // ImageHash, ForbiddenCategory. Lớp mới (ModerationPipelineService) chạy
+        // các check text-focused (BlacklistWord, DuplicateContent) dùng chung cho
+        // cả Product và Review — đảm bảo Product cũng được kiểm duyệt với bộ
+        // check mới nhất.
+        finalized = applyAdditionalModerationPipeline(finalized);
+
         log.info("[Product] Auto Moderation pipeline result for id={} name='{}': {} (flags={})",
                 finalized.getId(), finalized.getName(),
-                result.getTargetStatus(),
-                result.getAutoFlags());
+                finalized.getStatus(),
+                finalized.getModerationStatus());
 
         // MANUAL_REVIEW → tạo ReportCase cho Moderator queue.
         // Idempotent: ReportCaseService tự skip nếu đã có case PENDING cho target.
@@ -298,6 +313,105 @@ public class ProductServiceImpl implements ProductService {
         // Note: ReportCaseServiceImpl.validateTargetExists() tự snapshot
         // targetName/productName vào ReportCase.targetSnapshot.
         reportCaseService.createCase(req, null, AUDIT_ACTOR_SYSTEM);
+    }
+
+    /**
+     * Yêu cầu #1 — Áp dụng thêm {@link ModerationPipelineService} (lớp mới) cho Product.
+     *
+     * <p>Quy tắc escalate:</p>
+     * <ul>
+     *   <li>Pipeline mới trả FATAL → đẩy Product sang {@link ProductStatus#REJECTED_AUTO}
+     *       bất kể kết quả pipeline cũ.</li>
+     *   <li>Pipeline mới trả SUSPICIOUS mà pipeline cũ cho ACTIVE → escalate sang
+     *       {@link ProductStatus#MANUAL_REVIEW} + tạo ReportCase.</li>
+     *   <li>Pipeline mới trả PASS → giữ nguyên kết quả pipeline cũ.</li>
+     * </ul>
+     *
+     * <p>Idempotent: nếu ReportCaseService đã có case PENDING cho target thì tự skip.</p>
+     */
+    private Product applyAdditionalModerationPipeline(Product product) {
+        ModerationContext ctx = new ProductModerationContext(product,
+                ModerationContext.SharedState.builder().build(),
+                LocalDateTime.now());
+
+        ModerationPipelineResult pipelineResult;
+        try {
+            pipelineResult = moderationPipelineService.run(ctx);
+        } catch (Exception ex) {
+            // Fail-safe: pipeline mới lỗi → giữ nguyên kết quả pipeline cũ, log warn.
+            log.warn("[Product] Additional ModerationPipeline failed for id={}: {} — keeping old verdict",
+                    product.getId(), ex.getMessage());
+            return product;
+        }
+
+        boolean needResave = false;
+        ProductStatus newStatus = null;
+        StringBuilder extraReasons = new StringBuilder();
+
+        switch (pipelineResult.getSeverity()) {
+            case PASS -> {
+                // Không escalate — giữ nguyên.
+                log.debug("[Product] Additional pipeline PASS for id={} — keeping status={}",
+                        product.getId(), product.getStatus());
+            }
+            case SUSPICIOUS -> {
+                if (product.getStatus() == ProductStatus.ACTIVE
+                        || product.getStatus() == ProductStatus.PENDING_AUTO) {
+                    log.info("[Product] Additional pipeline SUSPICIOUS for id={} — escalating to MANUAL_REVIEW",
+                            product.getId());
+                    newStatus = ProductStatus.MANUAL_REVIEW;
+                    needResave = true;
+                    extraReasons.append("AdditionalModeration[SUSPICIOUS]: ")
+                            .append(String.join("; ", pipelineResult.getReasons()));
+                }
+            }
+            case FATAL -> {
+                log.warn("[Product] Additional pipeline FATAL for id={} — escalating to REJECTED_AUTO",
+                        product.getId());
+                newStatus = ProductStatus.REJECTED_AUTO;
+                needResave = true;
+                extraReasons.append("AdditionalModeration[FATAL]: ")
+                        .append(String.join("; ", pipelineResult.getReasons()));
+            }
+        }
+
+        if (!needResave) {
+            return product;
+        }
+
+        product.setStatus(newStatus);
+        Product saved = productRepository.save(product);
+
+        // Append reason vào moderationReason (nếu đã có) để vendor / moderator biết.
+        String prevReason = product.getModerationReason();
+        String mergedReason = prevReason == null || prevReason.isBlank()
+                ? extraReasons.toString()
+                : prevReason + " | " + extraReasons;
+        product.setModerationReason(mergedReason);
+        product.setModerationAt(LocalDateTime.now());
+        product.setModerationActorId(AUDIT_ACTOR_SYSTEM);
+
+        // Nếu escalate sang MANUAL_REVIEW → tạo ReportCase.
+        if (newStatus == ProductStatus.MANUAL_REVIEW) {
+            try {
+                ReportCaseCreateReq req = ReportCaseCreateReq.builder()
+                        .targetType(ReportTargetType.PRODUCT)
+                        .targetId(product.getId())
+                        .reason("Additional Moderation flag")
+                        .description("Lớp Moderation mới phát hiện dấu hiệu đáng ngờ:\n"
+                                + String.join("\n", pipelineResult.getReasons()))
+                        .autoFlags(new ArrayList<>(pipelineResult.getAutoFlags()))
+                        .source("AUTO")
+                        .priority(5)
+                        .build();
+                reportCaseService.createCase(req, null, AUDIT_ACTOR_SYSTEM);
+            } catch (Exception ex) {
+                log.warn("[Product] Additional pipeline createAutoReportCase failed for id={}: {}",
+                        product.getId(), ex.getMessage());
+            }
+        }
+
+        return productRepository.save(product);
     }
 
     private void logAutoModerationOutcome(Product product, AutoModerationResult result) {

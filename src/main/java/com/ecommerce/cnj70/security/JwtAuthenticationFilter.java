@@ -34,20 +34,19 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         try {
             String jwt = parseJwt(request);
 
-            if (jwt != null && jwtUtils.validateToken(jwt)) {
-                String email = jwtUtils.extractUsername(jwt);
-                String userId = jwtUtils.extractUserId(jwt);
-                String role = jwtUtils.extractRole(jwt);
+            if (jwt != null) {
+                if (!jwtUtils.validateToken(jwt)) {
+                    clearJwtCookie(response);
+                } else {
+                    String email = jwtUtils.extractUsername(jwt);
+                    String userId = jwtUtils.extractUserId(jwt);
+                    String role = jwtUtils.extractRole(jwt);
 
-                User user = userRepository.findByEmail(email).orElse(null);
-                if (user != null) {
-                    // TASK 1.7 — LOCKED user + old JWT.
-                    // Reject authentication for any account whose current status is not ACTIVE,
-                    // so previously valid JWT tokens stop authenticating once the account is LOCKED.
-                    if (user.getStatus() != AccountStatus.ACTIVE) {
-                        log.debug("JWT rejected: account {} is not active (status={})", email, user.getStatus());
+                    User user = userRepository.findByEmail(email).orElse(null);
+                    if (user == null || user.getStatus() != AccountStatus.ACTIVE) {
+                        clearJwtCookie(response);
                     } else if (!userId.equals(user.getId()) || !role.equals(user.getRole().name())) {
-                        log.debug("JWT rejected: claim mismatch for {}", email);
+                        clearJwtCookie(response);
                     } else {
                         CustomUserDetails userDetails = CustomUserDetails.fromUser(user);
 
@@ -68,6 +67,14 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         }
 
         filterChain.doFilter(request, response);
+    }
+
+    private void clearJwtCookie(HttpServletResponse response) {
+        Cookie bad = new Cookie("jwt", null);
+        bad.setPath("/");
+        bad.setMaxAge(0);
+        bad.setHttpOnly(false);
+        response.addCookie(bad);
     }
 
     private String parseJwt(HttpServletRequest request) {

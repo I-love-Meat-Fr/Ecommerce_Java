@@ -160,9 +160,8 @@ class PriceAnomalyCheckTest {
     @Test
     @DisplayName("Null price → PASS")
     void nullPrice_pass() {
-        when(historyRepository.findByProductIdAndRecordedAtGreaterThanEqual(
-                eq("p-1"), any(LocalDateTime.class), any(Pageable.class)))
-                .thenReturn(historyPrices(new BigDecimal("100"), new BigDecimal("110")));
+        // Không stub historyRepository — null price sẽ return PASS ngay từ
+        // đầu (line 99-102 PriceAnomalyCheck.check()), không gọi tới repo.
         Product p = productWithPrice("p-1", null);
         AutoCheckVerdict v = check.check(ctxFor(p));
         assertThat(v.isPass()).isTrue();

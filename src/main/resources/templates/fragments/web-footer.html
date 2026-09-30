@@ -34,10 +34,11 @@
             </div>
             <div class="footer-section">
                 <h4>Liên kết</h4>
-                <a href="#">Điều khoản sử dụng</a>
-                <a href="#">Chính sách bảo mật</a>
-                <a href="#">Chính sách giải quyết khiếu nại</a>
-                <a href="#">Sơ đồ website</a>
+                <a th:href="@{/legal/terms}" id="footer-terms-link">Điều khoản sử dụng</a>
+                <a th:href="@{/legal/privacy}" id="footer-privacy-link">Chính sách bảo mật</a>
+                <a th:href="@{/legal/complaint}">Chính sách giải quyết khiếu nại</a>
+                <a th:href="@{/legal/sitemap}">Sơ đồ website</a>
+                <a th:href="@{/legal}" id="footer-legal-link"><i class="fas fa-scale-balanced"></i> Tất cả tài liệu pháp lý</a>
             </div>
             <div class="footer-section">
                 <h4>Liên hệ</h4>

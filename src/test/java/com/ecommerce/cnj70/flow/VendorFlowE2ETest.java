@@ -119,7 +119,8 @@ class VendorFlowE2ETest {
                 mock(com.ecommerce.cnj70.repository.CategoryRepository.class),
                 mock(com.ecommerce.cnj70.service.AutoModerationService.class),
                 mock(com.ecommerce.cnj70.service.ReportCaseService.class),
-                mock(com.ecommerce.cnj70.service.AuditLogService.class));
+                mock(com.ecommerce.cnj70.service.AuditLogService.class),
+                mock(com.ecommerce.cnj70.moderation.ModerationPipelineService.class));
 
         cartService = new CartServiceImpl(cartRepository, productRepository);
 

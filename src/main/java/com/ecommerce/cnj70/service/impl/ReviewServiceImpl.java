@@ -5,10 +5,17 @@ import com.ecommerce.cnj70.document.Review;
 import com.ecommerce.cnj70.document.User;
 import com.ecommerce.cnj70.dto.request.ReportCaseCreateReq;
 import com.ecommerce.cnj70.enums.AuditAction;
+import com.ecommerce.cnj70.enums.ModerationStatus;
 import com.ecommerce.cnj70.enums.ReportTargetType;
 import com.ecommerce.cnj70.enums.ReviewModerationStatus;
 import com.ecommerce.cnj70.exception.BadRequestException;
 import com.ecommerce.cnj70.exception.ResourceNotFoundException;
+import com.ecommerce.cnj70.exception.VerifiedPurchaseException;
+import com.ecommerce.cnj70.moderation.ModerationContext;
+import com.ecommerce.cnj70.moderation.ModerationDecision;
+import com.ecommerce.cnj70.moderation.ModerationPipelineResult;
+import com.ecommerce.cnj70.moderation.ModerationPipelineService;
+import com.ecommerce.cnj70.moderation.ReviewModerationContext;
 import com.ecommerce.cnj70.repository.ProductRepository;
 import com.ecommerce.cnj70.repository.ReviewRepository;
 import com.ecommerce.cnj70.repository.UserRepository;
@@ -19,8 +26,10 @@ import com.ecommerce.cnj70.service.ReviewService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 
 @Slf4j
@@ -36,8 +45,11 @@ public class ReviewServiceImpl implements ReviewService {
     private final OrderService orderService;
     private final AuditLogService auditLogService;
     private final ReportCaseService reportCaseService;
+    /** Yêu cầu #1 — Auto Moderation Pipeline cho Review. */
+    private final ModerationPipelineService moderationPipelineService;
 
     @Override
+    @Transactional
     public Review createReview(String userId, String productId, int rating, String comment) {
         if (rating < 1 || rating > 5) {
             throw new BadRequestException("Rating phải từ 1 đến 5 sao");
@@ -53,12 +65,12 @@ public class ReviewServiceImpl implements ReviewService {
         Product product = productRepository.findById(productId)
                 .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy sản phẩm"));
 
-        // ===== TASK #14/#20: bắt buộc đã nhận Product (DELIVERED) mới được review =====
-        // Trước đây: check hasUserPurchasedProduct → Order không CANCELLED → vẫn review khi chưa nhận hàng
-        // Bây giờ: phải có Order DELIVERED chứa productId của user mới được review
+        // ===== Yêu cầu #2 — Verified Purchase validation =====
+        // Chỉ Customer đã mua và ĐÃ NHẬN HÀNG thành công (Order DELIVERED hoặc COMPLETED)
+        // mới được phép tạo Review. Đây là rào chặn trước khi Review lọt vào
+        // Auto Moderation Pipeline (yêu cầu #1).
         if (!orderService.hasUserReceivedProduct(userId, productId)) {
-            throw new BadRequestException(
-                    "Bạn chỉ có thể đánh giá sản phẩm sau khi đã nhận được hàng");
+            throw new VerifiedPurchaseException();
         }
 
         if (reviewRepository.findByProductIdAndUserId(productId, userId).isPresent()) {
@@ -72,9 +84,19 @@ public class ReviewServiceImpl implements ReviewService {
                 .userAvatar(user.getAvatarUrl())
                 .rating(rating)
                 .comment(comment.trim())
+                .moderationStatus(ReviewModerationStatus.VISIBLE)
                 .build();
 
         Review savedReview = reviewRepository.save(review);
+
+        // ===== Yêu cầu #1 — Chạy Auto Moderation Pipeline =====
+        // Pipeline chạy SAU khi save (đã có reviewId) để có thể tạo ReportCase
+        // với targetId hợp lệ.
+        ModerationPipelineResult pipelineResult =
+                runReviewModerationPipeline(savedReview, product);
+
+        // Lưu lại review sau khi pipeline apply status
+        Review finalized = reviewRepository.save(savedReview);
 
         updateProductRating(product.getId());
 
@@ -83,18 +105,109 @@ public class ReviewServiceImpl implements ReviewService {
             auditLogService.logInfo(
                     AuditAction.REVIEW_CREATED,
                     "REVIEW",
-                    savedReview.getId(),
+                    finalized.getId(),
                     userId,
                     user.getFullName(),
                     "CUSTOMER",
-                    "Customer tạo review cho productId=" + savedReview.getProductId()
-                            + " rating=" + savedReview.getRating());
+                    "Customer tạo review cho productId=" + finalized.getProductId()
+                            + " rating=" + finalized.getRating()
+                            + " | pipeline=" + pipelineResult.getSeverity()
+                            + " flags=" + pipelineResult.getAutoFlags());
         } catch (Exception ex) {
             log.warn("Failed to write REVIEW_CREATED audit for review {}: {}",
-                    savedReview.getId(), ex.getMessage());
+                    finalized.getId(), ex.getMessage());
         }
 
-        return savedReview;
+        return finalized;
+    }
+
+    /**
+     * Chạy {@link ModerationPipelineService} cho Review vừa tạo và apply kết quả:
+     *
+     * <ul>
+     *   <li>{@code PASS} → giữ {@code moderationStatus = VISIBLE},
+     *       {@code pipelineModerationStatus = AUTO_PASSED} (đồng bộ với Product).</li>
+     *   <li>{@code SUSPICIOUS} → đặt {@code pipelineModerationStatus = PENDING_MANUAL}
+     *       và tạo {@code ReportCase} cho Moderator duyệt tay.</li>
+     *   <li>{@code FATAL} → đặt {@code moderationStatus = HIDDEN},
+     *       {@code pipelineModerationStatus = AUTO_REJECTED}.</li>
+     * </ul>
+     */
+    private ModerationPipelineResult runReviewModerationPipeline(Review review, Product product) {
+        ModerationContext ctx = new ReviewModerationContext(review,
+                ModerationContext.SharedState.builder().build(),
+                LocalDateTime.now());
+
+        ModerationPipelineResult result;
+        try {
+            result = moderationPipelineService.run(ctx);
+        } catch (Exception ex) {
+            // Fail-safe: pipeline lỗi → coi như PASS để không chặn user.
+            log.error("[Review] Moderation pipeline threw for review id={}: {} — defaulting to PASS",
+                    review.getId(), ex.getMessage(), ex);
+            result = ModerationPipelineResult.pass();
+        }
+
+        log.info("[Review] Pipeline result for review id={} userId={}: severity={} flags={} reasons={}",
+                review.getId(), review.getUserId(),
+                result.getSeverity(),
+                result.getAutoFlags(),
+                result.getReasons());
+
+        // Apply kết quả lên document
+        switch (result.getSeverity()) {
+            case PASS -> {
+                review.setModerationStatus(ReviewModerationStatus.VISIBLE);
+                review.setPipelineModerationStatus(ModerationStatus.AUTO_PASSED);
+            }
+            case SUSPICIOUS -> {
+                review.setModerationStatus(ReviewModerationStatus.VISIBLE);
+                review.setPipelineModerationStatus(ModerationStatus.PENDING_MANUAL);
+                review.setModerationReason(formatReason(result));
+                createAutoReportCaseForReview(review, product, result);
+            }
+            case FATAL -> {
+                review.setModerationStatus(ReviewModerationStatus.HIDDEN);
+                review.setPipelineModerationStatus(ModerationStatus.AUTO_REJECTED);
+                review.setModerationReason(formatReason(result));
+                review.setHidden(true);
+                review.setHiddenReason(formatReason(result));
+            }
+        }
+
+        return result;
+    }
+
+    private static String formatReason(ModerationPipelineResult result) {
+        if (result.getReasons() == null || result.getReasons().isEmpty()) {
+            return "Auto Moderation flagged";
+        }
+        return String.join(" | ", result.getReasons());
+    }
+
+    /**
+     * Tạo ReportCase cho Moderator duyệt tay khi pipeline verdict = SUSPICIOUS.
+     * Idempotent: nếu đã có case PENDING cho cùng target, ReportCaseService tự skip.
+     */
+    private void createAutoReportCaseForReview(Review review, Product product,
+                                               ModerationPipelineResult result) {
+        try {
+            String description = "Auto Moderation phát hiện dấu hiệu đáng ngờ trong Review:\n"
+                    + String.join("\n", result.getReasons());
+            ReportCaseCreateReq req = ReportCaseCreateReq.builder()
+                    .targetType(ReportTargetType.REVIEW)
+                    .targetId(review.getId())
+                    .reason("Auto Moderation flag")
+                    .description(description)
+                    .autoFlags(new ArrayList<>(result.getAutoFlags()))
+                    .source("AUTO")
+                    .priority(5)
+                    .build();
+            reportCaseService.createCase(req, null, "SYSTEM");
+        } catch (Exception ex) {
+            log.warn("[Review] createAutoReportCase failed for review id={}: {}",
+                    review.getId(), ex.getMessage());
+        }
     }
 
     @Override

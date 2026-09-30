@@ -1,0 +1,6 @@
+# Local dev profile — points to LOCAL MongoDB so live server shares DB with vendor Compass/test data
+spring:
+  data:
+    mongodb:
+      uri: mongodb://localhost:27017
+      database: cnj70_ecommerce_test

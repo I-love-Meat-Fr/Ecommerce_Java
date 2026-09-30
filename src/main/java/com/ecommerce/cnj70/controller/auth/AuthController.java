@@ -10,6 +10,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -19,18 +20,25 @@ import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.nio.file.StandardOpenOption;
+
 @Controller
 @RequiredArgsConstructor
 public class AuthController {
     
     private final AuthService authService;
     private final JwtUtils jwtUtils;
-    
+
+    @Value("${debug.log.path:d:\\Ecommerce_Java\\.cursor\\debug-04f262.log}")
+    private String debugLogPath;
+
     @GetMapping("/auth/login")
     public String loginPage() {
         return "auth/login";
     }
-    
+
     @PostMapping("/auth/login")
     public String login(@ModelAttribute LoginReq request,
                         HttpServletResponse response,
@@ -53,6 +61,8 @@ public class AuthController {
             cookie.setMaxAge((int) (jwtUtils.getJwtExpiration() / 1000));
             response.addCookie(cookie);
 
+            writeDebugLog("login-ok", request.getEmail(), user.getId(), user.getRole(), null);
+
             // Redirect based on role - Phase 1 requirement
             String redirectUrl = "redirect:/home";
             if ("ADMIN".equals(user.getRole())) {
@@ -66,10 +76,28 @@ public class AuthController {
         } catch (Exception e) {
             // TASK 1.3 + Gate 0 #16 — Login error must be visible to the user.
             // Surface the actual reason (wrong credentials, account not active, etc.)
+            writeDebugLog("login-fail", request.getEmail(), null, null, e.getClass().getSimpleName() + ": " + e.getMessage());
             model.addAttribute("error", e.getMessage());
             model.addAttribute("email", request.getEmail());
             return "auth/login";
         }
+    }
+
+    private void writeDebugLog(String event, String email, String userId, String role, String extra) {
+        try {
+            String line = String.format(
+                "{\"sessionId\":\"04f262\",\"hypothesisId\":\"H2\",\"runId\":\"login-debug\","
+                + "\"location\":\"AuthController.login\","
+                + "\"message\":\"%s\",\"timestamp\":%d,\"data\":{"
+                + "\"event\":\"%s\",\"email\":\"%s\",\"userId\":\"%s\",\"role\":\"%s\",\"extra\":\"%s\"}}\n",
+                event, System.currentTimeMillis(), event,
+                email == null ? "" : email,
+                userId == null ? "" : userId,
+                role == null ? "" : role,
+                extra == null ? "" : extra.replace("\"", "'"));
+            Files.write(Paths.get(debugLogPath), line.getBytes(),
+                StandardOpenOption.CREATE, StandardOpenOption.APPEND);
+        } catch (Exception ignore) {}
     }
     
     @GetMapping("/auth/register")

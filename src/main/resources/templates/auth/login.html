@@ -78,6 +78,17 @@
                     </div>
 
                     <!-- Alerts -->
+                    <div th:if="${param.expired != null}" class="auth-alert auth-alert-warning">
+                        <div class="auth-alert-icon">
+                            <i class="fas fa-clock"></i>
+                        </div>
+                        <div class="auth-alert-content">
+                            <span>Phiên đăng nhập đã hết hạn hoặc không hợp lệ. Vui lòng đăng nhập lại.</span>
+                        </div>
+                        <button class="auth-alert-close" onclick="this.parentElement.remove()">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
                     <div th:if="${param.error != null or error != null}" class="auth-alert auth-alert-error">
                         <div class="auth-alert-icon">
                             <i class="fas fa-exclamation-circle"></i>

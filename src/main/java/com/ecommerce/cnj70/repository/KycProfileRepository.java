@@ -26,5 +26,8 @@ public interface KycProfileRepository extends MongoRepository<KycProfile, String
     /** Lấy tất cả profile đang cần admin xử lý */
     List<KycProfile> findByStatusIn(List<KycStatus> statuses);
 
+    /** Paged version cho moderator queue */
+    Page<KycProfile> findByStatusIn(List<KycStatus> statuses, Pageable pageable);
+
     long countByStatus(KycStatus status);
 }

@@ -18,6 +18,18 @@ public class JwtAuthenticationEntryPoint implements AuthenticationEntryPoint {
                          HttpServletResponse response,
                          AuthenticationException authException) throws IOException {
         log.error("Unauthorized error: {}", authException.getMessage());
+        // Detect browser navigation: redirect to login page instead of returning raw JSON.
+        // Without this, the user sees a JSON {"status":401,"error":"Unauthorized"} page,
+        // which makes it look like the login is broken.
+        String accept = request.getHeader("Accept");
+        String xrw = request.getHeader("X-Requested-With");
+        boolean isBrowser = accept != null && accept.contains("text/html")
+                && (xrw == null || !xrw.equalsIgnoreCase("XMLHttpRequest"));
+        if (isBrowser) {
+            String target = request.getRequestURI();
+            response.sendRedirect(request.getContextPath() + "/auth/login?expired=1&redirect=" + target);
+            return;
+        }
         response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Unauthorized");
     }
 }

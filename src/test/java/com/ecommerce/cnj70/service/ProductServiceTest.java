@@ -6,6 +6,8 @@ import com.ecommerce.cnj70.dto.request.ProductFormReq;
 import com.ecommerce.cnj70.enums.ProductStatus;
 import com.ecommerce.cnj70.exception.BadRequestException;
 import com.ecommerce.cnj70.exception.ResourceNotFoundException;
+import com.ecommerce.cnj70.moderation.ModerationPipelineResult;
+import com.ecommerce.cnj70.moderation.ModerationPipelineService;
 import com.ecommerce.cnj70.repository.CategoryRepository;
 import com.ecommerce.cnj70.repository.ProductRepository;
 import com.ecommerce.cnj70.service.automation.AutoModerationResult;
@@ -30,6 +32,7 @@ import java.util.Optional;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -60,6 +63,8 @@ class ProductServiceTest {
     @Mock private AutoModerationService autoModerationService;
     @Mock private ReportCaseService reportCaseService;
     @Mock private AuditLogService auditLogService;
+    /** Lớp pipeline mới (Chain of Responsibility) — default pass-through. */
+    @Mock private ModerationPipelineService moderationPipelineService;
 
     @InjectMocks private ProductServiceImpl productService;
 
@@ -73,6 +78,9 @@ class ProductServiceTest {
         // C1 — default pipeline result = PASS (mô phỏng hiện chưa có AutoCheckStrategy nào).
         when(autoModerationService.runProductChecks(any(Product.class)))
                 .thenAnswer(inv -> AutoModerationResult.pass(inv.getArgument(0)));
+        // Lớp pipeline mới mặc định PASS — không escalate thêm.
+        when(moderationPipelineService.run(any()))
+                .thenAnswer(inv -> ModerationPipelineResult.pass());
     }
 
     // ============ createProduct ============
@@ -154,7 +162,7 @@ class ProductServiceTest {
 
         assertThat(saved.getStatus()).isEqualTo(ProductStatus.MANUAL_REVIEW);
         verify(reportCaseService, times(1))
-                .createCase(any(), any(), org.mockito.ArgumentMatchers.isNull());
+                .createCase(any(), any(), eq("SYSTEM"));
     }
 
     @Test
@@ -202,7 +210,7 @@ class ProductServiceTest {
 
         assertThat(saved.getStatus()).isEqualTo(ProductStatus.MANUAL_REVIEW);
         verify(reportCaseService, times(1))
-                .createCase(any(), any(), org.mockito.ArgumentMatchers.isNull());
+                .createCase(any(), any(), eq("SYSTEM"));
     }
 
     // ============ updateProduct ============
@@ -283,10 +291,11 @@ class ProductServiceTest {
         Product updated = productService.updateProduct("p-1", req);
 
         assertThat(updated.getName()).isEqualTo("Tên mới đáng ngờ");
-        // Pipeline được gọi vì name là significant change trên ACTIVE product
-        ArgumentCaptor<Product> captor = ArgumentCaptor.forClass(Product.class);
-        verify(autoModerationService, times(1)).runProductChecks(captor.capture());
-        assertThat(captor.getValue().getStatus()).isEqualTo(ProductStatus.PENDING_AUTO);
+        // Pipeline được gọi vì name là significant change trên ACTIVE product.
+        // Lưu ý: cùng 1 Product instance được mutate xuyên suốt flow (status
+        // từ PENDING_AUTO → ACTIVE qua pipeline PASS), nên captor.getValue()
+        // phản ánh trạng thái cuối cùng của object.
+        verify(autoModerationService, times(1)).runProductChecks(any(Product.class));
     }
 
     @Test

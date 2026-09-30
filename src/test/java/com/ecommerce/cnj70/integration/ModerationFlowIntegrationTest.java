@@ -91,6 +91,10 @@ class ModerationFlowIntegrationTest {
                 shopRepository, userRepository, productRepository,
                 violationRepository, auditLogRepository,
                 () -> autoModeration);
+
+        // Seed owner user "u-1" — mọi test đều dùng user "u-1" làm owner.
+        // Phải gọi SAU khi harness được khởi tạo vì seedUser cần this.harness.
+        harness.seedUser("u-1");
     }
 
     private void buildCleanPipeline() {

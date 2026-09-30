@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout/web-layout :: layout(title='Điều khoản & Chính sách - CNJ70 Shop', content=~{::main-content}, scripts=~{::page-scripts}, pageStyles=~{::page-styles})}">
+<head>
+    <title>Điều khoản &amp; Chính sách - CNJ70 Shop</title>
+    <th:block th:fragment="page-styles">
+        <link rel="stylesheet" th:href="@{/css/legal.css}">
+    </th:block>
+</head>
+<body>
+<main th:fragment="main-content">
+    <div class="legal-page">
+        <div class="legal-container" style="grid-template-columns: 1fr;">
+            <div class="legal-breadcrumb">
+                <a th:href="@{/}"><i class="fas fa-home"></i> Trang chủ</a>
+                <span>/</span>
+                <strong>Điều khoản &amp; Chính sách</strong>
+            </div>
+
+            <div class="legal-header" style="text-align:center; margin-bottom:32px;">
+                <h1 class="legal-title">Điều khoản &amp; Chính sách</h1>
+                <p style="color:#64748b;">Vui lòng đọc kỹ các tài liệu pháp lý dưới đây trước khi sử dụng CNJ70 Shop.</p>
+            </div>
+
+            <div class="legal-grid">
+                <a th:each="d : ${docs}" th:href="@{/legal/{type}(type=${d.type.name().toLowerCase()})}"
+                   class="legal-card">
+                    <div class="legal-card-icon">
+                        <i th:classappend="${d.type.name() == 'TERMS' ? 'fas fa-file-contract' :
+                                            (d.type.name() == 'PRIVACY' ? 'fas fa-shield-halved' :
+                                            (d.type.name() == 'RETURN' ? 'fas fa-rotate-left' :
+                                            (d.type.name() == 'SHIPPING' ? 'fas fa-truck' :
+                                            (d.type.name() == 'WARRANTY' ? 'fas fa-award' :
+                                            (d.type.name() == 'COMPLAINT' ? 'fas fa-circle-exclamation' :
+                                            (d.type.name() == 'PAYMENT' ? 'fas fa-credit-card' :
+                                            'fas fa-sitemap'))))))}"></i>
+                    </div>
+                    <h3 th:text="${d.title}">Điều khoản sử dụng</h3>
+                    <p th:text="${d.metaDescription} ?: 'Xem chi tiết...'">Mô tả ngắn</p>
+                    <span class="legal-card-version">v<span th:text="${d.version}">1</span></span>
+                </a>
+            </div>
+        </div>
+    </div>
+</main>
+
+<th:block th:fragment="page-scripts"></th:block>
+</body>
+</html>

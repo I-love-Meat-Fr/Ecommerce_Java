@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/springsecurity6"
+      th:replace="~{layout/admin-layout :: layout(title='Chỉnh sửa tài liệu - CNJ70 Admin', content=~{::main-content}, scripts=~{::page-scripts})}">
+<head>
+    <title>Chỉnh sửa tài liệu pháp lý - CNJ70 Admin</title>
+</head>
+<body>
+<main th:fragment="main-content">
+    <div class="sd-page-head">
+        <div class="sd-page-head-title">
+            <h1>
+                <i class="fas fa-scale-balanced"></i>
+                <span th:text="${doc.title}">Điều khoản sử dụng</span>
+            </h1>
+            <p>
+                Loại: <span class="sd-badge sd-badge-slate" th:text="${doc.type.name()}">TERMS</span>
+                &nbsp;|&nbsp; Version hiện tại:
+                <span class="sd-badge sd-badge-blue" th:text="'v' + ${doc.version}">v1</span>
+                &nbsp;|&nbsp; Cập nhật bởi: <strong th:text="${doc.updatedBy} ?: '—'">admin</strong>
+                &nbsp;|&nbsp; Hiệu lực:
+                <span th:text="${#temporals.format(doc.effectiveDate, 'dd/MM/yyyy HH:mm')}">01/01/2025</span>
+            </p>
+        </div>
+        <div class="sd-page-head-right">
+            <a th:href="@{/admin/legal}" class="sd-btn sd-btn-secondary sd-btn-sm">
+                <i class="fas fa-arrow-left"></i> Quay lại
+            </a>
+            <a th:href="@{/legal/{type}(type=${doc.type.name().toLowerCase()})}"
+               target="_blank" class="sd-btn sd-btn-secondary sd-btn-sm">
+                <i class="fas fa-external-link-alt"></i> Xem trang public
+            </a>
+        </div>
+    </div>
+
+    <!-- Flash Messages -->
+    <div th:if="${flashSuccess != null}" class="sd-alert sd-alert-success" style="margin-bottom:16px;">
+        <i class="fas fa-circle-check"></i>
+        <span th:text="${flashSuccess}">flashSuccess</span>
+    </div>
+    <div th:if="${flashError != null}" class="sd-alert sd-alert-error" style="margin-bottom:16px;">
+        <i class="fas fa-circle-exclamation"></i>
+        <span th:text="${flashError}">flashError</span>
+    </div>
+
+    <form th:action="@{/admin/legal/{type}/edit(type=${doc.type.name()})}"
+          th:object="${updateReq}" method="post">
+        <div class="sd-card" style="margin-bottom:20px;">
+            <div class="sd-card-header">
+                <h3 style="margin:0;">Thông tin cơ bản</h3>
+            </div>
+            <div class="sd-card-body">
+                <div class="sd-form-group" style="margin-bottom:16px;">
+                    <label for="title" class="sd-form-label">
+                        Tiêu đề <span style="color:#ef4444;">*</span>
+                    </label>
+                    <input type="text" id="title" th:field="*{title}" required maxlength="200"
+                           class="sd-input" style="width:100%; padding:8px 10px; border:1px solid #e2e8f0; border-radius:6px;">
+                    <span class="form-error" th:if="${#fields.hasErrors('title')}" th:errors="*{title}"></span>
+                </div>
+                <div class="sd-form-group">
+                    <label for="meta" class="sd-form-label">Mô tả ngắn (SEO)</label>
+                    <input type="text" id="meta" th:field="*{metaDescription}" maxlength="300"
+                           placeholder="Mô tả hiển thị ở footer / meta tag"
+                           class="sd-input" style="width:100%; padding:8px 10px; border:1px solid #e2e8f0; border-radius:6px;">
+                </div>
+            </div>
+        </div>
+
+        <div class="sd-card" style="margin-bottom:20px;">
+            <div class="sd-card-header">
+                <h3 style="margin:0;">Nội dung</h3>
+                <p style="margin:4px 0 0 0; font-size:12px; color:#64748b;">
+                    Hỗ trợ HTML cơ bản: &lt;h1&gt;…&lt;h6&gt;, &lt;p&gt;, &lt;ul&gt;, &lt;ol&gt;, &lt;li&gt;, &lt;strong&gt;, &lt;em&gt;, &lt;a&gt;.
+                </p>
+            </div>
+            <div class="sd-card-body" style="display:grid; grid-template-columns: 1fr 1fr; gap:16px;">
+                <div>
+                    <label for="content" class="sd-form-label">Mã HTML <span style="color:#ef4444;">*</span></label>
+                    <textarea id="content" th:field="*{content}" rows="22" required
+                              style="width:100%; padding:10px; border:1px solid #e2e8f0; border-radius:6px; font-family:'JetBrains Mono', monospace; font-size:13px; line-height:1.5;"></textarea>
+                    <span class="form-error" th:if="${#fields.hasErrors('content')}" th:errors="*{content}"></span>
+                </div>
+                <div>
+                    <label class="sd-form-label">Preview</label>
+                    <div id="preview" style="border:1px solid #e2e8f0; border-radius:6px; padding:14px; min-height:400px; background:#fff; overflow:auto;">
+                        <div style="color:#94a3b8; font-style:italic;">Preview sẽ cập nhật khi bạn gõ...</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="sd-card">
+            <div class="sd-card-body" style="display:flex; gap:8px; justify-content:flex-end;">
+                <a th:href="@{/admin/legal}" class="sd-btn sd-btn-secondary">Huỷ</a>
+                <button type="submit" class="sd-btn sd-btn-primary"
+                        onclick="return confirm('Lưu sẽ tăng version tài liệu. Tiếp tục?');">
+                    <i class="fas fa-save"></i> Lưu &amp; tăng version
+                </button>
+            </div>
+        </div>
+    </form>
+</main>
+
+<th:block th:fragment="page-scripts">
+<script>
+(function(){
+    var content = document.getElementById('content');
+    var preview = document.getElementById('preview');
+    function render() {
+        var html = content.value || '';
+        if (!html.trim()) {
+            preview.innerHTML = '<div style="color:#94a3b8;font-style:italic;">Preview sẽ cập nhật khi bạn gõ...</div>';
+            return;
+        }
+        // sanitize basic - strip <script> tags
+        html = html.replace(/<script[\s\S]*?<\/script>/gi, '');
+        preview.innerHTML = html;
+    }
+    content.addEventListener('input', render);
+    render();
+})();
+</script>
+</th:block>
+</body>
+</html>

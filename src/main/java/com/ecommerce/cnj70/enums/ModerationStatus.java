@@ -23,6 +23,13 @@ package com.ecommerce.cnj70.enums;
  * depends on {@code ProductStatus} continues to work without changes.</p>
  */
 public enum ModerationStatus {
+    /**
+     * Legacy value kept for backward compatibility with existing MongoDB
+     * documents written before the Phase 2A enum refactor. Runtime
+     * lifecycle starts at {@link #PENDING_MANUAL} or {@code AUTO_PASSED}/
+     * {@code AUTO_REJECTED} after the auto-moderation pipeline runs.
+     */
+    PENDING_AUTO,
     PENDING_MANUAL,
     AUTO_PASSED,
     AUTO_REJECTED,

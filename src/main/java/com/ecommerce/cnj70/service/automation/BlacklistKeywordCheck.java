@@ -78,14 +78,7 @@ public class BlacklistKeywordCheck implements AutoCheckStrategy {
 
         for (String keyword : keywords) {
             String lowerKeyword = keyword.toLowerCase();
-            // \b không hoạt động tốt với tiếng Việt có dấu, vì vậy dùng
-            // Pattern.quote để đảm bảo an toàn, sau đó wrap với (?<!\w) và
-            // (?!\w) để tạo word-boundary tương đương (không phải ký tự từ
-            // ở hai bên).
-            String safeKw = Pattern.quote(lowerKeyword);
-            Pattern p = Pattern.compile("(?<![\\wđĐ])\\Q" + safeKw + "\\E(?![\\wđĐ])",
-                    Pattern.UNICODE_CASE);
-            if (p.matcher(lowerCombined).find()) {
+            if (containsWordBoundary(lowerCombined, lowerKeyword)) {
                 String msg = "Sản phẩm chứa từ khóa bị cấm: '" + keyword + "'";
                 log.warn("[BlacklistKeyword] HARD_REJECT product id={} hit keyword='{}'",
                         product.getId(), keyword);
@@ -94,6 +87,35 @@ public class BlacklistKeywordCheck implements AutoCheckStrategy {
         }
 
         return AutoCheckVerdict.pass();
+    }
+
+    /**
+     * Kiểm tra {@code keyword} xuất hiện trong {@code lowerText} với word-boundary
+     * an toàn Unicode. Dùng {@link Character#isLetterOrDigit(char)} thay cho
+     * regex {@code \w} (regex {@code \w} chỉ match ASCII, không bao gồm ký tự
+     * có dấu tiếng Việt). Tránh cả nested {@code \Q...\E} vốn sinh
+     * PatternSyntaxException trong một số phiên bản Java.
+     */
+    static boolean containsWordBoundary(String lowerText, String lowerKeyword) {
+        if (lowerText == null || lowerKeyword == null || lowerKeyword.isEmpty()) {
+            return false;
+        }
+        int idx = 0;
+        while ((idx = lowerText.indexOf(lowerKeyword, idx)) >= 0) {
+            boolean beforeOk = (idx == 0) || !isWordChar(lowerText.charAt(idx - 1));
+            int afterIdx = idx + lowerKeyword.length();
+            boolean afterOk = (afterIdx >= lowerText.length())
+                    || !isWordChar(lowerText.charAt(afterIdx));
+            if (beforeOk && afterOk) {
+                return true;
+            }
+            idx++;
+        }
+        return false;
+    }
+
+    private static boolean isWordChar(char c) {
+        return Character.isLetterOrDigit(c) || c == '_';
     }
 
     /**

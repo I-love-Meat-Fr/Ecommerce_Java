@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/springsecurity6"
+      th:replace="~{layout/admin-layout :: layout(title='Quản lý Điều khoản & Chính sách - CNJ70 Admin', content=~{::main-content}, scripts=~{::page-scripts})}">
+<head>
+    <title>Quản lý Điều khoản & Chính sách - CNJ70 Admin</title>
+</head>
+<body>
+<main th:fragment="main-content">
+    <div class="sd-page-head">
+        <div class="sd-page-head-title">
+            <h1><i class="fas fa-scale-balanced"></i> Quản lý Điều khoản &amp; Chính sách</h1>
+            <p>Cập nhật nội dung 8 tài liệu pháp lý. Mỗi lần lưu sẽ tăng version và cập nhật ngày hiệu lực.</p>
+        </div>
+    </div>
+
+    <!-- Flash Messages -->
+    <div th:if="${flashSuccess != null}" class="sd-alert sd-alert-success" style="margin-bottom:16px;">
+        <i class="fas fa-circle-check"></i>
+        <span th:text="${flashSuccess}">flashSuccess</span>
+    </div>
+    <div th:if="${flashError != null}" class="sd-alert sd-alert-error" style="margin-bottom:16px;">
+        <i class="fas fa-circle-exclamation"></i>
+        <span th:text="${flashError}">flashError</span>
+    </div>
+
+    <div class="dash-card">
+        <div class="sd-card-body sd-card-body-flush">
+            <table class="sd-table">
+                <thead>
+                    <tr>
+                        <th class="sd-col-stt">STT</th>
+                        <th>Loại tài liệu</th>
+                        <th>Tiêu đề</th>
+                        <th>Version</th>
+                        <th>Ngày hiệu lực</th>
+                        <th>Cập nhật bởi</th>
+                        <th style="text-align:right;">Thao tác</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr th:if="${#lists.isEmpty(docs)}">
+                        <td colspan="7">
+                            <div class="sd-empty">
+                                <i class="fas fa-inbox"></i>
+                                <h3>Chưa có tài liệu</h3>
+                                <p>Hệ thống sẽ tự seed 8 tài liệu khi khởi động lần đầu.</p>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr th:each="d, iter : ${docs}">
+                        <td class="sd-col-stt" th:text="${iter.count}">1</td>
+                        <td>
+                            <span class="sd-badge sd-badge-slate" th:text="${d.type.name()}">TERMS</span>
+                        </td>
+                        <td>
+                            <div class="sd-table-title" th:text="${d.title}">Điều khoản sử dụng</div>
+                        </td>
+                        <td>
+                            <span class="sd-badge sd-badge-blue" th:text="'v' + ${d.version}">v1</span>
+                        </td>
+                        <td>
+                            <span style="font-size:12px; color:#64748b;"
+                                  th:text="${#temporals.format(d.effectiveDate, 'dd/MM/yyyy HH:mm')}">01/01/2025</span>
+                        </td>
+                        <td>
+                            <span style="font-size:12px; color:#64748b;" th:text="${d.updatedBy} ?: '—'">admin</span>
+                        </td>
+                        <td style="text-align:right; white-space:nowrap;">
+                            <a th:href="@{/legal/{type}(type=${d.type.name().toLowerCase()})}"
+                               target="_blank" class="sd-btn sd-btn-secondary sd-btn-sm">
+                                <i class="fas fa-external-link-alt"></i> Xem
+                            </a>
+                            <a th:href="@{/admin/legal/{type}/edit(type=${d.type.name()})}"
+                               class="sd-btn sd-btn-primary sd-btn-sm">
+                                <i class="fas fa-pen"></i> Sửa
+                            </a>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</main>
+
+<th:block th:fragment="page-scripts"></th:block>
+</body>
+</html>

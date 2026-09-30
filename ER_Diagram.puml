@@ -1,0 +1,124 @@
+@startuml ER_Diagram
+' ==========================================================
+' CNJ70 Ecommerce - Mô hình vật lý CSDL (MongoDB)
+' Ký pháp: CHEN-style (thực thể = hộp, thuộc tính = dòng trong hộp,
+'                    quan hệ = đường nối có nhãn)
+' Trắng đen - đơn giản - chỉ thực thể nghiệp vụ chính
+' ==========================================================
+
+skinparam monochrome true
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam dpi 150
+skinparam defaultFontName "Times New Roman"
+skinparam defaultFontSize 13
+
+skinparam entity {
+  BackgroundColor #FFFFFF
+  BorderColor #000000
+  FontColor #000000
+  FontStyle bold
+}
+
+top to bottom direction
+
+' ===================== THỰC THỂ =====================
+
+entity "USER" as USER {
+  * user_id
+  --
+  email
+  password
+  full_name
+  phone
+  role
+}
+
+entity "SHOP" as SHOP {
+  * shop_id
+  --
+  shop_name
+  description
+  status
+}
+
+entity "CATEGORY" as CATEGORY {
+  * category_id
+  --
+  name
+  parent_id
+}
+
+entity "PRODUCT" as PRODUCT {
+  * product_id
+  --
+  name
+  brand
+  price
+  stock
+}
+
+entity "CART" as CART {
+  * cart_id
+  --
+  user_id
+}
+
+entity "ORDER" as ORDER {
+  * order_id
+  --
+  order_date
+  total_amount
+  status
+}
+
+entity "ORDER_ITEM" as ORDER_ITEM {
+  * order_item_id
+  --
+  quantity
+  price
+  subtotal
+}
+
+entity "REVIEW" as REVIEW {
+  * review_id
+  --
+  rating
+  comment
+}
+
+entity "VOUCHER" as VOUCHER {
+  * voucher_id
+  --
+  code
+  discount_value
+}
+
+entity "KYC_PROFILE" as KYC {
+  * kyc_id
+  --
+  user_id
+  status
+}
+
+' ===================== QUAN HỆ (Chen) =====================
+
+USER      ||--||  SHOP         : "OWNS"
+USER      ||--||  CART         : "HAS"
+USER      ||--o{  ORDER        : "PLACES"
+ORDER     ||--o{  ORDER_ITEM   : "INCLUDES"
+PRODUCT   ||--o{  ORDER_ITEM   : "ORDERED_AS"
+ORDER     }o--o{  VOUCHER      : "APPLIES"
+
+USER      ||--o{  REVIEW       : "WRITES"
+PRODUCT   ||--o{  REVIEW       : "REVIEWED_BY"
+
+SHOP      ||--o{  PRODUCT      : "SELLS"
+SHOP      ||--o{  VOUCHER      : "ISSUES"
+
+CATEGORY  ||--o{  PRODUCT      : "CLASSIFIES"
+CATEGORY  ||--o{  CATEGORY     : "PARENT"
+
+USER      ||--||  KYC          : "VERIFIES"
+
+@enduml

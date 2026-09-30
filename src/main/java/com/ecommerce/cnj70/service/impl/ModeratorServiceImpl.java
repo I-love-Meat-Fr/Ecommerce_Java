@@ -1,12 +1,16 @@
 package com.ecommerce.cnj70.service.impl;
 
+import com.ecommerce.cnj70.document.KycProfile;
 import com.ecommerce.cnj70.document.Review;
 import com.ecommerce.cnj70.document.Shop;
+import com.ecommerce.cnj70.document.User;
 import com.ecommerce.cnj70.enums.KycStatus;
 import com.ecommerce.cnj70.enums.ReviewModerationStatus;
 import com.ecommerce.cnj70.exception.ResourceNotFoundException;
+import com.ecommerce.cnj70.repository.KycProfileRepository;
 import com.ecommerce.cnj70.repository.ReviewRepository;
 import com.ecommerce.cnj70.repository.ShopRepository;
+import com.ecommerce.cnj70.repository.UserRepository;
 import com.ecommerce.cnj70.service.ModeratorService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -32,6 +36,8 @@ public class ModeratorServiceImpl implements ModeratorService {
 
     private final ReviewRepository reviewRepository;
     private final ShopRepository shopRepository;
+    private final KycProfileRepository kycProfileRepository;
+    private final UserRepository userRepository;
     private final MongoTemplate mongoTemplate;
 
     @Override
@@ -70,6 +76,145 @@ public class ModeratorServiceImpl implements ModeratorService {
             );
         }
         return shopRepository.findByKycStatus(status, pageable);
+    }
+
+    @Override
+    public Page<KycProfile> getKycProfilesByStatusPaged(KycStatus status, Pageable pageable) {
+        if (status == null) {
+            // All profiles cần moderator xử lý (PENDING_THIRD_PARTY + PENDING_ADMIN + THIRD_PARTY_REJECTED)
+            return kycProfileRepository.findByStatusIn(
+                    List.of(KycStatus.PENDING_THIRD_PARTY, KycStatus.PENDING_ADMIN,
+                            KycStatus.THIRD_PARTY_REJECTED),
+                    pageable
+            );
+        }
+        return kycProfileRepository.findByStatus(status, pageable);
+    }
+
+    @Override
+    public List<KycProfile> getKycProfilesByStatus(List<KycStatus> statuses) {
+        if (statuses == null || statuses.isEmpty()) {
+            return List.of();
+        }
+        return kycProfileRepository.findByStatusIn(statuses);
+    }
+
+    @Override
+    public KycProfile approveKycProfile(String profileId, String moderatorEmail, String note) {
+        // ===== DEBUG INSTRUMENTATION — debug-mode session 04f262 =====
+        com.ecommerce.cnj70.controller.moderator.ModeratorController
+                .debugLogStatic("H2", "ModeratorServiceImpl.approveKycProfile.entry", "service entry",
+                java.util.Map.of("profileId", profileId,
+                        "moderator", moderatorEmail == null ? "" : moderatorEmail,
+                        "note", note == null ? "" : note));
+        KycProfile profile = kycProfileRepository.findById(profileId)
+                .orElseThrow(() -> {
+                    com.ecommerce.cnj70.controller.moderator.ModeratorController
+                            .debugLogStatic("H2", "ModeratorServiceImpl.approveKycProfile.notFound",
+                                    "profile not found",
+                                    java.util.Map.of("profileId", profileId));
+                    return new ResourceNotFoundException("Không tìm thấy hồ sơ KYC: " + profileId);
+                });
+
+        KycStatus previous = profile.getStatus();
+        profile.setStatus(KycStatus.APPROVED);
+        profile.setAdminReviewedAt(LocalDateTime.now());
+        profile.setAdminNote(note);
+        profile.setAdminReviewerName(moderatorEmail != null ? moderatorEmail : "MODERATOR");
+        KycProfile saved = kycProfileRepository.save(profile);
+
+        // ===== DEBUG INSTRUMENTATION — sync decision =====
+        com.ecommerce.cnj70.controller.moderator.ModeratorController
+                .debugLogStatic("H2", "ModeratorServiceImpl.approveKycProfile.beforeSync", "before sync",
+                        java.util.Map.of("profileId", profileId,
+                                "userId", profile.getUserId() == null ? "<null>" : profile.getUserId(),
+                                "previousStatus", previous == null ? "null" : previous.name(),
+                                "newStatus", "APPROVED"));
+
+        // Sync denormalized fields
+        try {
+            syncAfterKycDecision(profile.getUserId(), KycStatus.APPROVED, null, note, moderatorEmail);
+            com.ecommerce.cnj70.controller.moderator.ModeratorController
+                    .debugLogStatic("H2", "ModeratorServiceImpl.approveKycProfile.syncOk", "sync ok",
+                            java.util.Map.of("profileId", profileId));
+        } catch (Exception ex) {
+            // ===== DEBUG INSTRUMENTATION — sync failure =====
+            com.ecommerce.cnj70.controller.moderator.ModeratorController
+                    .debugLogStatic("H2", "ModeratorServiceImpl.approveKycProfile.syncFailed", "sync threw",
+                            java.util.Map.of("profileId", profileId,
+                                    "exClass", ex.getClass().getName(),
+                                    "exMsg", ex.getMessage() == null ? "" : ex.getMessage()));
+            throw ex;
+        }
+
+        log.info("[ModeratorKyc] KycProfile {} APPROVED by {} (was {}) note={}",
+                profileId, moderatorEmail, previous, note);
+        // ===== DEBUG INSTRUMENTATION — done =====
+        com.ecommerce.cnj70.controller.moderator.ModeratorController
+                .debugLogStatic("H2", "ModeratorServiceImpl.approveKycProfile.done", "service done",
+                        java.util.Map.of("profileId", profileId, "savedStatus", saved.getStatus().name()));
+        return saved;
+    }
+
+    @Override
+    public KycProfile rejectKycProfile(String profileId, String moderatorEmail, String note) {
+        if (note == null || note.isBlank()) {
+            throw new IllegalArgumentException("Vui lòng nhập lý do từ chối");
+        }
+        KycProfile profile = kycProfileRepository.findById(profileId)
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy hồ sơ KYC: " + profileId));
+
+        KycStatus previous = profile.getStatus();
+        profile.setStatus(KycStatus.ADMIN_REJECTED);
+        profile.setAdminReviewedAt(LocalDateTime.now());
+        profile.setAdminNote(note);
+        profile.setAdminReviewerName(moderatorEmail != null ? moderatorEmail : "MODERATOR");
+        KycProfile saved = kycProfileRepository.save(profile);
+
+        // Sync denormalized fields
+        syncAfterKycDecision(profile.getUserId(), KycStatus.ADMIN_REJECTED, note, note, moderatorEmail);
+
+        log.info("[ModeratorKyc] KycProfile {} REJECTED by {} (was {}) note={}",
+                profileId, moderatorEmail, previous, note);
+        return saved;
+    }
+
+    /**
+     * Sync User.kycStatus + (nếu có) Shop.kycStatus + Shop.audit fields sau khi
+     * moderator ra quyết định trên KycProfile. Đảm bảo mọi nơi đọc KYC status
+     * đều nhất quán bất kể vendor đã tạo Shop hay chưa.
+     */
+    private void syncAfterKycDecision(String userId, KycStatus newStatus,
+                                      String rejectionReason, String moderationNote,
+                                      String moderatorEmail) {
+        if (userId == null) return;
+
+        // 1) User.kycStatus
+        User user = userRepository.findById(userId).orElse(null);
+        if (user == null) {
+            log.warn("[ModeratorKyc] Cannot sync User.kycStatus: user {} not found", userId);
+            return;
+        }
+        user.setKycStatus(newStatus);
+        userRepository.save(user);
+
+        // 2) Shop.kycStatus (nếu vendor đã có shop)
+        if (user.getShopId() != null) {
+            shopRepository.findById(user.getShopId()).ifPresent(shop -> {
+                shop.setKycStatus(newStatus);
+                if (newStatus == KycStatus.APPROVED) {
+                    shop.setKycApprovedAt(LocalDateTime.now());
+                }
+                if (rejectionReason != null) {
+                    shop.setKycRejectionReason(rejectionReason);
+                }
+                if (moderationNote != null) {
+                    shop.setActionBy(moderatorEmail != null ? moderatorEmail : "MODERATOR");
+                    shop.setActionAt(LocalDateTime.now());
+                }
+                shopRepository.save(shop);
+            });
+        }
     }
 
     @Override

@@ -47,17 +47,19 @@
             <table class="sd-table">
                 <thead>
                     <tr>
-                        <th>Shop</th>
-                        <th>Owner</th>
+                        <th>Shop / Doanh nghiệp</th>
+                        <th>Chủ shop</th>
                         <th>Trạng thái KYC</th>
                         <th>Ngày nộp</th>
+                        <th>Lần nộp</th>
+                        <th>Shop</th>
                         <th>Lý do từ chối</th>
                         <th style="text-align:right;">Thao tác</th>
                     </tr>
                 </thead>
                 <tbody>
-                    <tr th:if="${#lists.isEmpty(shops)}">
-                        <td colspan="6">
+                    <tr th:if="${#lists.isEmpty(rows)}">
+                        <td colspan="8">
                             <div class="sd-empty">
                                 <i class="fas fa-check-circle" style="font-size:40px;color:#10b981;"></i>
                                 <h3>Không có KYC nào</h3>
@@ -65,42 +67,60 @@
                             </div>
                         </td>
                     </tr>
-                    <tr th:each="shop : ${shops}">
+                    <tr th:each="row : ${rows}">
                         <td>
-                            <div class="sd-table-title" th:text="${shop.shopName}">Shop Name</div>
-                            <div class="sd-table-sub" th:text="${shop.id}">id</div>
+                            <div class="sd-table-title" th:text="${row.shopName}">Shop Name</div>
+                            <div class="sd-table-sub" th:text="${row.profileId}">id</div>
                         </td>
-                        <td th:text="${shop.ownerId}">ownerId</td>
                         <td>
-                            <span th:if="${shop.kycStatus.name() == 'PENDING_THIRD_PARTY'}" class="sd-badge sd-badge-warning">
+                            <div th:text="${row.ownerName}">Owner</div>
+                            <div class="sd-table-sub" th:text="${row.ownerEmail}">email</div>
+                        </td>
+                        <td>
+                            <span th:if="${row.status.name() == 'PENDING_THIRD_PARTY'}" class="sd-badge sd-badge-warning">
                                 <i class="fas fa-clock"></i> Đang chờ 3rd-party
                             </span>
-                            <span th:if="${shop.kycStatus.name() == 'PENDING_ADMIN'}" class="sd-badge sd-badge-warning">
+                            <span th:if="${row.status.name() == 'PENDING_ADMIN'}" class="sd-badge sd-badge-warning">
                                 <i class="fas fa-clock"></i> Đang chờ admin
                             </span>
-                            <span th:if="${shop.kycStatus.name() == 'THIRD_PARTY_REJECTED'}" class="sd-badge sd-badge-danger">
+                            <span th:if="${row.status.name() == 'THIRD_PARTY_REJECTED'}" class="sd-badge sd-badge-danger">
                                 <i class="fas fa-xmark"></i> 3rd-party từ chối
                             </span>
-                            <span th:if="${shop.kycStatus.name() == 'ADMIN_REJECTED'}" class="sd-badge sd-badge-danger">
+                            <span th:if="${row.status.name() == 'ADMIN_REJECTED'}" class="sd-badge sd-badge-danger">
                                 <i class="fas fa-xmark"></i> Admin từ chối
                             </span>
-                            <span th:if="${shop.kycStatus.name() == 'APPROVED'}" class="sd-badge sd-badge-success">
+                            <span th:if="${row.status.name() == 'APPROVED'}" class="sd-badge sd-badge-success">
                                 <i class="fas fa-check"></i> Đã duyệt
                             </span>
                         </td>
                         <td>
-                            <span th:if="${shop.kycSubmittedAt != null}"
-                                  th:text="${#temporals.format(shop.kycSubmittedAt, 'dd/MM/yyyy HH:mm')}">—</span>
-                            <span th:unless="${shop.kycSubmittedAt != null}">—</span>
+                            <span th:if="${row.submittedAt != null}"
+                                  th:text="${#temporals.format(row.submittedAt, 'dd/MM/yyyy HH:mm')}">—</span>
+                            <span th:unless="${row.submittedAt != null}">—</span>
                         </td>
                         <td>
-                            <span th:if="${shop.kycRejectionReason != null}"
-                                  th:text="${shop.kycRejectionReason}"
-                                  style="max-width:200px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:block;">reason</span>
-                            <span th:unless="${shop.kycRejectionReason != null}">—</span>
+                            <span th:if="${row.submitCount != null and row.submitCount > 1}"
+                                  class="sd-badge sd-badge-slate"
+                                  th:text="${'Lần ' + row.submitCount}">Lần 1</span>
+                        </td>
+                        <td>
+                            <span th:if="${row.shopCreated}" class="sd-badge sd-badge-green">
+                                <i class="fas fa-check"></i> Đã tạo
+                            </span>
+                            <span th:unless="${row.shopCreated}" class="sd-badge sd-badge-amber"
+                                  title="Vendor mới đăng ký KYC, chưa tạo Shop">
+                                <i class="fas fa-hourglass-half"></i> Chưa tạo
+                            </span>
+                        </td>
+                        <td>
+                            <span th:if="${row.rejectionReason != null}"
+                                  th:text="${row.rejectionReason}"
+                                  style="max-width:200px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:block;"
+                                  th:title="${row.rejectionReason}">reason</span>
+                            <span th:unless="${row.rejectionReason != null}">—</span>
                         </td>
                         <td style="text-align:right;">
-                            <a th:href="@{/moderator/kyc/{id}(id=${shop.id}, page=${page}, size=${size}, status=${status})}"
+                            <a th:href="@{/moderator/kyc/{id}(id=${row.profileId}, page=${page}, size=${size}, status=${status})}"
                                class="sd-btn sd-btn-secondary sd-btn-sm">
                                 <i class="fas fa-eye"></i> Chi tiết
                             </a>

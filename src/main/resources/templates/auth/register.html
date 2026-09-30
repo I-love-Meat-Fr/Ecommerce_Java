@@ -10,6 +10,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" th:href="@{/css/home.css}">
     <link rel="stylesheet" th:href="@{/css/auth.css}">
+    <link rel="stylesheet" th:href="@{/css/legal.css}">
 </head>
 <body class="auth-page">
     <a class="auth-skip-link" href="#registerForm">Bỏ qua tới nội dung chính</a>
@@ -233,13 +234,45 @@
                             </div>
                         </div>
 
-                        <!-- Terms -->
-                        <div class="form-terms">
-                            <label class="checkbox-wrapper">
-                                <input type="checkbox" required>
-                                <span class="checkmark"></span>
-                                <span>Tôi đồng ý với <a href="#">Điều khoản sử dụng</a> và <a href="#">Chính sách bảo mật</a></span>
-                            </label>
+                        <!-- Terms & Privacy acceptance (TASK #22) -->
+                        <div class="terms-block">
+                            <div class="terms-row">
+                                <input type="checkbox"
+                                       id="acceptTerms"
+                                       name="acceptTerms"
+                                       value="true"
+                                       required>
+                                <label for="acceptTerms">
+                                    Tôi đã đọc và đồng ý với
+                                    <a th:href="@{/legal/terms}" target="_blank">Điều khoản sử dụng</a>
+                                    của CNJ70 Shop <span class="required">*</span>
+                                </label>
+                            </div>
+                            <div class="terms-row">
+                                <input type="checkbox"
+                                       id="acceptPrivacy"
+                                       name="acceptPrivacy"
+                                       value="true"
+                                       required>
+                                <label for="acceptPrivacy">
+                                    Tôi đồng ý với
+                                    <a th:href="@{/legal/privacy}" target="_blank">Chính sách bảo mật</a>
+                                    và việc xử lý dữ liệu cá nhân của tôi <span class="required">*</span>
+                                </label>
+                            </div>
+                            <div class="terms-row terms-marketing">
+                                <input type="checkbox"
+                                       id="marketingOptIn"
+                                       name="marketingOptIn"
+                                       value="true">
+                                <label for="marketingOptIn">
+                                    (Tuỳ chọn) Tôi muốn nhận email về khuyến mãi và sản phẩm mới.
+                                </label>
+                            </div>
+                            <p style="font-size:11px; color:#94a3b8; margin:8px 0 0 0;">
+                                <i class="fas fa-info-circle"></i>
+                                Lần đăng ký này sẽ ghi nhận version Điều khoản &amp; Chính sách bảo mật hiện hành vào tài khoản của bạn.
+                            </p>
                         </div>
 
                         <div class="auth-actions">

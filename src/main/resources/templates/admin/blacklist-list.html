@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/springsecurity6"
+      th:replace="~{layout/admin-layout :: layout(title='Quản lý Blacklist - CNJ70 Admin', content=~{::main-content}, scripts=~{::page-scripts})}">
+<head>
+    <title>Quản lý Blacklist - CNJ70 Admin</title>
+</head>
+<body>
+<main th:fragment="main-content">
+    <div class="sd-page-head">
+        <div class="sd-page-head-title">
+            <h1><i class="fas fa-ban"></i> Quản lý từ khóa cấm (Blacklist)</h1>
+            <p>Danh sách từ khóa cấm dùng cho Auto Moderation Pipeline. Thay đổi có hiệu lực ngay lập tức (cache TTL 5 phút).</p>
+        </div>
+        <div class="sd-page-head-right">
+            <div class="sd-page-head-meta">
+                <span class="sd-page-head-meta-label">Đang kích hoạt</span>
+                <span class="sd-page-head-meta-value" th:text="${totalEnabled}">0</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Flash Messages -->
+    <div th:if="${flashSuccess != null}" class="sd-alert sd-alert-success" style="margin-bottom:16px;">
+        <i class="fas fa-circle-check"></i>
+        <span th:text="${flashSuccess}">flashSuccess</span>
+    </div>
+    <div th:if="${flashError != null}" class="sd-alert sd-alert-error" style="margin-bottom:16px;">
+        <i class="fas fa-circle-exclamation"></i>
+        <span th:text="${flashError}">flashError</span>
+    </div>
+
+    <!-- Add form -->
+    <div class="sd-card" style="margin-bottom:20px;">
+        <div class="sd-card-header">
+            <h3 style="margin:0;"><i class="fas fa-plus-circle"></i> Thêm từ khóa mới</h3>
+        </div>
+        <div class="sd-card-body">
+            <form th:action="@{/admin/blacklist/add}" method="post" class="sd-form-inline">
+                <div class="sd-form-row" style="display:grid; grid-template-columns: 2fr 1fr 3fr auto; gap:12px; align-items:end;">
+                    <div class="sd-form-group">
+                        <label for="kw" class="sd-form-label">Từ khóa <span style="color:#ef4444;">*</span></label>
+                        <input type="text" id="kw" name="keyword" required maxlength="200"
+                               placeholder="VD: vũ khí, lừa đảo, ..."
+                               class="sd-input" style="width:100%; padding:8px 10px; border:1px solid #e2e8f0; border-radius:6px;">
+                    </div>
+                    <div class="sd-form-group">
+                        <label for="sev" class="sd-form-label">Mức độ <span style="color:#ef4444;">*</span></label>
+                        <select id="sev" name="severity" required class="sd-select" style="width:100%; padding:8px 10px; border:1px solid #e2e8f0; border-radius:6px;">
+                            <option th:each="s : ${severities}"
+                                    th:value="${s.name()}"
+                                    th:text="${s.name()}">CRITICAL</option>
+                        </select>
+                    </div>
+                    <div class="sd-form-group">
+                        <label for="desc" class="sd-form-label">Mô tả (tuỳ chọn)</label>
+                        <input type="text" id="desc" name="description" maxlength="500"
+                               placeholder="Lý do thêm / nguồn quy định..."
+                               class="sd-input" style="width:100%; padding:8px 10px; border:1px solid #e2e8f0; border-radius:6px;">
+                    </div>
+                    <div class="sd-form-group">
+                        <button type="submit" class="sd-btn sd-btn-primary">
+                            <i class="fas fa-plus"></i> Thêm
+                        </button>
+                    </div>
+                </div>
+                <p style="margin:10px 0 0 0; font-size:12px; color:#64748b;">
+                    <i class="fas fa-info-circle"></i>
+                    <strong>CRITICAL/HIGH</strong> → Auto Moderation HARD_REJECT Product / HIDDEN Review.
+                    <strong>MEDIUM/LOW</strong> → SOFT_FLAG → Moderator review.
+                </p>
+            </form>
+        </div>
+    </div>
+
+    <!-- Bulk paste -->
+    <div class="sd-card" style="margin-bottom:20px;">
+        <div class="sd-card-header">
+            <h3 style="margin:0;"><i class="fas fa-list"></i> Thêm nhanh nhiều từ khóa</h3>
+        </div>
+        <div class="sd-card-body">
+            <form id="bulkAddForm" th:action="@{/admin/blacklist/add}" method="post" onsubmit="return submitBulkAdd(this);">
+                <textarea id="bulkText" name="bulkKeywords" rows="4"
+                          placeholder="Mỗi dòng 1 từ khóa. VD:&#10;vũ khí&#10;lừa đảo&#10;ma túy&#10;hàng cấm"
+                          style="width:100%; padding:10px; border:1px solid #e2e8f0; border-radius:6px; font-family:inherit;"></textarea>
+                <div style="display:flex; gap:12px; align-items:center; margin-top:10px; flex-wrap:wrap;">
+                    <label style="font-size:13px; color:#475569;">Mức độ mặc định:</label>
+                    <select id="bulkSev" name="severity" class="sd-select" style="padding:6px 10px; border:1px solid #e2e8f0; border-radius:6px;">
+                        <option th:each="s : ${severities}" th:value="${s.name()}" th:text="${s.name()}">CRITICAL</option>
+                    </select>
+                    <input type="text" name="description" placeholder="Mô tả chung (tuỳ chọn)" maxlength="500"
+                           style="flex:1; padding:6px 10px; border:1px solid #e2e8f0; border-radius:6px;">
+                    <button type="submit" class="sd-btn sd-btn-primary">
+                        <i class="fas fa-layer-group"></i> Thêm tất cả
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- List -->
+    <div class="dash-card">
+        <div class="sd-card-header" style="display:flex; justify-content:space-between; align-items:center;">
+            <h3 style="margin:0;"><i class="fas fa-table"></i> Danh sách (<span th:text="${#lists.size(words)}">0</span>)</h3>
+        </div>
+        <div class="sd-card-body sd-card-body-flush">
+            <table class="sd-table">
+                <thead>
+                    <tr>
+                        <th class="sd-col-stt">STT</th>
+                        <th>Từ khóa</th>
+                        <th>Mức độ</th>
+                        <th>Mô tả</th>
+                        <th>Trạng thái</th>
+                        <th>Cập nhật bởi</th>
+                        <th style="text-align:right;">Thao tác</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr th:if="${#lists.isEmpty(words)}">
+                        <td colspan="7">
+                            <div class="sd-empty">
+                                <i class="fas fa-inbox"></i>
+                                <h3>Chưa có từ khóa</h3>
+                                <p>Dùng form ở trên để thêm từ khóa cấm đầu tiên.</p>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr th:each="w, iter : ${words}">
+                        <td class="sd-col-stt" th:text="${iter.count}">1</td>
+                        <td>
+                            <div class="sd-table-title" style="font-family:'JetBrains Mono', monospace;" th:text="${w.keyword}">kw</div>
+                            <div class="sd-table-sub sd-mono" th:text="${w.id}">id</div>
+                        </td>
+                        <td>
+                            <span class="sd-badge"
+                                  th:classappend="${w.severity.name() == 'CRITICAL' ? 'sd-badge-red' : (w.severity.name() == 'HIGH' ? 'sd-badge-orange' : (w.severity.name() == 'MEDIUM' ? 'sd-badge-amber' : 'sd-badge-slate'))}"
+                                  th:text="${w.severity}">CRITICAL</span>
+                        </td>
+                        <td>
+                            <span style="color:#64748b; font-size:13px;" th:text="${w.description} ?: '—'">desc</span>
+                        </td>
+                        <td>
+                            <span class="sd-badge"
+                                  th:classappend="${w.enabled ? 'sd-badge-green' : 'sd-badge-slate'}"
+                                  th:text="${w.enabled ? 'BẬT' : 'TẮT'}">BẬT</span>
+                        </td>
+                        <td>
+                            <span style="font-size:12px; color:#64748b;" th:text="${w.createdBy} ?: '—'">admin</span>
+                        </td>
+                        <td style="text-align:right; white-space:nowrap;">
+                            <button type="button" class="sd-btn sd-btn-secondary sd-btn-sm edit-btn"
+                                    th:attr="data-row=${w.id}">
+                                <i class="fas fa-pen"></i> Sửa
+                            </button>
+                            <form th:action="@{/admin/blacklist/{id}/toggle(id=${w.id})}" method="post" style="display:inline;">
+                                <button type="submit" class="sd-btn sd-btn-secondary sd-btn-sm"
+                                        th:title="${w.enabled ? 'Tắt' : 'Bật'}">
+                                    <i class="fas" th:classappend="${w.enabled ? 'fa-eye-slash' : 'fa-eye'}"></i>
+                                    <span th:text="${w.enabled ? 'Tắt' : 'Bật'}">Tắt</span>
+                                </button>
+                            </form>
+                            <form th:action="@{/admin/blacklist/{id}/delete(id=${w.id})}" method="post"
+                                  style="display:inline;"
+                                  onsubmit="return confirm('Xóa vĩnh viễn từ khóa này?');">
+                                <button type="submit" class="sd-btn sd-btn-secondary sd-btn-sm" style="color:#ef4444;">
+                                    <i class="fas fa-trash"></i> Xóa
+                                </button>
+                            </form>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Edit Modal -->
+    <div id="editModal" class="sd-modal" style="display:none;">
+        <div class="sd-modal-backdrop" onclick="closeEditModal()"></div>
+        <div class="sd-modal-dialog">
+            <div class="sd-modal-header">
+                <h3 style="margin:0;"><i class="fas fa-pen"></i> Chỉnh sửa từ khóa</h3>
+                <button type="button" onclick="closeEditModal()" class="sd-modal-close" aria-label="Đóng">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <form id="editForm" method="post" th:action="@{/admin/blacklist/__ID__/update}">
+                <div class="sd-modal-body">
+                    <div class="sd-form-group" style="margin-bottom:12px;">
+                        <label class="sd-form-label">Mức độ</label>
+                        <select id="editSev" name="severity" class="sd-select" style="width:100%; padding:8px 10px; border:1px solid #e2e8f0; border-radius:6px;">
+                            <option th:each="s : ${severities}" th:value="${s.name()}" th:text="${s.name()}">CRITICAL</option>
+                        </select>
+                    </div>
+                    <div class="sd-form-group" style="margin-bottom:12px;">
+                        <label class="sd-form-label">Mô tả</label>
+                        <textarea id="editDesc" name="description" rows="3" maxlength="500"
+                                  style="width:100%; padding:8px 10px; border:1px solid #e2e8f0; border-radius:6px;"></textarea>
+                    </div>
+                    <div class="sd-form-group">
+                        <label class="checkbox-wrapper">
+                            <input type="checkbox" id="editEnabled" name="enabled" value="true">
+                            <span>Kích hoạt từ khóa này</span>
+                        </label>
+                    </div>
+                </div>
+                <div class="sd-modal-footer" style="display:flex; gap:8px; justify-content:flex-end; padding-top:12px; border-top:1px solid #e2e8f0;">
+                    <button type="button" class="sd-btn sd-btn-secondary" onclick="closeEditModal()">Huỷ</button>
+                    <button type="submit" class="sd-btn sd-btn-primary"><i class="fas fa-save"></i> Lưu</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</main>
+
+<th:block th:fragment="page-scripts">
+<script th:inline="javascript">
+/*<![CDATA[*/
+// Nhúng danh sách keyword dưới dạng JS array (escape JSON-safe).
+const WORDS_DATA = /*[[${words}]]*/ [];
+function _serializeWords(words) {
+    return (words || []).map(function(w){
+        return {
+            id: w.id,
+            severity: w.severity,
+            description: w.description,
+            enabled: w.enabled
+        };
+    });
+}
+const WORDS = _serializeWords(WORDS_DATA);
+
+function openEditModal(id) {
+    const item = WORDS.find(function(w){ return w.id === id; });
+    if (!item) return;
+    document.getElementById('editSev').value = item.severity;
+    document.getElementById('editDesc').value = item.description || '';
+    document.getElementById('editEnabled').checked = item.enabled === true;
+    document.getElementById('editForm').setAttribute('action',
+        '/admin/blacklist/' + encodeURIComponent(id) + '/update');
+    document.getElementById('editModal').style.display = 'flex';
+}
+function closeEditModal() {
+    document.getElementById('editModal').style.display = 'none';
+}
+document.querySelectorAll('.edit-btn').forEach(function(btn){
+    btn.addEventListener('click', function(){
+        openEditModal(this.getAttribute('data-row'));
+    });
+});
+function submitBulkAdd(form) {
+    // Split textarea by newlines, submit one form per keyword (sequential).
+    const text = document.getElementById('bulkText').value.trim();
+    if (!text) { alert('Vui lòng nhập ít nhất 1 từ khóa.'); return false; }
+    const sev = document.getElementById('bulkSev').value;
+    const descInput = form.querySelector('input[name="description"]');
+    const desc = descInput ? descInput.value : '';
+    const keywords = text.split(/\r?\n/).map(function(s){ return s.trim(); }).filter(function(s){ return s.length > 0; });
+    if (keywords.length === 0) return false;
+
+    // Use a single hidden form that submits the first keyword; subsequent submits triggered by JS.
+    document.getElementById('bulkText').value = keywords[0];
+    document.getElementById('bulkSev').value = sev;
+    if (descInput) descInput.value = desc;
+
+    if (keywords.length === 1) {
+        // Already filled, normal submit.
+        return true;
+    }
+
+    // For >1, submit first now, then schedule remaining.
+    let i = 1;
+    function next() {
+        if (i >= keywords.length) return;
+        const f = document.createElement('form');
+        f.method = 'post';
+        f.action = '/admin/blacklist/add';
+        f.innerHTML = '<input name="keyword" value="' + keywords[i].replace(/"/g, '&quot;') + '">'
+                    + '<input name="severity" value="' + sev + '">'
+                    + '<input name="description" value="' + desc.replace(/"/g, '&quot;') + '">';
+        document.body.appendChild(f);
+        f.submit();
+        i++;
+    }
+    setTimeout(next, 300);
+    return true;
+}
+</script>
+</th:block>
+</body>
+</html>

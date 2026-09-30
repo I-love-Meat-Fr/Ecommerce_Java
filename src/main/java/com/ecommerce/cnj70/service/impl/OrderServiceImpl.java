@@ -279,11 +279,18 @@ public class OrderServiceImpl implements OrderService {
     }
 
     /**
-     * TASK #14/#20/#21 — Kiểm tra Customer đã nhận được Product hay chưa.
-     * Chỉ Order ở trạng thái DELIVERED mới được coi là "đã nhận hàng".
-     * Dùng cho Review validation: chỉ cho phép tạo Review khi đã giao thành công.
+     * TASK #14/#20/#21/#26 — Kiểm tra Customer đã mua và ĐÃ NHẬN được Product chưa.
+     * Chỉ Order ở trạng thái DELIVERED hoặc COMPLETED mới được coi là "đã nhận hàng thành công".
+     * Dùng cho Verified Purchase validation trước khi cho phép tạo Review:
+     * chỉ khi giao hàng thành công (DELIVERED) hoặc đơn đã hoàn tất (COMPLETED)
+     * thì Customer mới được review sản phẩm.
      *
-     * @return true nếu có Order DELIVERED chứa productId của user
+     * <p>Lý do chấp nhận COMPLETED: trong marketplace thực tế, sau khi giao hàng
+     * (DELIVERED) khách hàng có thể bấm "Đã nhận hàng" / xác nhận hoàn tất đơn →
+     * chuyển sang COMPLETED. Cả hai trạng thái này đều đồng nghĩa với
+     * "đã mua và nhận thành công".</p>
+     *
+     * @return true nếu có Order DELIVERED hoặc COMPLETED chứa productId của user
      */
     @Override
     @Transactional(readOnly = true)
@@ -293,7 +300,8 @@ public class OrderServiceImpl implements OrderService {
         }
         List<Order> userOrders = orderRepository.findByUserId(userId);
         return userOrders.stream()
-                .filter(o -> o.getStatus() == OrderStatus.DELIVERED)
+                .filter(o -> o.getStatus() == OrderStatus.DELIVERED
+                          || o.getStatus() == OrderStatus.COMPLETED)
                 .filter(o -> o.getItems() != null)
                 .flatMap(o -> o.getItems().stream())
                 .anyMatch(item -> productId.equals(item.getProductId()));
@@ -353,7 +361,9 @@ public class OrderServiceImpl implements OrderService {
             case PENDING -> next == OrderStatus.PREPARING || next == OrderStatus.CANCELLED;
             case PREPARING -> next == OrderStatus.SHIPPING || next == OrderStatus.CANCELLED;
             case SHIPPING -> next == OrderStatus.DELIVERED || next == OrderStatus.CANCELLED;
-            case DELIVERED, CANCELLED -> false;
+            case DELIVERED -> next == OrderStatus.COMPLETED;
+            // COMPLETED và CANCELLED là terminal — không thể chuyển tiếp.
+            case COMPLETED, CANCELLED -> false;
         };
 
         if (!valid) {

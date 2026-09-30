@@ -1,12 +1,15 @@
 package com.ecommerce.cnj70.controller.moderator;
 
+import com.ecommerce.cnj70.document.KycProfile;
 import com.ecommerce.cnj70.document.Review;
 import com.ecommerce.cnj70.document.Shop;
 import com.ecommerce.cnj70.document.User;
+import com.ecommerce.cnj70.dto.moderation.ModeratorKycRow;
 import com.ecommerce.cnj70.enums.AuditAction;
 import com.ecommerce.cnj70.enums.KycStatus;
 import com.ecommerce.cnj70.enums.ReviewModerationStatus;
 import com.ecommerce.cnj70.exception.ResourceNotFoundException;
+import com.ecommerce.cnj70.repository.KycProfileRepository;
 import com.ecommerce.cnj70.repository.ShopRepository;
 import com.ecommerce.cnj70.repository.UserRepository;
 import com.ecommerce.cnj70.service.AuditLogService;
@@ -30,6 +33,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -54,15 +58,59 @@ import java.util.List;
 @Slf4j
 public class ModeratorController {
 
+    // ===== DEBUG INSTRUMENTATION (debug-mode session 04f262) — DO NOT REMOVE BEFORE VERIFICATION =====
+    private static final java.nio.file.Path DEBUG_LOG =
+            java.nio.file.Paths.get("d:\\Ecommerce_Java\\.cursor\\debug-04f262.log");
+    static void debugLog(String hypothesisId, String location, String message,
+                                 java.util.Map<String, Object> data) {
+        try {
+            java.util.Map<String, Object> payload = new java.util.LinkedHashMap<>();
+            payload.put("sessionId", "04f262");
+            payload.put("hypothesisId", hypothesisId);
+            payload.put("runId", "kyc-approve-debug");
+            payload.put("location", location);
+            payload.put("message", message);
+            payload.put("data", data);
+            payload.put("timestamp", System.currentTimeMillis());
+            String line = new com.fasterxml.jackson.databind.ObjectMapper().writeValueAsString(payload);
+            java.nio.file.Files.writeString(DEBUG_LOG, line + "\n",
+                    java.nio.file.StandardOpenOption.CREATE,
+                    java.nio.file.StandardOpenOption.APPEND);
+        } catch (Exception e) {
+            // ignore instrumentation errors
+        }
+    }
+    // Public static accessor for cross-class instrumentation
+    public static void debugLogStatic(String hypothesisId, String location, String message,
+                                       java.util.Map<String, Object> data) {
+        debugLog(hypothesisId, location, message, data);
+    }
+    // ===== END DEBUG INSTRUMENTATION =====
+
     private static final int DEFAULT_PAGE_SIZE = 10;
 
     private final ModeratorService moderatorService;
     private final ShopRepository shopRepository;
     private final UserRepository userRepository;
+    private final KycProfileRepository kycProfileRepository;
     private final ReviewService reviewService;
     private final CryptoUtil cryptoUtil;
     private final AuditLogService auditLogService;
     private final MongoTemplate mongoTemplate;
+
+    // TEMP DEBUG: check moderator2 user state
+    @GetMapping("/_diag_user")
+    @org.springframework.web.bind.annotation.ResponseBody
+    public String diagUser() {
+        var doc = mongoTemplate.getCollection("users")
+                .find(new org.bson.Document("email", "moderator2@gmail.com")).first();
+        if (doc == null) return "USER_NOT_FOUND";
+        return "email=" + doc.getString("email")
+                + " role=" + doc.getString("role")
+                + " status=" + doc.getString("status")
+                + " pwdLen=" + (doc.getString("password") == null ? 0 : doc.getString("password").length())
+                + " pwdPrefix=" + (doc.getString("password") == null ? "null" : doc.getString("password").substring(0, Math.min(10, doc.getString("password").length())));
+    }
 
     // ===== Dashboard — Gốc của tôi (stash feature/admin) =====
     @GetMapping("/dashboard")
@@ -70,14 +118,16 @@ public class ModeratorController {
         List<Review> reportedReviews = reviewService.getReviewsByModerationStatus(ReviewModerationStatus.REPORTED);
         List<Review> hiddenReviews = reviewService.getReviewsByModerationStatus(ReviewModerationStatus.HIDDEN);
 
-        List<Shop> pendingKycShops = moderatorService.getShopsByKycStatus(KycStatus.PENDING_THIRD_PARTY);
-        List<Shop> pendingAdminShops = moderatorService.getShopsByKycStatus(KycStatus.PENDING_ADMIN);
-        List<Shop> rejectedKycShops = moderatorService.getShopsByKycStatus(KycStatus.THIRD_PARTY_REJECTED);
+        // Đếm KYC từ KycProfile (bao gồm vendor mới chưa tạo Shop) + Shop (legacy mirror)
+        List<com.ecommerce.cnj70.document.KycProfile> pendingKycProfiles = moderatorService.getKycProfilesByStatus(
+                java.util.List.of(KycStatus.PENDING_THIRD_PARTY, KycStatus.PENDING_ADMIN));
+        List<com.ecommerce.cnj70.document.KycProfile> rejectedKycProfiles = moderatorService.getKycProfilesByStatus(
+                java.util.List.of(KycStatus.THIRD_PARTY_REJECTED, KycStatus.ADMIN_REJECTED));
 
         model.addAttribute("reportedCount", reportedReviews.size());
         model.addAttribute("hiddenCount", hiddenReviews.size());
-        model.addAttribute("pendingKycCount", pendingKycShops.size() + pendingAdminShops.size());
-        model.addAttribute("rejectedKycCount", rejectedKycShops.size());
+        model.addAttribute("pendingKycCount", pendingKycProfiles.size());
+        model.addAttribute("rejectedKycCount", rejectedKycProfiles.size());
 
         Page<Review> recentReported = moderatorService.getRecentReportedReviews(PageRequest.of(0, 5));
         model.addAttribute("recentReported", recentReported.getContent());
@@ -86,6 +136,11 @@ public class ModeratorController {
     }
 
     // ===== KYC Queue =====
+    /**
+     * KYC queue dựa trên KycProfile (source of truth) — bao gồm vendor đã submit KYC
+     * nhưng chưa tạo Shop. Trước đây query ShopRepository.findByKycStatus bỏ sót
+     * các vendor mới này.
+     */
     @GetMapping("/kyc")
     public String kycQueue(
             @RequestParam(defaultValue = "0") int page,
@@ -97,21 +152,67 @@ public class ModeratorController {
         int safePage = Math.max(page, 0);
         Pageable pageable = PageRequest.of(safePage, safeSize,
                 org.springframework.data.domain.Sort.by(
-                        org.springframework.data.domain.Sort.Direction.DESC, "kycSubmittedAt"));
+                        org.springframework.data.domain.Sort.Direction.DESC, "lastResubmittedAt"));
 
         KycStatus targetStatus = parseKycStatus(status);
-        Page<Shop> shops = moderatorService.getShopsByKycStatusPaged(targetStatus, pageable);
 
-        model.addAttribute("shops", shops.getContent());
-        model.addAttribute("page", shops.getNumber());
-        model.addAttribute("size", shops.getSize());
-        model.addAttribute("totalPages", shops.getTotalPages());
-        model.addAttribute("totalItems", shops.getTotalElements());
+        Page<KycProfile> profiles = moderatorService.getKycProfilesByStatusPaged(targetStatus, pageable);
+
+        List<ModeratorKycRow> rows = buildQueueRows(profiles.getContent());
+
+        model.addAttribute("rows", rows);
+        model.addAttribute("shops", rows); // legacy alias for any other template fragment
+        model.addAttribute("page", profiles.getNumber());
+        model.addAttribute("size", profiles.getSize());
+        model.addAttribute("totalPages", profiles.getTotalPages());
+        model.addAttribute("totalItems", profiles.getTotalElements());
         model.addAttribute("status", targetStatus != null ? targetStatus.name() : "");
-        model.addAttribute("hasNext", shops.hasNext());
-        model.addAttribute("hasPrev", shops.hasPrevious());
+        model.addAttribute("hasNext", profiles.hasNext());
+        model.addAttribute("hasPrev", profiles.hasPrevious());
 
         return "moderator/kyc-queue";
+    }
+
+    /**
+     * Build display rows từ KycProfile + User lookup.
+     * Nếu vendor đã tạo Shop sẽ hiển thị tên shop; nếu chưa thì hiển thị tên doanh nghiệp
+     * từ KYC hoặc tên user.
+     */
+    private List<ModeratorKycRow> buildQueueRows(List<KycProfile> profiles) {
+        List<ModeratorKycRow> rows = new ArrayList<>(profiles.size());
+        for (KycProfile p : profiles) {
+            User vendor = p.getUserId() != null ? userRepository.findById(p.getUserId()).orElse(null) : null;
+            boolean shopCreated = vendor != null && vendor.getShopId() != null;
+            String shopName = null;
+            if (shopCreated) {
+                shopName = shopRepository.findById(vendor.getShopId())
+                        .map(Shop::getShopName).orElse(null);
+            }
+            String displayShopName = shopName != null ? shopName
+                    : (p.getBusinessName() != null && !p.getBusinessName().isBlank()
+                        ? p.getBusinessName()
+                        : (vendor != null ? vendor.getFullName() : null));
+            String displayOwner = p.getOwnerFullName() != null && !p.getOwnerFullName().isBlank()
+                    ? p.getOwnerFullName()
+                    : (vendor != null ? vendor.getFullName() : null);
+
+            rows.add(ModeratorKycRow.builder()
+                    .profileId(p.getId())
+                    .userId(p.getUserId())
+                    .shopName(displayShopName != null ? displayShopName : "(chưa đặt tên)")
+                    .ownerName(displayOwner)
+                    .ownerEmail(vendor != null ? vendor.getEmail() : null)
+                    .ownerPhone(vendor != null ? vendor.getPhone() : null)
+                    .status(p.getStatus())
+                    .submittedAt(p.getLastResubmittedAt() != null ? p.getLastResubmittedAt() : p.getSubmittedAt())
+                    .rejectionReason(p.getThirdPartyRejectionReason() != null
+                            ? p.getThirdPartyRejectionReason()
+                            : p.getAdminNote())
+                    .submitCount(p.getSubmitCount())
+                    .shopCreated(shopCreated)
+                    .build());
+        }
+        return rows;
     }
 
     @GetMapping("/kyc/{id}")
@@ -121,41 +222,106 @@ public class ModeratorController {
                             @RequestParam(required = false) String status,
                             Model model,
                             @AuthenticationPrincipal UserDetails userDetails) {
-        Shop shop = loadShopWithFallback(id);
+        // Thử load theo KycProfile trước (vendor mới submit KYC trước khi tạo Shop)
+        KycProfile profile = kycProfileRepository.findById(id).orElse(null);
+
+        User vendor = null;
+        Shop shop = null;
+        if (profile != null && profile.getUserId() != null) {
+            vendor = userRepository.findById(profile.getUserId()).orElse(null);
+            if (vendor != null && vendor.getShopId() != null) {
+                shop = shopRepository.findById(vendor.getShopId()).orElse(null);
+            }
+        } else {
+            // Fallback: id này có thể là Shop id (legacy flow)
+            shop = loadShopWithFallback(id);
+            if (shop != null && shop.getOwnerId() != null) {
+                vendor = userRepository.findById(shop.getOwnerId()).orElse(null);
+                if (vendor != null) {
+                    profile = kycProfileRepository.findByUserId(vendor.getId()).orElse(null);
+                }
+            }
+        }
+
+        if (profile == null && shop == null) {
+            throw new ResourceNotFoundException("Không tìm thấy hồ sơ KYC / Shop với ID: " + id);
+        }
 
         String decryptedCitizenId = null;
         String decryptedTaxCode = null;
         String decryptedBankAccount = null;
-        String ownerEmail = null;
-        String ownerPhone = null;
+        String ownerEmail = vendor != null ? vendor.getEmail() : null;
+        String ownerPhone = vendor != null ? vendor.getPhone() : null;
 
-        // Look up owner (User) for contact info — used in the detail header
-        if (shop.getOwnerId() != null) {
+        // PII có thể nằm trên KycProfile (ưu tiên) hoặc Shop (legacy mirror)
+        String encryptedCccd = profile != null ? profile.getIdNumber() : null; // KycProfile.idNumber là plaintext số CCCD
+        String encryptedTax = profile != null ? profile.getTaxCode() : null;
+        String encryptedBank = profile != null ? profile.getBankAccount() : null;
+        if (shop != null) {
+            // Shop lưu encrypted, override
+            if (shop.getEncryptedCitizenId() != null) encryptedCccd = shop.getEncryptedCitizenId();
+            if (shop.getEncryptedTaxCode() != null) encryptedTax = shop.getEncryptedTaxCode();
+            if (shop.getEncryptedBankAccount() != null) encryptedBank = shop.getEncryptedBankAccount();
+        }
+
+        if (encryptedCccd != null && !encryptedCccd.isBlank()) {
             try {
-                User owner = userRepository.findById(shop.getOwnerId()).orElse(null);
-                if (owner != null) {
-                    ownerEmail = owner.getEmail();
-                    ownerPhone = owner.getPhone();
+                // CCCD có thể đã là plaintext trên KycProfile — chỉ decrypt nếu có "==" base64 padding
+                if (encryptedCccd.contains("==") || encryptedCccd.contains("===")) {
+                    decryptedCitizenId = cryptoUtil.decrypt(encryptedCccd);
+                } else {
+                    decryptedCitizenId = encryptedCccd;
                 }
+                auditLogService.logInfo(
+                        AuditAction.PII_ACCESSED,
+                        profile != null ? "KYC_PROFILE" : "SHOP",
+                        profile != null ? profile.getId() : shop.getId(),
+                        userDetails != null ? userDetails.getUsername() : "MODERATOR",
+                        userDetails != null ? userDetails.getUsername() : "MODERATOR",
+                        "MODERATOR",
+                        "Moderator xem CCCD của " + (profile != null ? ("profile " + profile.getId()) : ("Shop: " + shop.getShopName()))
+                );
             } catch (Exception e) {
-                log.debug("Failed to load owner user for shop [{}]: {}", shop.getId(), e.getMessage());
+                log.debug("Failed to decrypt CCCD for {}: {}", id, e.getMessage());
+                decryptedCitizenId = encryptedCccd; // fallback show plaintext nếu không phải encrypted
+            }
+        }
+        if (encryptedTax != null && !encryptedTax.isBlank()) {
+            try {
+                decryptedTaxCode = (encryptedTax.contains("==")) ? cryptoUtil.decrypt(encryptedTax) : encryptedTax;
+            } catch (Exception e) {
+                decryptedTaxCode = encryptedTax;
+            }
+        }
+        if (encryptedBank != null && !encryptedBank.isBlank()) {
+            try {
+                decryptedBankAccount = (encryptedBank.contains("==")) ? cryptoUtil.decrypt(encryptedBank) : encryptedBank;
+            } catch (Exception e) {
+                decryptedBankAccount = encryptedBank;
             }
         }
 
-        if (shop.getEncryptedCitizenId() != null) {
-            decryptedCitizenId = cryptoUtil.decrypt(shop.getEncryptedCitizenId());
-            auditLogService.logInfo(
-                    AuditAction.PII_ACCESSED,
-                    "SHOP",
-                    shop.getId(),
-                    userDetails != null ? userDetails.getUsername() : "MODERATOR",
-                    userDetails != null ? userDetails.getUsername() : "MODERATOR",
-                    "MODERATOR",
-                    "Moderator xem CCCD của Shop: " + shop.getShopName()
-            );
-        }
+        KycStatus effectiveStatus = profile != null && profile.getStatus() != null
+                ? profile.getStatus()
+                : (shop != null ? shop.getKycStatus() : null);
+        java.time.LocalDateTime submittedAt = profile != null
+                ? (profile.getLastResubmittedAt() != null ? profile.getLastResubmittedAt() : profile.getSubmittedAt())
+                : (shop != null ? shop.getKycSubmittedAt() : null);
+        String rejectionReason = profile != null
+                ? (profile.getThirdPartyRejectionReason() != null
+                        ? profile.getThirdPartyRejectionReason()
+                        : profile.getAdminNote())
+                : (shop != null ? shop.getKycRejectionReason() : null);
+        String referenceId = profile != null ? profile.getThirdPartyReferenceId() : null;
 
-        model.addAttribute("shop", shop);
+        model.addAttribute("profile", profile);
+        model.addAttribute("shop", shop); // có thể null nếu vendor chưa tạo shop
+        model.addAttribute("vendor", vendor);
+        model.addAttribute("kycStatus", effectiveStatus);
+        model.addAttribute("kycSubmittedAt", submittedAt);
+        model.addAttribute("kycApprovedAt", shop != null ? shop.getKycApprovedAt() : null);
+        model.addAttribute("kycRejectionReason", rejectionReason);
+        model.addAttribute("kycReferenceId", referenceId);
         model.addAttribute("decryptedCitizenId", decryptedCitizenId);
         model.addAttribute("decryptedTaxCode", decryptedTaxCode);
         model.addAttribute("decryptedBankAccount", decryptedBankAccount);
@@ -169,28 +335,57 @@ public class ModeratorController {
     }
 
     /**
-     * Moderator approves KYC for a Shop.
-     * Transitions PENDING_THIRD_PARTY / PENDING_ADMIN / THIRD_PARTY_REJECTED → APPROVED.
+     * Moderator approves KYC.
+     * <p>Hỗ trợ cả 2 loại id:</p>
+     * <ul>
+     *   <li>KycProfile id (vendor mới submit KYC, chưa có Shop)</li>
+     *   <li>Shop id (legacy / vendor đã tạo Shop)</li>
+     * </ul>
      */
     @PostMapping("/kyc/{id}/approve")
     public String kycApprove(@PathVariable String id,
                              @RequestParam(required = false) String note,
                              @AuthenticationPrincipal UserDetails userDetails,
                              RedirectAttributes redirectAttributes) {
+        // ===== DEBUG INSTRUMENTATION — debug-mode session 04f262 =====
+        debugLog("H1", "ModeratorController.kycApprove.entry", "approve entry",
+                java.util.Map.of(
+                        "id", id,
+                        "idLen", id == null ? 0 : id.length(),
+                        "is24Hex", id != null && id.length() == 24 && id.matches("[0-9a-fA-F]+"),
+                        "note", note == null ? "" : note,
+                        "actor", userDetails != null ? userDetails.getUsername() : "<null-anonymous>"));
         try {
             String actor = userDetails != null ? userDetails.getUsername() : "MODERATOR";
-            moderatorService.approveKyc(id, actor, note);
+            boolean profileExists = kycProfileRepository.existsById(id);
+            // ===== DEBUG INSTRUMENTATION — branch decision =====
+            debugLog("H1", "ModeratorController.kycApprove.branch", "existsById check",
+                    java.util.Map.of("profileExists", profileExists, "id", id));
+            if (profileExists) {
+                moderatorService.approveKycProfile(id, actor, note);
+            } else {
+                moderatorService.approveKyc(id, actor, note);
+            }
             auditLogService.logInfo(
                     com.ecommerce.cnj70.enums.AuditAction.KYC_APPROVED,
-                    "SHOP",
+                    "KYC",
                     id,
                     actor,
                     actor,
                     "MODERATOR",
-                    "Moderator duyệt KYC Shop: " + id + (note != null ? " | note=" + note : "")
+                    "Moderator duyệt KYC: " + id + (note != null ? " | note=" + note : "")
             );
-            redirectAttributes.addFlashAttribute("success", "Đã duyệt KYC Shop.");
+            // ===== DEBUG INSTRUMENTATION — success =====
+            debugLog("H1", "ModeratorController.kycApprove.success", "approve ok",
+                    java.util.Map.of("id", id, "actor", actor));
+            redirectAttributes.addFlashAttribute("success", "Đã duyệt hồ sơ KYC.");
         } catch (Exception e) {
+            // ===== DEBUG INSTRUMENTATION — failure =====
+            debugLog("H1", "ModeratorController.kycApprove.exception", "approve failed",
+                    java.util.Map.of(
+                            "id", id,
+                            "exClass", e.getClass().getName(),
+                            "exMsg", e.getMessage() == null ? "" : e.getMessage()));
             log.debug("Approve KYC failed for [{}]: {}", id, e.getMessage());
             redirectAttributes.addFlashAttribute("error", e.getMessage());
         }
@@ -198,8 +393,7 @@ public class ModeratorController {
     }
 
     /**
-     * Moderator rejects KYC for a Shop.
-     * Transitions to ADMIN_REJECTED with required note.
+     * Moderator rejects KYC.
      */
     @PostMapping("/kyc/{id}/reject")
     public String kycReject(@PathVariable String id,
@@ -212,17 +406,21 @@ public class ModeratorController {
                 return "redirect:/moderator/kyc/" + id;
             }
             String actor = userDetails != null ? userDetails.getUsername() : "MODERATOR";
-            moderatorService.rejectKyc(id, actor, note);
+            if (kycProfileRepository.existsById(id)) {
+                moderatorService.rejectKycProfile(id, actor, note);
+            } else {
+                moderatorService.rejectKyc(id, actor, note);
+            }
             auditLogService.logInfo(
                     com.ecommerce.cnj70.enums.AuditAction.KYC_REJECTED,
-                    "SHOP",
+                    "KYC",
                     id,
                     actor,
                     actor,
                     "MODERATOR",
-                    "Moderator từ chối KYC Shop: " + id + " | note=" + note
+                    "Moderator từ chối KYC: " + id + " | note=" + note
             );
-            redirectAttributes.addFlashAttribute("success", "Đã từ chối KYC Shop.");
+            redirectAttributes.addFlashAttribute("success", "Đã từ chối hồ sơ KYC.");
         } catch (Exception e) {
             log.debug("Reject KYC failed for [{}]: {}", id, e.getMessage());
             redirectAttributes.addFlashAttribute("error", e.getMessage());
