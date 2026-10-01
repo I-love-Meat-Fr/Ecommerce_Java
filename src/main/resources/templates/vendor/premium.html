@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/springsecurity6"
+      th:replace="~{layout/vendor-layout :: layout(title='Gói Premium - CNJ70 Vendor', content=~{::main-content}, scripts=~{::page-scripts})}">
+<head>
+    <title>Gói Premium - CNJ70 Vendor</title>
+</head>
+<body>
+<main th:fragment="main-content">
+
+    <div class="vd-page-hero">
+        <div class="vd-page-hero-left">
+            <div class="vd-page-hero-icon" style="background:linear-gradient(135deg,#f59e0b,#d97706);"><i class="fas fa-crown"></i></div>
+            <div class="vd-page-hero-info">
+                <h2>Gói Premium</h2>
+                <p>Nâng cấp shop lên Premium để sản phẩm hiển thị badge HOT và nổi bật hơn.</p>
+            </div>
+        </div>
+    </div>
+
+    <div th:if="${success}" class="sd-alert sd-alert-success" style="margin-bottom:16px;">
+        <i class="fas fa-circle-check"></i>
+        <span th:text="${success}">Thành công</span>
+    </div>
+    <div th:if="${error}" class="sd-alert sd-alert-danger" style="margin-bottom:16px;">
+        <i class="fas fa-triangle-exclamation"></i>
+        <span th:text="${error}">Lỗi</span>
+    </div>
+
+    <!-- Current subscription banner -->
+    <div th:if="${currentSub != null}" class="sd-card" style="margin-bottom:24px;border:2px solid #f59e0b;background:linear-gradient(135deg,#fffbeb,#fef3c7);">
+        <div class="sd-card-body" style="display:flex;align-items:center;gap:16px;flex-wrap:wrap;">
+            <div style="width:60px;height:60px;border-radius:50%;background:linear-gradient(135deg,#f59e0b,#d97706);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                <i class="fas fa-crown" style="color:white;font-size:24px;"></i>
+            </div>
+            <div style="flex:1;min-width:200px;">
+                <div style="font-size:14px;color:#92400e;font-weight:600;margin-bottom:4px;">
+                    <i class="fas fa-check-circle"></i> Shop đang có Premium
+                </div>
+                <div style="font-size:18px;font-weight:700;color:#78350f;" th:text="${currentSub.packageName}">Premium 1 tháng</div>
+                <div style="font-size:13px;color:#a16207;margin-top:4px;">
+                    <i class="fas fa-clock"></i>
+                    Hết hạn sau <strong th:text="${daysRemaining}">30</strong> ngày
+                    (<span th:text="${#temporals.format(currentSub.endDate, 'dd/MM/yyyy HH:mm')}">31/12/2024</span>)
+                </div>
+            </div>
+            <form th:action="@{/vendor/premium/cancel}" method="post"
+                  onsubmit="return confirm('Bạn có chắc muốn hủy gói Premium? Shop sẽ mất badge HOT và quyền boost ranking.');"
+                  style="margin:0;">
+                <button type="submit" class="sd-btn sd-btn-danger">
+                    <i class="fas fa-times-circle"></i> Hủy Premium
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Empty state: no packages -->
+    <div th:if="${#lists.isEmpty(packages)}" class="sd-card">
+        <div class="sd-card-body" style="text-align:center;padding:60px 24px;">
+            <div style="width:96px;height:96px;border-radius:50%;background:linear-gradient(135deg,#fef3c7,#fde68a);display:inline-flex;align-items:center;justify-content:center;margin-bottom:18px;">
+                <i class="fas fa-crown" style="font-size:40px;background:linear-gradient(135deg,#f59e0b,#d97706);-webkit-background-clip:text;-webkit-text-fill-color:transparent;"></i>
+            </div>
+            <h3 style="font-size:18px;font-weight:700;color:var(--ink);margin-bottom:6px;">Chưa có gói Premium nào</h3>
+            <p style="font-size:13px;color:var(--ink-soft);">Admin hiện chưa cấu hình gói Premium. Vui lòng quay lại sau.</p>
+        </div>
+    </div>
+
+    <!-- Packages grid -->
+    <div th:unless="${#lists.isEmpty(packages)}">
+        <div class="vd-section-head" style="margin-top:8px;">
+            <h3>
+                <i class="fas fa-gem"></i>
+                <th:block th:text="${currentSub != null} ? 'Gia hạn / nâng cấp' : 'Chọn gói Premium'">Chọn gói Premium</th:block>
+            </h3>
+        </div>
+
+        <div class="vd-premium-grid">
+            <div th:each="pkg : ${packages}" class="vd-premium-card"
+                 th:classappend="${pkg.priority > 0} ? 'vd-premium-card-popular' : ''">
+                <div class="vd-premium-card-header">
+                    <div class="vd-premium-card-icon">
+                        <i class="fas fa-crown"></i>
+                    </div>
+                    <div th:if="${pkg.priority > 0}" class="vd-premium-card-badge">Phổ biến</div>
+                </div>
+                <div class="vd-premium-card-name" th:text="${pkg.name}">Premium 1 tháng</div>
+                <div class="vd-premium-card-desc" th:text="${pkg.description != null ? pkg.description : 'Hiển thị badge HOT trên tất cả sản phẩm của shop.'}">Mô tả</div>
+                <div class="vd-premium-card-price">
+                    <span class="vd-premium-card-price-value"
+                          th:text="${#numbers.formatDecimal(pkg.price, 0, 'DEFAULT', 0, 'DEFAULT')}">199.000</span>
+                    <span class="vd-premium-card-price-unit">đ</span>
+                </div>
+                <div class="vd-premium-card-duration">
+                    <i class="fas fa-calendar-alt"></i>
+                    <span th:text="${pkg.durationDays} + ' ngày'">30 ngày</span>
+                </div>
+                <ul class="vd-premium-card-features">
+                    <li><i class="fas fa-check"></i> Badge HOT trên sản phẩm</li>
+                    <li><i class="fas fa-check"></i> Ưu tiên hiển thị ở trang chủ</li>
+                    <li><i class="fas fa-check"></i> Tự động gia hạn khi mua tiếp</li>
+                </ul>
+                <form th:action="@{/vendor/premium/purchase/{id}(id=${pkg.id})}" method="post" style="margin:0;">
+                    <button type="submit" class="sd-btn sd-btn-cta vd-premium-card-btn">
+                        <i class="fas fa-shopping-cart"></i>
+                        <span th:text="${currentSub != null} ? 'Gia hạn' : 'Đăng ký ngay'">Đăng ký ngay</span>
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- History -->
+    <div th:if="${not #lists.isEmpty(history)}" style="margin-top:32px;">
+        <div class="vd-section-head">
+            <h3><i class="fas fa-history"></i> Lịch sử đăng ký</h3>
+        </div>
+        <div class="sd-card">
+            <div class="sd-card-body sd-card-body-flush">
+                <div class="sd-table-wrap">
+                    <table class="sd-table">
+                        <thead>
+                            <tr>
+                                <th>Gói</th>
+                                <th>Số tiền</th>
+                                <th>Bắt đầu</th>
+                                <th>Kết thúc</th>
+                                <th>Trạng thái</th>
+                                <th>Ngày tạo</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr th:each="h : ${history}">
+                                <td th:text="${h.packageName}">Premium 1 tháng</td>
+                                <td>
+                                    <strong th:text="${#numbers.formatDecimal(h.amountPaid, 0, 'DEFAULT', 0, 'DEFAULT')} + 'đ'">199.000đ</strong>
+                                </td>
+                                <td>
+                                    <small th:text="${h.startDate != null ? #temporals.format(h.startDate, 'dd/MM/yyyy HH:mm') : '—'}">01/01/2024</small>
+                                </td>
+                                <td>
+                                    <small th:text="${h.endDate != null ? #temporals.format(h.endDate, 'dd/MM/yyyy HH:mm') : '—'}">31/01/2024</small>
+                                </td>
+                                <td>
+                                    <span class="sd-badge"
+                                          th:classappend="${h.status.name() == 'ACTIVE' ? 'sd-badge-green' : (h.status.name() == 'EXPIRED' ? 'sd-badge-slate' : 'sd-badge-red')}">
+                                        <th:block th:text="${h.status.name() == 'ACTIVE' ? 'Đang hoạt động' : (h.status.name() == 'EXPIRED' ? 'Hết hạn' : 'Đã hủy')}">ACTIVE</th:block>
+                                    </span>
+                                </td>
+                                <td>
+                                    <small th:text="${h.createdAt != null ? #temporals.format(h.createdAt, 'dd/MM/yyyy HH:mm') : '—'}">01/01/2024</small>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Empty state: no shop yet -->
+    <div th:if="${shop == null}" class="sd-card" style="margin-top:24px;">
+        <div class="sd-card-body" style="text-align:center;padding:40px 24px;background:#fef3c7;border-radius:8px;">
+            <i class="fas fa-exclamation-triangle" style="font-size:32px;color:#f59e0b;margin-bottom:12px;"></i>
+            <h3 style="font-size:16px;font-weight:700;color:#92400e;margin-bottom:6px;">Bạn cần tạo Shop trước</h3>
+            <p style="font-size:13px;color:#a16207;margin-bottom:16px;">Để đăng ký Premium, shop của bạn cần được Admin duyệt.</p>
+            <a th:href="@{/vendor/shop}" class="sd-btn sd-btn-primary">
+                <i class="fas fa-store"></i> Tạo Shop ngay
+            </a>
+        </div>
+    </div>
+
+</main>
+</body>
+</html>

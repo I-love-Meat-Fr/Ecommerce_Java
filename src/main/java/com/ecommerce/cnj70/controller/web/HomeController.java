@@ -4,9 +4,11 @@ import com.ecommerce.cnj70.document.Banner;
 import com.ecommerce.cnj70.document.Category;
 import com.ecommerce.cnj70.document.FlashSaleStat;
 import com.ecommerce.cnj70.document.Product;
+import com.ecommerce.cnj70.document.Shop;
 import com.ecommerce.cnj70.document.Voucher;
 import com.ecommerce.cnj70.enums.ProductStatus;
 import com.ecommerce.cnj70.repository.CategoryRepository;
+import com.ecommerce.cnj70.repository.ShopRepository;
 import com.ecommerce.cnj70.service.CustomerBannerService;
 import com.ecommerce.cnj70.service.ProductService;
 import com.ecommerce.cnj70.service.VoucherService;
@@ -15,8 +17,11 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 @Controller
 @RequiredArgsConstructor
@@ -26,6 +31,7 @@ public class HomeController {
     private final CategoryRepository categoryRepository;
     private final VoucherService voucherService;
     private final CustomerBannerService customerBannerService;
+    private final ShopRepository shopRepository;
 
     @GetMapping("/home")
     public String homePage(Model model) {
@@ -56,6 +62,9 @@ public class HomeController {
         List<Banner> heroBanners = customerBannerService.getVisibleBanners("HERO_SLIDER");
         List<Banner> promoBanners = customerBannerService.getVisibleBanners("PROMO_GRID");
 
+        // Premium shop IDs — dùng cho badge HOT trên các product cards
+        Set<String> premiumShopIds = loadActivePremiumShopIds();
+
         model.addAttribute("products", products);
         model.addAttribute("newArrivals", newArrivals);
         model.addAttribute("featuredProducts", featuredProducts);
@@ -64,7 +73,21 @@ public class HomeController {
         model.addAttribute("availableVouchers", availableVouchers);
         model.addAttribute("heroBanners", heroBanners);
         model.addAttribute("promoBanners", promoBanners);
+        model.addAttribute("premiumShopIds", premiumShopIds);
         return "web/index";
+    }
+
+    /** Lấy set các shopId đang có Premium ACTIVE (cho badge HOT). */
+    private Set<String> loadActivePremiumShopIds() {
+        try {
+            return shopRepository
+                    .findByPremiumActiveTrueAndPremiumExpiresAtAfter(LocalDateTime.now())
+                    .stream()
+                    .map(Shop::getId)
+                    .collect(Collectors.toSet());
+        } catch (Exception ex) {
+            return Set.of();
+        }
     }
 
     /**

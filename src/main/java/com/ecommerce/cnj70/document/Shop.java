@@ -104,6 +104,24 @@ public class Shop {
      */
     private LocalDateTime enforcementAt;
 
+    // ===== Premium Subscription denormalized flags =====
+    /**
+     * Shop đang có Premium ACTIVE hay không.
+     * Denormalized từ {@code VendorSubscription} để query nhanh ở web pages
+     * (Home / Products page) — tránh phải join thêm mỗi request.
+     * Được sync bởi {@code PremiumPackageService.purchasePackage} và
+     * {@code PremiumSubscriptionScheduler}.
+     */
+    @Builder.Default
+    private boolean premiumActive = false;
+
+    /**
+     * Thời điểm Premium hiện tại hết hạn. Null nếu chưa từng mua hoặc đã expire.
+     * Được dùng trong query {@code findByPremiumActiveTrueAndPremiumExpiresAtAfter(now)}
+     * để filter chính xác các shop còn hiệu lực.
+     */
+    private LocalDateTime premiumExpiresAt;
+
     @CreatedDate
     private LocalDateTime createdAt;
 

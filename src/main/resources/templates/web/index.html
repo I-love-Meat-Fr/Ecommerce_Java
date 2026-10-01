@@ -245,6 +245,11 @@
                                     <div class="product-card-img-wrap">
                                         <img th:src="${product.thumbnailUrl ?: 'https://placehold.co/300x300/f1f5f9/94a3b8?text=No+Img'}" th:alt="${product.name}" class="product-card-img">
                                         <span class="product-card-badge"><i class="fas fa-fire"></i> HOT</span>
+                                        <!-- Premium shop badge -->
+                                        <span class="product-card-badge product-card-badge-premium"
+                                              th:if="${premiumShopIds != null and premiumShopIds.contains(product.shopId)}">
+                                            <i class="fas fa-crown"></i> Premium
+                                        </span>
                                     </div>
                                     <div class="product-card-body">
                                         <h3 class="product-card-name" th:text="${product.name}">Tên sản phẩm</h3>
@@ -299,6 +304,11 @@
                                     <div class="product-card-img-wrap">
                                         <img th:src="${product.thumbnailUrl ?: 'https://placehold.co/300x300/f1f5f9/94a3b8?text=No+Img'}" th:alt="${product.name}" class="product-card-img">
                                         <span class="product-card-badge badge-new"><i class="fas fa-sparkles"></i> Mới</span>
+                                        <!-- Premium shop badge -->
+                                        <span class="product-card-badge product-card-badge-premium"
+                                              th:if="${premiumShopIds != null and premiumShopIds.contains(product.shopId)}">
+                                            <i class="fas fa-crown"></i> Premium
+                                        </span>
                                     </div>
                                     <div class="product-card-body">
                                         <h3 class="product-card-name" th:text="${product.name}">Tên sản phẩm</h3>
@@ -352,6 +362,11 @@
                                 <a th:href="@{/products/{id}(id=${product.id})}" class="product-card-link">
                                     <div class="product-card-img-wrap">
                                         <img th:src="${product.thumbnailUrl ?: 'https://placehold.co/300x300/f1f5f9/94a3b8?text=No+Img'}" th:alt="${product.name}" class="product-card-img">
+                                        <!-- Premium shop badge (no HOT badge for this tab) -->
+                                        <span class="product-card-badge product-card-badge-premium"
+                                              th:if="${premiumShopIds != null and premiumShopIds.contains(product.shopId)}">
+                                            <i class="fas fa-crown"></i> Premium
+                                        </span>
                                     </div>
                                     <div class="product-card-body">
                                         <h3 class="product-card-name" th:text="${product.name}">Tên sản phẩm</h3>

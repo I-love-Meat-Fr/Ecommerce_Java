@@ -50,6 +50,11 @@
                 <i class="fas fa-ticket"></i>
                 <span class="sd-nav-label">Voucher</span>
             </a>
+            <a th:if="${hasShop}" th:href="@{/vendor/premium}" class="sd-nav-item" data-match="/vendor/premium">
+                <i class="fas fa-crown"></i>
+                <span class="sd-nav-label">Premium</span>
+                <span class="sd-nav-badge sd-nav-badge-warn" th:if="${premiumActive == true}">HOT</span>
+            </a>
             <a th:href="@{/vendor/complaints}" class="sd-nav-item" data-match="/vendor/complaints">
                 <i class="fas fa-flag"></i>
                 <span class="sd-nav-label">Khiếu nại</span>

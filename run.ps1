@@ -86,8 +86,8 @@ Write-Host "   - API:       http://localhost:8081/api" -ForegroundColor Cyan
 Write-Host "  ----------------------------------------" -ForegroundColor DarkGray
 Write-Host ""
 
-# Run the application
-& java -jar "$ProjectDir\target\cnj70-ecommerce-1.0.0.jar"
+# Run the application (use Spring Boot's repackaged executable jar)
+& java -jar "$ProjectDir\target\cnj70-ecommerce-1.0.0-exec.jar"
 
 # If application exits
 Write-Host ""

@@ -49,6 +49,16 @@ jwt:
   secret: ${JWT_SECRET:mySecretKeyForJWTTokenGenerationMustBeAtLeast256BitsLong}
   expiration: 86400000  # 24 hours in milliseconds
 
+# PII Encryption Key (AES-256-GCM, must be 32-byte Base64)
+# Generate with: openssl rand -base64 32
+# DEV DEFAULT — override in production via OS env var or .env file.
+# Required for CryptoUtil bean (encrypts CCCD, taxCode, bankAccount...).
+# Note: aliased via app.encryption.dev-key to avoid a self-referential placeholder.
+ENCRYPTION_KEY: ${app.encryption.dev-key:XoAzcRRdRaOgufwPTZTocPy5RVJkWauddL25AEgkcKg=}
+app:
+  encryption:
+    dev-key: XoAzcRRdRaOgufwPTZTocPy5RVJkWauddL25AEgkcKg=  # dev-only fallback; do not use in prod
+
 # Logging
 logging:
   level:
@@ -68,3 +78,9 @@ kyc:
     # PENDING_THIRD_PARTY: giữ nguyên chờ 3rd-party (an toàn, admin duyệt tay nếu fail)
     # APPROVE: tự động coi như 3rd-party OK → chờ admin duyệt (dev/demo)
     on-error: APPROVE
+
+# Premium Subscription Scheduler — quét VendorSubscription đã quá hạn
+premium:
+  scheduler:
+    # Mặc định: 1h sáng mỗi ngày. Format Spring cron (6 fields, second đầu tiên).
+    cron: "0 0 1 * * *"

@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/springsecurity6"
+      th:replace="~{layout/admin-layout :: layout(title='Premium Package - CNJ70 Admin', content=~{::main-content}, scripts=~{::page-scripts})}">
+<head>
+    <title>Premium Package - CNJ70 Admin</title>
+</head>
+<body>
+<main th:fragment="main-content">
+    <div class="sd-page-head">
+        <div class="sd-page-head-title">
+            <h1 th:text="${isEdit} ? 'Chỉnh sửa Premium Package' : 'Tạo Premium Package'">Premium Package</h1>
+            <p>Cấu hình gói Premium cho Vendor.</p>
+        </div>
+        <div class="sd-page-head-actions">
+            <a th:href="@{/admin/premium}" class="sd-btn sd-btn-secondary sd-btn-sm">
+                <i class="fas fa-arrow-left"></i>
+                <span>Quay lại</span>
+            </a>
+        </div>
+    </div>
+
+    <div th:if="${error}" class="sd-alert sd-alert-danger" style="margin-bottom:16px;">
+        <i class="fas fa-circle-exclamation"></i>
+        <span th:text="${error}">Lỗi</span>
+    </div>
+
+    <div class="sd-card" style="max-width:720px;">
+        <div class="sd-card-body">
+            <form th:action="${isEdit} ? @{/admin/premium/{id}/edit(id=${packageId})} : @{/admin/premium/create}"
+                  th:object="${premiumForm}" method="post">
+
+                <div class="sd-form-group">
+                    <label for="p-name">Tên gói <span style="color:#ef4444;">*</span></label>
+                    <input type="text" id="p-name" th:field="*{name}" class="sd-form-control"
+                           placeholder="VD: Premium 1 tháng, Premium 3 tháng" maxlength="100" required>
+                    <div class="sd-form-error" th:if="${#fields.hasErrors('name')}" th:errors="*{name}"></div>
+                </div>
+
+                <div class="sd-form-group">
+                    <label for="p-desc">Mô tả</label>
+                    <textarea id="p-desc" th:field="*{description}" class="sd-form-control"
+                              placeholder="Mô tả ngắn các đặc quyền của gói (vd: badge HOT, ranking boost)"
+                              maxlength="500" rows="3"></textarea>
+                    <div class="sd-form-hint">Tối đa 500 ký tự</div>
+                </div>
+
+                <div class="sd-grid sd-grid-2">
+                    <div class="sd-form-group">
+                        <label for="p-price">Giá (VNĐ) <span style="color:#ef4444;">*</span></label>
+                        <input type="number" id="p-price" th:field="*{price}" class="sd-form-control"
+                               placeholder="VD: 199000" min="1" step="1000" required>
+                        <div class="sd-form-hint">Giá cố định do Admin config</div>
+                        <div class="sd-form-error" th:if="${#fields.hasErrors('price')}" th:errors="*{price}"></div>
+                    </div>
+
+                    <div class="sd-form-group">
+                        <label for="p-duration">Thời hạn (ngày) <span style="color:#ef4444;">*</span></label>
+                        <input type="number" id="p-duration" th:field="*{durationDays}" class="sd-form-control"
+                               placeholder="VD: 30" min="1" max="3650" step="1" required>
+                        <div class="sd-form-hint">Phổ biến: 30 (1 tháng), 90 (3 tháng), 365 (1 năm)</div>
+                        <div class="sd-form-error" th:if="${#fields.hasErrors('durationDays')}" th:errors="*{durationDays}"></div>
+                    </div>
+                </div>
+
+                <div class="sd-grid sd-grid-2">
+                    <div class="sd-form-group">
+                        <label for="p-priority">Độ ưu tiên hiển thị</label>
+                        <input type="number" id="p-priority" th:field="*{priority}" class="sd-form-control"
+                               placeholder="VD: 1" step="1">
+                        <div class="sd-form-hint">Cao = nổi bật hơn. Mặc định 0.</div>
+                    </div>
+
+                    <div class="sd-form-group">
+                        <label>Trạng thái</label>
+                        <label class="sd-flex" style="gap:8px;align-items:center;padding:10px 0;">
+                            <input type="checkbox" th:field="*{active}" th:value="true">
+                            <span>Đang bán (vendor có thể mua)</span>
+                        </label>
+                    </div>
+                </div>
+
+                <div class="sd-form-actions" style="margin-top: 24px;">
+                    <a th:href="@{/admin/premium}" class="sd-btn sd-btn-secondary">Hủy</a>
+                    <button type="submit" class="sd-btn sd-btn-primary">
+                        <i class="fas fa-check"></i>
+                        <span th:text="${isEdit} ? 'Cập nhật' : 'Tạo Premium Package'">Tạo</span>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</main>
+</body>
+</html>

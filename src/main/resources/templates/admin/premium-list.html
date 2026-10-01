@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/springsecurity6"
+      th:replace="~{layout/admin-layout :: layout(title='Quản lý Premium Package - CNJ70 Admin', content=~{::main-content}, scripts=~{::page-scripts})}">
+<head>
+    <title>Quản lý Premium Package - CNJ70 Admin</title>
+</head>
+<body>
+<main th:fragment="main-content">
+    <div class="sd-page-head">
+        <div class="sd-page-head-title">
+            <h1>Quản lý Premium Package</h1>
+            <p>Tạo và quản lý các gói Premium cho Vendor (mua theo tháng để được Hot Search).</p>
+        </div>
+        <div class="sd-page-head-right">
+            <div class="sd-page-head-meta">
+                <span class="sd-page-head-meta-label">Tổng gói</span>
+                <span class="sd-page-head-meta-value" th:text="${totalItems}">0</span>
+            </div>
+            <div class="sd-page-head-actions">
+                <a th:href="@{/admin/premium/create}" class="sd-btn sd-btn-primary sd-btn-sm">
+                    <i class="fas fa-plus"></i>
+                    <span>Tạo Premium Package</span>
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Flash messages -->
+    <div th:if="${flashSuccess}" class="sd-alert sd-alert-success" style="margin-bottom:16px;">
+        <i class="fas fa-circle-check"></i>
+        <span th:text="${flashSuccess}">Thành công</span>
+    </div>
+    <div th:if="${success}" class="sd-alert sd-alert-success" style="margin-bottom:16px;">
+        <i class="fas fa-circle-check"></i>
+        <span th:text="${success}">Thành công</span>
+    </div>
+    <div th:if="${flashError}" class="sd-alert sd-alert-danger" style="margin-bottom:16px;">
+        <i class="fas fa-circle-exclamation"></i>
+        <span th:text="${flashError}">Lỗi</span>
+    </div>
+    <div th:if="${error}" class="sd-alert sd-alert-danger" style="margin-bottom:16px;">
+        <i class="fas fa-circle-exclamation"></i>
+        <span th:text="${error}">Lỗi</span>
+    </div>
+
+    <!-- Toolbar filter -->
+    <div class="sd-card sd-toolbar" style="margin-bottom:20px;">
+        <div class="sd-card-body">
+            <form th:action="@{/admin/premium}" method="get" class="sd-toolbar-form">
+                <select name="active" class="sd-select sd-toolbar-select"
+                        style="padding:8px 10px;border:1px solid var(--border,#e2e8f0);border-radius:6px;">
+                    <option value="">Tất cả trạng thái</option>
+                    <option value="true" th:selected="${active == 'true'}">Đang bán</option>
+                    <option value="false" th:selected="${active == 'false'}">Ngừng bán</option>
+                </select>
+                <button type="submit" class="sd-btn sd-btn-primary sd-btn-sm sd-toolbar-btn">
+                    <i class="fas fa-filter"></i> Lọc
+                </button>
+                <a th:href="@{/admin/premium}"
+                   class="sd-btn sd-btn-secondary sd-btn-sm sd-toolbar-btn">
+                    <i class="fas fa-rotate-left"></i> Đặt lại
+                </a>
+            </form>
+        </div>
+    </div>
+
+    <!-- Empty state -->
+    <div th:if="${#lists.isEmpty(packages)}" class="sd-card">
+        <div class="sd-card-body">
+            <div class="sd-empty">
+                <i class="fas fa-crown"></i>
+                <h3 th:if="${active != null and !#strings.isEmpty(active)}">Không có gói nào khớp bộ lọc</h3>
+                <h3 th:unless="${active != null and !#strings.isEmpty(active)}">Chưa có Premium Package nào</h3>
+                <p th:if="${active == null or #strings.isEmpty(active)}">Tạo gói Premium đầu tiên để Vendor đăng ký.</p>
+                <a th:if="${active == null or #strings.isEmpty(active)}"
+                   th:href="@{/admin/premium/create}" class="sd-btn sd-btn-primary" style="margin-top:16px;">
+                    <i class="fas fa-plus"></i> Tạo Premium Package
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Table -->
+    <div th:unless="${#lists.isEmpty(packages)}" class="sd-card">
+        <div class="sd-card-body sd-card-body-flush">
+            <div class="sd-table-wrap">
+                <table class="sd-table">
+                    <thead>
+                        <tr>
+                            <th class="sd-col-stt">STT</th>
+                            <th>Tên gói</th>
+                            <th>Giá</th>
+                            <th>Thời hạn</th>
+                            <th>Ưu tiên</th>
+                            <th>Trạng thái</th>
+                            <th>Ngày tạo</th>
+                            <th style="text-align: right;">Thao tác</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr th:each="pkg, iter : ${packages}">
+                            <td class="sd-col-stt" th:text="${iter.count}">1</td>
+                            <td>
+                                <div class="sd-table-title">
+                                    <i class="fas fa-crown" style="color:#f59e0b;margin-right:6px;"></i>
+                                    <span th:text="${pkg.name}">Tên gói</span>
+                                </div>
+                                <div class="sd-table-sub" th:if="${pkg.description}" th:text="${pkg.description}">Mô tả</div>
+                            </td>
+                            <td>
+                                <strong style="color:#0fb5b0;"
+                                        th:text="${#numbers.formatDecimal(pkg.price, 0, 'DEFAULT', 0, 'DEFAULT')} + 'đ'">
+                                    199.000đ
+                                </strong>
+                            </td>
+                            <td>
+                                <span th:text="${pkg.durationDays} + ' ngày'">30 ngày</span>
+                            </td>
+                            <td>
+                                <span class="sd-badge sd-badge-slate" th:text="${pkg.priority}">0</span>
+                            </td>
+                            <td>
+                                <span class="sd-badge"
+                                      th:classappend="${pkg.active} ? 'sd-badge-green' : 'sd-badge-slate'">
+                                    <th:block th:text="${pkg.active} ? 'Đang bán' : 'Ngừng bán'">Đang bán</th:block>
+                                </span>
+                            </td>
+                            <td>
+                                <small style="color:#64748b;"
+                                       th:text="${pkg.createdAt != null ? #temporals.format(pkg.createdAt, 'dd/MM/yyyy HH:mm') : '—'}">
+                                    01/01/2024
+                                </small>
+                            </td>
+                            <td style="text-align: right;">
+                                <div class="sd-flex sd-gap-1" style="justify-content:flex-end;">
+                                    <a th:href="@{/admin/premium/{id}/edit(id=${pkg.id})}"
+                                       class="sd-btn sd-btn-secondary sd-btn-sm" title="Chỉnh sửa">
+                                        <i class="fas fa-pen"></i>
+                                    </a>
+                                    <form th:action="@{/admin/premium/{id}/delete(id=${pkg.id})}"
+                                          method="post" style="display:inline;margin:0;"
+                                          th:if="${pkg.active}"
+                                          onsubmit="return confirm('Bạn có chắc muốn ngừng bán gói này?');">
+                                        <input type="hidden" name="active" th:value="${active}"/>
+                                        <button type="submit" class="sd-btn sd-btn-danger sd-btn-sm" title="Ngừng bán">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Info box -->
+</main>
+</body>
+</html>

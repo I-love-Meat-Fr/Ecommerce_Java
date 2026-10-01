@@ -1,8 +1,10 @@
 package com.ecommerce.cnj70.config;
 
+import com.ecommerce.cnj70.document.Shop;
 import com.ecommerce.cnj70.document.User;
 import com.ecommerce.cnj70.enums.KycStatus;
 import com.ecommerce.cnj70.repository.KycProfileRepository;
+import com.ecommerce.cnj70.repository.ShopRepository;
 import com.ecommerce.cnj70.repository.UserRepository;
 import com.ecommerce.cnj70.service.VendorService;
 import com.ecommerce.cnj70.service.ViolationService;
@@ -12,6 +14,8 @@ import org.springframework.security.core.Authentication;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ModelAttribute;
+
+import java.time.LocalDateTime;
 
 /**
  * Global controller advice - thêm các attribute chung cho tất cả view
@@ -25,6 +29,7 @@ public class GlobalControllerAdvice {
     private final KycProfileRepository kycProfileRepository;
     private final VoucherService voucherService;
     private final ViolationService violationService;
+    private final ShopRepository shopRepository;
 
     /**
      * Thêm hasShop + kycStatus + activeViolations vào model cho vendor pages
@@ -54,20 +59,35 @@ public class GlobalControllerAdvice {
                     } catch (Exception e) {
                         model.addAttribute("activeViolations", 0L);
                     }
+
+                    // Premium status — chỉ true khi premiumActive && endDate > now
+                    try {
+                        Shop shop = shopRepository.findById(user.getShopId()).orElse(null);
+                        boolean premiumActive = shop != null
+                                && shop.isPremiumActive()
+                                && shop.getPremiumExpiresAt() != null
+                                && shop.getPremiumExpiresAt().isAfter(LocalDateTime.now());
+                        model.addAttribute("premiumActive", premiumActive);
+                    } catch (Exception e) {
+                        model.addAttribute("premiumActive", false);
+                    }
                 } else {
                     model.addAttribute("activeViolations", 0L);
+                    model.addAttribute("premiumActive", false);
                 }
             } else {
                 model.addAttribute("hasShop", false);
                 model.addAttribute("kycStatus", "NOT_SUBMITTED");
                 model.addAttribute("kycApproved", false);
                 model.addAttribute("activeViolations", 0L);
+                model.addAttribute("premiumActive", false);
             }
         } else {
             model.addAttribute("hasShop", false);
             model.addAttribute("kycStatus", "NOT_SUBMITTED");
             model.addAttribute("kycApproved", false);
             model.addAttribute("activeViolations", 0L);
+            model.addAttribute("premiumActive", false);
         }
     }
 

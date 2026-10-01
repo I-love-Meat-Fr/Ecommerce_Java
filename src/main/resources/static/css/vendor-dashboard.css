@@ -3,6 +3,159 @@
    Scope: .sd-app .vd-*  (chỉ thay đổi vùng content, sidebar/topbar giữ nguyên)
    ============================================================ */
 
+/* ============================================
+   Premium Package cards (vendor)
+   ============================================ */
+
+.vd-premium-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: 20px;
+    margin-top: 16px;
+}
+
+.vd-premium-card {
+    background: #fff;
+    border: 2px solid #e2e8f0;
+    border-radius: 14px;
+    padding: 24px 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    transition: all 0.25s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+.vd-premium-card:hover {
+    border-color: #f59e0b;
+    box-shadow: 0 8px 24px rgba(245, 158, 11, 0.18);
+    transform: translateY(-2px);
+}
+
+.vd-premium-card-popular {
+    border-color: #f59e0b;
+    background: linear-gradient(180deg, #fffbeb 0%, #fff 60%);
+}
+
+.vd-premium-card-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.vd-premium-card-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 12px;
+    background: linear-gradient(135deg, #fcd34d, #d97706);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+    font-size: 22px;
+    box-shadow: 0 4px 10px rgba(217, 119, 6, 0.25);
+}
+
+.vd-premium-card-badge {
+    background: linear-gradient(135deg, #ef4444, #dc2626);
+    color: #fff;
+    padding: 4px 12px;
+    border-radius: 999px;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    box-shadow: 0 2px 6px rgba(239, 68, 68, 0.35);
+}
+
+.vd-premium-card-name {
+    font-size: 18px;
+    font-weight: 700;
+    color: #1e293b;
+    margin-top: 4px;
+}
+
+.vd-premium-card-desc {
+    font-size: 13px;
+    color: #64748b;
+    line-height: 1.5;
+    min-height: 38px;
+}
+
+.vd-premium-card-price {
+    display: flex;
+    align-items: baseline;
+    gap: 4px;
+    margin-top: 4px;
+}
+
+.vd-premium-card-price-value {
+    font-size: 32px;
+    font-weight: 800;
+    background: linear-gradient(135deg, #f59e0b, #d97706);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.vd-premium-card-price-unit {
+    font-size: 16px;
+    font-weight: 600;
+    color: #f59e0b;
+}
+
+.vd-premium-card-duration {
+    font-size: 13px;
+    color: #475569;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 12px;
+    background: #f1f5f9;
+    border-radius: 8px;
+    width: fit-content;
+}
+
+.vd-premium-card-features {
+    list-style: none;
+    padding: 0;
+    margin: 4px 0 0 0;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.vd-premium-card-features li {
+    font-size: 13px;
+    color: #475569;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.vd-premium-card-features li i {
+    color: #f59e0b;
+    font-size: 11px;
+}
+
+.vd-premium-card-btn {
+    margin-top: auto;
+    padding: 12px 16px !important;
+    font-size: 14px !important;
+    width: 100%;
+    justify-content: center;
+}
+
+.vd-premium-card-popular .vd-premium-card-btn {
+    background: linear-gradient(135deg, #f59e0b, #d97706) !important;
+}
+
+.vd-premium-card-popular .vd-premium-card-btn:hover {
+    background: linear-gradient(135deg, #d97706, #b45309) !important;
+}
+
 /* ---------- 0. Override primary tokens sang teal của web ---------- */
 .sd-app {
     --primary:           #0fb5b0;

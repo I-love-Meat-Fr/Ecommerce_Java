@@ -459,6 +459,22 @@
     font-size: 9px;
 }
 
+/* Premium shop badge — đè lên trên badge Hot thường, ở góc dưới-trái */
+.pl-product-badge-premium {
+    top: auto;
+    left: 8px;
+    bottom: 8px;
+    background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 50%, #d97706 100%);
+    color: #fff;
+    box-shadow: 0 2px 8px rgba(217, 119, 6, 0.35);
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+    padding: 5px 10px;
+}
+
+.pl-product-badge-premium i {
+    font-size: 10px;
+}
+
 .pl-product-image {
     position: relative;
     overflow: hidden;

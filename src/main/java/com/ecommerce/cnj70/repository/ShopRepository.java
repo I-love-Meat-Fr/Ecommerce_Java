@@ -48,4 +48,10 @@ public interface ShopRepository extends MongoRepository<Shop, String> {
 
     // === Phase 4A — counts used by Admin Dashboard ===
     long countByStatus(ShopStatus status);
+
+    // ===== Premium Subscription queries =====
+    /**
+     * Lấy các shop đang có Premium còn hiệu lực (dùng cho web pages render badge HOT).
+     */
+    List<Shop> findByPremiumActiveTrueAndPremiumExpiresAtAfter(java.time.LocalDateTime cutoff);
 }

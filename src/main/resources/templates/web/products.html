@@ -152,6 +152,11 @@
                             <div class="pl-product-badge" th:if="${product.rating >= 4.5}">
                                 <i class="fas fa-fire"></i> Hot
                             </div>
+                            <!-- Premium shop badge: hiển thị khi shop đang có Premium ACTIVE -->
+                            <div class="pl-product-badge pl-product-badge-premium"
+                                 th:if="${premiumShopIds != null and premiumShopIds.contains(product.shopId)}">
+                                <i class="fas fa-crown"></i> Premium
+                            </div>
                         </div>
                         <div class="pl-product-content">
                             <h3 class="pl-product-name" th:text="${product.name}">Tên sản phẩm</h3>

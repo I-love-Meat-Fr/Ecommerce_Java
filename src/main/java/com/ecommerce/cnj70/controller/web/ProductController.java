@@ -3,9 +3,11 @@ package com.ecommerce.cnj70.controller.web;
 import com.ecommerce.cnj70.document.Category;
 import com.ecommerce.cnj70.document.Product;
 import com.ecommerce.cnj70.document.Review;
+import com.ecommerce.cnj70.document.Shop;
 import com.ecommerce.cnj70.dto.response.ReviewRes;
 import com.ecommerce.cnj70.repository.CategoryRepository;
 import com.ecommerce.cnj70.repository.ReviewRepository;
+import com.ecommerce.cnj70.repository.ShopRepository;
 import com.ecommerce.cnj70.security.CustomUserDetails;
 import com.ecommerce.cnj70.service.ProductService;
 import com.ecommerce.cnj70.service.ReviewService;
@@ -28,6 +30,7 @@ import java.nio.file.StandardOpenOption;
 import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @Controller
@@ -40,6 +43,7 @@ public class ProductController {
     private final CategoryRepository categoryRepository;
     private final ReviewRepository reviewRepository;
     private final ReviewService reviewService;
+    private final ShopRepository shopRepository;
 
     @GetMapping("/products")
     public String productsList(
@@ -108,7 +112,23 @@ public class ProductController {
         model.addAttribute("totalPages", productPage.getTotalPages());
         model.addAttribute("totalProducts", totalProducts);
 
+        // Premium shop IDs — dùng cho badge HOT trên product cards
+        model.addAttribute("premiumShopIds", loadActivePremiumShopIds());
+
         return "web/products";
+    }
+
+    /** Lấy set các shopId đang có Premium ACTIVE (cho badge HOT). */
+    private Set<String> loadActivePremiumShopIds() {
+        try {
+            return shopRepository
+                    .findByPremiumActiveTrueAndPremiumExpiresAtAfter(LocalDateTime.now())
+                    .stream()
+                    .map(Shop::getId)
+                    .collect(Collectors.toSet());
+        } catch (Exception ex) {
+            return Set.of();
+        }
     }
 
     @GetMapping("/products/{id}")
