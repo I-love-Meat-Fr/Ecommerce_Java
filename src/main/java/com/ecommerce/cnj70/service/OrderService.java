@@ -10,7 +10,30 @@ import java.util.List;
 
 public interface OrderService {
 
-    Order createOrder(String userId, CheckoutReq request);
+    /**
+     * Tạo Order mới cho Customer, có wrap idempotency để chống tạo đơn trùng.
+     *
+     * <p>Caller (OrderController) lấy {@code idempotencyKey} từ form ẩn
+     * (UUID do client sinh trong {@code checkout.html}). Nếu null/blank,
+     * service tự fallback sang key dựa trên (userId, cartSnapshot, phút) để
+     * vẫn bắt được double-submit.</p>
+     *
+     * <p>Behavior:</p>
+     * <ul>
+     *   <li>Cùng (userId, idempotencyKey) + cùng request body → trả về Order
+     *       đã tạo (idempotent replay — áp dụng cho network retry).</li>
+     *   <li>Cùng key + body khác → throw {@link com.ecommerce.cnj70.exception.ConflictException}.</li>
+     *   <li>Cùng key, request trước vẫn PENDING → throw
+     *       {@link com.ecommerce.cnj70.exception.ConflictException} (double-click thật).</li>
+     * </ul>
+     *
+     * @param userId          user hiện tại
+     * @param request         checkout payload từ client
+     * @param idempotencyKey  UUID do client gửi (có thể null — service sẽ fallback)
+     * @param clientHint      user-agent / IP để audit
+     */
+    Order createOrder(String userId, CheckoutReq request,
+                      String idempotencyKey, String clientHint);
 
     /**
      * Pre-submit validation: kiểm tra lại toàn bộ trạng thái (price, stock, shop, voucher)

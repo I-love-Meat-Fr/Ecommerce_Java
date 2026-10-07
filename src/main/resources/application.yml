@@ -84,3 +84,20 @@ premium:
   scheduler:
     # Mặc định: 1h sáng mỗi ngày. Format Spring cron (6 fields, second đầu tiên).
     cron: "0 0 1 * * *"
+
+# VietQR Configuration
+vietqr:
+  api:
+    base-url: https://api.vietqr.io/v2
+    client-id: ${VIETQR_CLIENT_ID:12cad607-5495-481d-83a8-e6572d981fe4}
+    api-key: ${VIETQR_API_KEY:27a7086c-e648-44bf-85a9-05b4bd23b1c4}
+    timeout-connect: 10
+    timeout-read: 30
+  merchant:
+    account-number: ${VIETQR_ACCOUNT_NUMBER:0386267692}
+    bank-code: ${VIETQR_BANK_CODE:MBB}
+    bank-name: ${VIETQR_BANK_NAME:MB Bank}
+    account-name: ${VIETQR_ACCOUNT_NAME:Cửa hàng CNJ70}
+  callback:
+    # URL mà VietQR sẽ gọi khi có thanh toán (đặt trong portal VietQR hoặc config ở đây)
+    base-url: ${VIETQR_CALLBACK_BASE_URL:https://shrink-bartender-pug.ngrok-free.dev}

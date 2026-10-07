@@ -7,19 +7,25 @@ import com.ecommerce.cnj70.document.Voucher;
 import com.ecommerce.cnj70.dto.checkout.CheckoutValidationRes;
 import com.ecommerce.cnj70.dto.request.CheckoutReq;
 import com.ecommerce.cnj70.dto.response.OrderHistoryRes;
+import com.ecommerce.cnj70.dto.vietqr.VietQRPaymentResponse;
+import com.ecommerce.cnj70.enums.PaymentMethod;
 import com.ecommerce.cnj70.enums.PaymentStatus;
 import com.ecommerce.cnj70.enums.ShippingStatus;
 import com.ecommerce.cnj70.enums.VoucherType;
 import com.ecommerce.cnj70.exception.BadRequestException;
+import com.ecommerce.cnj70.exception.ConflictException;
 import com.ecommerce.cnj70.exception.ResourceNotFoundException;
 import com.ecommerce.cnj70.repository.UserRepository;
 import com.ecommerce.cnj70.security.CustomUserDetails;
 import com.ecommerce.cnj70.service.CartService;
 import com.ecommerce.cnj70.service.OrderService;
+import com.ecommerce.cnj70.service.PaymentService;
+import com.ecommerce.cnj70.service.VietQRService;
 import com.ecommerce.cnj70.service.VoucherService;
 import jakarta.servlet.http.HttpSession;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.stereotype.Controller;
@@ -29,8 +35,11 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
+
+import jakarta.servlet.http.HttpServletRequest;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
@@ -41,6 +50,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+@Slf4j
 @Controller
 @RequiredArgsConstructor
 public class OrderController {
@@ -54,6 +64,8 @@ public class OrderController {
     private final UserRepository userRepository;
     private final CartService cartService;
     private final VoucherService voucherService;
+    private final PaymentService paymentService;
+    private final VietQRService vietQRService;
 
     @GetMapping("/checkout")
     public String checkoutPage(@AuthenticationPrincipal CustomUserDetails user,
@@ -219,6 +231,8 @@ public class OrderController {
                           @ModelAttribute @Valid CheckoutReq request,
                           BindingResult bindingResult,
                           HttpSession session,
+                          @RequestHeader(value = "User-Agent", required = false) String userAgent,
+                          HttpServletRequest httpRequest,
                           Model model) {
         if (user == null) {
             return "redirect:/auth/login";
@@ -290,7 +304,15 @@ public class OrderController {
                 request.setDiscount(discount);
             }
 
-            Order order = orderService.createOrder(user.getId(), request);
+            // Idempotency key: ưu tiên key client gửi (UUID v4 sinh trong checkout.html),
+            // fallback về key trong form (hidden field), cuối cùng để null/blank để
+            // OrderService tự sinh fallback (userId + cartSnapshot + phút).
+            String idempotencyKey = request.getIdempotencyKey();
+            // clientHint: user-agent + IP để audit (KHÔNG dùng cho logic, chỉ logging).
+            String clientIp = httpRequest != null ? extractClientIp(httpRequest) : null;
+            String clientHint = (userAgent != null ? userAgent : "")
+                    + "|" + (clientIp != null ? clientIp : "");
+            Order order = orderService.createOrder(user.getId(), request, idempotencyKey, clientHint);
 
             // Xóa voucher đã dùng khỏi session (đã được Order lưu vào Order.voucherCode)
             session.removeAttribute(SESSION_APPLIED_VOUCHER);
@@ -298,6 +320,43 @@ public class OrderController {
             return "redirect:/orders/" + order.getId();
         } catch (Exception e) {
             String errorMessage = e.getMessage();
+
+            // ===== Xử lý lỗi Idempotency (ConflictException) =====
+            // OrderServiceImpl.createOrder throw ConflictException khi:
+            //   - Double-click thật sự: request trước vẫn PENDING
+            //   - Network retry với body khác: cùng key nhưng requestHash mismatch
+            //   - Idempotency record cũ đã được dùng với data khác
+            //
+            // Xử lý: render banner lỗi với message thân thiện, KHÔNG clear cart
+            // (cart vẫn còn nguyên — user có thể đợi vài giây rồi retry).
+            // Đặt attribute riêng `idempotencyConflict=true` để template có thể
+            // phân biệt với các lỗi khác và disable button + show spinner.
+            if (e instanceof ConflictException) {
+                log.info("Idempotency conflict on POST /checkout for user {}: {}",
+                        user.getId(), errorMessage);
+                model.addAttribute("error", errorMessage);
+                model.addAttribute("idempotencyConflict", Boolean.TRUE);
+
+                // ===== Critical: Generate NEW idempotency key =====
+                // Khi ConflictException xảy ra (đặc biệt với stale MongoDB index
+                // case: INSERT fail với DuplicateKey nhưng SELECT empty), key cũ
+                // bị "poisoned" — mọi retry với cùng key sẽ fail forever. Phải
+                // generate key mới và set vào checkoutReq để hidden field render
+                // giá trị mới. JS cũng sẽ clear sessionStorage khi thấy banner
+                // (defense in depth).
+                //
+                // Lý do update request (không phải chỉ model): Spring dùng cùng
+                // instance cho @ModelAttribute, nên thay đổi `request` cũng
+                // phản ánh lên model attribute "checkoutReq" → hidden field
+                // sẽ render với value mới.
+                String oldKey = request.getIdempotencyKey();
+                String newKey = java.util.UUID.randomUUID().toString();
+                request.setIdempotencyKey(newKey);
+                log.info("Idempotency conflict — generated fresh key for retry: " +
+                         "oldKey={} newKey={}", oldKey, newKey);
+
+                return "web/checkout";
+            }
 
             // ===== Xử lý lỗi Voucher =====
             // OrderServiceImpl.createOrder luôn wrap voucher errors với prefix
@@ -573,6 +632,21 @@ public class OrderController {
     }
 
     /**
+     * Lấy IP thật của client, có tính tới X-Forwarded-For (khi chạy sau nginx/cloud).
+     * Trả về null nếu không xác định được.
+     */
+    private String extractClientIp(HttpServletRequest request) {
+        if (request == null) return null;
+        String xff = request.getHeader("X-Forwarded-For");
+        if (xff != null && !xff.isBlank()) {
+            // X-Forwarded-For: client, proxy1, proxy2 — lấy IP đầu tiên
+            int comma = xff.indexOf(',');
+            return (comma > 0 ? xff.substring(0, comma) : xff).trim();
+        }
+        return request.getRemoteAddr();
+    }
+
+    /**
      * Invalidate HTTP session + clear JWT cookie khi phát hiện user không còn tồn tại
      * trong database (vd: DB reset, admin xóa user trong khi JWT cookie còn hạn).
      * Buộc browser phải đăng nhập lại để tránh các lỗi "Không tìm thấy người dùng"
@@ -611,5 +685,111 @@ public class OrderController {
             return "redirect:/auth/login?expired=true";
         }
         return null;
+    }
+
+    // =========================================================================
+    // BANK_QR Payment Endpoints (VietQR Integration)
+    // =========================================================================
+
+    /**
+     * Tạo QR code thanh toán VietQR cho đơn hàng đã tạo với phương thức BANK_QR.
+     * 
+     * <p>GET /orders/{orderId}/payment/qr
+     * 
+     * <p>Flow:
+     * 1. User tạo đơn hàng với paymentMethod = BANK_QR
+     * 2. Redirect đến trang order detail với thông báo chờ thanh toán
+     * 3. User gọi endpoint này để lấy QR code
+     * 4. User quét QR bằng app ngân hàng để thanh toán
+     * 5. VietQR webhook callback khi có thanh toán
+     */
+    @GetMapping("/orders/{orderId}/payment/qr")
+    @ResponseBody
+    public ResponseEntity<?> createPaymentQR(@AuthenticationPrincipal CustomUserDetails user,
+                                             @PathVariable String orderId) {
+        if (user == null) {
+            return ResponseEntity.status(401).body(Map.of("error", "Vui lòng đăng nhập"));
+        }
+
+        try {
+            Order order = orderService.getOrderById(orderId);
+            
+            // Verify ownership
+            if (!user.getId().equals(order.getUserId())) {
+                return ResponseEntity.status(403).body(Map.of("error", "Không có quyền truy cập đơn hàng này"));
+            }
+
+            // Check payment method
+            if (order.getPaymentMethod() != PaymentMethod.BANK_QR) {
+                return ResponseEntity.badRequest().body(Map.of(
+                        "error", "Đơn hàng này không sử dụng phương thức thanh toán QR"
+                ));
+            }
+
+            // Check if already paid
+            if (paymentService.isPaid(orderId)) {
+                return ResponseEntity.ok(Map.of(
+                        "orderId", orderId,
+                        "paid", true,
+                        "message", "Đơn hàng đã được thanh toán"
+                ));
+            }
+
+            // Create VietQR payment
+            VietQRPaymentResponse qrResponse = vietQRService.createPaymentQR(
+                    orderId, order.getTotalAmount());
+
+            return ResponseEntity.ok(qrResponse);
+
+        } catch (ResourceNotFoundException e) {
+            return ResponseEntity.status(404).body(Map.of("error", "Không tìm thấy đơn hàng"));
+        } catch (Exception e) {
+            log.error("Error creating VietQR for order: {}", orderId, e);
+            return ResponseEntity.internalServerError().body(Map.of(
+                    "error", "Không thể tạo mã QR: " + e.getMessage()
+            ));
+        }
+    }
+
+    /**
+     * Kiểm tra trạng thái thanh toán của đơn hàng.
+     * 
+     * <p>GET /orders/{orderId}/payment/status
+     * 
+     * <p>Poll endpoint cho frontend kiểm tra xem đã thanh toán chưa
+     * (sau khi user quét QR thành công).
+     */
+    @GetMapping("/orders/{orderId}/payment/status")
+    @ResponseBody
+    public ResponseEntity<?> checkPaymentStatus(@AuthenticationPrincipal CustomUserDetails user,
+                                                @PathVariable String orderId) {
+        if (user == null) {
+            return ResponseEntity.status(401).body(Map.of("error", "Vui lòng đăng nhập"));
+        }
+
+        try {
+            Order order = orderService.getOrderById(orderId);
+            
+            // Verify ownership
+            if (!user.getId().equals(order.getUserId())) {
+                return ResponseEntity.status(403).body(Map.of("error", "Không có quyền truy cập"));
+            }
+
+            boolean paid = paymentService.isPaid(orderId);
+
+            return ResponseEntity.ok(Map.of(
+                    "orderId", orderId,
+                    "paid", paid,
+                    "paymentStatus", order.getPaymentStatus() != null ? order.getPaymentStatus().name() : "UNKNOWN"
+            ));
+
+        } catch (ResourceNotFoundException e) {
+            return ResponseEntity.status(404).body(Map.of("error", "Không tìm thấy đơn hàng"));
+        } catch (Exception e) {
+            log.error("Error checking payment status for order: {}", orderId, e);
+            return ResponseEntity.internalServerError().body(Map.of(
+                    "error", "Không thể kiểm tra trạng thái: " + e.getMessage()
+            ));
+        }
     }
 }

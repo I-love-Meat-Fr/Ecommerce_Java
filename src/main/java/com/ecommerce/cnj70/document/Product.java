@@ -9,6 +9,7 @@ import lombok.NoArgsConstructor;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.annotation.LastModifiedDate;
+import org.springframework.data.annotation.Version;
 import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.Document;
 
@@ -121,6 +122,22 @@ public class Product {
 
     @Builder.Default
     private int sold = 0;
+
+    /**
+     * TASK #Tồn kho — Optimistic locking version (tự tăng khi update).
+     *
+     * <p>Spring Data MongoDB sẽ tự động tăng {@code version} khi {@code save()} và throw
+     * {@link org.springframework.dao.OptimisticLockingFailureException} nếu document đã bị
+     * update bởi thread khác giữa lúc đọc và lúc ghi.</p>
+     *
+     * <p>Lưu ý: Atomic operations qua {@link com.ecommerce.cnj70.service.InventoryService}
+     * tự bump version trong {@code $inc}, nên không bị conflict với cơ chế này.</p>
+     *
+     * <p>Document cũ trong DB KHÔNG có field {@code version} sẽ được treat như version=0
+     * — Spring Data vẫn hoạt động bình thường (khi đọc lần đầu sẽ tự khởi tạo).</p>
+     */
+    @Version
+    private Long version;
 
     @CreatedDate
     private LocalDateTime createdAt;

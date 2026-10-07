@@ -20,8 +20,14 @@
 
     <div class="sd-card sd-toolbar" style="margin-bottom:20px;">
         <div class="sd-card-body">
+            <!--
+                Filters compose with AND. They are evaluated at the QUERY layer
+                (MongoTemplate criteria on the `audit_logs` collection). The
+                underlying data source is unchanged.
+            -->
             <form th:action="@{/admin/audit}" method="get" class="sd-toolbar-form">
                 <input type="hidden" name="size" th:value="${size}" />
+
                 <select name="role" class="sd-select sd-toolbar-select"
                         style="padding:8px 10px;border:1px solid var(--border,#e2e8f0);border-radius:6px;">
                     <option value="">Tất cả role</option>
@@ -30,6 +36,33 @@
                             th:text="${r.name()}"
                             th:selected="${roleFilter == r.name()}"></option>
                 </select>
+
+                <select name="severity" class="sd-select sd-toolbar-select"
+                        style="padding:8px 10px;border:1px solid var(--border,#e2e8f0);border-radius:6px;">
+                    <option value="">Tất cả severity</option>
+                    <option th:each="s : ${severityChoices}"
+                            th:value="${s.name()}"
+                            th:text="${s.name()}"
+                            th:selected="${severityFilter == s.name()}"></option>
+                </select>
+
+                <!--
+                    Action is grouped by prefix (USER_, SHOP_, KYC_, ...) so the
+                    dropdown is scannable. The form posts the action name; the
+                    controller composes it with other filters via search().
+                -->
+                <select name="action" class="sd-select sd-toolbar-select"
+                        style="padding:8px 10px;border:1px solid var(--border,#e2e8f0);border-radius:6px;min-width:200px;">
+                    <option value="">Tất cả action</option>
+                    <optgroup th:each="group : ${actionGroups}"
+                              th:label="${group.key}">
+                        <option th:each="a : ${group.value}"
+                                th:value="${a.name()}"
+                                th:text="${a.name()}"
+                                th:selected="${actionFilter == a.name()}"></option>
+                    </optgroup>
+                </select>
+
                 <input type="text" name="actorId" th:value="${actorId}"
                        placeholder="Actor ID..."
                        style="padding:8px 10px;border:1px solid var(--border,#e2e8f0);border-radius:6px;min-width:160px;" />
@@ -55,6 +88,8 @@
     </div>
 
     <div class="sd-card" th:if="${(roleFilter != null and !#strings.isEmpty(roleFilter))
+                                  or (severityFilter != null and !#strings.isEmpty(severityFilter))
+                                  or (actionFilter != null and !#strings.isEmpty(actionFilter))
                                   or (actorId != null and !#strings.isEmpty(actorId))
                                   or (resourceType != null and !#strings.isEmpty(resourceType))
                                   or (resourceId != null and !#strings.isEmpty(resourceId))
@@ -66,6 +101,12 @@
             <span>Đang lọc theo:</span>
             <span th:if="${roleFilter != null and !#strings.isEmpty(roleFilter)}" class="sd-badge sd-badge-blue">
                 Role: <span th:text="${roleFilter}"></span>
+            </span>
+            <span th:if="${severityFilter != null and !#strings.isEmpty(severityFilter)}" class="sd-badge sd-badge-red">
+                Severity: <span th:text="${severityFilter}"></span>
+            </span>
+            <span th:if="${actionFilter != null and !#strings.isEmpty(actionFilter)}" class="sd-badge sd-badge-amber">
+                Action: <span th:text="${actionFilter}"></span>
             </span>
             <span th:if="${actorId != null and !#strings.isEmpty(actorId)}" class="sd-badge sd-badge-slate">
                 Actor: <span th:text="${actorId}"></span>
@@ -129,7 +170,12 @@
                             <span class="sd-badge sd-badge-slate" th:text="${e.resourceType}">TYPE</span>
                             <div class="sd-table-sub sd-mono" th:text="${e.resourceId}">id</div>
                         </td>
-                        <td th:text="${e.severity != null ? e.severity : '—'}">—</td>
+                        <td>
+                            <span th:if="${e.severity == 'CRITICAL'}" class="sd-badge sd-badge-red" th:text="${e.severity}">CRITICAL</span>
+                            <span th:if="${e.severity == 'WARNING'}" class="sd-badge sd-badge-amber" th:text="${e.severity}">WARNING</span>
+                            <span th:if="${e.severity == 'INFO'}" class="sd-badge sd-badge-slate" th:text="${e.severity}">INFO</span>
+                            <span th:if="${e.severity == null}" th:text="'—'">—</span>
+                        </td>
                         <td class="sd-table-sub" style="max-width:220px;">
                             <div th:text="${e.reason != null and #strings.length(e.reason) > 60}
                                           ? ${#strings.substring(e.reason, 0, 60)} + '...'
@@ -144,7 +190,7 @@
              style="display:flex;justify-content:center;border-top:1px solid var(--border,#e2e8f0);">
             <nav class="sd-pagination" aria-label="Phân trang">
                 <a th:if="${hasPrev}"
-                   th:href="@{/admin/audit(page=${page - 1}, size=${size}, role=${roleFilter}, actorId=${actorId}, resourceType=${resourceType}, resourceId=${resourceId}, from=${from}, to=${to})}"
+                   th:href="@{/admin/audit(page=${page - 1}, size=${size}, role=${roleFilter}, actorId=${actorId}, action=${actionFilter}, severity=${severityFilter}, resourceType=${resourceType}, resourceId=${resourceId}, from=${from}, to=${to})}"
                    class="sd-page-link">
                     <i class="fas fa-chevron-left"></i> Trước
                 </a>
@@ -156,12 +202,12 @@
                     <span class="sd-page-link sd-page-active" th:text="${i + 1}">1</span>
                 </th:block>
                 <th:block th:each="i : ${pageNumbers}" th:unless="${i == page}">
-                    <a th:href="@{/admin/audit(page=${i}, size=${size}, role=${roleFilter}, actorId=${actorId}, resourceType=${resourceType}, resourceId=${resourceId}, from=${from}, to=${to})}"
+                    <a th:href="@{/admin/audit(page=${i}, size=${size}, role=${roleFilter}, actorId=${actorId}, action=${actionFilter}, severity=${severityFilter}, resourceType=${resourceType}, resourceId=${resourceId}, from=${from}, to=${to})}"
                        class="sd-page-link" th:text="${i + 1}">1</a>
                 </th:block>
 
                 <a th:if="${hasNext}"
-                   th:href="@{/admin/audit(page=${page + 1}, size=${size}, role=${roleFilter}, actorId=${actorId}, resourceType=${resourceType}, resourceId=${resourceId}, from=${from}, to=${to})}"
+                   th:href="@{/admin/audit(page=${page + 1}, size=${size}, role=${roleFilter}, actorId=${actorId}, action=${actionFilter}, severity=${severityFilter}, resourceType=${resourceType}, resourceId=${resourceId}, from=${from}, to=${to})}"
                    class="sd-page-link">
                     Sau <i class="fas fa-chevron-right"></i>
                 </a>

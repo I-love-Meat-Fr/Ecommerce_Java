@@ -112,11 +112,13 @@
         </div>
     </div>
 
-    <div class="sd-card" style="margin-top:20px;">
+    <div class="sd-card" style="margin-top:20px;" sec:authorize="hasRole('ADMIN')">
         <div class="sd-card-head">
             <div>
                 <h3><i class="fas fa-shield-halved"></i> Thao tác tài khoản</h3>
                 <p>Khóa, mở khóa hoặc đổi trạng thái tài khoản này</p>
+                <!-- Phase 4 §1.2 — chỉ Admin mới được thao tác Khóa/Mở khóa/Sửa status. -->
+                <!-- Moderator có quyền xem user-detail để hỗ trợ kiểm duyệt nhưng không mutate. -->
             </div>
         </div>
         <div class="sd-card-body">

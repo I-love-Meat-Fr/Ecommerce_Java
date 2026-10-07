@@ -72,6 +72,27 @@
                         <span th:text="${error}">Có lỗi xảy ra</span>
                     </div>
 
+                    <!--
+                      Idempotency conflict banner — chỉ hiển thị khi server trả về
+                      ConflictException (đơn hàng trước đang được xử lý, key đã
+                      được dùng với data khác, hoặc MongoDB stale index).
+                      Server đã generate UUID mới + set vào hidden field + JS
+                      clear sessionStorage → user chỉ cần click "Đặt hàng" lại
+                      với mã mới là OK.
+                    -->
+                    <div th:if="${idempotencyConflict}" class="checkout-alert checkout-alert-warning"
+                         id="idempotency-conflict-banner">
+                        <i class="fas fa-redo"></i>
+                        <div>
+                            <strong>Đã xảy ra lỗi tạm thời với đơn hàng</strong>
+                            <p style="margin: 4px 0 0; font-size: 13px;">
+                                Mã đơn cũ đã được xử lý xong. Hệ thống đã tạo
+                                <b>mã đơn mới</b> cho bạn — vui lòng click
+                                <b>"Xác nhận đặt hàng"</b> bên dưới để thử lại.
+                            </p>
+                        </div>
+                    </div>
+
                     <!-- Pre-submit validation banner (price/stock/shop/voucher changed since page load) -->
                     <div id="checkout-validation-banner" class="checkout-validation-banner" style="display:none">
                         <!-- JS sẽ render nội dung vào đây -->
@@ -133,6 +154,15 @@
                                 <!-- Hidden fields carrying voucher info from Cart session -->
                                 <input type="hidden" th:field="*{voucherCode}" id="hidden-voucher-code">
                                 <input type="hidden" th:field="*{discount}" id="hidden-voucher-discount">
+                                <!--
+                                  Idempotency key — chống tạo Order trùng khi double click
+                                  / double submit / network retry. JS sẽ sinh UUID khi trang
+                                  load và set vào field này trước khi submit. Server sẽ dùng
+                                  compound unique index (userId, idempotencyKey) để chỉ cho
+                                  phép 1 Order được tạo / key. Cùng key + cùng body → trả
+                                  về Order cũ (idempotent replay); cùng key + body khác → 409.
+                                -->
+                                <input type="hidden" th:field="*{idempotencyKey}" id="hidden-idempotency-key">
 
                                 <!-- Contact info -->
                                 <div class="form-section-title">
@@ -287,7 +317,7 @@
                                     </div>
                                     <div class="bank-qr-preview-note">
                                         <i class="fas fa-info-circle"></i>
-                                        <span>Đơn hàng sẽ được xử lý sau khi hệ thống xác nhận đã nhận được thanh toán.</span>
+                                        <span><strong>Quan trọng:</strong> Đây là QR preview tạm thời. Bạn vẫn cần bấm <strong>"Xác nhận đặt hàng"</strong> bên dưới để tạo đơn hàng. Sau khi tạo, hệ thống sẽ chuyển đến trang chi tiết đơn hàng với mã QR chính thức có chứa mã đơn hàng (<code>DH&lt;ID&gt;</code>) — bạn quét QR đó để thanh toán.</span>
                                     </div>
                                 </div>
 
@@ -550,6 +580,63 @@
                 btn.innerHTML = original;
                 btn.classList.remove('is-copied');
             }, 1400);
+        }
+
+        // ============================================================
+        // Idempotency — sinh UUID khi load trang, lưu sessionStorage,
+        // gán vào hidden field khi submit. Server sẽ dùng compound unique
+        // index (userId, idempotencyKey) để chống tạo 2 Order trùng.
+        // ============================================================
+        const IDEMPOTENCY_STORAGE_KEY = 'checkoutIdempotencyKey';
+
+        function generateUuidV4() {
+            // RFC4122 v4 — dùng crypto.randomUUID nếu có, fallback manual.
+            if (window.crypto && typeof window.crypto.randomUUID === 'function') {
+                return window.crypto.randomUUID();
+            }
+            // Fallback cho browser cũ (vd: Safari < 15.4) — vẫn đủ unique cho
+            // mục đích idempotency (không cần cryptographic strength).
+            return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+                const r = (Math.random() * 16) | 0;
+                const v = c === 'x' ? r : (r & 0x3) | 0x8;
+                return v.toString(16);
+            });
+        }
+
+        /**
+         * Lấy/ generate idempotency key cho session hiện tại.
+         *
+         * <p>Dùng sessionStorage (per-tab) thay vì localStorage để mỗi tab có
+         * key riêng — tránh 2 tab dùng chung key gây false-positive replay.</p>
+         */
+        function getOrCreateIdempotencyKey() {
+            try {
+                let key = sessionStorage.getItem(IDEMPOTENCY_STORAGE_KEY);
+                if (!key) {
+                    key = generateUuidV4();
+                    sessionStorage.setItem(IDEMPOTENCY_STORAGE_KEY, key);
+                }
+                return key;
+            } catch (e) {
+                // sessionStorage có thể bị disable (private mode, security policy)
+                // → fallback về UUID mới mỗi lần. Server vẫn nhận key nhưng
+                // double-click protection chỉ hoạt động nhờ sessionStorage ở các
+                // lần click tiếp theo cùng page-load.
+                return generateUuidV4();
+            }
+        }
+
+        /**
+         * Xoá idempotency key sau khi đặt hàng thành công — lần sau mở trang
+         * sẽ có key mới. Nếu không xoá, user đặt hàng lần 2 (sau khi giỏ đã
+         * thay đổi) sẽ dùng lại key cũ và bị idempotent replay (trả về Order
+         * cũ thay vì Order mới — đây là behavior đúng của idempotency nhưng
+         * sẽ gây hiểu nhầm nếu user không để ý).
+         */
+        function clearIdempotencyKey() {
+            try {
+                sessionStorage.removeItem(IDEMPOTENCY_STORAGE_KEY);
+            } catch (e) { /* ignore */ }
         }
 
         // ============================================================
@@ -868,6 +955,45 @@
         // Init — wire up submit handler
         // ============================================================
         document.addEventListener('DOMContentLoaded', function() {
+            // ===== Idempotency key: sinh/lấy UUID và gán vào hidden field =====
+            // Field hidden-idempotency-key đã có sẵn ở form (render bởi Thymeleaf
+            // với giá trị từ server nếu có). Ở đây ta ưu tiên giá trị từ
+            // sessionStorage — server side chỉ là fallback khi JS không chạy.
+            const idempotencyKeyInput = document.getElementById('hidden-idempotency-key');
+            if (idempotencyKeyInput) {
+                idempotencyKeyInput.value = getOrCreateIdempotencyKey();
+            }
+
+            // Nếu server trả về idempotencyConflict=true (vd: user back lại trang
+            // sau khi bị conflict), clear sessionStorage để lần tới user submit
+            // thật sự sẽ có key mới — tránh vòng lặp conflict vô tận.
+            //
+            // QUAN TRỌNG: Nếu server đã render sẵn key mới trong hidden field
+            // (xem phần ConflictException handler ở OrderController — set
+            // request.idempotencyKey = UUID.randomUUID()), ta ưu tiên dùng giá trị
+            // đó thay vì generate key mới. Server-rendered key là authoritative
+            // vì server biết key nào đã bị "poisoned" bởi MongoDB stale index.
+            if (document.getElementById('idempotency-conflict-banner')) {
+                clearIdempotencyKey();
+                if (idempotencyKeyInput) {
+                    const serverRenderedKey = idempotencyKeyInput.value;
+                    if (serverRenderedKey && serverRenderedKey.trim().length > 0) {
+                        // Server đã generate key mới — dùng nó
+                        idempotencyKeyInput.value = serverRenderedKey;
+                        // Đồng bộ lại sessionStorage cho nhất quán (đề phòng
+                        // một số flow khác vẫn đọc từ sessionStorage)
+                        try {
+                            sessionStorage.setItem(IDEMPOTENCY_STORAGE_KEY, serverRenderedKey);
+                        } catch (e) { /* ignore */ }
+                        console.log('[checkout] Used server-rendered fresh idempotency key:', serverRenderedKey);
+                    } else {
+                        // Server không render key mới (hiếm gặp) — tự generate
+                        idempotencyKeyInput.value = getOrCreateIdempotencyKey();
+                        console.log('[checkout] Generated client-side fresh idempotency key:', idempotencyKeyInput.value);
+                    }
+                }
+            }
+
             // Payment option visual selection
             document.querySelectorAll('.payment-option').forEach(function(option) {
                 option.addEventListener('click', function() {
@@ -952,8 +1078,23 @@
             const btn = document.getElementById('btn-place-order');
             if (!form) return;
 
+            // ===== Chống double submit phía client (defense-in-depth) =====
+            // Ngay cả khi server đã có idempotency, ta vẫn muốn:
+            //   1) Disable button ngay khi user click — UX rõ ràng "đang xử lý"
+            //   2) Set cờ `inFlight` để chặn mọi click tiếp theo trong cùng page-load
+            //   3) Clear key trong sessionStorage sau khi submit thật sự — nếu
+            //      user back/reload sau khi Order tạo thành công, key mới sẽ
+            //      được generate (tránh replay nhầm vào Order cũ).
+            let inFlight = false;
+
             form.addEventListener('submit', async function(e) {
                 e.preventDefault(); // chặn submit cho tới khi validation xong
+
+                // Chặn click lần 2 trong khi lần 1 vẫn đang xử lý
+                if (inFlight) {
+                    return;
+                }
+                inFlight = true;
 
                 const phone = document.getElementById('phone').value.trim();
                 const address = document.getElementById('shippingAddress').value.trim();
@@ -970,6 +1111,7 @@
                 }
                 if (!valid) {
                     alert('Vui lòng điền đầy đủ thông tin bắt buộc (số điện thoại và địa chỉ giao hàng).');
+                    inFlight = false;
                     return;
                 }
 
@@ -977,9 +1119,11 @@
                 const voucherCodeEl = document.getElementById('hidden-voucher-code');
                 const voucherCode = voucherCodeEl ? voucherCodeEl.value.trim() : '';
 
-                // Disable button + show spinner
+                // Disable button + show spinner + thêm pointer-events:none để chặn
+                // mọi click chuột / touch kể cả khi CSS chưa apply disabled style
                 if (btn) {
                     btn.disabled = true;
+                    btn.style.pointerEvents = 'none';
                     btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Đang kiểm tra đơn hàng...';
                 }
 
@@ -991,8 +1135,10 @@
                     alert('Có lỗi khi kiểm tra đơn hàng. Vui lòng thử lại.');
                     if (btn) {
                         btn.disabled = false;
+                        btn.style.pointerEvents = '';
                         btn.innerHTML = '<i class="fas fa-lock"></i> Xác nhận đặt hàng';
                     }
+                    inFlight = false;
                     return;
                 }
 
@@ -1000,8 +1146,10 @@
                     alert('Không thể kiểm tra đơn hàng. Vui lòng thử lại.');
                     if (btn) {
                         btn.disabled = false;
+                        btn.style.pointerEvents = '';
                         btn.innerHTML = '<i class="fas fa-lock"></i> Xác nhận đặt hàng';
                     }
+                    inFlight = false;
                     return;
                 }
 
@@ -1017,20 +1165,37 @@
                     // Có lỗi nghiêm trọng — không submit
                     if (btn) {
                         btn.disabled = false;
+                        btn.style.pointerEvents = '';
                         btn.innerHTML = '<i class="fas fa-lock"></i> Xác nhận đặt hàng';
                     }
                     // Scroll banner lên trên cùng
                     const banner = document.getElementById('checkout-validation-banner');
                     if (banner) banner.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                    inFlight = false;
                     return;
                 }
 
                 // Hợp lệ (hoặc chỉ warning) → submit form thật
-                // Hidden field hidden-voucher-discount đã được refresh ở trên
+                // Hidden field hidden-voucher-discount đã được refresh ở trên.
+                // Đảm bảo idempotency key còn trong field (defense in depth —
+                // user có thể đã reload trang sau khi sessionStorage bị xoá).
+                const finalKeyInput = document.getElementById('hidden-idempotency-key');
+                if (finalKeyInput && !finalKeyInput.value) {
+                    finalKeyInput.value = getOrCreateIdempotencyKey();
+                }
+
                 if (btn) {
                     btn.disabled = true;
+                    btn.style.pointerEvents = 'none';
                     btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Đang xử lý...';
                 }
+
+                // Sau khi submit thật sự, xoá idempotency key — nếu user back/reload
+                // sau khi Order tạo xong, lần submit sau sẽ có key mới (tránh replay).
+                // Lưu ý: nếu submit fail và server trả về cùng trang với
+                // idempotencyConflict, ta KHÔNG clear key ở đây — banner conflict
+                // sẽ trigger clear khi user reload.
+                clearIdempotencyKey();
                 form.submit();
             });
         });

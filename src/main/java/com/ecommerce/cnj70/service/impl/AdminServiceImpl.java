@@ -49,12 +49,15 @@ public class AdminServiceImpl implements com.ecommerce.cnj70.service.AdminServic
 
     /**
      * Phase 4A — pending moderation statuses (Phase 2A/2B contract).
-     * Reuses existing {@link ModerationStatus} enum without modifying it.
+     * <p>
+     * CHỈ {@link ModerationStatus#PENDING_MANUAL} mới là "đang chờ moderator xem".
+     * Các trạng thái {@code AUTO_PASSED} / {@code AUTO_REJECTED} là kết quả cuối cùng
+     * của pipeline auto-moderation (informational, terminal cho moderator queue),
+     * KHÔNG đếm vào "Pending Moderation".
+     * </p>
      */
     private static final Set<ModerationStatus> PENDING_MODERATION_STATUSES = Set.of(
-            ModerationStatus.PENDING_MANUAL,
-            ModerationStatus.AUTO_PASSED,
-            ModerationStatus.AUTO_REJECTED
+            ModerationStatus.PENDING_MANUAL
     );
 
     /**
@@ -94,13 +97,28 @@ public class AdminServiceImpl implements com.ecommerce.cnj70.service.AdminServic
 
         List<AdminDashboardRes.RecentActivity> activities = buildRecentActivities(recentOrders);
 
-        // Phase 4A — Financial: GMV (DELIVERED total amount, all-time) distinct from Platform Revenue.
-        // Per Phase 4A §10–11: Order Total ≠ Platform Revenue. Platform Revenue must come from
-        // a real Finance backend (commission/fee). When unavailable (null from gateway), the
-        // metric MUST be null — NEVER fall back to GMV/periodRevenue. The UI uses
-        // MetricAvailability.platformRevenue to render N/A.
-        BigDecimal gmv = sumDeliveredRevenue(allOrders, o -> true);
+        // Phase 4A — Financial: mỗi chỉ số có NGUỒN DỮ LIỆU RIÊNG, KHÔNG suy diễn lẫn nhau.
+        // Theo Phase 4A §10–24: GMV ≠ Platform Revenue ≠ Vendor Sales ≠ Vendor Payable ≠ Refund.
+        //
+        //  - gmv              : sum(Order.totalAmount) cho Order DELIVERED.
+        //                       totalAmount = subtotal + shippingFee − discount (gồm cả phí ship,
+        //                       trừ voucher) — đây là số tiền khách hàng đã trả cho đơn đã giao.
+        //  - platformRevenue  : sum(Order.commissionAmount) cho Order DELIVERED — hiện chưa wire
+        //                       nên Order.commissionAmount = null → gateway trả null → UI N/A.
+        //  - vendorSales      : sum(OrderItem.subtotal) cho Order DELIVERED (doanh số bán hàng của
+        //                       vendor, chưa trừ hoa hồng sàn, không gồm ship).
+        //  - vendorPayable    : sum(Order.vendorNetAmount) cho Order DELIVERED — hiện chưa wire
+        //                       → gateway trả null → UI N/A.
+        //  - refund           : sum(RefundRequest.settledAmount) cho status=SUCCEEDED — wire từ
+        //                       RefundRequestRepository ngay bây giờ vì data đã có.
+        //
+        // QUAN TRỌNG: KHÔNG fall-back giữa các metric. Nếu gateway trả null, giữ null và để
+        // MetricAvailability.render N/A trên UI.
+        BigDecimal gmv = sumDeliveredTotalAmount(allOrders, o -> true);
         BigDecimal platformRevenue = metricsGateway.getPlatformRevenue(); // null until Finance contract
+        BigDecimal vendorSales = computeVendorSales(allOrders);
+        BigDecimal vendorPayable = metricsGateway.getVendorPayable();     // null until Settlement wired
+        BigDecimal refund = metricsGateway.getRefund();                   // wired from refunds collection
 
         // Phase 4A — Compliance / Risk counters
         long pendingModeration = countPendingModeration();
@@ -110,9 +128,6 @@ public class AdminServiceImpl implements com.ecommerce.cnj70.service.AdminServic
                 + safeCountByStatus(shopRepository, ShopStatus.RESTRICTED);
 
         Long pendingKyc = metricsGateway.countPendingKyc();
-        BigDecimal vendorSales = metricsGateway.getVendorSales();
-        BigDecimal vendorPayable = metricsGateway.getVendorPayable();
-        BigDecimal refund = metricsGateway.getRefund();
 
         AdminDashboardRes.MetricAvailability av = metricsGateway.getAvailability();
 
@@ -249,23 +264,53 @@ public class AdminServiceImpl implements com.ecommerce.cnj70.service.AdminServic
     private BigDecimal computePeriodRevenue(List<Order> allOrders, String period) {
         if (period == null) return BigDecimal.ZERO;
         switch (period) {
-            case "DAY":     return sumDeliveredRevenue(allOrders, daysWindowPredicate(14));
-            case "WEEK":    return sumDeliveredRevenue(allOrders, weeksWindowPredicate(8));
-            case "MONTH":   return sumDeliveredRevenue(allOrders, monthsWindowPredicate(12));
-            case "QUARTER": return sumDeliveredRevenue(allOrders, quartersWindowPredicate(8));
-            case "YEAR":    return sumDeliveredRevenue(allOrders, yearsWindowPredicate(6));
-            case "ALL":     return sumDeliveredRevenue(allOrders, o -> true);
-            default:        return sumDeliveredRevenue(allOrders, weeksWindowPredicate(8));
+            case "DAY":     return sumDeliveredTotalAmount(allOrders, daysWindowPredicate(14));
+            case "WEEK":    return sumDeliveredTotalAmount(allOrders, weeksWindowPredicate(8));
+            case "MONTH":   return sumDeliveredTotalAmount(allOrders, monthsWindowPredicate(12));
+            case "QUARTER": return sumDeliveredTotalAmount(allOrders, quartersWindowPredicate(8));
+            case "YEAR":    return sumDeliveredTotalAmount(allOrders, yearsWindowPredicate(6));
+            case "ALL":     return sumDeliveredTotalAmount(allOrders, o -> true);
+            default:        return sumDeliveredTotalAmount(allOrders, weeksWindowPredicate(8));
         }
     }
 
-    private static BigDecimal sumDeliveredRevenue(List<Order> allOrders, java.util.function.Predicate<Order> inWindow) {
+    /**
+     * Sum {@link Order#getTotalAmount()} (= subtotal + shippingFee − discount) cho Order
+     * đã DELIVERED. Đây là <b>GMV</b> — tổng số tiền khách hàng đã trả cho đơn đã giao
+     * (bao gồm phí ship, trừ voucher).
+     * <p>KHÔNG dùng giá trị này cho Platform Revenue / Vendor Sales / Vendor Payable —
+     * mỗi metric có nguồn dữ liệu riêng.</p>
+     */
+    private static BigDecimal sumDeliveredTotalAmount(List<Order> allOrders,
+                                                      java.util.function.Predicate<Order> inWindow) {
         return allOrders.stream()
                 .filter(o -> o.getStatus() == OrderStatus.DELIVERED)
                 .filter(inWindow)
                 .map(Order::getTotalAmount)
                 .filter(java.util.Objects::nonNull)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
+    }
+
+    /**
+     * <b>Vendor Sales</b> = tổng doanh số bán hàng của vendor (chưa trừ hoa hồng sàn, không
+     * gồm phí ship). Tính bằng sum(OrderItem.subtotal) cho Order DELIVERED.
+     * <p>KHÁC GMV: GMV là tổng tiền khách trả (= subtotal + ship − discount); Vendor Sales
+     * chỉ tính subtotal (doanh số bán hàng thuần).</p>
+     * <p>KHÁC Vendor Payable: Vendor Payable là subtotal − commission (vendor còn được nhận);
+     * Vendor Sales là doanh số (vendor đã bán được).</p>
+     */
+    private static BigDecimal computeVendorSales(List<Order> allOrders) {
+        BigDecimal sum = BigDecimal.ZERO;
+        for (Order o : allOrders) {
+            if (o.getStatus() != OrderStatus.DELIVERED) continue;
+            if (o.getItems() == null) continue;
+            for (Order.OrderItem it : o.getItems()) {
+                if (it.getSubtotal() != null) {
+                    sum = sum.add(it.getSubtotal());
+                }
+            }
+        }
+        return sum;
     }
 
     private static java.util.function.Predicate<Order> weeksWindowPredicate(int weeks) {

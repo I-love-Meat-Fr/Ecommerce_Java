@@ -6,6 +6,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.AuthenticationProvider;
@@ -89,25 +90,51 @@ public class SecurityConfig {
                 // contract, chỉ meaningful khi user đã login và đang trong checkout flow.
                 // permitAll() trước đây cho phép anonymous user dò voucher — fix tại Phase 4.
                 .requestMatchers("/api/kyc/callback").permitAll()  // KYC provider webhook (Phase 4 §8)
+                .requestMatchers("/api/vietqr/webhook").permitAll()  // VietQR webhook callback
+                .requestMatchers("/api/vietqr/health").permitAll()  // VietQR health check
                 // ===== PHASE 2 — SECURITY FIX & ROUTE MAPPING =====
                 // §1.1 Role × Module Matrix.
                 // Thứ tự rule quan trọng: rule cụ thể (/admin/users/**) phải ĐỨNG TRƯỚC
                 // rule tổng quát (/admin/**). Spring Security match first match wins.
-                // ADMIN + MODERATOR (theo matrix §1.1)
-                .requestMatchers("/admin/users/**").hasAnyRole("ADMIN", "MODERATOR")
+                // ADMIN + MODERATOR (theo matrix §1.1) — chỉ áp dụng cho thao tác XEM (GET).
+                // Thao tác MUTATE (POST) nhạy cảm bên dưới được giới hạn ADMIN để tránh
+                // MODERATOR escalate quyền lên Admin/MODERATOR khác.
+                .requestMatchers(HttpMethod.GET, "/admin/users", "/admin/users/{id}").hasAnyRole("ADMIN", "MODERATOR")
                 .requestMatchers("/admin/categories/**").hasAnyRole("ADMIN", "MODERATOR")
                 .requestMatchers("/admin/shops/**").hasAnyRole("ADMIN", "MODERATOR")
-                .requestMatchers("/admin/kyc/**").hasAnyRole("ADMIN", "MODERATOR")
+                .requestMatchers(HttpMethod.GET, "/admin/kyc", "/admin/kyc/{id}").hasAnyRole("ADMIN", "MODERATOR")
                 .requestMatchers("/admin/violations/**").hasAnyRole("ADMIN", "MODERATOR")
-                .requestMatchers("/admin/escalations/**").hasAnyRole("ADMIN", "MODERATOR")
+                .requestMatchers(HttpMethod.GET, "/admin/escalations", "/admin/escalations/{id}").hasAnyRole("ADMIN", "MODERATOR")
                 .requestMatchers("/admin/products/**").hasAnyRole("ADMIN", "MODERATOR")
                 .requestMatchers("/admin/reviews/**").hasAnyRole("ADMIN", "MODERATOR")
+                // ===== ADMIN-ONLY MUTATIONS — Phase 4 §1.2 Privilege Boundary =====
+                // QUAN TRỌNG: pattern "/admin/users/**" rộng hơn ở dưới sẽ match POST
+                // /admin/users/{id}/lock trước — phải đặt rule cụ thể ADMIN-only TRƯỚC.
+                .requestMatchers(HttpMethod.POST, "/admin/users/{id}/lock",
+                        "/admin/users/{id}/unlock",
+                        "/admin/users/{id}/edit").hasRole("ADMIN")
+                .requestMatchers(HttpMethod.GET, "/admin/users/{id}/edit").hasRole("ADMIN")
+                .requestMatchers(HttpMethod.POST, "/admin/kyc/{id}/approve",
+                        "/admin/kyc/{id}/reject",
+                        "/admin/kyc/{id}/suspend").hasRole("ADMIN")
+                .requestMatchers(HttpMethod.POST, "/admin/escalations/{id}/claim",
+                        "/admin/escalations/{id}/enforce",
+                        "/admin/escalations/{id}/dismiss").hasRole("ADMIN")
+                // ===== Pattern rộng "/admin/users/**" đặt SAU các ADMIN-only cụ thể =====
+                .requestMatchers("/admin/users/**").hasAnyRole("ADMIN", "MODERATOR")
+                .requestMatchers("/admin/kyc/**").hasAnyRole("ADMIN", "MODERATOR")
+                .requestMatchers("/admin/escalations/**").hasAnyRole("ADMIN", "MODERATOR")
                 // ADMIN-only (theo matrix §1.1)
                 .requestMatchers("/admin/orders/**").hasRole("ADMIN")
                 .requestMatchers("/admin/vouchers/**").hasRole("ADMIN")
                 .requestMatchers("/admin/audit/**").hasRole("ADMIN")
                 .requestMatchers("/admin/banners/**").hasRole("ADMIN")
-                // Fallback cho admin path khác (dashboard, ...) — chỉ ADMIN
+                .requestMatchers("/admin/complaints/**").hasRole("ADMIN")
+                .requestMatchers("/admin/dashboard").hasRole("ADMIN")
+                // PHASE 5 — Admin Report Generation (PDF/Excel/CSV).
+                // Dữ liệu tài chính / doanh thu / danh sách user là nhạy cảm → ADMIN-only.
+                .requestMatchers("/admin/reports/**").hasRole("ADMIN")
+                // Fallback cho admin path khác — chỉ ADMIN
                 .requestMatchers("/admin/**").hasRole("ADMIN")
                 .requestMatchers("/moderator/**").hasRole("MODERATOR")
                 .requestMatchers("/vendor/**").hasRole("VENDOR")

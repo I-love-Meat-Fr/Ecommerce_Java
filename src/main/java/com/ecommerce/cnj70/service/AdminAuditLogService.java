@@ -1,6 +1,7 @@
 package com.ecommerce.cnj70.service;
 
 import com.ecommerce.cnj70.document.AuditLogEntry;
+import com.ecommerce.cnj70.enums.AuditSeverity;
 import com.ecommerce.cnj70.enums.UserRole;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -17,6 +18,12 @@ import java.util.Collection;
  * <h3>Immutable</h3>
  * All methods are read-only. No update or delete operations exist.
  * Audit records are append-only by design.</p>
+ *
+ * <h3>Data source</h3>
+ * Backed by MongoDB collection {@code audit_logs} (single collection,
+ * two schemas: {@link com.ecommerce.cnj70.document.AuditLog} for writes,
+ * {@link AuditLogEntry} for Admin read queries). The collection name
+ * MUST stay {@code audit_logs} — never {@code audit_log}.
  */
 public interface AdminAuditLogService {
 
@@ -34,6 +41,26 @@ public interface AdminAuditLogService {
                                          UserRole role, String actorId,
                                          Collection<String> actions,
                                          Pageable pageable);
+
+    /**
+     * Combined filter — any subset of {@code role}, {@code actorId},
+     * {@code action}, {@code severity}, {@code resourceType},
+     * {@code resourceId}, {@code from}, {@code to} can be supplied.
+     * Null / blank parameters are ignored (no constraint added).
+     *
+     * <p>Implemented at the query layer via {@code MongoTemplate} so
+     * that any combination of filters works without changing the data
+     * source.</p>
+     */
+    Page<AuditLogEntry> search(LocalDateTime from,
+                                LocalDateTime to,
+                                UserRole role,
+                                String actorId,
+                                Collection<String> actions,
+                                AuditSeverity severity,
+                                String resourceType,
+                                String resourceId,
+                                Pageable pageable);
 
     AuditLogEntry getDetail(String id);
 }

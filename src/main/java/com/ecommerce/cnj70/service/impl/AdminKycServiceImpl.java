@@ -5,6 +5,7 @@ import com.ecommerce.cnj70.document.User;
 import com.ecommerce.cnj70.enums.KycStatus;
 import com.ecommerce.cnj70.exception.BadRequestException;
 import com.ecommerce.cnj70.exception.ResourceNotFoundException;
+import com.ecommerce.cnj70.exception.UnauthorizedException;
 import com.ecommerce.cnj70.repository.KycProfileRepository;
 import com.ecommerce.cnj70.repository.UserRepository;
 import com.ecommerce.cnj70.security.CustomUserDetails;
@@ -96,6 +97,7 @@ public class AdminKycServiceImpl implements AdminKycService {
 
     @Override
     public KycProfile approve(String profileId, UserDetails admin, String note) {
+        AdminGuard.verify(admin);
         KycProfile profile = kycProfileRepository.findById(profileId)
                 .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy hồ sơ KYC"));
 
@@ -123,6 +125,7 @@ public class AdminKycServiceImpl implements AdminKycService {
 
     @Override
     public KycProfile reject(String profileId, UserDetails admin, String note) {
+        AdminGuard.verify(admin);
         if (note == null || note.isBlank()) {
             throw new BadRequestException("Vui lòng nhập lý do từ chối");
         }
@@ -146,6 +149,7 @@ public class AdminKycServiceImpl implements AdminKycService {
 
     @Override
     public KycProfile suspend(String profileId, UserDetails admin, String note) {
+        AdminGuard.verify(admin);
         KycProfile profile = kycProfileRepository.findById(profileId)
                 .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy hồ sơ KYC"));
 
@@ -205,5 +209,33 @@ public class AdminKycServiceImpl implements AdminKycService {
             return cud.getId();
         }
         return null;
+    }
+
+    /**
+     * Phase 4 §1.2 — Defense-in-depth: chỉ ADMIN được duyệt/từ chối/đình chỉ KYC.
+     * MODERATOR có queue riêng tại /moderator/kyc. Nếu Moderator cố tình POST
+     * vào /admin/kyc/{id}/approve thì SecurityConfig sẽ chặn trước, nhưng thêm
+     * guard service-level để bảo vệ khi controller được gọi nội bộ hoặc test.
+     */
+    private static final class AdminGuard {
+        static void verify(UserDetails actor) {
+            if (actor == null) {
+                throw new UnauthorizedException("Yêu cầu đăng nhập Admin");
+            }
+            String role;
+            if (actor instanceof CustomUserDetails cud) {
+                role = cud.getRole();
+                if (!actor.isEnabled() || !actor.isAccountNonLocked()) {
+                    throw new UnauthorizedException("Tài khoản Admin đã bị khóa hoặc chưa kích hoạt");
+                }
+            } else {
+                // Fallback: không có CustomUserDetails, không xác định được role — từ chối.
+                throw new UnauthorizedException("Không xác định được role — từ chối thao tác Admin");
+            }
+            if (!"ADMIN".equals(role)) {
+                throw new UnauthorizedException(
+                        "Chỉ Admin mới có quyền duyệt KYC cấp Admin. Role hiện tại: " + role);
+            }
+        }
     }
 }

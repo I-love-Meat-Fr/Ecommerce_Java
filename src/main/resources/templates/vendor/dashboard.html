@@ -64,8 +64,12 @@
         <!-- Mini KPI strip -->
         <div class="vd-hero-kpis">
             <div class="vd-kpi">
-                <span class="vd-kpi-value" th:text="${@money.format(stats.totalRevenue)}">0đ</span>
-                <span class="vd-kpi-label">Doanh thu tổng</span>
+                <span class="vd-kpi-value" th:text="${@money.format(stats.vendorSales)}">0đ</span>
+                <span class="vd-kpi-label">Doanh số bán hàng</span>
+            </div>
+            <div class="vd-kpi">
+                <span class="vd-kpi-value" th:text="${stats.vendorPayable != null} ? ${@money.format(stats.vendorPayable)} : 'N/A'">N/A</span>
+                <span class="vd-kpi-label">Doanh thu ròng</span>
             </div>
             <div class="vd-kpi">
                 <span class="vd-kpi-value" th:text="${stats.totalOrders}">0</span>
@@ -88,15 +92,27 @@
 
         <div class="vd-stat-card vd-stat-link" th:href="@{/vendor/orders}" onclick="location.href=this.getAttribute('href')">
             <div class="vd-stat-icon vd-stat-teal"><i class="fas fa-dollar-sign"></i></div>
-            <div class="vd-stat-label">Doanh thu</div>
-            <div class="vd-stat-value" th:text="${@money.format(stats.totalRevenue)}">0đ</div>
+            <div class="vd-stat-label">Doanh số bán hàng</div>
+            <div class="vd-stat-value" th:text="${@money.format(stats.vendorSales)}">0đ</div>
             <div class="vd-stat-foot">
-                <span class="vd-trend" th:classappend="${stats.monthlyRevenue != null and stats.monthlyRevenue.compareTo(new java.math.BigDecimal(0)) > 0 ? 'vd-trend-up' : 'vd-trend-flat'}">
-                    <i class="fas" th:classappend="${stats.monthlyRevenue != null and stats.monthlyRevenue.compareTo(new java.math.BigDecimal(0)) > 0 ? 'fa-arrow-up' : 'fa-minus'}"></i>
-                    Tháng này: <th:block th:text="${stats.monthlyRevenue != null ? @money.format(stats.monthlyRevenue) : '0đ'}">0đ</th:block>
+                <span class="vd-trend" th:classappend="${stats.monthlyVendorSales != null and stats.monthlyVendorSales.compareTo(new java.math.BigDecimal(0)) > 0 ? 'vd-trend-up' : 'vd-trend-flat'}">
+                    <i class="fas" th:classappend="${stats.monthlyVendorSales != null and stats.monthlyVendorSales.compareTo(new java.math.BigDecimal(0)) > 0 ? 'fa-arrow-up' : 'fa-minus'}"></i>
+                    Tháng này: <th:block th:text="${stats.monthlyVendorSales != null ? @money.format(stats.monthlyVendorSales) : '0đ'}">0đ</th:block>
                 </span>
             </div>
             <div class="dash-stat-link-indicator"><i class="fas fa-arrow-right"></i></div>
+        </div>
+
+        <div class="vd-stat-card">
+            <div class="vd-stat-icon vd-stat-purple"><i class="fas fa-hand-holding-dollar"></i></div>
+            <div class="vd-stat-label">Doanh thu ròng</div>
+            <div class="vd-stat-value" th:text="${stats.vendorPayable != null} ? ${@money.format(stats.vendorPayable)} : 'N/A'">N/A</div>
+            <div class="vd-stat-foot">
+                <span class="vd-trend vd-trend-flat">
+                    <i class="fas fa-info-circle"></i>
+                    <span>Vendor Payable — N/A (chưa wire settlement)</span>
+                </span>
+            </div>
         </div>
 
         <div class="vd-stat-card vd-stat-link" th:href="@{/vendor/orders}" onclick="location.href=this.getAttribute('href')">
@@ -141,11 +157,11 @@
     <!-- ====== 2-COLUMN GRID: Chart + Top Products ====== -->
     <div class="vd-grid vd-grid-2-1" th:if="${stats.shopSummary != null}">
 
-        <!-- LEFT: Revenue chart -->
+        <!-- LEFT: Revenue chart — Phase 4A: đây là Vendor Sales (OrderItem.subtotal), không phải GMV. -->
         <div class="vd-card">
             <div class="vd-card-head">
                 <div class="vd-card-head-title">
-                    <i class="fas fa-chart-line"></i> Doanh thu 7 ngày qua
+                    <i class="fas fa-chart-line"></i> Doanh số bán hàng 7 ngày qua
                 </div>
                 <a th:href="@{/vendor/orders}" class="vd-btn vd-btn-ghost vd-btn-sm">Xem tất cả</a>
             </div>
@@ -235,7 +251,7 @@
     <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
     <script th:inline="javascript">
         (function() {
-            // ===== Revenue Chart — show both revenue + orders if data available =====
+            // ===== Vendor Sales Chart (Phase 4A: OrderItem.subtotal, không phải Order.totalAmount) =====
             const revenueLabels = /*[[${stats.revenueTrend != null ? #strings.listJoin(stats.revenueTrend.![label], ',') : 'T2,T3,T4,T5,T6,T7,CN'}]]*/ 'T2,T3,T4,T5,T6,T7,CN';
             const revenueRaw = /*[[${stats.revenueTrend != null ? #strings.listJoin(stats.revenueTrend.![revenue], ',') : '0,0,0,0,0,0,0'}]]*/ '0,0,0,0,0,0,0';
             const ordersRaw = /*[[${stats.revenueTrend != null ? #strings.listJoin(stats.revenueTrend.![orders], ',') : '0,0,0,0,0,0,0'}]]*/ '0,0,0,0,0,0,0';
@@ -245,13 +261,13 @@
             const hasOrders = ordersData.some(v => v > 0);
 
             if (document.getElementById('revenueChart')) {
-                var series = [{ name: 'Doanh thu', data: revenueData }];
+                var series = [{ name: 'Doanh số bán hàng', data: revenueData }];
                 if (hasOrders || revenueData.some(v => v > 0)) {
                     series.push({ name: 'Đơn hàng', data: ordersData });
                 }
                 var yaxisCfg = [
                     {
-                        seriesName: 'Doanh thu',
+                        seriesName: 'Doanh số bán hàng',
                         labels: {
                             style: { colors: '#94a3b8', fontSize: '12px' },
                             formatter: function(v) { return fmtCurrency(v); }

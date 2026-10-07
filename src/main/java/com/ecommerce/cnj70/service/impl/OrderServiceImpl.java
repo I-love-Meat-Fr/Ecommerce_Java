@@ -11,6 +11,7 @@ import com.ecommerce.cnj70.enums.ProductStatus;
 import com.ecommerce.cnj70.enums.ShippingStatus;
 import com.ecommerce.cnj70.enums.ShopStatus;
 import com.ecommerce.cnj70.exception.BadRequestException;
+import com.ecommerce.cnj70.exception.ConflictException;
 import com.ecommerce.cnj70.exception.ResourceNotFoundException;
 import com.ecommerce.cnj70.exception.UnauthorizedException;
 import com.ecommerce.cnj70.repository.CartRepository;
@@ -19,9 +20,12 @@ import com.ecommerce.cnj70.repository.ProductRepository;
 import com.ecommerce.cnj70.repository.ShopRepository;
 import com.ecommerce.cnj70.repository.UserRepository;
 import com.ecommerce.cnj70.service.CartService;
+import com.ecommerce.cnj70.service.CheckoutIdempotencyService;
+import com.ecommerce.cnj70.service.InventoryService;
 import com.ecommerce.cnj70.service.OrderService;
 import com.ecommerce.cnj70.service.VoucherService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -37,6 +41,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class OrderServiceImpl implements OrderService {
@@ -51,10 +56,92 @@ public class OrderServiceImpl implements OrderService {
     private final ShopRepository shopRepository;
     private final CartService cartService;
     private final VoucherService voucherService;
+    /**
+     * TASK #Tồn kho — Service xử lý atomic stock operations.
+     * <p>Thay thế pattern "read stock → tính new value → save" (race condition) bằng
+     * atomic conditional update tại MongoDB.</p>
+     */
+    private final InventoryService inventoryService;
+
+    /**
+     * TASK #Idempotency — Service chống tạo Order trùng cho POST /checkout.
+     * <p>Compound unique index {@code (userId, idempotencyKey)} trên
+     * {@link com.ecommerce.cnj70.document.CheckoutIdempotencyRecord} là gate chính
+     * chống race-condition giữa 2 request đồng thời (vd: double click).</p>
+     */
+    private final CheckoutIdempotencyService idempotencyService;
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public Order createOrder(String userId, CheckoutReq request) {
+    public Order createOrder(String userId, CheckoutReq request,
+                             String idempotencyKey, String clientHint) {
+        // =========================================================================
+        // BƯỚC 0: Idempotency guard — chống tạo đơn trùng (double click / retry).
+        // ----------------------------------------------------------------------------
+        // Hai request đến đồng thời với cùng (userId, idempotencyKey):
+        //  - 1 INSERT thắng (RESERVED) → tiếp tục tạo Order
+        //  - INSERT còn lại bị compound unique index reject → handleDuplicate()
+        //    trả về REPLAYED (cùng hash → idempotent replay) hoặc CONFLICT.
+        //
+        // Về transaction scope: tryReserve và createOrder chạy trong cùng
+        // @Transactional. Nếu phần business logic throw, MongoDB transaction sẽ
+        // rollback CẢ reservation → user retry với cùng key vẫn OK (record cũ
+        // không còn). Đây là behavior mong muốn: lỗi → retry tự do, không bị
+        // "khoá" key vĩnh viễn.
+        //
+        // Về replay: nếu response trước bị mất trên đường truyền và client retry,
+        // key đã ở COMPLETED → trả về Order cũ (idempotent replay), KHÔNG tạo mới.
+        // =========================================================================
+        String effectiveKey = (idempotencyKey == null || idempotencyKey.isBlank())
+                ? idempotencyService.generateFallbackKey(
+                        userId, computeCartSnapshotHash(userId))
+                : idempotencyKey.trim();
+        String requestHash = idempotencyService.generateRequestHash(request);
+
+        CheckoutIdempotencyService.ReservationOutcome outcome =
+                idempotencyService.tryReserve(userId, effectiveKey, requestHash,
+                        "POST /checkout", clientHint);
+
+        if (outcome.isReplayed()) {
+            // Idempotent replay — response trước bị mất / network retry.
+            // Trả về Order đã tạo, KHÔNG tạo Order mới.
+            log.info("Idempotency replay for createOrder: userId={} key={} orderId={}",
+                    userId, effectiveKey, outcome.getExistingOrderId());
+            return getOrderByIdOrThrow(outcome.getExistingOrderId(), userId);
+        }
+        if (outcome.isConflict()) {
+            log.warn("Idempotency conflict for createOrder: userId={} key={} reason={}",
+                    userId, effectiveKey, outcome.getConflictReason());
+            throw new ConflictException(outcome.getConflictReason());
+        }
+        // outcome.isReserved() — fall through để tạo Order.
+
+        Order savedOrder = doCreateOrder(userId, request);
+
+        // Mark COMPLETED sau khi Order đã persist an toàn.
+        // Nếu bước này fail (rất hiếm), Order vẫn được tạo nhưng idempotency
+        // record sẽ ở PENDING → retry sau sẽ thấy PENDING (coi như conflict).
+        // Đây là acceptable tradeoff — Order tồn tại quan trọng hơn record hoàn hảo.
+        try {
+            idempotencyService.markCompleted(userId, effectiveKey, savedOrder.getId());
+        } catch (RuntimeException ex) {
+            log.warn("Failed to mark idempotency COMPLETED (order still created): userId={} key={} orderId={} error={}",
+                    userId, effectiveKey, savedOrder.getId(), ex.getMessage());
+        }
+        return savedOrder;
+    }
+
+    /**
+     * Logic tạo Order thuần tuý — được {@link #createOrder} gọi sau khi đã qua
+     * idempotency guard. Tách ra private method để code dễ đọc và test.
+     *
+     * <p>Không cần annotation @Transactional riêng — đã được method public bao
+     * ngoài ({@link #createOrder}) wrap qua Spring transaction proxy.</p>
+     */
+    private Order doCreateOrder(String userId, CheckoutReq request) {
+        // idempotencyKey có thể null/blank từ client (vd: JS disabled) — service vẫn
+        // hoạt động nhưng sẽ fallback sang key tự sinh. CheckoutIdempotencyService
+        // chịu trách trách nhiệm dedup.
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy người dùng"));
 
@@ -114,6 +201,12 @@ public class OrderServiceImpl implements OrderService {
                 throw new BadRequestException("Số lượng mua phải > 0 cho sản phẩm " + product.getName());
             }
 
+            // ===== TASK #Tồn kho — Stock pre-check (read-only, có thể stale) =====
+            // Đây CHỈ là check sơ bộ để fail-fast với thông báo thân thiện.
+            // Quyết định cuối cùng về việc có đủ hàng hay không được đưa ra bởi
+            // atomic decrement bên dưới (CAS-style với filter stock >= qty).
+            // Lưu ý: giá trị `product.getStock()` ở đây có thể đã stale so với lúc
+            // decrement thật sự chạy — đó là lý do ta LUÔN dùng atomic operation.
             if (product.getStock() < buyQty) {
                 throw new BadRequestException(String.format(
                         "Sản phẩm '%s' không đủ hàng. Chỉ còn %d sản phẩm.",
@@ -136,12 +229,9 @@ public class OrderServiceImpl implements OrderService {
             orderItems.add(orderItem);
             subtotal = subtotal.add(itemSubtotal);
 
-            // Trừ stock (sẽ rollback nếu có lỗi ở bước sau nhờ @Transactional)
-            product.setStock(product.getStock() - buyQty);
-            if (product.getStock() < 0) {
-                product.setStock(0);
-            }
-            productRepository.save(product);
+            // KHÔNG trừ stock ở đây nữa — sẽ dùng atomic batch bên dưới.
+            // Pattern cũ (read in Java → modify → save) bị race condition với concurrent
+            // buyers — xem InventoryService.
         }
 
         BigDecimal shippingFee = SHIPPING_FEE;
@@ -176,6 +266,54 @@ public class OrderServiceImpl implements OrderService {
         BigDecimal totalAmount = totalBeforeDiscount.subtract(discount);
         if (totalAmount.compareTo(BigDecimal.ZERO) < 0) {
             totalAmount = BigDecimal.ZERO;
+        }
+
+        // ===== TASK #Tồn kho — Atomic batch decrement =====
+        // Tại thời điểm này, TẤT CẢ items đã pass pre-check (price, stock, shop, ...).
+        // Bây giờ ta thực hiện atomic decrement cho toàn bộ items cùng lúc.
+        //
+        // Lợi ích:
+        // 1) MongoDB xử lý mỗi decrement atomic tại DB level → 2 concurrent buyers
+        //    không thể cùng "ăn" cùng 1 đơn vị stock.
+        // 2) Nếu 1 item fail (không đủ hàng do buyer khác vừa mua), các items đã
+        //    giảm thành công sẽ được tự động rollback (compensation).
+        // 3) Sau bước này, MỌI items đều đã được reserve — nếu có lỗi ở các bước
+        //    sau (vd: voucher increment fail), @Transactional rollback toàn bộ.
+        //
+        // Lưu ý: compensation chỉ chạy khi batch fail. Nếu batch thành công rồi mới
+        // throw exception ở bước sau, @Transactional sẽ rollback qua các cơ chế khác
+        // (cart cleanup, voucher increment) — nhưng KHÔNG tự rollback stock atomic vì
+        // MongoDB transaction chỉ rollback các thao tác MongoDB native, không rollback
+        // các lệnh đã chạy qua findAndModify nếu cluster không phải replica set.
+        // Do đó, với cluster Atlas (replica set), @Transactional hoạt động đầy đủ.
+        // Với standalone MongoDB, ta vẫn có compensation để handle race condition
+        // trong batch (xem InventoryService.tryDecrementBatch).
+        List<InventoryService.DecrementRequest> decrementRequests = new ArrayList<>();
+        for (Order.OrderItem oi : orderItems) {
+            decrementRequests.add(new InventoryService.DecrementRequest(
+                    oi.getProductId(), oi.getQuantity()));
+        }
+        InventoryService.BatchDecrementResult batchResult =
+                inventoryService.tryDecrementBatch(decrementRequests);
+
+        if (batchResult instanceof InventoryService.BatchDecrementResult.Failure failure) {
+            // Một item không đủ hàng (do concurrent buyer vừa mua) — compensation đã
+            // chạy tự động trong tryDecrementBatch. Giờ chỉ cần thông báo cho user.
+            String productName = orderItems.stream()
+                    .filter(oi -> oi.getProductId().equals(failure.failedProductId()))
+                    .map(Order.OrderItem::getProductName)
+                    .findFirst()
+                    .orElse(failure.failedProductId());
+
+            if ("PRODUCT_NOT_FOUND".equals(failure.reason())) {
+                throw new ResourceNotFoundException(
+                        "Sản phẩm '" + productName + "' không tồn tại hoặc đã bị xóa.");
+            }
+            // INSUFFICIENT_STOCK hoặc các lỗi khác
+            throw new BadRequestException(String.format(
+                    "Sản phẩm '%s' vừa hết hàng do có người khác đặt cùng lúc. "
+                            + "Vui lòng thử lại với số lượng khác.",
+                    productName));
         }
 
         // Lấy shopId/shopName đầu tiên để Order có thể lọc (giữ nguyên hành vi cũ)
@@ -693,14 +831,30 @@ public class OrderServiceImpl implements OrderService {
         }
     }
 
+    /**
+     * TASK #Tồn kho — Restore stock khi Order bị hủy.
+     *
+     * <p>Quy tắc mới: dùng {@link InventoryService#increment(String, int)} (atomic $inc)
+     * thay vì pattern cũ "read in Java → + qty → save" (race condition).</p>
+     *
+     * <p>Vì tăng stock là idempotent và luôn safe (không có điều kiện ràng buộc), ta có
+     * thể gọi {@code increment} trực tiếp không cần check điều kiện. Nếu concurrent buyer
+     * cùng lúc mua, kết quả cuối cùng vẫn đúng vì cả 2 đều là atomic $inc.</p>
+     *
+     * @param order Order bị hủy — sẽ trả lại stock cho từng item
+     */
     private void restoreStock(Order order) {
         if (order.getItems() == null) return;
 
         for (Order.OrderItem item : order.getItems()) {
-            Product product = productRepository.findById(item.getProductId()).orElse(null);
-            if (product != null) {
-                product.setStock(product.getStock() + item.getQuantity());
-                productRepository.save(product);
+            InventoryService.IncrementResult result =
+                    inventoryService.increment(item.getProductId(), item.getQuantity());
+            if (result instanceof InventoryService.IncrementResult.NotFound) {
+                // Edge case: product bị xóa giữa lúc mua và lúc hủy → log nhưng
+                // không throw (không thể restore cho product không tồn tại).
+                // Khuyến nghị: job dọn dẹp nên đối chiếu với order_items để audit.
+                log.warn("[Order] restoreStock: product {} not found while restoring for order {}",
+                        item.getProductId(), order.getId());
             }
         }
     }
@@ -736,5 +890,50 @@ public class OrderServiceImpl implements OrderService {
         }
 
         return orderRepository.save(order);
+    }
+
+    // =========================================================================
+    // Helpers for idempotency replay
+    // =========================================================================
+
+    /**
+     * Tìm Order theo id, có ownership check để tránh IDOR (user khác không xem
+     * được Order của user này). Được dùng khi idempotency replay cần trả về
+     * Order đã tạo trước đó — phải chắc chắn Order thuộc về user đang request.
+     */
+    private Order getOrderByIdOrThrow(String orderId, String userId) {
+        Order order = orderRepository.findById(orderId)
+                .orElseThrow(() -> new ConflictException(
+                        "Đơn hàng idempotency đã tồn tại nhưng không tìm thấy trong database. "
+                                + "Vui lòng thử đặt hàng lại."));
+        if (userId != null && !userId.equals(order.getUserId())) {
+            // Phòng trường hợp hiếm: cùng idempotencyKey nhưng khác user
+            // (vd: test isolation, race giữa 2 tài khoản). Trả conflict thay vì
+            // lộ thông tin Order của user khác.
+            throw new ConflictException(
+                    "Idempotency key không khớp với người dùng hiện tại.");
+        }
+        return order;
+    }
+
+    /**
+     * Tính hash ổn định từ Cart hiện tại của user — dùng làm input cho
+     * {@link CheckoutIdempotencyService#generateFallbackKey} khi client không
+     * gửi idempotencyKey.
+     *
+     * <p>Hash dựa trên (productId, quantity) theo thứ tự canonical để 2 request
+     * cùng cart (khác thứ tự trong list) vẫn cho cùng hash. Điều này đảm bảo
+     * double-submit trong cùng phút → fallback key giống nhau → server phát hiện.</p>
+     */
+    private String computeCartSnapshotHash(String userId) {
+        Cart cart = cartRepository.findByUserId(userId).orElse(null);
+        if (cart == null || cart.getItems() == null || cart.getItems().isEmpty()) {
+            return "empty:" + userId;
+        }
+        return cart.getItems().stream()
+                .filter(i -> i != null && i.getProductId() != null)
+                .sorted((a, b) -> a.getProductId().compareTo(b.getProductId()))
+                .map(i -> i.getProductId() + ":" + i.getQuantity())
+                .collect(Collectors.joining(","));
     }
 }

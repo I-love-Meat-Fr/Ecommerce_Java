@@ -46,28 +46,39 @@ public class AdminDashboardRes {
 
     /* ===== FINANCIAL OVERVIEW ===== */
     /**
-     * Gross Merchandise Value — sum of DELIVERED order totals.
-     * Distinct from Platform Revenue (commission/fee).
+     * <b>GMV</b> — Gross Merchandise Value: tổng tiền khách hàng đã trả cho đơn đã giao.
+     * <p>Nguồn: {@code sum(Order.totalAmount) where Order.status = DELIVERED}.</p>
+     * <p>totalAmount = subtotal + shippingFee − discount (gồm cả phí ship, trừ voucher).</p>
+     * <p><b>KHÔNG</b> được dùng làm Platform Revenue / Vendor Sales / Vendor Payable.</p>
      */
     private BigDecimal gmv;
     /**
-     * Platform Revenue — commission/fee earned.
-     * Today: 0 (no Finance contract yet). NOT equal to GMV.
+     * <b>Platform Revenue</b> — hoa hồng / phí sàn nhận được.
+     * <p>Nguồn dự kiến: {@code sum(Order.commissionAmount) where DELIVERED}. Hiện Order.commissionAmount
+     * chưa được wire nên giá trị trả về là {@code null} → UI hiển thị N/A.</p>
+     * <p><b>KHÔNG BAO GIỜ</b> fall-back về GMV (Phase 4A §11, §43).</p>
      */
     private BigDecimal platformRevenue;
     /**
-     * Vendor Sales — total sales attributed to vendors.
-     * null/N/A until Vendor Finance backend is wired.
+     * <b>Vendor Sales</b> — doanh số bán hàng của vendor (chưa trừ hoa hồng sàn, không gồm ship).
+     * <p>Nguồn: {@code sum(OrderItem.subtotal) where Order.status = DELIVERED}.</p>
+     * <p><b>KHÁC GMV</b>: GMV là tổng tiền khách trả; Vendor Sales là doanh số thuần của vendor.</p>
+     * <p><b>KHÁC Vendor Payable</b>: Payable = subtotal − commission (vendor còn được nhận);
+     * Vendor Sales = subtotal (vendor đã bán được, chưa trừ phí).</p>
      */
     private BigDecimal vendorSales;
     /**
-     * Vendor Payable — settlement amount owed to vendors.
-     * null/N/A until Settlement backend is wired.
+     * <b>Vendor Payable</b> — số tiền sàn còn nợ vendor sau khi trừ hoa hồng.
+     * <p>Nguồn dự kiến: {@code sum(Order.vendorNetAmount) where DELIVERED}. Hiện Order.vendorNetAmount
+     * chưa wire nên giá trị trả về là {@code null} → UI hiển thị N/A.</p>
      */
     private BigDecimal vendorPayable;
     /**
-     * Total refunded amount.
-     * null/N/A until Refund backend is wired.
+     * <b>Refund</b> — tổng tiền đã hoàn trả thực sự cho Customer.
+     * <p>Nguồn: {@code sum(RefundRequest.settledAmount) where status = SUCCEEDED}.</p>
+     * <p>Chỉ tính các refund đã provider confirm (SUCCEEDED), KHÔNG tính REQUESTED/PROCESSING/FAILED.</p>
+     * <p><b>KHÁC GMV/Platform Revenue/Vendor Sales</b>: đây là chiều đi của dòng tiền (ra khỏi
+     * platform), không phải doanh thu.</p>
      */
     private BigDecimal refund;
 

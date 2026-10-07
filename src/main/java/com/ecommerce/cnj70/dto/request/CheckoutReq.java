@@ -64,6 +64,28 @@ public class CheckoutReq {
      */
     private BigDecimal discount;
 
+    /**
+     * Idempotency key do client sinh (UUID v4) — gửi kèm POST /checkout để
+     * chống double-click / double-submit / network retry tạo 2 Order trùng.
+     *
+     * <p>Flow:</p>
+     * <ul>
+     *   <li>JS trong {@code checkout.html} generate UUID ngay khi user mở trang,
+     *       lưu vào {@code sessionStorage}, gán vào hidden field của form.</li>
+     *   <li>Server wrap {@code OrderService.createOrder} với
+     *       {@code CheckoutIdempotencyService.tryReserve} — race-condition
+     *       được giải quyết bằng compound unique index trên MongoDB.</li>
+     *   <li>Nếu cùng key + body → trả Order cũ (idempotent replay).</li>
+     *   <li>Nếu cùng key + body khác → 409 Conflict.</li>
+     *   <li>Nếu null/blank → server fallback sang key dựa trên
+     *       (userId, cartSnapshot, phút hiện tại) — defense-in-depth.</li>
+     * </ul>
+     *
+     * <p>KHÔNG validate {@code @NotBlank} — cho phép null để client cũ / JS
+     * disabled vẫn hoạt động (server sẽ tự sinh fallback).</p>
+     */
+    private String idempotencyKey;
+
     @Data
     @Builder
     @NoArgsConstructor

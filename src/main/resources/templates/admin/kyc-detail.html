@@ -222,9 +222,11 @@
             </div>
 
             <!-- Actions -->
-            <div class="sd-card">
+            <div class="sd-card" sec:authorize="hasRole('ADMIN')">
                 <div class="sd-card-head">
                     <h3><i class="fas fa-gavel"></i> Hành động</h3>
+                    <!-- Phase 4 §1.2 — Duyệt/Từ chối/Đình chỉ KYC cấp Admin là ADMIN-only.
+                         Moderator có queue riêng tại /moderator/kyc. -->
                 </div>
                 <div class="sd-card-body">
                     <!-- Approve button - chỉ khi có thể approve -->

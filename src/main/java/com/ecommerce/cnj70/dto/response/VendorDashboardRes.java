@@ -14,7 +14,7 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 public class VendorDashboardRes {
-    
+
     private int totalProducts;
     private int outOfStockProducts;
     private int totalOrders;
@@ -22,8 +22,28 @@ public class VendorDashboardRes {
     private int processingOrders;
     private int completedOrders;
     private int cancelledOrders;
-    private BigDecimal totalRevenue;
-    private BigDecimal monthlyRevenue;
+
+    /**
+     * <b>Vendor Sales</b> — doanh số bán hàng của vendor (sum of OrderItem.subtotal cho
+     * Order DELIVERED của shop này). Đã sửa từ "totalRevenue" cũ (gộp cả shipping &amp;
+     * voucher discount) để khớp với định nghĩa Vendor Sales ở Admin dashboard.
+     * <p>KHÔNG gồm phí ship và KHÔNG trừ voucher (vendor không "thu" ship, voucher là
+     * khuyến mãi do vendor tự cấp).</p>
+     */
+    private BigDecimal vendorSales;
+
+    /**
+     * <b>Vendor Sales (tháng này)</b> — tương tự vendorSales nhưng giới hạn trong tháng hiện tại.
+     */
+    private BigDecimal monthlyVendorSales;
+
+    /**
+     * <b>Vendor Payable</b> — số tiền vendor thực nhận (= subtotal − commission). Hiện
+     * Order.vendorNetAmount chưa wire nên giá trị này là {@code null} → UI hiển thị N/A.
+     * <p>KHÁC Vendor Sales: Vendor Sales = doanh số bán; Vendor Payable = tiền vendor được nhận.</p>
+     */
+    private BigDecimal vendorPayable;
+
     private ShopSummary shopSummary;
     private List<TopProduct> topProducts;
     private List<DailyMetric> revenueTrend;

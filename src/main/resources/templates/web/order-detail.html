@@ -621,6 +621,77 @@
                     }
                 });
             });
+
+            // ============================================================
+            // AUTO-POLLING — Tự động kiểm tra trạng thái thanh toán
+            // Khi KH chọn BANK_QR và đơn hàng còn PENDING, tự động gọi
+            // GET /orders/{orderId}/payment/status mỗi 5 giây.
+            // Khi webhook xử lý xong (PAID) → reload trang để hiển thị
+            // trạng thái mới + ẩn QR section.
+            // ============================================================
+            const bankQrSection = document.querySelector('.od-bank-qr-section');
+            const paymentStatusCard = document.querySelector('.od-payment-status-card');
+            if (bankQrSection && paymentStatusCard) {
+                const status = paymentStatusCard.getAttribute('data-status');
+                if (status === 'PENDING') {
+                    console.log('[AUTO-POLL] Bắt đầu kiểm tra trạng thái thanh toán mỗi 5 giây...');
+                    
+                    // Lấy orderId từ URL
+                    const pathParts = window.location.pathname.split('/');
+                    const orderId = pathParts[pathParts.length - 1];
+                    
+                    let pollCount = 0;
+                    const maxPolls = 360; // 360 * 5s = 30 phút
+                    
+                    const pollInterval = setInterval(async function() {
+                        pollCount++;
+                        
+                        // Dừng polling sau 30 phút (tránh chạy vô hạn)
+                        if (pollCount > maxPolls) {
+                            console.log('[AUTO-POLL] Đã hết thời gian polling, dừng lại.');
+                            clearInterval(pollInterval);
+                            return;
+                        }
+                        
+                        try {
+                            const resp = await fetch('/orders/' + orderId + '/payment/status', {
+                                method: 'GET',
+                                headers: { 'X-Requested-With': 'XMLHttpRequest' }
+                            });
+                            
+                            if (!resp.ok) {
+                                console.warn('[AUTO-POLL] Lỗi khi kiểm tra trạng thái:', resp.status);
+                                return;
+                            }
+                            
+                            const data = await resp.json();
+                            console.log('[AUTO-POLL] Trạng thái thanh toán:', data);
+                            
+                            if (data.paid === true || data.paymentStatus === 'PAID') {
+                                console.log('[AUTO-POLL] Đã nhận thanh toán! Reload trang...');
+                                clearInterval(pollInterval);
+                                
+                                // Hiển thị thông báo thành công
+                                if (typeof odShowToast === 'function') {
+                                    odShowToast('success', 'Thanh toán thành công! Đang cập nhật...');
+                                }
+                                
+                                // Reload sau 1 giây để user thấy toast
+                                setTimeout(function() {
+                                    window.location.reload();
+                                }, 1000);
+                            }
+                        } catch (err) {
+                            console.error('[AUTO-POLL] Lỗi khi gọi API:', err);
+                        }
+                    }, 5000); // 5 giây
+                    
+                    // Dừng polling khi user rời trang
+                    window.addEventListener('beforeunload', function() {
+                        clearInterval(pollInterval);
+                    });
+                }
+            }
         });
     </script>
 </th:block>

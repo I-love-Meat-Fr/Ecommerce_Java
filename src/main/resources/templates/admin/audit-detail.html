@@ -13,7 +13,11 @@
             <p>Chi tiết một entry audit log — READ ONLY.</p>
         </div>
         <div class="sd-page-head-actions">
-            <a th:href="@{/admin/audit(page=${page}, size=${size}, role=${roleFilter}, actorId=${actorId}, resourceType=${resourceType}, resourceId=${resourceId}, from=${from}, to=${to})}"
+            <!--
+                Back link preserves every filter so the Admin lands on the
+                same filtered list they came from. No data-source change.
+            -->
+            <a th:href="@{/admin/audit(page=${page}, size=${size}, role=${roleFilter}, actorId=${actorId}, action=${actionFilter}, severity=${severityFilter}, resourceType=${resourceType}, resourceId=${resourceId}, from=${from}, to=${to})}"
                class="sd-btn sd-btn-secondary sd-btn-sm">
                 <i class="fas fa-arrow-left"></i>
                 <span>Quay lại danh sách</span>

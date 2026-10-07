@@ -7,6 +7,7 @@ import com.ecommerce.cnj70.enums.UserRole;
 import com.ecommerce.cnj70.exception.BusinessException;
 import com.ecommerce.cnj70.exception.ResourceNotFoundException;
 import com.ecommerce.cnj70.repository.UserRepository;
+import com.ecommerce.cnj70.security.CustomUserDetails;
 import com.ecommerce.cnj70.service.AdminUserService;
 import com.ecommerce.cnj70.service.AuditLogService;
 import lombok.RequiredArgsConstructor;
@@ -150,6 +151,17 @@ public class AdminUserServiceImpl implements AdminUserService {
     @Override
     public void lockUser(String id, String currentUserId) {
         User user = getUserById(id);
+        User actor = loadActorForGuard(currentUserId);
+
+        // Phase 4 §1.2 — Privilege Boundary: MODERATOR KHÔNG được khóa ADMIN hoặc MODERATOR khác.
+        // Chỉ ADMIN mới có quyền thao tác lên tài khoản privileged roles.
+        if (actor != null && actor.getRole() == UserRole.MODERATOR
+                && (user.getRole() == UserRole.ADMIN || user.getRole() == UserRole.MODERATOR)) {
+            throw new BusinessException(
+                    "Moderator không có quyền khóa tài khoản "
+                            + user.getRole().name()
+                            + ". Chỉ Admin mới có quyền này.");
+        }
 
         // Phase 3 §1.2 / §3.9 — Self-Action Protection cho cả ADMIN và MODERATOR.
         // Admin không được tự khóa chính mình; Moderator cũng không được tự khóa chính mình.
@@ -176,6 +188,7 @@ public class AdminUserServiceImpl implements AdminUserService {
         updateUserStatusRaw(id, AccountStatus.LOCKED);
 
         // ===== TASK #24: AuditLog =====
+        String actorRole = actor != null ? actor.getRole().name() : "ADMIN";
         try {
             auditLogService.logWarning(
                     AuditAction.USER_LOCKED,
@@ -183,19 +196,31 @@ public class AdminUserServiceImpl implements AdminUserService {
                     id,
                     currentUserId,
                     null,
-                    "ADMIN",
-                    "Admin khóa tài khoản: " + user.getEmail() + " (" + beforeStatus + " → LOCKED)"
+                    actorRole,
+                    actorRole + " khóa tài khoản: " + user.getEmail()
+                            + " (" + beforeStatus + " → LOCKED, role=" + user.getRole() + ")"
             );
         } catch (RuntimeException auditEx) {
             log.warn("AuditLog write failed for lockUser({}): {}", id, auditEx.getMessage());
         }
 
-        log.info("AdminUserService.lockUser: user {} locked by {}", id, currentUserId);
+        log.info("AdminUserService.lockUser: user {} locked by {} ({})",
+                id, currentUserId, actorRole);
     }
 
     @Override
     public void unlockUser(String id) {
         User user = getUserById(id);
+        User actor = loadActorForGuard(currentUserIdOfUnlock());
+
+        // Phase 4 §1.2 — Privilege Boundary: MODERATOR KHÔNG được mở khóa ADMIN/MODERATOR.
+        if (actor != null && actor.getRole() == UserRole.MODERATOR
+                && (user.getRole() == UserRole.ADMIN || user.getRole() == UserRole.MODERATOR)) {
+            throw new BusinessException(
+                    "Moderator không có quyền mở khóa tài khoản "
+                            + user.getRole().name()
+                            + ". Chỉ Admin mới có quyền này.");
+        }
 
         // Phase 3 §3.9 — Self-Action Protection cho unlock (nếu Admin/Moderator unlock chính mình
         // vẫn OK vì đó là restore access; nhưng không có self-action block cho unlock).
@@ -211,6 +236,7 @@ public class AdminUserServiceImpl implements AdminUserService {
         updateUserStatusRaw(id, AccountStatus.ACTIVE);
 
         // ===== TASK #24: AuditLog =====
+        String actorRole = actor != null ? actor.getRole().name() : "ADMIN";
         try {
             auditLogService.logInfo(
                     AuditAction.USER_UNLOCKED,
@@ -218,14 +244,46 @@ public class AdminUserServiceImpl implements AdminUserService {
                     id,
                     null,
                     null,
-                    "ADMIN",
-                    "Admin mở khóa tài khoản: " + user.getEmail() + " (" + beforeStatus + " → ACTIVE)"
+                    actorRole,
+                    actorRole + " mở khóa tài khoản: " + user.getEmail()
+                            + " (" + beforeStatus + " → ACTIVE, role=" + user.getRole() + ")"
             );
         } catch (RuntimeException auditEx) {
             log.warn("AuditLog write failed for unlockUser({}): {}", id, auditEx.getMessage());
         }
 
-        log.info("AdminUserService.unlockUser: user {} unlocked", id);
+        log.info("AdminUserService.unlockUser: user {} unlocked by {}", id, currentUserIdOfUnlock());
+    }
+
+    /**
+     * Lấy id actor cho unlock — controller hiện không truyền currentUserId, dùng
+     * SecurityContextHolder để xác định role của actor phục vụ role-guard.
+     */
+    private String currentUserIdOfUnlock() {
+        org.springframework.security.core.Authentication authCtx =
+                org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication();
+        if (authCtx != null && authCtx.getPrincipal() instanceof CustomUserDetails cud) {
+            return cud.getId();
+        }
+        return null;
+    }
+
+    private User loadActorForGuard(String actorId) {
+        if (actorId == null || actorId.isBlank()) return null;
+        org.bson.Document raw = null;
+        try {
+            raw = mongoTemplate.getCollection("users")
+                    .find(new org.bson.Document("_id", actorId))
+                    .first();
+        } catch (Exception e) {
+            log.debug("loadActorForGuard: actor lookup failed for [{}]: {}", actorId, e.getMessage());
+        }
+        if (raw == null) return null;
+        if (!raw.containsKey("_class")) raw.put("_class", User.class.getName());
+        raw.put("_id", actorId);
+        User u = mongoTemplate.getConverter().read(User.class, raw);
+        if (u != null && u.getId() == null) u.setId(actorId);
+        return u;
     }
 
     @Override
@@ -240,7 +298,17 @@ public class AdminUserServiceImpl implements AdminUserService {
         }
 
         User user = getUserById(id);
+        User actor = loadActorForGuard(currentUserId);
         AccountStatus beforeStatus = user.getStatus();
+
+        // Phase 4 §1.2 — Privilege Boundary: MODERATOR KHÔNG được đổi status của ADMIN/MODERATOR.
+        if (actor != null && actor.getRole() == UserRole.MODERATOR
+                && (user.getRole() == UserRole.ADMIN || user.getRole() == UserRole.MODERATOR)) {
+            throw new BusinessException(
+                    "Moderator không có quyền đổi trạng thái tài khoản "
+                            + user.getRole().name()
+                            + ". Chỉ Admin mới có quyền này.");
+        }
 
         // Phase 3 §3.7 — Self-Action Protection cho Edit Status.
         // Không cho đổi status của chính mình nếu status hiện tại = ACTIVE
@@ -269,6 +337,7 @@ public class AdminUserServiceImpl implements AdminUserService {
         updateUserStatusRaw(id, newStatus);
 
         // ===== TASK #24: AuditLog =====
+        String actorRole = actor != null ? actor.getRole().name() : "ADMIN";
         try {
             auditLogService.logInfo(
                     AuditAction.ADMIN_ACTION,
@@ -276,15 +345,16 @@ public class AdminUserServiceImpl implements AdminUserService {
                     id,
                     currentUserId,
                     null,
-                    "ADMIN",
-                    "Admin đổi trạng thái user " + user.getEmail()
-                            + " (" + beforeStatus + " → " + newStatus + ")"
+                    actorRole,
+                    actorRole + " đổi trạng thái user " + user.getEmail()
+                            + " (" + beforeStatus + " → " + newStatus
+                            + ", role=" + user.getRole() + ")"
             );
         } catch (RuntimeException auditEx) {
             log.warn("AuditLog write failed for updateUserStatus({}): {}", id, auditEx.getMessage());
         }
 
-        log.info("AdminUserService.updateUserStatus: user {} status {} → {} by {}",
-                id, beforeStatus, newStatus, currentUserId);
+        log.info("AdminUserService.updateUserStatus: user {} status {} → {} by {} ({})",
+                id, beforeStatus, newStatus, currentUserId, actorRole);
     }
 }

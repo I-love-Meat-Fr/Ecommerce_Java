@@ -16,6 +16,11 @@
                 <i class="fas fa-house"></i>
                 <span class="sd-nav-label">Dashboard</span>
             </a>
+            <!-- PHASE 5 — Báo cáo & Xuất dữ liệu (PDF/Excel/CSV). ADMIN-only vì chứa dữ liệu tài chính. -->
+            <a th:href="@{/admin/reports}" sec:authorize="hasRole('ADMIN')" class="sd-nav-item" data-match="/admin/reports">
+                <i class="fas fa-chart-pie"></i>
+                <span class="sd-nav-label">Báo cáo</span>
+            </a>
         </div>
 
         <div class="sd-sidebar-nav-section">
@@ -28,7 +33,8 @@
                 <i class="fas fa-tags"></i>
                 <span class="sd-nav-label">Danh mục</span>
             </a>
-            <a th:href="@{/admin/vouchers}" class="sd-nav-item" data-match="/admin/vouchers">
+            <!-- Voucher WEB: chỉ ADMIN được quản lý voucher toàn hệ thống. -->
+            <a th:href="@{/admin/vouchers}" sec:authorize="hasRole('ADMIN')" class="sd-nav-item" data-match="/admin/vouchers">
                 <i class="fas fa-ticket"></i>
                 <span class="sd-nav-label">Voucher WEB</span>
             </a>
@@ -48,7 +54,8 @@
                 <i class="fas fa-triangle-exclamation"></i>
                 <span class="sd-nav-label">Vi phạm</span>
             </a>
-            <a th:href="@{/admin/orders}" class="sd-nav-item" data-match="/admin/orders">
+            <!-- Đơn hàng: ADMIN-only (doanh thu, refund, settlement). -->
+            <a th:href="@{/admin/orders}" sec:authorize="hasRole('ADMIN')" class="sd-nav-item" data-match="/admin/orders">
                 <i class="fas fa-cart-shopping"></i>
                 <span class="sd-nav-label">Đơn hàng</span>
             </a>
@@ -64,15 +71,18 @@
                 <i class="fas fa-triangle-exclamation"></i>
                 <span class="sd-nav-label">Escalations</span>
             </a>
-            <a th:href="@{/admin/complaints}" class="sd-nav-item" data-match="/admin/complaints">
+            <!-- Khiếu nại L2: chỉ Admin mới xử lý cấp cuối (Moderator xử lý L0/L1 ở /moderator/complaints). -->
+            <a th:href="@{/admin/complaints}" sec:authorize="hasRole('ADMIN')" class="sd-nav-item" data-match="/admin/complaints">
                 <i class="fas fa-flag"></i>
                 <span class="sd-nav-label">Khiếu nại (L2)</span>
             </a>
-            <a th:href="@{/admin/audit}" class="sd-nav-item" data-match="/admin/audit">
+            <!-- Audit Log: ADMIN-only (dữ liệu nhạy cảm về toàn bộ actor). -->
+            <a th:href="@{/admin/audit}" sec:authorize="hasRole('ADMIN')" class="sd-nav-item" data-match="/admin/audit">
                 <i class="fas fa-clipboard-list"></i>
                 <span class="sd-nav-label">Audit Log</span>
             </a>
-            <a th:href="@{/admin/banners}" class="sd-nav-item" data-match="/admin/banners">
+            <!-- Banner / PR: ADMIN-only (ảnh hưởng toàn hệ thống). -->
+            <a th:href="@{/admin/banners}" sec:authorize="hasRole('ADMIN')" class="sd-nav-item" data-match="/admin/banners">
                 <i class="fas fa-images"></i>
                 <span class="sd-nav-label">Banner / PR</span>
             </a>

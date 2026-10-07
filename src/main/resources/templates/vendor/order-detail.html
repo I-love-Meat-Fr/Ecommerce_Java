@@ -164,7 +164,16 @@
                         </div>
                         <div class="vd-info-item">
                             <div class="vd-info-label">Email</div>
-                            <div class="vd-info-value" th:text="${order.userEmail}">Email</div>
+                            <!--
+                                TASK #2 — Hiển thị email đã mask (vd: "a***@example.com").
+                                Vendor KHÔNG được xem email plaintext.
+                                Tooltip giải thích tại sao bị che.
+                            -->
+                            <div class="vd-info-value" th:text="${order.userEmailMasked}"
+                                 th:title="'Email đã được ẩn để bảo vệ quyền riêng tư của khách hàng'">a***@example.com</div>
+                            <small class="vd-info-hint" th:if="${order.userEmailMasked != null and order.userEmailMasked.contains('***')}">
+                                <i class="fas fa-shield-halved"></i> Email đã ẩn để bảo vệ quyền riêng tư
+                            </small>
                         </div>
                         <div class="vd-info-item">
                             <div class="vd-info-label">Số điện thoại</div>

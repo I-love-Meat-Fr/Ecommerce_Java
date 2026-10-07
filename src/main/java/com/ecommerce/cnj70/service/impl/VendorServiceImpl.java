@@ -194,42 +194,42 @@ public class VendorServiceImpl implements VendorService {
                     .processingOrders(0)
                     .completedOrders(0)
                     .cancelledOrders(0)
-                    .totalRevenue(BigDecimal.ZERO)
-                    .monthlyRevenue(BigDecimal.ZERO)
+                    .vendorSales(BigDecimal.ZERO)
+                    .monthlyVendorSales(BigDecimal.ZERO)
+                    .vendorPayable(null) // N/A — chưa wire
                     .build();
         }
-        
+
         List<Product> products = productRepository.findByShopId(shopId);
         int totalProducts = products.size();
         int outOfStockProducts = (int) products.stream()
                 .filter(p -> p.getStock() <= 0)
                 .count();
-        
+
         List<Order> orders = orderRepository.findByShopIdOrderByCreatedAtDesc(shopId);
         int totalOrders = orders.size();
         int pendingOrders = countOrdersByStatus(orders, OrderStatus.PENDING);
         int processingOrders = countOrdersByStatus(orders, OrderStatus.PREPARING);
         int completedOrders = countOrdersByStatus(orders, OrderStatus.DELIVERED);
         int cancelledOrders = countOrdersByStatus(orders, OrderStatus.CANCELLED);
-        
-        BigDecimal totalRevenue = orders.stream()
-                .filter(o -> o.getStatus() == OrderStatus.DELIVERED)
-                .map(Order::getTotalAmount)
-                .filter(java.util.Objects::nonNull)
-                .reduce(BigDecimal.ZERO, BigDecimal::add);
-        
+
+        // Phase 4A — Financial semantics: phân biệt rõ GMV / Vendor Sales / Vendor Payable.
+        //  - vendorSales = sum(OrderItem.subtotal) for DELIVERED — DOANH SỐ BÁN HÀNG
+        //    của vendor (không gồm phí ship, không trừ voucher, chưa trừ hoa hồng sàn).
+        //  - vendorPayable = null — N/A vì Order.vendorNetAmount chưa wire.
+        // KHÔNG dùng Order.totalAmount (= subtotal + ship − discount) làm "doanh thu"
+        // vì đó là GMV per-vendor (gộp 3 khái niệm: doanh số + ship + voucher).
+        BigDecimal vendorSales = computeShopSubtotal(orders, OrderStatus.DELIVERED, null);
+
         YearMonth currentMonth = YearMonth.now();
         LocalDateTime startOfMonth = currentMonth.atDay(1).atStartOfDay();
         LocalDateTime endOfMonth = currentMonth.atEndOfMonth().atTime(23, 59, 59);
-        
-        BigDecimal monthlyRevenue = orders.stream()
-                .filter(o -> o.getStatus() == OrderStatus.DELIVERED)
-                .filter(o -> o.getCreatedAt() != null && 
-                           (o.getCreatedAt().isAfter(startOfMonth) || o.getCreatedAt().isEqual(startOfMonth)) &&
-                           (o.getCreatedAt().isBefore(endOfMonth) || o.getCreatedAt().isEqual(endOfMonth)))
-                .map(Order::getTotalAmount)
-                .filter(java.util.Objects::nonNull)
-                .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+        BigDecimal monthlyVendorSales = computeShopSubtotal(
+                orders, OrderStatus.DELIVERED,
+                o -> o.getCreatedAt() != null
+                        && (o.getCreatedAt().isAfter(startOfMonth) || o.getCreatedAt().isEqual(startOfMonth))
+                        && (o.getCreatedAt().isBefore(endOfMonth) || o.getCreatedAt().isEqual(endOfMonth)));
         
         Map<LocalDate, BigDecimal> revByDay = new LinkedHashMap<>();
         Map<LocalDate, Long> orderByDay = new LinkedHashMap<>();
@@ -238,13 +238,15 @@ public class VendorServiceImpl implements VendorService {
             revByDay.put(d, BigDecimal.ZERO);
             orderByDay.put(d, 0L);
         }
+        // Chart trend cũng dùng Vendor Sales (OrderItem.subtotal cho shop này), không phải
+        // Order.totalAmount — tránh trộn GMV / ship / voucher trong cùng một chỉ số.
         for (Order o : orders) {
             if (o.getCreatedAt() == null) continue;
             LocalDate d = o.getCreatedAt().toLocalDate();
             if (!revByDay.containsKey(d)) continue;
             orderByDay.merge(d, 1L, Long::sum);
-            if (o.getStatus() == OrderStatus.DELIVERED && o.getTotalAmount() != null) {
-                revByDay.merge(d, o.getTotalAmount(), BigDecimal::add);
+            if (o.getStatus() == OrderStatus.DELIVERED) {
+                revByDay.merge(d, shopSubtotalFor(o, shopId), BigDecimal::add);
             }
         }
         List<VendorDashboardRes.DailyMetric> revenueTrend = new ArrayList<>();
@@ -255,7 +257,7 @@ public class VendorServiceImpl implements VendorService {
                     .orders(orderByDay.getOrDefault(e.getKey(), 0L))
                     .build());
         }
-        
+
         VendorDashboardRes.VendorDashboardResBuilder builder = VendorDashboardRes.builder()
                 .totalProducts(totalProducts)
                 .outOfStockProducts(outOfStockProducts)
@@ -264,8 +266,9 @@ public class VendorServiceImpl implements VendorService {
                 .processingOrders(processingOrders)
                 .completedOrders(completedOrders)
                 .cancelledOrders(cancelledOrders)
-                .totalRevenue(totalRevenue)
-                .monthlyRevenue(monthlyRevenue)
+                .vendorSales(vendorSales)
+                .monthlyVendorSales(monthlyVendorSales)
+                .vendorPayable(null) // N/A — Order.vendorNetAmount chưa wire
                 .revenueTrend(revenueTrend);
         
         if (shop != null) {
@@ -333,5 +336,39 @@ public class VendorServiceImpl implements VendorService {
         return (int) orders.stream()
                 .filter(o -> o.getStatus() == status)
                 .count();
+    }
+
+    /**
+     * Phase 4A — Vendor Sales helper.
+     * <p>Tính tổng OrderItem.subtotal của SHOP HIỆN TẠI cho các Order DELIVERED.
+     * KHÔNG dùng Order.totalAmount (đó là GMV per-vendor — gộp ship + voucher).</p>
+     *
+     * @param orders  danh sách Order đã lọc theo shopId (gọi từ orderRepository.findByShopId…)
+     * @param status  trạng thái Order cần tính (DELIVERED)
+     * @param extraPred predicate phụ (vd: lọc theo tháng); null = không lọc
+     */
+    private BigDecimal computeShopSubtotal(List<Order> orders, OrderStatus status,
+                                          java.util.function.Predicate<Order> extraPred) {
+        BigDecimal sum = BigDecimal.ZERO;
+        for (Order o : orders) {
+            if (o.getStatus() != status) continue;
+            if (extraPred != null && !extraPred.test(o)) continue;
+            sum = sum.add(shopSubtotalFor(o, null));
+        }
+        return sum;
+    }
+
+    /**
+     * Subtotal của 1 shop cụ thể trong Order (mỗi Order có thể chứa nhiều shop).
+     * Nếu shopIdFilter == null thì lấy theo shop của Order (shop chính).
+     */
+    private BigDecimal shopSubtotalFor(Order o, String shopIdFilter) {
+        if (o.getItems() == null) return BigDecimal.ZERO;
+        BigDecimal sum = BigDecimal.ZERO;
+        for (Order.OrderItem it : o.getItems()) {
+            if (shopIdFilter != null && !shopIdFilter.equals(it.getShopId())) continue;
+            if (it.getSubtotal() != null) sum = sum.add(it.getSubtotal());
+        }
+        return sum;
     }
 }

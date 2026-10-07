@@ -16,7 +16,9 @@
             <div class="sd-topbar-avatar" sec:authentication="name">A</div>
             <div class="sd-topbar-profile-info">
                 <span class="sd-topbar-profile-name" sec:authentication="name">Admin</span>
-                <span class="sd-topbar-profile-role">ROLE_ADMIN</span>
+                <!-- Hiển thị role thật của user — ADMIN hoặc MODERATOR (cả hai có thể
+                     dùng admin-layout khi xem các trang /admin/users, /admin/kyc, ...). -->
+                <span class="sd-topbar-profile-role" sec:authentication="principal.role">ROLE_ADMIN</span>
             </div>
         </div>
 

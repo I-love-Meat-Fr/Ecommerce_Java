@@ -21,6 +21,64 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * TASK #5 — Order document cho Multi-vendor marketplace.
+ *
+ * <h3>Cấu trúc Master Order + SubOrder</h3>
+ * <p>Trong marketplace này, một Order duy nhất có thể chứa sản phẩm từ NHIỀU Shop.
+ * Để xử lý:</p>
+ * <ul>
+ *   <li><b>Master Order</b> = {@link Order} document này — đại diện cho toàn bộ đơn hàng
+ *       của Customer. Có {@link #status} (OrderStatus), paymentStatus, totalAmount, ...</li>
+ *   <li><b>SubOrder</b> = mỗi entry trong {@link #shippingByShop} map — đại diện cho
+ *       phần đơn hàng thuộc về 1 Shop cụ thể. Có trạng thái vận chuyển riêng
+ *       (ShippingStatus), phí ship riêng, tracking riêng.</li>
+ * </ul>
+ *
+ * <h3>Quan hệ Customer → Order → Shop</h3>
+ * <pre>
+ *   Customer
+ *      │
+ *      ▼ (1:N)
+ *   Order (Master)              ← document này
+ *      │
+ *      ├─ items: List&lt;OrderItem&gt;         ← có shopId ở mỗi item
+ *      │
+ *      ├─ shopId (primary)       ← shop đầu tiên trong cart (legacy, giữ để tương thích)
+ *      │
+ *      └─ shippingByShop: Map    ← SubOrder theo từng shop
+ *           shopId → SubOrderShipping {
+ *              shopId, shopName,
+ *              status (ShippingStatus — DELIVERED/PENDING/...),
+ *              shippingFee, trackingNumber, carrier, ...
+ *           }
+ * </pre>
+ *
+ * <h3>Tại sao KHÔNG tách SubOrder thành collection riêng?</h3>
+ * <ul>
+ *   <li>Đồ án đã chốt: 1 Order = 1 document với shippingByShop map → đơn giản cho truy vấn.</li>
+ *   <li>Mỗi Order KHÔNG BAO GIỜ có quá nhiều Shop (thực tế 1-3 shop, hiếm khi &gt;5).</li>
+ *   <li>Truy vấn theo shop vẫn có thể dùng index trên {@code items.shopId} ở collection orders.</li>
+ *   <li>Nếu sau này cần scale: có thể migrate sang {@code orders} + {@code sub_orders}
+ *       collection riêng mà không phải đổi API nhiều (chỉ thay cách query).</li>
+ * </ul>
+ *
+ * <h3>Master Order vs SubOrder status</h3>
+ * <ul>
+ *   <li><b>Master Order status</b> ({@link #status} = OrderStatus): trạng thái tổng của đơn.
+ *       Hiện tại dùng status của SubOrder đầu tiên — KHÔNG khuyến khích suy diễn.</li>
+ *   <li><b>SubOrder status</b> ({@link SubOrderShipping#getStatus()} = ShippingStatus):
+ *       trạng thái vận chuyển riêng của từng shop.</li>
+ * </ul>
+ *
+ * <h3>Revenue calculation (CHO ADMIN DASHBOARD)</h3>
+ * <ul>
+ *   <li><b>GMV</b>: sum(Order.totalAmount) where status=DELIVERED — toàn bộ đơn.</li>
+ *   <li><b>Vendor Sales</b>: sum(SubOrderShipping.shippingFee đảo ngược? No) — cần
+ *       xem lại logic; hiện tại dùng GMV × (1 - commissionRate) cho mỗi vendor.</li>
+ *   <li><b>Platform Revenue</b>: sum(commissionAmount) — phí sàn nhận được.</li>
+ * </ul>
+ */
 @Data
 @Builder
 @NoArgsConstructor
@@ -112,6 +170,24 @@ public class Order {
      */
     private LocalDateTime refundedAt;
 
+    /**
+     * TASK #9 — Commission amount (phí sàn) tính trên Subtotal khi Order DELIVERED.
+     * Null = chưa tính (đơn chưa giao xong).
+     * Vendor nhận: subtotal - commissionAmount.
+     */
+    private BigDecimal commissionAmount;
+
+    /**
+     * TASK #9 — Số tiền Vendor thực nhận (= subtotal - commissionAmount).
+     * Null = chưa tính.
+     */
+    private BigDecimal vendorNetAmount;
+
+    /**
+     * TASK #9 — CommissionRule ID đã áp dụng cho Order này (audit).
+     */
+    private String appliedCommissionRuleId;
+
     private String shopId;
 
     private String shopName;
@@ -152,6 +228,30 @@ public class Order {
      * <p>Mỗi shop có trạng thái vận chuyển + phí ship + tracking riêng vì vendor tự xử lý
      * phần của mình. Phí ship được phân bổ từ {@link Order#getShippingFee()} tổng khi tạo
      * Order (chia đều cho các shop, shop cuối nhận phần dư để tổng luôn khớp).</p>
+     */
+    /**
+     * TASK #5 — SubOrder (per-shop) trong Multi-vendor Order.
+     *
+     * <p>Mỗi SubOrder đại diện cho phần đơn hàng thuộc về 1 Shop cụ thể, bao gồm:</p>
+     * <ul>
+     *   <li><b>Trạng thái vận chuyển riêng</b> ({@link #status}) — Vendor tự quản lý.</li>
+     *   <li><b>Phí ship phân bổ</b> ({@link #shippingFee}) — từ Order.shippingFee tổng,
+     *       chia đều cho các shop (shop cuối nhận phần dư để tổng khớp).</li>
+     *   <li><b>Tracking riêng</b> ({@link #trackingNumber}, {@link #carrier}) — mỗi
+     *       ĐVVC khác nhau có thể có code riêng.</li>
+     *   <li><b>Timeline riêng</b> ({@link #shippedAt}, {@link #deliveredAt}) — cho
+     *       audit trail theo shop.</li>
+     * </ul>
+     *
+     * <p>SubOrder KHÔNG có status tổng (PENDING/PREPARING/SHIPPING/DELIVERED) của Master —
+     * status Master nằm trên {@link Order#getStatus()} (OrderStatus).</p>
+     *
+     * <p><b>Workflow điển hình:</b></p>
+     * <pre>
+     *   SubOrderShipping PENDING  →  (vendor prepare)  →  PICKED_UP/IN_TRANSIT
+     *                              →  DELIVERED          (customer nhận hàng)
+     *                              →  FAILED             (giao fail, hoàn về vendor)
+     * </pre>
      */
     @Data
     @Builder

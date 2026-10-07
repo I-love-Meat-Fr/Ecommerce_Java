@@ -116,7 +116,7 @@
         <div class="dash-card-header">
             <div class="dash-card-title-group">
                 <h3><i class="fas fa-sack-dollar"></i> Financial Overview</h3>
-                <p>GMV ≠ Platform Revenue ≠ Vendor Sales ≠ Vendor Payable ≠ Refund (Phase 4A §20–24)</p>
+                <p>GMV ≠ Platform Revenue ≠ Vendor Sales ≠ Vendor Payable ≠ Refund (Phase 4A §20–24) — mỗi chỉ số có nguồn dữ liệu riêng, KHÔNG quy đổi qua lại.</p>
             </div>
         </div>
         <div class="dash-stats dash-stats-financial">
@@ -126,24 +126,25 @@
                 </div>
                 <div class="dash-stat-value" th:text="${stats.gmv != null} ? ${@money.format(stats.gmv)} : 'N/A'">0đ</div>
                 <div class="dash-stat-label">GMV (Gross Merchandise Value)</div>
-                <div class="dash-stat-sub">Sum of DELIVERED order totals (all-time)</div>
+                <div class="dash-stat-sub">Sum of Order.totalAmount for DELIVERED orders (all-time) — includes shipping, net of voucher</div>
             </div>
-            <div class="dash-stat-card dash-stat-purple">
+            <div class="dash-stat-card dash-stat-purple" th:classappend="${stats.availability == null or !stats.availability.platformRevenue} ? 'dash-stat-na' : ''">
                 <div class="dash-stat-icon-wrap">
                     <div class="dash-stat-icon"><i class="fas fa-coins"></i></div>
+                    <span class="dash-na-badge" th:if="${stats.availability == null or !stats.availability.platformRevenue}">N/A</span>
                 </div>
-                <div class="dash-stat-value" th:text="${stats.platformRevenue != null} ? ${@money.format(stats.platformRevenue)} : 'N/A'">0đ</div>
+                <div class="dash-stat-value" th:text="${stats.platformRevenue != null} ? ${@money.format(stats.platformRevenue)} : 'N/A'">N/A</div>
                 <div class="dash-stat-label">Platform Revenue</div>
-                <div class="dash-stat-sub">Commission / fee earned by platform</div>
+                <div class="dash-stat-sub">sum(Order.commissionAmount) for DELIVERED — N/A until Finance commission engine is wired</div>
             </div>
-            <div class="dash-stat-card dash-stat-slate" th:classappend="${stats.availability == null or !stats.availability.vendorSales} ? 'dash-stat-na' : ''">
+            <div class="dash-stat-card dash-stat-info" th:classappend="${stats.availability == null or !stats.availability.vendorSales} ? 'dash-stat-na' : ''">
                 <div class="dash-stat-icon-wrap">
                     <div class="dash-stat-icon"><i class="fas fa-receipt"></i></div>
                     <span class="dash-na-badge" th:if="${stats.availability == null or !stats.availability.vendorSales}">N/A</span>
                 </div>
-                <div class="dash-stat-value" th:text="${stats.vendorSales != null} ? ${@money.format(stats.vendorSales)} : 'N/A'">N/A</div>
+                <div class="dash-stat-value" th:text="${stats.vendorSales != null} ? ${@money.format(stats.vendorSales)} : 'N/A'">0đ</div>
                 <div class="dash-stat-label">Vendor Sales</div>
-                <div class="dash-stat-sub">Vendor Finance backend — INTEGRATION-READY</div>
+                <div class="dash-stat-sub">sum(OrderItem.subtotal) for DELIVERED — doanh số bán hàng (chưa trừ hoa hồng sàn)</div>
             </div>
             <div class="dash-stat-card dash-stat-slate" th:classappend="${stats.availability == null or !stats.availability.vendorPayable} ? 'dash-stat-na' : ''">
                 <div class="dash-stat-icon-wrap">
@@ -152,16 +153,16 @@
                 </div>
                 <div class="dash-stat-value" th:text="${stats.vendorPayable != null} ? ${@money.format(stats.vendorPayable)} : 'N/A'">N/A</div>
                 <div class="dash-stat-label">Vendor Payable</div>
-                <div class="dash-stat-sub">Settlement backend — INTEGRATION-READY</div>
+                <div class="dash-stat-sub">sum(Order.vendorNetAmount) for DELIVERED — N/A until Settlement backend is wired</div>
             </div>
-            <div class="dash-stat-card dash-stat-slate" th:classappend="${stats.availability == null or !stats.availability.refund} ? 'dash-stat-na' : ''">
+            <div class="dash-stat-card dash-stat-warning" th:classappend="${stats.availability == null or !stats.availability.refund} ? 'dash-stat-na' : ''">
                 <div class="dash-stat-icon-wrap">
                     <div class="dash-stat-icon"><i class="fas fa-rotate-left"></i></div>
                     <span class="dash-na-badge" th:if="${stats.availability == null or !stats.availability.refund}">N/A</span>
                 </div>
-                <div class="dash-stat-value" th:text="${stats.refund != null} ? ${@money.format(stats.refund)} : 'N/A'">N/A</div>
+                <div class="dash-stat-value" th:text="${stats.refund != null} ? ${@money.format(stats.refund)} : 'N/A'">0đ</div>
                 <div class="dash-stat-label">Refund</div>
-                <div class="dash-stat-sub">Refund backend — INTEGRATION-READY</div>
+                <div class="dash-stat-sub">sum(RefundRequest.settledAmount) for SUCCEEDED — tiền đã hoàn trả cho Customer</div>
             </div>
         </div>
     </div>
@@ -183,7 +184,7 @@
                 </div>
                 <div class="dash-stat-value" th:text="${stats.pendingKyc != null} ? ${stats.pendingKyc} : 'N/A'">0</div>
                 <div class="dash-stat-label">Pending KYC</div>
-                <div class="dash-stat-sub">KycStatus.PENDING_KYC</div>
+                <div class="dash-stat-sub">KycStatus.PENDING_THIRD_PARTY + PENDING_ADMIN</div>
                 <div class="dash-stat-link-indicator" th:if="${stats.pendingKyc != null}"><i class="fas fa-arrow-right"></i></div>
             </a>
             <div class="dash-stat-card dash-stat-info">
@@ -226,16 +227,17 @@
 
     <!-- Main Content Grid -->
     <div class="dash-main-grid">
-        <!-- Revenue Card — Phase 4A §11: shows GMV (delivered order totals), NOT Platform Revenue. -->
+        <!-- GMV Card — Phase 4A §11: GMV (delivered order totals), KHÔNG phải Platform Revenue.
+             Top value = GMV all-time. Period selector chỉ áp dụng cho chart trend bên dưới. -->
         <div class="dash-card dash-card-chart">
             <div class="dash-card-header">
                 <div class="dash-card-title-group">
                     <h3><i class="fas fa-chart-line"></i> GMV — Doanh thu hàng hóa</h3>
-                    <p>Tổng giá trị đơn hàng đã giao thành công (Gross Merchandise Value, không phải Platform Revenue)</p>
+                    <p>Tổng giá trị đơn hàng đã giao thành công (Gross Merchandise Value), KHÔNG phải Platform Revenue.</p>
                 </div>
                 <div class="dash-revenue-meta">
                     <div class="dash-revenue-period-wrap">
-                        <label class="dash-period-label" for="dashPeriodSelect">Period</label>
+                        <label class="dash-period-label" for="dashPeriodSelect">Chart period</label>
                         <select id="dashPeriodSelect" class="dash-period-select" data-current-period="${period ?: 'WEEK'}">
                             <option value="DAY" th:selected="${period == 'DAY'}">Day</option>
                             <option value="WEEK" th:selected="${period == 'WEEK' || period == null}">Week</option>
@@ -248,21 +250,10 @@
                 </div>
             </div>
             <div class="dash-revenue-display">
-                <!--
-                    Phase 4A §11: this card shows GMV (sum of DELIVERED order totals),
-                    NOT Platform Revenue. Platform Revenue is a separate metric in the
-                    Financial Overview section above (N/A until Finance backend is wired).
-                -->
-                <div class="dash-revenue-value" th:text="${@money.format(stats.gmv)}">0đ</div>
-                <div class="dash-revenue-label" th:switch="${period ?: 'WEEK'}">
-                    <span th:case="'DAY'">GMV 14 ngày gần nhất</span>
-                    <span th:case="'WEEK'">GMV 8 tuần gần nhất</span>
-                    <span th:case="'MONTH'">GMV 12 tháng gần nhất</span>
-                    <span th:case="'QUARTER'">GMV 8 quý gần nhất</span>
-                    <span th:case="'YEAR'">GMV 6 năm gần nhất</span>
-                    <span th:case="'ALL'">GMV toàn thời gian</span>
-                    <span th:case="*">GMV 8 tuần gần nhất</span>
-                </div>
+                <!-- Top value: GMV ALL-TIME (sum of DELIVERED Order.totalAmount, không theo period).
+                     Khác với chart bên dưới — chart GMV được lọc theo period selector. -->
+                <div class="dash-revenue-value" th:text="${stats.gmv != null} ? ${@money.format(stats.gmv)} : 'N/A'">0đ</div>
+                <div class="dash-revenue-label">GMV all-time — sum(Order.totalAmount) where status = DELIVERED</div>
             </div>
             <div id="adminRevenueChart" class="dash-chart-container"></div>
         </div>
@@ -396,7 +387,7 @@
                         background: 'transparent'
                     },
                     series: [
-                        { name: 'Doanh thu', data: revenue },
+                        { name: 'GMV', data: revenue },
                         { name: 'Đơn hàng', data: orders }
                     ],
                     colors: ['#0fb5b0', '#10b981'],
@@ -429,7 +420,7 @@
                     },
                     yaxis: [
                         {
-                            seriesName: 'Doanh thu',
+                            seriesName: 'GMV',
                             labels: {
                                 style: { colors: '#94a3b8', fontSize: '12px' },
                                 formatter: function(v){ return new Intl.NumberFormat('vi-VN').format(v) + ' đ'; }
@@ -463,7 +454,7 @@
                     window.__adminRevenueChartInstance.updateOptions({
                         xaxis: { categories: labels },
                         series: [
-                            { name: 'Doanh thu', data: revenue },
+                            { name: 'GMV', data: revenue },
                             { name: 'Đơn hàng', data: orders }
                         ]
                     });

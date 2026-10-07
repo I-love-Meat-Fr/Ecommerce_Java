@@ -1,0 +1,520 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/springsecurity6"
+      th:replace="~{layout/admin-layout :: layout(title='Báo cáo & Xuất dữ liệu - CNJ70 Admin', content=~{::main-content}, scripts=~{::page-scripts})}">
+<head>
+    <title>Báo cáo &amp; Xuất dữ liệu - CNJ70 Admin</title>
+</head>
+<body>
+<main th:fragment="main-content">
+
+    <!-- ============ HERO ============ -->
+    <div class="rpa-hero">
+        <div class="rpa-hero-content">
+            <div class="rpa-hero-text">
+                <span class="rpa-hero-tag">
+                    <i class="fas fa-shield-halved"></i>
+                    ADMIN-ONLY · PDF · Excel · CSV
+                </span>
+                <h1>
+                    <i class="fas fa-chart-pie" style="margin-right:10px;"></i>
+                    Trung tâm Báo cáo &amp; Xuất dữ liệu
+                </h1>
+                <p>
+                    Trích xuất dữ liệu vận hành của sàn theo <strong>5 chiều</strong>:
+                    Đơn hàng, Doanh thu, Tài chính, Người dùng, Cửa hàng. Mỗi chỉ số
+                    tài chính có nguồn dữ liệu riêng (GMV ≠ Platform Revenue ≠ Vendor Sales ≠ Payable ≠ Refund).
+                </p>
+            </div>
+            <div class="rpa-hero-actions">
+                <a th:href="@{/admin/dashboard}" class="rpa-hero-btn rpa-hero-btn-ghost">
+                    <i class="fas fa-house"></i>
+                    <span>Dashboard</span>
+                </a>
+                <a th:href="@{/admin/reports(type='FINANCIAL', format='xlsx')}"
+                   class="rpa-hero-btn rpa-hero-btn-solid">
+                    <i class="fas fa-bolt"></i>
+                    <span>Xuất nhanh báo cáo Tài chính</span>
+                </a>
+            </div>
+        </div>
+        <div class="rpa-hero-bg">
+            <div class="rpa-hero-blob rpa-hero-blob-1"></div>
+            <div class="rpa-hero-blob rpa-hero-blob-2"></div>
+        </div>
+    </div>
+
+    <!-- ============ FLASH ============ -->
+    <div th:if="${flashSuccess}" class="rpa-flash rpa-flash-success">
+        <i class="fas fa-circle-check"></i>
+        <div><strong>Thành công</strong> · <span th:text="${flashSuccess}">OK</span></div>
+    </div>
+    <div th:if="${flashError}" class="rpa-flash rpa-flash-error">
+        <i class="fas fa-circle-exclamation"></i>
+        <div><strong>Lỗi</strong> · <span th:text="${flashError}">Có lỗi</span></div>
+    </div>
+
+    <!-- ============ TYPE PICKER ============ -->
+    <div class="rpa-types" role="tablist" aria-label="Loại báo cáo">
+        <a th:each="t : ${types}"
+           th:href="@{/admin/reports(type=${t.name()}, fromDate=${filter.fromDate}, toDate=${filter.toDate}, status=${filter.status}, period=${filter.period}, role=${filter.role}, shopStatus=${filter.shopStatus}, kycStatus=${filter.kycStatus}, accountStatus=${filter.accountStatus}, q=${filter.q})}"
+           th:attr="data-type=${t.name()}"
+           th:class="'rpa-type-card' + (${t.name() == type.name()} ? ' active' : '')">
+            <div class="rpa-type-icon">
+                <i class="fas"
+                   th:classappend="${t.name() == 'ORDERS'} ? 'fa-cart-shopping'
+                                 : (${t.name() == 'REVENUE'} ? 'fa-chart-line'
+                                 : (${t.name() == 'FINANCIAL'} ? 'fa-sack-dollar'
+                                 : (${t.name() == 'USERS'} ? 'fa-users'
+                                 : 'fa-store')))"></i>
+            </div>
+            <div class="rpa-type-info">
+                <div class="rpa-type-name" th:text="${t.displayName}">Đơn hàng</div>
+                <div class="rpa-type-desc" th:text="${t.name() == 'ORDERS'} ? 'Toàn bộ đơn trên sàn'
+                                                     : (${t.name() == 'REVENUE'} ? 'GMV theo thời gian'
+                                                     : (${t.name() == 'FINANCIAL'} ? '5 chỉ số tài chính'
+                                                     : (${t.name() == 'USERS'} ? 'Khách & người bán'
+                                                     : 'Cửa hàng & KYC')))">Mô tả</div>
+            </div>
+            <i class="fas fa-arrow-right rpa-type-arrow"></i>
+        </a>
+    </div>
+
+    <!-- ============ SUMMARY ROW ============ -->
+    <div class="rpa-summary">
+        <div class="rpa-summary-item">
+            <div class="rpa-summary-label">
+                <i class="fas fa-list-ol"></i>
+                <span>Tổng số dòng</span>
+            </div>
+            <div class="rpa-summary-value"
+                 th:text="${#numbers.formatInteger(#lists.size(rows), 0, 'COMMA')}">0</div>
+            <div class="rpa-summary-sub">Sau khi áp dụng bộ lọc</div>
+        </div>
+        <div class="rpa-summary-item">
+            <div class="rpa-summary-label">
+                <i class="fas fa-file-export"></i>
+                <span>Số cột</span>
+            </div>
+            <div class="rpa-summary-value"
+                 th:text="${#arrays.length(headers)}">0</div>
+            <div class="rpa-summary-sub" th:text="${type.displayName}">Loại</div>
+        </div>
+        <div class="rpa-summary-item">
+            <div class="rpa-summary-label">
+                <i class="fas fa-tag"></i>
+                <span>Báo cáo đang xem</span>
+            </div>
+            <div class="rpa-summary-value" th:text="${type.displayName}">Đơn hàng</div>
+            <div class="rpa-summary-sub" th:text="'ID file: ' + ${suggestedFilename}">Filename</div>
+        </div>
+        <div class="rpa-summary-item">
+            <div class="rpa-summary-label">
+                <i class="fas fa-clock"></i>
+                <span>Thời điểm xem</span>
+            </div>
+            <div class="rpa-summary-value"
+                 th:text="${#temporals.format(#temporals.createNow(), 'HH:mm')}">--:--</div>
+            <div class="rpa-summary-sub"
+                 th:text="${#temporals.format(#temporals.createNow(), 'dd/MM/yyyy')}">--</div>
+        </div>
+    </div>
+
+    <!-- ============ MAIN LAYOUT (filter sidebar + preview) ============ -->
+    <div class="rpa-layout">
+
+        <!-- ===== FILTER SIDEBAR ===== -->
+        <aside class="rpa-filter-card">
+            <div class="rpa-filter-head">
+                <div class="rpa-filter-head-icon">
+                    <i class="fas fa-sliders"></i>
+                </div>
+                <div>
+                    <h3>Bộ lọc</h3>
+                    <small>Tùy chỉnh tham số cho <span th:text="${type.displayName}">báo cáo</span></small>
+                </div>
+            </div>
+
+            <!-- Active filter chips (nếu có) -->
+            <div class="rpa-active-chips" th:if="${(filter.fromDate != null) or (filter.toDate != null)
+                                                or (filter.status != null) or (filter.period != null and filter.period != 'WEEK')
+                                                or (filter.role != null) or (filter.shopStatus != null)
+                                                or (filter.kycStatus != null) or (filter.accountStatus != null)
+                                                or (filter.q != null and filter.q != '')}">
+                <span class="rpa-active-chip" th:if="${filter.fromDate != null}">
+                    <i class="fas fa-calendar-day"></i>
+                    <span class="rpa-active-chip-label">Từ:</span>
+                    <span th:text="${filter.fromDate}">-</span>
+                </span>
+                <span class="rpa-active-chip" th:if="${filter.toDate != null}">
+                    <i class="fas fa-calendar-day"></i>
+                    <span class="rpa-active-chip-label">Đến:</span>
+                    <span th:text="${filter.toDate}">-</span>
+                </span>
+                <span class="rpa-active-chip" th:if="${filter.status != null}">
+                    <i class="fas fa-tag"></i>
+                    <span class="rpa-active-chip-label">TT:</span>
+                    <span th:text="${filter.status}">-</span>
+                </span>
+                <span class="rpa-active-chip" th:if="${filter.period != null and filter.period != 'WEEK'}">
+                    <i class="fas fa-calendar-week"></i>
+                    <span class="rpa-active-chip-label">Kỳ:</span>
+                    <span th:text="${filter.period}">-</span>
+                </span>
+                <span class="rpa-active-chip" th:if="${filter.role != null}">
+                    <i class="fas fa-user"></i>
+                    <span class="rpa-active-chip-label">Vai trò:</span>
+                    <span th:text="${filter.role}">-</span>
+                </span>
+                <span class="rpa-active-chip" th:if="${filter.shopStatus != null}">
+                    <i class="fas fa-store"></i>
+                    <span class="rpa-active-chip-label">Shop:</span>
+                    <span th:text="${filter.shopStatus}">-</span>
+                </span>
+                <span class="rpa-active-chip" th:if="${filter.kycStatus != null}">
+                    <i class="fas fa-id-card"></i>
+                    <span class="rpa-active-chip-label">KYC:</span>
+                    <span th:text="${filter.kycStatus}">-</span>
+                </span>
+                <span class="rpa-active-chip" th:if="${filter.accountStatus != null}">
+                    <i class="fas fa-user-shield"></i>
+                    <span class="rpa-active-chip-label">TK:</span>
+                    <span th:text="${filter.accountStatus}">-</span>
+                </span>
+                <span class="rpa-active-chip" th:if="${filter.q != null and filter.q != ''}">
+                    <i class="fas fa-search"></i>
+                    <span class="rpa-active-chip-label">Từ khoá:</span>
+                    <span th:text="${filter.q}">-</span>
+                </span>
+            </div>
+
+            <form th:action="@{/admin/reports}" method="get" id="reportFilterForm">
+                <input type="hidden" name="type" th:value="${type.name()}" />
+
+                <div class="rpa-filter-body">
+
+                    <!-- Date range — áp dụng cho tất cả các loại trừ FINANCIAL -->
+                    <div class="rpa-filter-field" th:if="${type.name() != 'FINANCIAL'}">
+                        <label>
+                            <i class="fas fa-calendar"></i>
+                            Khoảng thời gian
+                        </label>
+                        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+                            <input type="date" name="fromDate" class="sd-input"
+                                   th:value="${filter.fromDate != null} ? ${filter.fromDate} : ''"
+                                   title="Từ ngày" />
+                            <input type="date" name="toDate" class="sd-input"
+                                   th:value="${filter.toDate != null} ? ${filter.toDate} : ''"
+                                   title="Đến ngày" />
+                        </div>
+                    </div>
+
+                    <!-- ORDERS: status -->
+                    <div class="rpa-filter-field" th:if="${type.name() == 'ORDERS'}">
+                        <label>
+                            <i class="fas fa-tag"></i>
+                            Trạng thái đơn
+                        </label>
+                        <select name="status" class="sd-select">
+                            <option value="">-- Tất cả --</option>
+                            <option th:each="s : ${orderStatuses}"
+                                    th:value="${s}"
+                                    th:text="${s == 'PENDING' ? 'Chờ xác nhận'
+                                            : (s == 'PREPARING' ? 'Đang chuẩn bị'
+                                            : (s == 'SHIPPING' ? 'Đang giao'
+                                            : (s == 'DELIVERED' ? 'Đã giao'
+                                            : (s == 'CANCELLED' ? 'Đã hủy' : s))))}"
+                                    th:selected="${filter.status == s}"></option>
+                        </select>
+                    </div>
+
+                    <!-- REVENUE: period -->
+                    <div class="rpa-filter-field" th:if="${type.name() == 'REVENUE'}">
+                        <label>
+                            <i class="fas fa-calendar-week"></i>
+                            Kỳ thống kê
+                        </label>
+                        <select name="period" class="sd-select">
+                            <option th:each="p : ${periods}"
+                                    th:value="${p}"
+                                    th:text="${p == 'DAY' ? 'Ngày'
+                                            : (p == 'WEEK' ? 'Tuần (mặc định)'
+                                            : (p == 'MONTH' ? 'Tháng'
+                                            : (p == 'QUARTER' ? 'Quý'
+                                            : (p == 'YEAR' ? 'Năm'
+                                            : 'Tất cả'))))}"
+                                    th:selected="${filter.period == p or (filter.period == null and p == 'WEEK')}"></option>
+                        </select>
+                    </div>
+
+                    <!-- USERS: role -->
+                    <div class="rpa-filter-field" th:if="${type.name() == 'USERS'}">
+                        <label>
+                            <i class="fas fa-user"></i>
+                            Vai trò
+                        </label>
+                        <select name="role" class="sd-select">
+                            <option value="">-- Tất cả --</option>
+                            <option th:each="r : ${userRoles}"
+                                    th:value="${r}"
+                                    th:text="${r == 'CUSTOMER' ? 'Khách hàng'
+                                            : (r == 'VENDOR' ? 'Người bán'
+                                            : (r == 'MODERATOR' ? 'Kiểm duyệt viên'
+                                            : (r == 'ADMIN' ? 'Quản trị viên' : r)))}"
+                                    th:selected="${filter.role == r}"></option>
+                        </select>
+                    </div>
+
+                    <!-- USERS: accountStatus -->
+                    <div class="rpa-filter-field" th:if="${type.name() == 'USERS'}">
+                        <label>
+                            <i class="fas fa-user-shield"></i>
+                            Trạng thái tài khoản
+                        </label>
+                        <select name="accountStatus" class="sd-select">
+                            <option value="">-- Tất cả --</option>
+                            <option th:each="s : ${accountStatuses}"
+                                    th:value="${s}"
+                                    th:text="${s == 'ACTIVE' ? 'Hoạt động'
+                                            : (s == 'LOCKED' ? 'Đã khóa'
+                                            : 'Chưa xác minh')}"
+                                    th:selected="${filter.accountStatus == s}"></option>
+                        </select>
+                    </div>
+
+                    <!-- SHOPS: shopStatus -->
+                    <div class="rpa-filter-field" th:if="${type.name() == 'SHOPS'}">
+                        <label>
+                            <i class="fas fa-store"></i>
+                            Trạng thái shop
+                        </label>
+                        <select name="shopStatus" class="sd-select">
+                            <option value="">-- Tất cả --</option>
+                            <option th:each="s : ${shopStatuses}"
+                                    th:value="${s}"
+                                    th:text="${s == 'PENDING' ? 'Chờ duyệt'
+                                            : (s == 'APPROVED' ? 'Đã duyệt'
+                                            : (s == 'REJECTED' ? 'Bị từ chối'
+                                            : (s == 'SUSPENDED' ? 'Đình chỉ'
+                                            : 'Hạn chế')))}"
+                                    th:selected="${filter.shopStatus == s}"></option>
+                        </select>
+                    </div>
+
+                    <!-- SHOPS: kycStatus -->
+                    <div class="rpa-filter-field" th:if="${type.name() == 'SHOPS'}">
+                        <label>
+                            <i class="fas fa-id-card"></i>
+                            Trạng thái KYC
+                        </label>
+                        <select name="kycStatus" class="sd-select">
+                            <option value="">-- Tất cả --</option>
+                            <option th:each="k : ${ {'NOT_SUBMITTED','PENDING_THIRD_PARTY','PENDING_ADMIN','APPROVED','REJECTED'} }"
+                                    th:value="${k}"
+                                    th:text="${k == 'NOT_SUBMITTED' ? 'Chưa nộp'
+                                            : (k == 'PENDING_THIRD_PARTY' ? 'Chờ bên thứ ba'
+                                            : (k == 'PENDING_ADMIN' ? 'Chờ Admin duyệt'
+                                            : (k == 'APPROVED' ? 'Đã duyệt'
+                                            : 'Bị từ chối')))}"
+                                    th:selected="${filter.kycStatus == k}"></option>
+                        </select>
+                    </div>
+
+                    <!-- Từ khóa (ORDERS/USERS/SHOPS) -->
+                    <div class="rpa-filter-field"
+                         th:if="${type.name() == 'ORDERS' or type.name() == 'USERS' or type.name() == 'SHOPS'}">
+                        <label>
+                            <i class="fas fa-search"></i>
+                            Từ khoá
+                        </label>
+                        <input type="text" name="q" class="sd-input"
+                               th:placeholder="${type.name() == 'ORDERS' ? 'Tên/ID khách hàng'
+                                              : (type.name() == 'USERS' ? 'Email hoặc họ tên'
+                                              : 'Tên shop')}"
+                               th:value="${filter.q}" />
+                    </div>
+
+                </div>
+
+                <div class="rpa-filter-actions">
+                    <button type="submit" class="sd-btn sd-btn-primary sd-btn-sm">
+                        <i class="fas fa-search"></i>
+                        Áp dụng
+                    </button>
+                    <a th:href="@{/admin/reports(type=${type.name()})}"
+                       class="sd-btn sd-btn-secondary sd-btn-sm">
+                        <i class="fas fa-rotate-left"></i>
+                        Đặt lại
+                    </a>
+                </div>
+            </form>
+        </aside>
+
+        <!-- ===== MAIN COLUMN: EXPORT + PREVIEW ===== -->
+        <div>
+            <!-- Export buttons -->
+            <div class="rpa-export">
+                <a th:href="@{/admin/reports/{type}/export(type=${type.name()}, format='csv',
+                            fromDate=${filter.fromDate}, toDate=${filter.toDate},
+                            status=${filter.status}, period=${filter.period},
+                            role=${filter.role}, shopStatus=${filter.shopStatus},
+                            kycStatus=${filter.kycStatus}, accountStatus=${filter.accountStatus},
+                            q=${filter.q})}"
+                   class="rpa-export-card rpa-export-csv">
+                    <div class="rpa-export-icon">
+                        <i class="fas fa-file-csv"></i>
+                    </div>
+                    <div class="rpa-export-title">CSV</div>
+                    <div class="rpa-export-sub">
+                        UTF-8 + BOM, mở trực tiếp bằng Excel / Numbers / Google Sheets.<br>
+                        Tốt cho xử lý dữ liệu tiếp theo bằng script.
+                    </div>
+                    <i class="fas fa-download rpa-export-arrow"></i>
+                </a>
+                <a th:href="@{/admin/reports/{type}/export(type=${type.name()}, format='xlsx',
+                            fromDate=${filter.fromDate}, toDate=${filter.toDate},
+                            status=${filter.status}, period=${filter.period},
+                            role=${filter.role}, shopStatus=${filter.shopStatus},
+                            kycStatus=${filter.kycStatus}, accountStatus=${filter.accountStatus},
+                            q=${filter.q})}"
+                   class="rpa-export-card rpa-export-xlsx">
+                    <div class="rpa-export-icon">
+                        <i class="fas fa-file-excel"></i>
+                    </div>
+                    <div class="rpa-export-title">Excel (.xlsx)</div>
+                    <div class="rpa-export-sub">
+                        Định dạng bảng tính chuẩn. Có header in đậm, auto-fit cột.<br>
+                        Phù hợp cho chỉnh sửa / lọc / pivot table nhanh.
+                    </div>
+                    <i class="fas fa-download rpa-export-arrow"></i>
+                </a>
+                <a th:href="@{/admin/reports/{type}/export(type=${type.name()}, format='pdf',
+                            fromDate=${filter.fromDate}, toDate=${filter.toDate},
+                            status=${filter.status}, period=${filter.period},
+                            role=${filter.role}, shopStatus=${filter.shopStatus},
+                            kycStatus=${filter.kycStatus}, accountStatus=${filter.accountStatus},
+                            q=${filter.q})}"
+                   class="rpa-export-card rpa-export-pdf">
+                    <div class="rpa-export-icon">
+                        <i class="fas fa-file-pdf"></i>
+                    </div>
+                    <div class="rpa-export-title">PDF (A4)</div>
+                    <div class="rpa-export-sub">
+                        Landscape, có tiêu đề. Phù hợp in ấn / đính kèm email /<br>
+                        lưu trữ báo cáo chính thức.
+                    </div>
+                    <i class="fas fa-download rpa-export-arrow"></i>
+                </a>
+            </div>
+
+            <!-- Preview table -->
+            <div class="rpa-preview">
+                <div class="rpa-preview-head">
+                    <div class="rpa-preview-title">
+                        <i class="fas fa-table"></i>
+                        <span>Xem trước dữ liệu</span>
+                        <span class="rpa-preview-stats">
+                                <span th:text="${#numbers.formatInteger(#lists.size(rows), 0, 'COMMA')}">0</span>
+                                dòng ·
+                                <span th:text="${#arrays.length(headers)}">0</span> cột
+                            </span>
+                    </div>
+                    <input type="search" class="rpa-preview-search"
+                           placeholder="Lọc nhanh trong bảng…"
+                           id="rpaPreviewSearch" />
+                </div>
+
+                <div class="rpa-preview-table" th:if="${not #lists.isEmpty(rows)}">
+                    <div class="rpa-preview-table-wrap">
+                        <table>
+                            <thead>
+                            <tr>
+                                <th class="rpa-stt">#</th>
+                                <th th:each="h : ${headers}" th:text="${h}">Header</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            <tr th:each="row, iter : ${rows}"
+                                th:classappend="${row[0] == 'TỔNG' or row[0] == '---'} ? 'totals-row' : ''">
+                                <td class="rpa-stt" th:text="${iter.count}">1</td>
+                                <td th:each="cell, ci : ${row}"
+                                    th:classappend="${ci.index == 1 or ci.index == 6 or ci.index == 7 or ci.index == 8} ? 'rpa-num' : ''"
+                                    th:text="${cell}">cell</td>
+                            </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div class="rpa-preview-footer">
+                        <div class="rpa-preview-info">
+                            <i class="fas fa-circle-info"></i>
+                            <span>
+                                Tiêu đề báo cáo: <strong th:text="${title}">Báo cáo</strong>
+                            </span>
+                        </div>
+                        <div class="rpa-preview-info">
+                            <i class="fas fa-file"></i>
+                            <span>Tên file: <code th:text="${suggestedFilename} + '.' + ${format.extension()}">report-orders.csv</code></span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Empty state -->
+                <div class="rpa-empty" th:if="${#lists.isEmpty(rows)}">
+                    <div class="rpa-empty-icon">
+                        <i class="fas fa-folder-open"></i>
+                    </div>
+                    <h3>Không có dữ liệu khớp với bộ lọc</h3>
+                    <p>
+                        Báo cáo <strong th:text="${type.displayName}">này</strong> hiện không có bản ghi nào
+                        thỏa mãn điều kiện. Hãy thử mở rộng khoảng thời gian hoặc bỏ bớt bộ lọc.
+                    </p>
+                    <div class="rpa-empty-hints">
+                        <i class="fas fa-lightbulb"></i>
+                        <span>Mẹo: bấm <strong>Đặt lại</strong> trong bộ lọc để xem toàn bộ dữ liệu</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</main>
+
+<th:block th:fragment="page-scripts">
+    <script th:inline="javascript">
+        (function() {
+            'use strict';
+
+            // Client-side filter preview — lọc các hàng trong bảng theo text.
+            var searchInput = document.getElementById('rpaPreviewSearch');
+            if (searchInput) {
+                searchInput.addEventListener('input', function() {
+                    var q = searchInput.value.toLowerCase().trim();
+                    var rows = document.querySelectorAll('.rpa-preview-table tbody tr');
+                    rows.forEach(function(tr) {
+                        // totals-row luôn hiển thị (dòng TỔNG/---).
+                        if (tr.classList.contains('totals-row')) {
+                            tr.style.display = '';
+                            return;
+                        }
+                        var text = tr.textContent.toLowerCase();
+                        tr.style.display = (q === '' || text.indexOf(q) !== -1) ? '' : 'none';
+                    });
+                });
+            }
+
+            // Auto-submit khi date input thay đổi (UX: áp dụng filter ngay khi đổi ngày).
+            document.querySelectorAll('#reportFilterForm input[type="date"]').forEach(function(el) {
+                el.addEventListener('change', function() {
+                    // Bỏ qua nếu user đang xoá field (không submit rỗng).
+                    if (el.value === '' && (el.name === 'fromDate' || el.name === 'toDate')) {
+                        return;
+                    }
+                    document.getElementById('reportFilterForm').submit();
+                });
+            });
+        })();
+    </script>
+</th:block>
+</body>
+</html>
