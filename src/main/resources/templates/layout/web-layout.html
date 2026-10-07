@@ -8,9 +8,11 @@
     <meta name="description" content="CNJ70 Shop - Sàn thương mại điện tử đa nhà bán hàng hàng đầu Việt Nam.">
     <title th:text="${title} ?: 'CNJ70 Shop'">CNJ70 Shop</title>
 
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Work+Sans:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <!-- PERFORMANCE #3 — Self-host Google Fonts thay vì load qua CDN.
+         Loại bỏ 2 round-trip tới fonts.googleapis.com + fonts.gstatic.com
+         và render-blocking CSS của Google. -->
+    <link rel="preload" href="/vendor/fonts/worksans-latin.woff2" as="font" type="font/woff2" crossorigin>
+    <link rel="stylesheet" th:href="@{/css/work-sans.css}">
 
     <!-- ============================================================
          UI PHASE 4 — Customer / Web UI Revolution
@@ -45,7 +47,7 @@
     <th:block th:replace="${pageStyles} ?: ~{}"></th:block>
     <link rel="stylesheet" th:href="@{/css/foundation/index.css}">
     <link rel="stylesheet" th:href="@{/css/web-ui.css}">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="/vendor/fontawesome/all.min.css">
 </head>
 <body>
     <a class="wb-skip-link" href="#main-content">Bỏ qua tới nội dung chính</a>
@@ -57,6 +59,14 @@
     <div th:replace="~{fragments/web-footer}"></div>
 
     <script th:src="@{/js/main.js}"></script>
+    <!-- PERFORMANCE #7 — code-split home.js:
+         home-core.js   (above-the-fold): banner, navbar, tabs, scroll reveal — load ngay
+         home-flash.js  (mid-fold):       flash countdown + marquee — idle callback
+         home-deferred.js (below-fold):   count-up, FAQ, activity, favorite, quick view — idle
+         Tổng còn 3 file nhỏ thay vì 1 file 28KB render-blocking. -->
+    <script th:src="@{/js/home-core.js}" defer></script>
+    <script th:src="@{/js/home-flash.js}" defer></script>
+    <script th:src="@{/js/home-deferred.js}" defer></script>
     <th:block th:replace="${scripts} ?: ~{}"></th:block>
 </body>
 </html>

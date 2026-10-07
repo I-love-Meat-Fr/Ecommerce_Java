@@ -7,16 +7,16 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title th:text="${title} ?: 'Admin - CNJ70'">Admin - CNJ70</title>
 
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Work+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- PERFORMANCE #3 -->
+<link rel="preload" href="/vendor/fonts/worksans-latin.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="/css/work-sans.css">
 
     <link rel="stylesheet" th:href="@{/css/dashboard.css}">
     <link rel="stylesheet" th:href="@{/css/admin-dashboard.css}">
     <link rel="stylesheet" th:href="@{/css/foundation/index.css}">
     <link rel="stylesheet" th:href="@{/css/admin-ui.css}">
     <link rel="stylesheet" th:href="@{/css/reports-admin.css}">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="/vendor/fontawesome/all.min.css">
 </head>
 <body>
     <a class="sd-skip-link" href="#mainContent">Bỏ qua tới nội dung chính</a>

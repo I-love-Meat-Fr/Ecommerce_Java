@@ -107,6 +107,15 @@
             <artifactId>spring-boot-starter-test</artifactId>
             <scope>test</scope>
         </dependency>
+
+        <!-- PERFORMANCE #6 — Thumbnailator: resize ảnh upload về max-width 1600px
+             + tạo thumbnail 400x400. Tránh phục vụ ảnh 3-5MB nguyên bản
+             cho product list (chỉ render 200x200). -->
+        <dependency>
+            <groupId>net.coobird</groupId>
+            <artifactId>thumbnailator</artifactId>
+            <version>0.4.20</version>
+        </dependency>
         
         <!-- Spring Security Test -->
         <dependency>

@@ -6,9 +6,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description" content="CNJ70 Shop - Sàn thương mại điện tử đa nhà bán hàng hàng đầu Việt Nam. Mua sắm thông minh với hàng ngàn sản phẩm chất lượng.">
     <title>CNJ70 Shop - Sàn Thương Mại Điện Tử Đa Nhà Bán</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Work+Sans:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <!-- PERFORMANCE #3 — Self-host Google Fonts + FontAwesome (xem work-sans.css).
+         Bỏ 3 round-trip: fonts.googleapis.com, fonts.gstatic.com, cdnjs.cloudflare.com -->
+    <link rel="preload" href="/vendor/fonts/worksans-latin.woff2" as="font" type="font/woff2" crossorigin>
+    <link rel="stylesheet" th:href="@{/css/work-sans.css}">
 
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
@@ -29,7 +30,9 @@
     </script>
     <link rel="stylesheet" th:href="@{/css/style.css}">
     <link rel="stylesheet" th:href="@{/css/home.css}">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- PERFORMANCE #3 — local FontAwesome thay vì cdnjs.cloudflare.com.
+         Tiết kiệm 1 RTT + render-blocking ~80KB CSS. -->
+    <link rel="stylesheet" th:href="@{/vendor/fontawesome/all.min.css}">
 </head>
 <body class="home-page">
     <div th:replace="~{fragments/web-header}"></div>
@@ -821,7 +824,9 @@
 
     <div th:replace="fragments/web-footer"></div>
 
-    <script th:src="@{/js/main.js}"></script>
-    <script th:src="@{/js/home.js}" defer></script>
+    <script th:src="@{/js/main.js}" defer></script>
+    <script th:src="@{/js/home-core.js}" defer></script>
+    <script th:src="@{/js/home-flash.js}" defer></script>
+    <script th:src="@{/js/home-deferred.js}" defer></script>
 </body>
 </html>

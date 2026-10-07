@@ -27,6 +27,9 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class HomeController {
 
+    /** PERFORMANCE #2 — chỉ render tối đa N sản phẩm cho mỗi list trên home. */
+    private static final int HOME_LIST_LIMIT = 8;
+
     private final ProductService productService;
     private final CategoryRepository categoryRepository;
     private final VoucherService voucherService;
@@ -35,18 +38,25 @@ public class HomeController {
 
     @GetMapping("/home")
     public String homePage(Model model) {
+        // PERFORMANCE #2 — gộp 3 lần `getActiveProducts()` trước đây
+        // thành 1 lần `getFeaturedProducts()` đã sort DESC theo rating
+        // ngayở Mongo (xem ProductServiceImpl#getFeaturedProducts).
+        // Trước: 3 query DB, mỗi query load full collection + sort in JVM.
+        // Sau:  1 query DB với Mongo-side sort + projection + limit.
+        List<Product> featuredProducts = productService.getFeaturedProducts(HOME_LIST_LIMIT);
+
+        // Lấy danh sách active đầy đủ (giới hạn 50) cho tab "Tất cả".
+        // Đã có field projection, không pull imageUrls/variants.
         List<Product> products = productService.getActiveProducts();
-        List<Product> newArrivals = productService.getNewArrivals(8);
-        List<Product> featuredProducts = productService.getActiveProducts().stream().limit(8).toList();
-        // Flash-sale strip: only surface products that already have real
-        // sales activity in the database so the section reflects genuine
-        // movement, not every active SKU. Falls back to featuredProducts
-        // when nothing has sold yet so the section is never empty.
-        List<Product> flashSaleSource = productService.getActiveProducts().stream()
-                .filter(p -> p.getSold() > 0)
-                .limit(8)
-                .toList();
+
+        List<Product> newArrivals = productService.getNewArrivals(HOME_LIST_LIMIT);
+
+        // PERFORMANCE #2 — flash sale: query thẳng sold > 0 ở Mongo,
+        // không cần load tất cả active rồi filter trong Java.
+        List<Product> flashSaleSource = productService.getFlashSaleCandidates(HOME_LIST_LIMIT);
         if (flashSaleSource.isEmpty()) {
+            // Fallback khi DB chưa có sản phẩm nào bán được → dùng
+            // featuredProducts thay vì gọi lại DB.
             flashSaleSource = featuredProducts;
         }
         List<FlashSaleStat> flashSaleStats = buildFlashSaleStats(flashSaleSource);

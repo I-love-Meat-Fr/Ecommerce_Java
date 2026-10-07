@@ -2,8 +2,10 @@ package com.ecommerce.cnj70.util;
 
 import com.ecommerce.cnj70.exception.BadRequestException;
 import lombok.extern.slf4j.Slf4j;
+import net.coobird.thumbnailator.Thumbnails;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -34,6 +36,15 @@ public class FileUploadUtil {
 
     /** 5MB default, có thể override qua env var MAX_FILE_SIZE (bytes) */
     private static final long DEFAULT_MAX_SIZE = 5 * 1024 * 1024L; // 5MB
+
+    /** PERFORMANCE #6 — max width cho ảnh gốc sau resize. */
+    private static final int MAX_IMAGE_WIDTH = 1600;
+
+    /** PERFORMANCE #6 — kích thước thumbnail (vuông) phục vụ product list. */
+    private static final int THUMB_SIZE = 400;
+
+    /** PERFORMANCE #6 — JPEG quality (0.0–1.0). 0.85 = sweet spot cho web. */
+    private static final float JPEG_QUALITY = 0.85f;
 
     /** Allowed MIME types */
     private static final Set<String> ALLOWED_MIME_TYPES = Set.of(
@@ -91,12 +102,87 @@ public class FileUploadUtil {
         }
 
         Path filePath = uploadPath.resolve(uuidFilename);
-        Files.copy(file.getInputStream(), filePath, StandardCopyOption.REPLACE_EXISTING);
+
+        // PERFORMANCE #6 — Ảnh thì resize trước khi ghi; PDF thì ghi nguyên bản.
+        if (isImage(contentType)) {
+            writeResizedImage(file, filePath);
+            // Tạo thumbnail song song (không fail nếu thumbnail lỗi)
+            try {
+                writeThumbnail(file, uploadPath.resolve(thumbNameFor(uuidFilename)));
+            } catch (Exception ex) {
+                log.warn("[FileUpload] Thumbnail generation failed for {}: {}", uuidFilename, ex.getMessage());
+            }
+        } else {
+            Files.copy(file.getInputStream(), filePath, StandardCopyOption.REPLACE_EXISTING);
+        }
 
         log.info("[FileUpload] Saved: {}, originalName: {}, size: {} bytes",
                 uuidFilename, originalFilename, file.getSize());
 
         return "/uploads/" + uuidFilename;
+    }
+
+    /** PERFORMANCE #6 — True nếu MIME là ảnh được phép resize. */
+    private static boolean isImage(String mime) {
+        return "image/jpeg".equalsIgnoreCase(mime) || "image/png".equalsIgnoreCase(mime);
+    }
+
+    /**
+     * PERFORMANCE #6 — Resize ảnh về max-width {@value #MAX_IMAGE_WIDTH}px,
+     * convert sang JPEG (quality {@value #JPEG_QUALITY}) để giảm size 3-10x.
+     */
+    private static void writeResizedImage(MultipartFile file, Path dest) throws IOException {
+        try (ByteArrayOutputStream baos = new ByteArrayOutputStream()) {
+            Thumbnails.of(file.getInputStream())
+                    .width(MAX_IMAGE_WIDTH)
+                    .outputFormat("jpg")
+                    .outputQuality(JPEG_QUALITY)
+                    .toOutputStream(baos);
+            Files.write(dest, baos.toByteArray());
+        }
+    }
+
+    /**
+     * PERFORMANCE #6 — Tạo thumbnail {@value #THUMB_SIZE}×{@value #THUMB_SIZE} với
+     * center-crop. Dùng cho product list / search results để giảm 95% bandwidth
+     * so với tải ảnh gốc 1600px vào thumbnail DOM 200×200.
+     */
+    private static void writeThumbnail(MultipartFile file, Path dest) throws IOException {
+        try (ByteArrayOutputStream baos = new ByteArrayOutputStream()) {
+            Thumbnails.of(file.getInputStream())
+                    .size(THUMB_SIZE, THUMB_SIZE)
+                    .crop(net.coobird.thumbnailator.geometry.Positions.CENTER)
+                    .outputFormat("jpg")
+                    .outputQuality(JPEG_QUALITY)
+                    .toOutputStream(baos);
+            Files.write(dest, baos.toByteArray());
+        }
+    }
+
+    /**
+     * PERFORMANCE #6 — Sinh tên file thumbnail từ file gốc: foo.png → foo.thumb.jpg.
+     */
+    public static String thumbNameFor(String originalName) {
+        int dot = originalName.lastIndexOf('.');
+        String stem = dot > 0 ? originalName.substring(0, dot) : originalName;
+        return stem + ".thumb.jpg";
+    }
+
+    /**
+     * PERFORMANCE #6 — Trả về URL thumbnail nếu tồn tại, fallback original URL.
+     * Template có thể dùng helper này thay vì hard-code đường dẫn thumb.
+     */
+    public static String thumbnailUrlOrOriginal(String originalUrl) {
+        if (originalUrl == null || !originalUrl.startsWith("/uploads/")) {
+            return originalUrl;
+        }
+        String thumbPath = UPLOAD_DIR + thumbNameFor(originalUrl.substring("/uploads/".length()));
+        if (Files.exists(Paths.get(thumbPath))) {
+            int idx = originalUrl.lastIndexOf('.');
+            String stem = idx > 0 ? originalUrl.substring(0, idx) : originalUrl;
+            return stem + ".thumb.jpg";
+        }
+        return originalUrl;
     }
 
     /**
@@ -197,6 +283,14 @@ public class FileUploadUtil {
             log.info("[FileUpload] Deleted: {}", filename);
         } catch (IOException e) {
             log.warn("[FileUpload] Could not delete file: {}", filePath);
+        }
+
+        // PERFORMANCE #6 — Xóa cả file thumbnail nếu có
+        try {
+            Path thumbPath = Paths.get(UPLOAD_DIR, thumbNameFor(filename));
+            Files.deleteIfExists(thumbPath);
+        } catch (IOException e) {
+            log.warn("[FileUpload] Could not delete thumbnail for: {}", filename);
         }
     }
 

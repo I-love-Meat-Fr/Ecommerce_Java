@@ -49,6 +49,12 @@ public interface ProductService {
     List<Product> getNewArrivals(int limit);
     
     List<Product> getFeaturedProducts(int limit);
+
+    /**
+     * PERFORMANCE #2 — Flash Sale candidates (sold > 0, sort DESC).
+     * Trả về tối đa {@code limit} sản phẩm có tín hiệu bán chạy.
+     */
+    List<Product> getFlashSaleCandidates(int limit);
     
     void updateProductStatus(String id, ProductStatus status);
 }

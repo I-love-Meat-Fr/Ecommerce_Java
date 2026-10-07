@@ -7,14 +7,19 @@ spring:
     mongodb:
       uri: ${MONGODB_URI:mongodb+srv://nguyenquocanh170205_db_user:FJGAwn7TMMPkcslN@cluster0.2pu37z6.mongodb.net}
       database: ${MONGODB_DATABASE:cnj70_ecommerce}
-      auto-index-creation: true
+      # PERFORMANCE #8 — tắt auto index creation ở prod để tránh app start
+      # bị blocking khi MongoDB tạo index. Index migration nên chạy qua
+      # script riêng (init-mongo.js) hoặc Mongo CLI.
+      auto-index-creation: false
   
   # Thymeleaf Configuration
   thymeleaf:
     prefix: classpath:/templates/
     suffix: .html
     mode: HTML
-    cache: false
+    # PERFORMANCE #4 — bật template cache để không phải re-parse HTML mỗi
+    # request. Trong profile dev có thể đặt lại false qua SPRING_PROFILES_ACTIVE=dev.
+    cache: true
 
   # Multipart upload
   servlet:
@@ -28,21 +33,28 @@ spring:
     date-format: dd/MM/yyyy HH:mm:ss
     time-zone: Asia/Ho_Chi_Minh
 
-# Static resource handling - graceful 404 instead of 500 for missing files
-spring.web.resources:
-  add-mappings: true
-  cache:
-    cachecontrol:
-      # Tắt cache để F5/CSS reload tức thì khi dev; prod nên đặt lại 3600
-      max-age: 0
-      no-store: true
-  static-locations: classpath:/static/
-
-# Server Configuration
+# PERFORMANCE #4 — bật HTTP compression cho response body > 1KB.
+# Tiết kiệm ~70% băng thông cho HTML, CSS, JS, JSON.
 server:
   port: 8081
   servlet:
     context-path: /
+  compression:
+    enabled: true
+    mime-types: text/html,text/css,text/plain,text/xml,application/javascript,application/json,image/svg+xml,application/xml
+    min-response-size: 1024
+
+# Static resource handling
+# PERFORMANCE #4 — bỏ `no-store: true` để browser có thể cache static assets
+# giữa các request. CSS/JS đã có content-hash hoặc version query sẽ tự invalidate.
+# max-age=3600 (1 giờ): đủ cho user session trung bình.
+spring.web.resources:
+  add-mappings: true
+  cache:
+    cachecontrol:
+      max-age: 3600
+      cache-public: true
+  static-locations: classpath:/static/
 
 # JWT Configuration
 jwt:
@@ -63,9 +75,11 @@ app:
 logging:
   level:
     root: INFO
-    com.ecommerce.cnj70: DEBUG
-    org.springframework.security: DEBUG
-    org.springframework.data.mongodb: DEBUG
+    com.ecommerce.cnj70: INFO
+    # PERFORMANCE #8 — đổi Security + MongoDB log về WARN/INFO ở prod.
+    # Debug log tốn I/O, làm tăng latency ~5-10%.
+    org.springframework.security: WARN
+    org.springframework.data.mongodb: WARN
 
 # KYC 3rd-party Provider Configuration
 kyc:

@@ -22,6 +22,7 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.security.config.annotation.web.configuration.WebSecurityCustomizer;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
@@ -59,16 +60,53 @@ public class SecurityConfig {
         return config.getAuthenticationManager();
     }
 
+    /**
+     * PERFORMANCE #5 — Spring Security vẫn chạy qua filter chain cho
+     * các request tới static assets (/css, /js, /images, /uploads, /vendor)
+     * dù đã được permitAll(). Mỗi asset phải qua JwtAuthenticationFilter,
+     * CorsFilter, ExceptionTranslationFilter... tốn thêm 5-20ms/asset.
+     *
+     * <p>{@link WebSecurityCustomizer#ignoring()} bỏ qua HOÀN TOÀN security
+     * pipeline cho các path này — an toàn vì static assets không cần auth.
+     * Phải khớp với pattern permitAll() ở {@link #filterChain(HttpSecurity)}.</p>
+     */
+    @Bean
+    public WebSecurityCustomizer webSecurityCustomizer() {
+        return (web) -> web.ignoring().requestMatchers(
+                "/css/**",
+                "/js/**",
+                "/images/**",
+                "/uploads/**",
+                "/vendor/**",
+                "/static/**",
+                "/webjars/**",
+                "/favicon.ico",
+                "/error"
+        );
+    }
+
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOrigins(List.of("http://localhost:8081", "http://localhost:3000"));
+        // setAllowedOriginPatterns (không phải setAllowedOrigins) cho phép dùng wildcard
+        // và vẫn tương thích với allowCredentials(true) — cần thiết để nhận cookie JWT
+        // từ mọi domain khi dev qua localtunnel/ngrok/cloudflare tunnel.
+        // Khi deploy production thật, chỉ giữ lại domain chính thức của bạn.
+        configuration.setAllowedOriginPatterns(List.of(
+                "http://localhost:8081",
+                "http://localhost:3000",
+                "https://*.loca.lt",          // localtunnel
+                "https://*.ngrok-free.app",   // ngrok free (mới)
+                "https://*.ngrok-free.dev",   // ngrok free (cũ)
+                "https://*.ngrok.io",         // ngrok (cũ)
+                "https://*.trycloudflare.com" // cloudflare quick tunnel
+        ));
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(Arrays.asList("Authorization", "Content-Type", "X-Requested-With"));
         configuration.setExposedHeaders(List.of("Authorization"));
         configuration.setAllowCredentials(true);
         configuration.setMaxAge(3600L);
-        
+
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", configuration);
         return source;

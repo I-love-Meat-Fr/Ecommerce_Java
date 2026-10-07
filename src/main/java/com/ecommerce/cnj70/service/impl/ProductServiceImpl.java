@@ -25,6 +25,7 @@ import com.ecommerce.cnj70.service.ProductService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
@@ -459,21 +460,38 @@ public class ProductServiceImpl implements ProductService {
 
     @Override
     public List<Product> getActiveProducts() {
-        return productRepository.findByStatus(ProductStatus.ACTIVE);
+        // PERFORMANCE #2 — query với field projection ở Mongo side,
+        // giới hạn 50 để tránh full-collection scan. Sort by createdAt
+        // DESC cho tab "Tất cả" trên home page.
+        return productRepository.findSummaryByStatus(ProductStatus.ACTIVE,
+                PageRequest.of(0, 50));
     }
 
     @Override
     public List<Product> getNewArrivals(int limit) {
-        return productRepository.findTop10ByStatusOrderByCreatedAtDesc(ProductStatus.ACTIVE)
-                .stream().limit(limit).toList();
+        // PERFORMANCE #2 — đẩy sort + limit xuống Mongo, kèm projection
+        // để không pull về imageUrls/variants/specifications.
+        return productRepository.findSummaryByStatusOrderByCreatedAtDesc(ProductStatus.ACTIVE,
+                PageRequest.of(0, Math.min(limit, 50)));
     }
 
     @Override
     public List<Product> getFeaturedProducts(int limit) {
-        return productRepository.findByStatus(ProductStatus.ACTIVE).stream()
-                .sorted((p1, p2) -> Double.compare(p2.getRating(), p1.getRating()))
-                .limit(limit)
-                .toList();
+        // PERFORMANCE #2 — Mongo sort theo rating thay vì sort toàn bộ
+        // collection trong RAM như trước đây.
+        return productRepository.findSummaryByStatusOrderByRatingDesc(ProductStatus.ACTIVE,
+                PageRequest.of(0, Math.min(limit, 50)));
+    }
+
+    /**
+     * PERFORMANCE #2 — Flash Sale: chỉ lấy products có sold > 0,
+     * sort theo sold DESC, giới hạn limit. Trước đây controller
+     filter lại bằng `.filter(p -> p.getSold() > 0)` SAU khi đã load
+     * toàn bộ active products → lãng phí.
+     */
+    public List<Product> getFlashSaleCandidates(int limit) {
+        return productRepository.findFlashSaleCandidates(ProductStatus.ACTIVE,
+                PageRequest.of(0, Math.min(limit, 50)));
     }
 
     @Override
